@@ -232,14 +232,18 @@ export class UIManager {
       </div>
 
       <div class="france-map-svg-container" id="france-container">
-        <!-- SVG Réaliste de la France avec contours géographiques et reliefs -->
-        <svg class="france-svg" viewBox="0 0 500 480">
+        <!-- SVG Cartographique Haute Fidélité : France Réaliste, Pays Frontaliers & Reliefs -->
+        <svg class="france-svg" viewBox="0 0 540 500">
           <defs>
-            <radialGradient id="franceRelief" cx="50%" cy="50%" r="55%">
-              <stop offset="0%" stop-color="#34495e" />
-              <stop offset="50%" stop-color="#2c3e50" />
+            <radialGradient id="franceRelief" cx="50%" cy="48%" r="58%">
+              <stop offset="0%" stop-color="#3d566e" />
+              <stop offset="45%" stop-color="#2c3e50" />
               <stop offset="85%" stop-color="#1e272e" />
-              <stop offset="100%" stop-color="#0f141d" />
+              <stop offset="100%" stop-color="#0f171e" />
+            </radialGradient>
+            <radialGradient id="oceanShading" cx="50%" cy="50%" r="70%">
+              <stop offset="0%" stop-color="#142334" />
+              <stop offset="100%" stop-color="#09101a" />
             </radialGradient>
             <filter id="glowTourRoute" x="-20%" y="-20%" width="140%" height="140%">
               <feGaussianBlur stdDeviation="3.5" result="blur" />
@@ -248,54 +252,127 @@ export class UIManager {
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
+            <filter id="softShadow" x="-10%" y="-10%" width="120%" height="120%">
+              <feDropShadow dx="2" dy="5" stdDeviation="4" flood-color="#000" flood-opacity="0.6" />
+            </filter>
           </defs>
 
-          <!-- Mer / Océan environnant -->
-          <rect width="100%" height="100%" fill="transparent" />
+          <!-- Fond Océanique / Mer -->
+          <rect width="100%" height="100%" fill="url(#oceanShading)" />
 
-          <!-- Relief montagneux stylisé (Alpes & Pyrénées) -->
-          <path d="M 360 220 Q 400 240 430 300 Q 390 350 370 380 Z" fill="#2d3436" opacity="0.4" />
-          <path d="M 120 420 Q 200 430 280 440 Q 220 410 140 415 Z" fill="#2d3436" opacity="0.4" />
+          <!-- Vagues et rides marines subtiles -->
+          <path d="M 40 330 Q 60 325 80 330 T 120 330" fill="none" stroke="#2980b9" stroke-width="1" opacity="0.35" />
+          <path d="M 60 380 Q 80 375 100 380 T 140 380" fill="none" stroke="#2980b9" stroke-width="1" opacity="0.3" />
+          <path d="M 330 465 Q 350 460 370 465 T 410 465" fill="none" stroke="#2980b9" stroke-width="1" opacity="0.35" />
+          <path d="M 160 85 Q 180 80 200 85 T 240 85" fill="none" stroke="#2980b9" stroke-width="1" opacity="0.3" />
 
-          <!-- Contour géographique précis de la France métropolitaine -->
-          <path class="france-mainland" d="
-            M 240 28
-            C 260 25, 290 35, 310 40
-            C 340 50, 365 42, 385 65
-            C 410 90, 440 95, 455 125
-            C 470 150, 450 180, 460 210
-            C 470 235, 440 260, 435 285
-            C 430 310, 445 340, 420 375
-            C 400 400, 370 415, 350 435
-            C 320 440, 290 430, 260 445
-            C 230 455, 195 440, 170 430
-            C 140 420, 130 380, 115 365
-            C 100 350, 65 330, 55 305
-            C 45 280, 60 250, 50 220
-            C 40 190, 25 180, 20 160
-            C 15 135, 40 120, 60 115
-            C 85 110, 105 125, 130 115
-            C 150 105, 160 85, 185 75
-            C 210 65, 225 35, 240 28 Z
-          " fill="url(#franceRelief)" stroke="#38ada9" stroke-width="2.5" />
+          <!-- PAYS FRONTALIERS RÉALISTES AVEC FRONTIÈRES ET DRAPEAUX -->
+          <!-- 1. ROYAUME-UNI (UK) / Angleterre au nord-ouest -->
+          <path class="border-country uk" d="
+            M 0 0 L 195 0
+            C 185 25, 175 40, 150 48
+            C 120 52, 90 42, 65 58
+            C 35 62, 15 50, 0 55 Z
+          " fill="#182330" stroke="#34495e" stroke-width="1.8" />
+          <text x="50" y="30" fill="#a4b0be" font-size="9.5" font-weight="900" letter-spacing="0.8">ROYAUME-UNI 🇬🇧</text>
 
-          <!-- Corse -->
-          <path d="M 445 380 C 455 375, 465 390, 460 420 C 450 445, 440 440, 435 415 Z"
-                fill="#2c3e50" stroke="#38ada9" stroke-width="2" />
+          <!-- 2. BELGIQUE & LUXEMBOURG au nord-est -->
+          <path class="border-country belgique" d="
+            M 275 0 L 450 0 L 450 65
+            C 435 60, 420 70, 395 62
+            C 365 52, 330 45, 298 32
+            C 285 20, 280 5, 275 0 Z
+          " fill="#182330" stroke="#34495e" stroke-width="1.8" />
+          <text x="325" y="24" fill="#a4b0be" font-size="9.5" font-weight="900" letter-spacing="0.8">BELGIQUE 🇧🇪</text>
 
-          <!-- Tracé dynamique du Tour de France reliant les étapes en séquence -->
+          <!-- 3. ALLEMAGNE à l'est au-delà du Rhin -->
+          <path class="border-country allemagne" d="
+            M 450 65 L 540 65 L 540 185
+            C 505 180, 480 170, 465 145
+            C 455 125, 452 90, 450 65 Z
+          " fill="#182330" stroke="#34495e" stroke-width="1.8" />
+          <text x="452" y="125" fill="#a4b0be" font-size="9.5" font-weight="900" letter-spacing="0.8">ALLEMAGNE 🇩🇪</text>
+
+          <!-- 4. SUISSE à l'est (Jura & Alpes) -->
+          <path class="border-country suisse" d="
+            M 465 185 L 540 185 L 540 265
+            C 515 260, 490 270, 460 255
+            C 440 245, 435 220, 450 195 Z
+          " fill="#182330" stroke="#34495e" stroke-width="1.8" />
+          <text x="456" y="225" fill="#a4b0be" font-size="9.5" font-weight="900" letter-spacing="0.8">SUISSE 🇨🇭</text>
+
+          <!-- 5. ITALIE au sud-est (au-delà des Alpes) -->
+          <path class="border-country italie" d="
+            M 460 255 L 540 265 L 540 430
+            C 510 415, 475 390, 455 370
+            C 435 345, 442 300, 450 270 Z
+          " fill="#182330" stroke="#34495e" stroke-width="1.8" />
+          <text x="470" y="335" fill="#a4b0be" font-size="9.5" font-weight="900" letter-spacing="0.8">ITALIE 🇮🇹</text>
+
+          <!-- 6. ESPAGNE au sud (au-delà des Pyrénées) -->
+          <path class="border-country espagne" d="
+            M 85 455 L 375 455 L 375 500 L 0 500 L 0 455
+            C 35 452, 60 454, 85 455 Z
+          " fill="#182330" stroke="#34495e" stroke-width="1.8" />
+          <text x="175" y="482" fill="#a4b0be" font-size="10" font-weight="900" letter-spacing="1">ESPAGNE 🇪🇸</text>
+
+          <!-- Mers et Océans : Typographie cartographique -->
+          <text x="25" y="320" fill="#38ada9" font-size="9" font-weight="800" font-style="italic" opacity="0.6">OCÉAN ATLANTIQUE</text>
+          <text x="45" y="240" fill="#38ada9" font-size="8.5" font-weight="700" font-style="italic" opacity="0.55">GOLFE DE GASCOGNE</text>
+          <text x="110" y="85" fill="#38ada9" font-size="8.5" font-weight="700" font-style="italic" opacity="0.6">LA MANCHE</text>
+          <text x="325" y="455" fill="#38ada9" font-size="9" font-weight="800" font-style="italic" opacity="0.6">MER MÉDITERRANÉE</text>
+
+          <!-- Relief montagneux ombré (Pyrénées & Alpes) -->
+          <path d="M 370 240 Q 410 270 435 320 Q 400 360 380 395 Z" fill="#202b38" opacity="0.75" />
+          <path d="M 125 430 Q 210 440 300 445 Q 235 420 145 425 Z" fill="#202b38" opacity="0.75" />
+
+          <!-- Fleuves majeurs réalistes (Seine, Loire, Rhône, Garonne) -->
+          <path d="M 230 40 Q 255 100 250 135 Q 230 160 170 120" fill="none" stroke="#00cec9" stroke-width="1.2" opacity="0.4" />
+          <path d="M 340 330 Q 320 280 260 240 Q 180 230 115 220" fill="none" stroke="#00cec9" stroke-width="1.2" opacity="0.4" />
+          <path d="M 425 240 Q 355 260 335 285 Q 340 350 345 405" fill="none" stroke="#00cec9" stroke-width="1.2" opacity="0.4" />
+          <path d="M 270 435 Q 235 375 140 320" fill="none" stroke="#00cec9" stroke-width="1.2" opacity="0.4" />
+
+          <!-- CONTOUR GÉOGRAPHIQUE HAUTE FIDÉLITÉ DE LA FRANCE MÉTROPOLITAINE -->
+          <path class="france-mainland" filter="url(#softShadow)" d="
+            M 275 30
+            C 295 28, 325 36, 345 42
+            C 375 52, 400 45, 420 68
+            C 445 92, 455 110, 460 135
+            C 465 160, 440 185, 450 215
+            C 460 240, 435 265, 430 290
+            C 425 315, 440 345, 415 380
+            C 395 405, 365 420, 345 440
+            C 315 445, 285 435, 255 450
+            C 225 460, 190 445, 165 435
+            C 135 425, 125 385, 110 370
+            C 95 355, 60 335, 50 310
+            C 40 285, 55 255, 45 225
+            C 35 195, 20 185, 15 165
+            C 10 140, 35 125, 55 120
+            C 80 115, 100 130, 125 120
+            C 145 110, 155 90, 180 80
+            C 205 70, 220 40, 245 32
+            C 255 28, 265 30, 275 30 Z
+          " fill="url(#franceRelief)" stroke="#2ed573" stroke-width="2.6" />
+
+          <!-- Île de Corse -->
+          <path d="M 450 395 C 460 390, 470 405, 465 435 C 455 460, 445 455, 440 430 Z"
+                fill="#2c3e50" stroke="#2ed573" stroke-width="2" filter="url(#softShadow)" />
+          <text x="444" y="468" fill="#2ed573" font-size="8" font-weight="800">CORSE</text>
+
+          <!-- Tracé Lumineux Officiel du Tour de France -->
           <path class="tour-route-glow" d="
-            M 250 134
-            L 335 264
-            L 370 230
-            L 400 250
-            L 270 345
-            L 340 403
-            L 430 374
-            L 140 312
-            L 110 153
-            L 440 134
-          " fill="none" stroke="#f1c40f" stroke-width="2.8" stroke-dasharray="6,4" opacity="0.65" filter="url(#glowTourRoute)" />
+            M 270 140
+            L 360 275
+            L 395 240
+            L 430 260
+            L 290 360
+            L 365 420
+            L 460 390
+            L 150 325
+            L 120 160
+            L 470 140
+          " fill="none" stroke="#fffa65" stroke-width="3" stroke-dasharray="7,4" opacity="0.8" filter="url(#glowTourRoute)" />
         </svg>
 
         <!-- Pins interactifs des villes avec emblèmes français -->
@@ -692,19 +769,28 @@ export class UIManager {
       </div>
 
       <div class="hud-bottom-controls">
-        <div style="display: flex; gap: 12px; align-items: flex-end;">
-          <div class="speedometer">
+        <!-- Pédale de Frein ergonomique à gauche (pouce gauche) -->
+        <button class="btn-pedal-brake" id="btn-hud-brake" title="Maintenir la pédale pour freiner / stopper">
+          <div class="pedal-grip-ridges"></div>
+          <span class="pedal-icon">🛑</span>
+          <span class="pedal-label">FREIN</span>
+        </button>
+
+        <!-- Compteur de vitesse moderne centré (dégagé et lisible) -->
+        <div class="speedometer-center">
+          <div class="speed-dial">
             <span class="speed-value" id="hud-speed-val">0</span>
             <span class="speed-unit">KM/H</span>
           </div>
-          <!-- Bouton de freinage / arrêt et reprise de circulation -->
-          <button class="btn-brake" id="btn-hud-brake" title="Maintenir pour freiner / arrêter">
-            🛑 FREIN
-          </button>
+          <div class="speed-track-gauge">
+            <div class="speed-fill-gauge" id="hud-speed-gauge"></div>
+          </div>
         </div>
 
-        <button class="btn-horn" id="btn-hud-horn" title="Klaxonner !">
-          📢
+        <!-- Bouton Klaxon ergonomique à droite (pouce droit) -->
+        <button class="btn-horn-pedal" id="btn-hud-horn" title="Klaxonner !">
+          <span class="horn-icon">📢</span>
+          <span class="horn-label">KLAXON</span>
         </button>
       </div>
 
@@ -771,9 +857,14 @@ export class UIManager {
 
   updateHUDStats(data) {
     const speedVal = this.root.querySelector('#hud-speed-val');
+    const speedGauge = this.root.querySelector('#hud-speed-gauge');
     const progressFill = this.root.querySelector('#hud-progress-fill');
 
     if (speedVal) speedVal.textContent = data.speed;
+    if (speedGauge) {
+      const pct = Math.min(100, Math.floor((data.speed / 160) * 100));
+      speedGauge.style.width = `${pct}%`;
+    }
     if (progressFill) progressFill.style.width = `${Math.floor(data.progressRatio * 100)}%`;
   }
 

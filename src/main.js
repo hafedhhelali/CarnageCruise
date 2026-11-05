@@ -198,12 +198,12 @@ class GameApp {
           this.engine.triggerCameraShake(0.35);
           this.particles.spawnComicBurst(hitChar.group.position, hitChar.typeDef.points, gameState.combo);
           this.particles.spawnBloodBurst(hitChar.group.position);
-          gameState.addInteraction(hitChar.typeDef.points, hitChar.typeDef.type);
+          gameState.addInteraction(hitChar.typeDef.points, hitChar.typeDef.type, hitChar.category);
         },
         (z) => this.environment.getRoadCenterX(z)
       );
 
-      // 9. Gestion des carrefours, ronds-points, feux grillés et collisions transversales
+      // 9. Gestion des carrefours réalistes, feux et trafic transversal
       this.intersections.update(
         delta,
         this.bike.z,
@@ -219,6 +219,11 @@ class GameApp {
             gameState.speed = 0;
             storage.recordRedLightRun();
           }
+        },
+        (streetName) => {
+          // Bonus de civisme : Arrêt parfait au feu rouge avant de repartir !
+          gameState.score += 250;
+          soundManager.playCoin();
         },
         (z) => this.environment.getRoadCenterX(z),
         (z) => this.environment.getRoadAngle(z)

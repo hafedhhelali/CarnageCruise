@@ -295,77 +295,167 @@ html, body {
   pointer-events: auto;
 }
 
-/* Zone tactile et contrôles bas */
+/* Zone tactile et contrôles bas ergonomiques */
 .hud-bottom-controls {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
   width: 100%;
-  padding-bottom: 8px;
+  padding: 0 12px 14px 12px;
+  box-sizing: border-box;
+  pointer-events: none;
 }
 
-.speedometer {
+/* 1. PÉDALE DE FREIN ERGONOMIQUE (POUCE GAUCHE) */
+.btn-pedal-brake {
+  width: 88px;
+  height: 68px;
+  border-radius: 18px;
+  background: linear-gradient(145deg, #2c0b0e, #5c141a);
+  border: 2px solid #ff4d4f;
+  color: #fff;
   display: flex;
   flex-direction: column;
-  background: var(--glass-bg);
-  padding: 8px 14px;
-  border-radius: 16px;
-  border: 1px solid var(--border-light);
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  cursor: pointer;
+  pointer-events: auto;
+  box-shadow: 0 6px 20px rgba(255, 77, 79, 0.45), inset 0 2px 4px rgba(255, 255, 255, 0.2);
+  transition: transform 0.08s ease, filter 0.08s ease;
+  position: relative;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.pedal-grip-ridges {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.35),
+    rgba(0, 0, 0, 0.35) 4px,
+    transparent 4px,
+    transparent 8px
+  );
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.pedal-icon {
+  font-size: 1.35rem;
+  z-index: 2;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+}
+
+.pedal-label {
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+  color: #fff;
+  z-index: 2;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+}
+
+.btn-pedal-brake:active, .btn-pedal-brake.active {
+  transform: scale(0.92) translateY(3px);
+  background: linear-gradient(145deg, #e74c3c, #c0392b);
+  border-color: #ff7675;
+  box-shadow: 0 0 25px #ff4757, inset 0 3px 6px rgba(0,0,0,0.5);
+}
+
+/* 2. COMPTEUR DE VITESSE CENTRÉ (DÉGAGÉ ET LISIBLE) */
+.speedometer-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(10px);
+  padding: 8px 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  min-width: 105px;
+}
+
+.speed-dial {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
 }
 
 .speed-value {
-  font-size: 1.9rem;
+  font-size: 2.1rem;
   font-weight: 900;
   color: #fffa65;
   line-height: 1;
+  text-shadow: 0 0 12px rgba(255, 250, 101, 0.4);
 }
 
 .speed-unit {
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #a4b0be;
 }
 
-/* Bouton de freinage / arrêt circulation */
-.btn-brake {
-  padding: 12px 20px;
-  border-radius: 18px;
-  background: linear-gradient(135deg, #c0392b, #e74c3c);
-  border: 2px solid #ff7675;
-  color: #fff;
-  font-size: 0.95rem;
-  font-weight: 900;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
-  pointer-events: auto;
-  box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);
-  transition: transform 0.1s, filter 0.1s;
+.speed-track-gauge {
+  width: 100%;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 3px;
+  margin-top: 5px;
+  overflow: hidden;
 }
 
-.btn-brake:active, .btn-brake.active {
-  transform: scale(0.92);
-  filter: brightness(1.2);
-  background: #e74c3c;
-  box-shadow: 0 0 20px #ff4757;
+.speed-fill-gauge {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #2ed573, #ffa502, #ff4757);
+  transition: width 0.15s ease-out;
+  border-radius: 3px;
 }
 
-.btn-horn {
-  width: 58px;
-  height: 58px;
+/* 3. BOUTON KLAXON ERGONOMIQUE (POUCE DROIT) */
+.btn-horn-pedal {
+  width: 68px;
+  height: 68px;
   border-radius: 50%;
   background: linear-gradient(135deg, #ffa502, #ff7f50);
-  border: none;
+  border: 2px solid #ffbe76;
   color: #fff;
-  font-size: 1.5rem;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 15px rgba(255, 127, 80, 0.4);
+  box-shadow: 0 6px 20px rgba(255, 127, 80, 0.45);
   cursor: pointer;
   pointer-events: auto;
-  transition: transform 0.1s;
+  transition: transform 0.08s ease;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.horn-icon {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.horn-label {
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  margin-top: 2px;
+}
+
+.btn-horn-pedal:active {
+  transform: scale(0.90);
+  filter: brightness(1.15);
+  box-shadow: 0 0 20px #ffa502;
 }
 
 .btn-horn:active {
@@ -392,26 +482,33 @@ html, body {
   top: 0;
   left: 0;
   width: 100%;
+  max-width: 100vw;
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: radial-gradient(circle at center, #1b2838 0%, #0d131a 100%);
-  padding: 16px;
+  background: radial-gradient(circle at 50% 25%, #18283d 0%, #080d14 100%);
+  /* Décalage vers le bas pour préserver la barre d'état et l'encoche du téléphone */
+  padding: calc(env(safe-area-inset-top, 28px) + 28px) 14px 24px 14px;
+  box-sizing: border-box;
   pointer-events: auto;
   overflow-y: auto;
+  overflow-x: hidden !important; /* SUPPRESSION TOTALE DU SCROLL HORIZONTAL */
 }
 
 .map-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .map-title {
-  font-size: 1.5rem;
+  font-size: 1.35rem;
   font-weight: 800;
   color: #fff;
+  letter-spacing: 0.5px;
 }
 
 .currency-badge {
@@ -431,18 +528,20 @@ html, body {
   position: relative;
   width: 100%;
   max-width: 520px;
-  height: 360px;
+  height: 380px;
   margin: 0 auto;
-  background: rgba(255,255,255,0.02);
+  background: linear-gradient(180deg, rgba(14, 27, 42, 0.85) 0%, rgba(8, 16, 26, 0.95) 100%);
   border-radius: 24px;
-  border: 1px solid var(--border-light);
+  border: 1px solid rgba(56, 173, 169, 0.35);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), inset 0 0 40px rgba(0, 0, 0, 0.4);
   overflow: hidden;
+  box-sizing: border-box;
 }
 
 .france-svg {
   width: 100%;
   height: 100%;
-  filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
+  filter: drop-shadow(0 12px 24px rgba(0,0,0,0.6));
 }
 
 .city-pin {
@@ -659,9 +758,14 @@ html, body {
   display: flex;
   gap: 8px;
   overflow-x: auto;
+  overflow-y: hidden;
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
   padding: 6px 4px 10px 4px;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
+  touch-action: pan-x;
 }
 
 .stages-carousel-bar::-webkit-scrollbar {

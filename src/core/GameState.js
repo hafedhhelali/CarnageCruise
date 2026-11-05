@@ -374,7 +374,7 @@ export class GameState {
     this.isBraking = braking;
   }
 
-  addInteraction(points = 100, itemType = 'person') {
+  addInteraction(points = 100, itemType = 'person', category = 'man') {
     if (this.currentMode !== 'PLAYING') return;
 
     this.interactionsCount++;
@@ -388,7 +388,8 @@ export class GameState {
     const coinsFromHit = Math.floor(totalAdded / 60) + 1;
     this.coinsEarned += coinsFromHit;
 
-    soundManager.playBoing();
+    // Réaction sonore réaliste selon la personne heurtée (enfant, vieux, femme, homme)
+    soundManager.playPedestrianReaction(category);
     if (this.combo > 2) {
       soundManager.playComboFanfare(this.combo);
     }

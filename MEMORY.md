@@ -57,18 +57,24 @@
 - Volume moteur adouci en un ronronnement agréable.
 
 ### ✅ 11. VERSIONNAGE COMPLET, CANAL BETA & GITHUB ACTIONS
-- **Canal officiel** : **BETA** (`1.2.0-beta`, Build 3).
+- **Canal officiel** : **BETA** (`1.2.1-beta`, Build 4).
 - **Intégration GitHub Actions consolidée** :
   - **1 seule exécution par push** (déclencheur unique `push: branches: [main]`, concurrency activée).
-  - **1 seul APK officiel** généré et publié : `Motormageddon-v1.2.0-beta-b3-debug.apk` (suppression du doublon `app-debug.apk`).
+  - **1 seul APK officiel** généré et publié : `Motormageddon-v1.2.1-beta-b4-debug.apk` (sans doublon).
   - Extraction dynamique de la version depuis `version.json` dans GitHub Actions (`APP_VERSION`, `VERSION_CODE`, `CHANNEL`).
-  - Nom d'artefact GitHub dynamique : `Motormageddon-v1.2.0-beta-b3-APK`.
+  - Nom d'artefact GitHub dynamique : `Motormageddon-v1.2.1-beta-b4-APK`.
   - Releases GitHub configurées en Pre-release (`prerelease: true`) marquées **[BETA]**.
   - Badge BETA distinctif rouge/rose sur le Splash Screen et dans les mentions légales de l'application.
 - **Keystore permanent** : `android/app/motormageddon.keystore` (RSA 2048, 10 000 jours, EOMedia) garantissant l'identité de signature SHA-256 sur toutes les versions.
 - **Script d'incrémentation** : `npm run version:patch`, `version:minor`, `version:major` configurés pour préserver automatiquement le canal `-beta`.
 
-### ✅ 12. VALIDATION DU BUILD ANDROID & GITHUB ACTIONS
-- **Compilation locale & cloud APK réussie** : `android/app/build/outputs/apk/debug/Motormageddon-v1.2.0-beta-b3-debug.apk` (unique).
-- **Release GitHub officielle** : `https://github.com/hafedhhelali/Motormageddon/releases/tag/v1.2.0-beta`
+### ✅ 12. NOUVEAUTÉS DE LA VERSION 1.2.1-BETA
+- **Carrefours Réalistes** : Remplacement complet des ronds-points par de vrais carrefours urbains français (4 voies, trottoirs arrondis en granit, feux tricolores avec potence et répétiteur bas deux-roues, passages piétons zébrés, barrières Croix de Saint-André, plaques de rue émaillées, circulation transversale fluide avec bonus d'arrêt au feu).
+- **Ergonomie du Frein (3 Zones)** : Pédale de frein sport grand format en bas à gauche (pouce gauche), compteur centré dégagé avec jauge, klaxon en bas à droite (pouce droit).
+- **Réactions Vocales Réalistes aux Heurts** : Synthèse WebAudio de voix humaine différenciée pour enfant (cri aigu), vieux (râle chevrotant + canne en bois), femme (cri perçant), homme (grognement viril) + thud corporel.
+- **Piétons Expressifs & IA de Fuite** : Modèles 3D détaillés et IA paniquée ("Ils tentent de s'enfuir !") : les piétons crient, agitent les bras et sprintent vers le trottoir quand la moto approche.
+- **Carte Haute Fidélité & Zéro Scroll** : Décalage sous la barre d'état du téléphone, suppression totale du défilement horizontal, géographie française exacte, rivières et pays frontaliers réels (Espagne 🇪🇸, Italie 🇮🇹, Suisse 🇨🇭, Allemagne 🇩🇪, Belgique 🇧🇪, Royaume-Uni 🇬🇧).
+
+### ✅ 13. VALIDATION DU BUILD ANDROID & GITHUB ACTIONS
+- **Compilation locale & cloud APK** : `android/app/build/outputs/apk/debug/Motormageddon-v1.2.1-beta-b4-debug.apk`.
 - **Dépôt officiel** : `https://github.com/hafedhhelali/Motormageddon`

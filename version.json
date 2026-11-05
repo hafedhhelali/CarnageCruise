@@ -1,7 +1,7 @@
 {
-  "version": "1.2.0-beta",
-  "versionCode": 3,
-  "build": 3,
+  "version": "1.2.1-beta",
+  "versionCode": 4,
+  "build": 4,
   "channel": "beta",
   "name": "Motormageddon",
   "releaseName": "Édition Carrefours & Virages (Beta)",

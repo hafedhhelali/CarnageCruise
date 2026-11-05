@@ -120,6 +120,106 @@ export class SoundManager {
 
   // --- EFFETS SONORES (SFX) ---
 
+  playPedestrianReaction(category = 'man') {
+    if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
+    this.resumeContext();
+
+    const now = this.ctx.currentTime;
+
+    // 1. Choc physique réaliste (Bruit sourd d'impact corporel)
+    const thudOsc = this.ctx.createOscillator();
+    const thudGain = this.ctx.createGain();
+    thudOsc.type = 'triangle';
+    thudOsc.frequency.setValueAtTime(110, now);
+    thudOsc.frequency.exponentialRampToValueAtTime(35, now + 0.12);
+    thudGain.gain.setValueAtTime(0.5, now);
+    thudGain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+
+    thudOsc.connect(thudGain);
+    thudGain.connect(this.ctx.destination);
+    thudOsc.onended = () => this.cleanupNodes(thudOsc, thudGain);
+    thudOsc.start(now);
+    thudOsc.stop(now + 0.14);
+
+    // 2. Réaction vocale humaine réaliste selon la catégorie
+    const voiceOsc = this.ctx.createOscillator();
+    const voiceGain = this.ctx.createGain();
+    const formantFilter = this.ctx.createBiquadFilter();
+    formantFilter.type = 'bandpass';
+
+    if (category === 'child') {
+      // ENFANT : Voix aiguë surprise (680Hz -> 460Hz)
+      voiceOsc.type = 'sawtooth';
+      voiceOsc.frequency.setValueAtTime(680, now);
+      voiceOsc.frequency.exponentialRampToValueAtTime(460, now + 0.28);
+      formantFilter.frequency.setValueAtTime(1450, now);
+      formantFilter.Q.value = 3.2;
+
+      voiceGain.gain.setValueAtTime(0.38, now);
+      voiceGain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+      voiceOsc.stop(now + 0.28);
+    } else if (category === 'elderly') {
+      // VIEUX (Papy / Mamie) : Voix rauque chevrotante ("Oh là là !" + impact de canne)
+      voiceOsc.type = 'triangle';
+      voiceOsc.frequency.setValueAtTime(165, now);
+      voiceOsc.frequency.linearRampToValueAtTime(140, now + 0.12);
+      voiceOsc.frequency.exponentialRampToValueAtTime(95, now + 0.38);
+
+      formantFilter.frequency.setValueAtTime(750, now);
+      formantFilter.Q.value = 2.5;
+
+      voiceGain.gain.setValueAtTime(0.42, now);
+      voiceGain.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
+      voiceOsc.stop(now + 0.38);
+
+      // Bruit sec de la canne en bois qui claque
+      const caneOsc = this.ctx.createOscillator();
+      const caneGain = this.ctx.createGain();
+      caneOsc.type = 'square';
+      caneOsc.frequency.setValueAtTime(800, now + 0.04);
+      caneOsc.frequency.exponentialRampToValueAtTime(150, now + 0.09);
+      caneGain.gain.setValueAtTime(0.3, now + 0.04);
+      caneGain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+      caneOsc.connect(caneGain);
+      caneGain.connect(this.ctx.destination);
+      caneOsc.onended = () => this.cleanupNodes(caneOsc, caneGain);
+      caneOsc.start(now + 0.04);
+      caneOsc.stop(now + 0.09);
+    } else if (category === 'woman') {
+      // FEMME : Cri aigu surpris perçant ("Aaaaah !")
+      voiceOsc.type = 'sawtooth';
+      voiceOsc.frequency.setValueAtTime(520, now);
+      voiceOsc.frequency.linearRampToValueAtTime(580, now + 0.08);
+      voiceOsc.frequency.exponentialRampToValueAtTime(320, now + 0.34);
+
+      formantFilter.frequency.setValueAtTime(1850, now);
+      formantFilter.Q.value = 3.8;
+
+      voiceGain.gain.setValueAtTime(0.4, now);
+      voiceGain.gain.exponentialRampToValueAtTime(0.001, now + 0.34);
+      voiceOsc.stop(now + 0.34);
+    } else {
+      // HOMME : Râle / grognement baryton vigoureux ("Wooooh !" / "Hé !")
+      voiceOsc.type = 'sawtooth';
+      voiceOsc.frequency.setValueAtTime(210, now);
+      voiceOsc.frequency.exponentialRampToValueAtTime(85, now + 0.32);
+
+      formantFilter.frequency.setValueAtTime(620, now);
+      formantFilter.Q.value = 2.8;
+
+      voiceGain.gain.setValueAtTime(0.45, now);
+      voiceGain.gain.exponentialRampToValueAtTime(0.001, now + 0.32);
+      voiceOsc.stop(now + 0.32);
+    }
+
+    voiceOsc.connect(formantFilter);
+    formantFilter.connect(voiceGain);
+    voiceGain.connect(this.ctx.destination);
+
+    voiceOsc.onended = () => this.cleanupNodes(voiceOsc, formantFilter, voiceGain);
+    voiceOsc.start(now);
+  }
+
   playBoing() {
     if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
     this.resumeContext();

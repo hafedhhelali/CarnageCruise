@@ -8,7 +8,7 @@ Ce document fournit l'ensemble des informations de conception, d'architecture lo
 ## 1. VISION DU PROJET & SPÉCIFICATIONS
 
 - **Genre** : Jeu de course d'arcade urbain / Runner 3D burlesque
-- **Version actuelle** : **1.2.0-beta** (Build / versionCode 3 - Canal BETA)
+- **Version actuelle** : **1.2.1-beta** (Build / versionCode 4 - Canal BETA)
 - **Signature & Clé** : Keystore permanent dédié `android/app/motormageddon.keystore` (validité 10 000 jours, EOMedia Paris)
 - **Plateforme cible** : Android (Smartphones & Tablettes) + WebGL Mobile/Desktop
 - **Direction artistique** : Cartoon 3D éclatant, physique burlesque (slapstick), animations hilarantes et dynamiques, identité française affirmée.
@@ -66,5 +66,43 @@ Ce document fournit l'ensemble des informations de conception, d'architecture lo
 - Gestion de concurrence (`concurrency: cancel-in-progress`) pour éviter tout build superflus en parallèle.
 - Pre-release GitHub Release automatique étiquetée **[BETA]** avec `prerelease: true`.
 - Badge BETA élégant affiché sur le Splash Screen et dans les mentions légales de l'application.
-- `versionCode` : 3, `versionName` : 1.2.0-beta.
+- `versionCode` : 4, `versionName` : 1.2.1-beta.
 - Scripts d'incrémentation : `npm run version:patch`, `version:minor`, `version:major` (gérant automatiquement le suffixe `-beta`).
+
+---
+
+## 3. NOUVEAUTÉS DE LA VERSION 1.2.1-BETA
+
+### A. Remplacement Total des Ronds-Points par des Carrefours Urbains Réalistes
+- **Suppression définitive des ronds-points** inadaptés au gameplay d'arcade linéaire.
+- **Grands carrefours réalistes** : chaussée perpendiculaire de 54m de long x 16m de large, bordures de trottoir arrondies en granit clair (`0x95a5a6`), passages piétons zébrés normalisés sur les 4 branches, lignes d'arrêt continues.
+- **Feux tricolores haute fidélité** : mât acier laqué anthracite avec potence surplombante, visières pare-soleil, optiques fonctionnelles (Rouge, Orange, Vert), **répétiteur bas pour deux-roues** à 1.6m de haut et plaques de rue émaillées parisiennes ("BD SAINT-GERMAIN", "AVENUE MONTAIGNE", etc.).
+- **Mobilier urbain authentique** : barrières de protection piétons **Croix de Saint-André** vert impérial aux 4 angles et candélabres d'éclairage.
+- **Trafic transversal dynamique** : Taxis avec enseigne lumineuse de toit, camionnettes de livraison blanches, compactes sport et berlines.
+- **Bonus de civisme** : Si le joueur freine et s'arrête avant la ligne de stop au feu rouge, le trafic défile devant lui et il reçoit `+250 PTS` avant que le feu ne repasse au vert !
+
+### B. Ergonomie Optimisée du Frein (Disposition 3 Zones Équilibrée)
+- **Pédale de FREIN (Pouce gauche)** : Pédale sport grand format (88px x 68px) dans le coin inférieur gauche avec rainures antidérapantes, bordure rouge néon et retour haptique/visuel au maintien.
+- **Compteur de Vitesse (Centre)** : Afficheur numérique centré, totalement dégagé des pouces, avec jauge de vitesse dynamique (`hud-speed-gauge`).
+- **Klaxon (Pouce droit)** : Bouton klaxon ergonomique (68px x 68px) dans le coin inférieur droit.
+
+### C. Réactions Sonores Réalistes Différenciées selon la Personne Heurtée
+- Synthèse procédurale WebAudio dédiée selon la catégorie du piéton :
+  - **Enfant (`child`)** : Cri aigu surpris (680Hz ➔ 460Hz, filtre formant à 1450Hz).
+  - **Vieux (`elderly`)** : Râle rauque chevrotant (165Hz ➔ 95Hz, tremolo 8Hz "Oh là là !") + claquement sec de la canne en bois.
+  - **Femme (`woman`)** : Cri perçant surpris (520Hz ➔ 320Hz, formant à 1850Hz "Aaaaah !").
+  - **Homme (`man`)** : Grognement / râle baryton viril (210Hz ➔ 85Hz, formant à 620Hz "Wooooh !").
+- Choc corporel physique réaliste (thud sub-bass 110Hz ➔ 35Hz) sous-jacent.
+
+### D. Graphismes et Animations Piétons Améliorés + IA de Fuite ("Ils tentent de s'enfuir !")
+- Modèles 3D enrichis : jambes et bras articulés avec mains et chaussures, têtes expressives, coiffures, casquettes, sacs à main, trottinettes, poussettes avec bébé.
+- **IA de Fuite Paniquée** : Quand la moto approche à moins de 26m, le piéton panique, tourne la tête, lève les bras au ciel en criant et sprint à toute allure (vitesse x 2.8) vers le trottoir le plus proche !
+- S'il atteint le trottoir à temps, il esquive l'impact ; sinon, collision burlesque.
+
+### E. Écran Carte du Tour : Zéro Scroll Horizontal, Décalage Encoche & Pays Frontaliers Réalistes
+- **Décalage vers le bas** : `padding: calc(env(safe-area-inset-top, 28px) + 28px)` pour ne plus empiéter sur la barre d'état et l'encoche du téléphone.
+- **Suppression intégrale du défilement horizontal** : `overflow-x: hidden !important; max-width: 100vw; box-sizing: border-box;`.
+- **SVG Cartographique Haute Définition** :
+  - Contours géographiques précis de la France (Bretagne, Cotentin, Golfe de Gascogne, Côte d'Azur, Corse).
+  - Pays frontaliers réels intégrés avec frontières et drapeaux : 🇪🇸 **ESPAGNE**, 🇮🇹 **ITALIE**, 🇨🇭 **SUISSE**, 🇩🇪 **ALLEMAGNE**, 🇧🇪 **BELGIQUE**, 🇬🇧 **ROYAUME-UNI**.
+  - Rivières majeures (Seine, Loire, Rhône, Garonne) et typographie marine (Océan Atlantique, Mer Méditerranée, La Manche).
