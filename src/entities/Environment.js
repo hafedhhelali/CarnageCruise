@@ -5,6 +5,7 @@
  */
 
 import * as THREE from 'three';
+import { textureFactory } from '../gfx/TextureFactory.js';
 
 export class Environment {
   constructor(scene) {
@@ -535,14 +536,31 @@ export class Environment {
     chunk.position.set(curveX, 0, zPos);
     chunk.rotation.y = curveAngle;
 
-    const roadMat = new THREE.MeshToonMaterial({ color: this.cityTheme.roadColor });
-    const sidewalkMat = new THREE.MeshToonMaterial({ color: 0xd8d4cb });
-    const curbMat = new THREE.MeshToonMaterial({ color: 0x9e9e9e });
-    const stripeMat = new THREE.MeshBasicMaterial({ color: 0xf5f5f5 });
+    // Asphalte texturé HD avec vibreurs de course et traces de pneus
+    const roadTex = textureFactory.getRoadTexture().clone();
+    roadTex.repeat.set(1, this.chunkLength / 14);
+    const roadMat = new THREE.MeshStandardMaterial({
+      map: roadTex,
+      roughness: 0.85,
+      metalness: 0.05
+    });
+
+    // Pavés parisiens biseautés HD
+    const sidewalkTex = textureFactory.getSidewalkTexture().clone();
+    sidewalkTex.repeat.set(1.5, this.chunkLength / 4);
+    const sidewalkMat = new THREE.MeshStandardMaterial({
+      map: sidewalkTex,
+      roughness: 0.7,
+      metalness: 0.05
+    });
+
+    const curbMat = new THREE.MeshStandardMaterial({ color: 0x7f8c8d, roughness: 0.6 });
+    const stripeMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
 
     // Chaussée
     const road = new THREE.Mesh(this.sharedGeos.road, roadMat);
     road.rotation.x = -Math.PI / 2;
+    road.receiveShadow = true;
     chunk.add(road);
 
     // Bandes blanches centrales
@@ -634,30 +652,27 @@ export class Environment {
         chunk.add(roof);
       }
 
-      // Fenêtres vivantes (alternance jour/nuit avec lumières d'intérieur) et balcons en fer forgé
-      const floors = Math.floor(bHeight / 3.2);
-      for (let f = 1; f < floors; f++) {
-        const winY = f * 3.2;
-        const hasBalcony = (f === 2 || f === 4); // Étage noble haussmannien
+      // Façade Haussmannienne HD avec fenêtres détaillées, corniches et commerce
+      const hexColorStr = '#' + (this.cityTheme.buildingColors[0] || 0xdfe4ea).toString(16).padStart(6, '0');
+      const roofColorStr = '#' + (this.cityTheme.roofColor || 0x576574).toString(16).padStart(6, '0');
+      const facadeTex = textureFactory.getHaussmannFacadeTexture(hexColorStr, roofColorStr);
+      const facadeMat = new THREE.MeshStandardMaterial({
+        map: facadeTex,
+        roughness: 0.8,
+        metalness: 0.05
+      });
+      const facadeMesh = new THREE.Mesh(new THREE.PlaneGeometry(bWidth, bHeight), facadeMat);
+      facadeMesh.position.set(xBase - side * 0.08, bHeight / 2, currentZ + bWidth / 2);
+      facadeMesh.rotation.y = side > 0 ? -Math.PI / 2 : Math.PI / 2;
+      chunk.add(facadeMesh);
 
-        for (let w = -bWidth / 2 + 1.8; w < bWidth / 2 - 1.0; w += 2.6) {
-          const isLit = Math.random() < 0.45;
-          const win = new THREE.Mesh(new THREE.BoxGeometry(0.12, 1.45, 1.05), isLit ? litWinMat : darkWinMat);
-          win.position.set(xBase - side * 0.06, winY, currentZ + bWidth / 2 + w);
-          chunk.add(win);
-
-          // Garde-corps de balcon stylisé
-          if (hasBalcony) {
-            const balc = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.5, 1.25), balconyMat);
-            balc.position.set(xBase - side * 0.18, winY - 0.5, currentZ + bWidth / 2 + w);
-            chunk.add(balc);
-          }
-        }
-      }
-
-      // Store banne de bistrot ou boutique
-      if (Math.random() < 0.7) {
-        const awningMat = awningMats[Math.floor(Math.random() * awningMats.length)];
+      // Store banne de bistrot ou boutique avec texture rayée réaliste
+      if (Math.random() < 0.75) {
+        const awningTex = textureFactory.getAwningTexture(side > 0 ? '#e74c3c' : '#2980b9');
+        const awningMat = new THREE.MeshStandardMaterial({
+          map: awningTex,
+          roughness: 0.7
+        });
         const awningGeo = new THREE.BoxGeometry(1.8, 0.35, bWidth * 0.75);
         const awning = new THREE.Mesh(awningGeo, awningMat);
         awning.rotation.z = side * 0.35;

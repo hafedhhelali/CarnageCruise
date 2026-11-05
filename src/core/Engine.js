@@ -4,6 +4,8 @@
  */
 
 import * as THREE from 'three';
+import { PostProcessingManager } from '../gfx/PostProcessing.js';
+import { SkyDome } from '../gfx/SkyDome.js';
 
 export class Engine {
   constructor(canvas) {
@@ -31,7 +33,7 @@ export class Engine {
       60,
       window.innerWidth / window.innerHeight,
       0.1,
-      450
+      500
     );
     this.baseFov = 60;
 
@@ -62,7 +64,13 @@ export class Engine {
     this.scene.add(this.rimLight);
 
     // Brouillard atmosphérique doux et profond
-    this.scene.fog = new THREE.Fog(0xd8e8f8, 35, 180);
+    this.scene.fog = new THREE.Fog(0xd8e8f8, 45, 220);
+
+    // Dôme Céleste & Nuages Cartoon Dérivants
+    this.skyDome = new SkyDome(this.scene);
+
+    // Post-Processing Arcade (EffectComposer & Bloom subtil)
+    this.postProcessing = new PostProcessingManager(this.renderer, this.scene, this.camera);
 
     // Propriétés de caméra dynamique
     this.cameraTarget = new THREE.Vector3(0, 1.2, 0);
@@ -80,6 +88,9 @@ export class Engine {
   applyCityAtmosphere(cityDef) {
     this.scene.background = new THREE.Color(cityDef.skyColor);
     this.scene.fog.color = new THREE.Color(cityDef.fogColor);
+    if (this.skyDome) {
+      this.skyDome.setColors(cityDef.skyColor, cityDef.fogColor);
+    }
     if (this.hemiLight) {
       this.hemiLight.color = new THREE.Color(cityDef.skyColor);
       this.hemiLight.groundColor = new THREE.Color(cityDef.ambientColor);
@@ -94,6 +105,11 @@ export class Engine {
   }
 
   updateCameraGameplay(delta, bikePosition, bikeSpeed) {
+    // Mise à jour du dôme céleste
+    if (this.skyDome) {
+      this.skyDome.update(delta, bikePosition.z);
+    }
+
     // Calcul de la secousse d'impact comique
     let shakeX = 0;
     let shakeY = 0;
@@ -131,6 +147,10 @@ export class Engine {
   }
 
   updateCameraCinematic(delta, bikePosition) {
+    if (this.skyDome) {
+      this.skyDome.update(delta, bikePosition.z);
+    }
+
     // Rotation lente 360° cinématographique autour de la moto pour le Splash / Menu / Garage
     this.cinematicAngle += delta * 0.6;
     const radius = 4.2;
@@ -152,9 +172,16 @@ export class Engine {
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2.0));
+    if (this.postProcessing) {
+      this.postProcessing.setSize(window.innerWidth, window.innerHeight);
+    }
   }
 
   render() {
-    this.renderer.render(this.scene, this.camera);
+    if (this.postProcessing) {
+      this.postProcessing.render();
+    } else {
+      this.renderer.render(this.scene, this.camera);
+    }
   }
 }

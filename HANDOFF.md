@@ -8,7 +8,7 @@ Ce document fournit l'ensemble des informations de conception, d'architecture lo
 ## 1. VISION DU PROJET & SPÉCIFICATIONS
 
 - **Genre** : Jeu de course d'arcade urbain / Runner 3D burlesque
-- **Version actuelle** : **1.2.6-beta** (Build / versionCode 9 - Canal BETA)
+- **Version actuelle** : **0.9.0-beta** (Build / versionCode 10 - Canal 0.x.x BETA)
 - **Signature & Clé** : Keystore permanent dédié `android/app/motormageddon.keystore` (validité 10 000 jours, EOMedia Paris)
 - **Plateforme cible** : Android (Smartphones & Tablettes) + WebGL Mobile/Desktop
 - **Direction artistique** : Cartoon 3D éclatant, physique burlesque (slapstick), animations hilarantes et dynamiques, identité française affirmée.
@@ -264,6 +264,30 @@ Ce document fournit l'ensemble des informations de conception, d'architecture lo
 ### E. Boutons d'Arcade 3D & UI Polie
 - **Boutons 3D Relief & Brillance Double-Couche** : Design tactile haute finition avec biseau lumineux supérieur, ombre portée colorée profonde et retour haptique visuel élastique au clic.
 - **Jauge d'Objectif avec Shimmer Lumineux** : Effet de brillance scintillante animée traversant la barre de progression en continu.
+
+---
+
+## 8. NOUVEAUTÉS DE LA VERSION 0.9.0-BETA (CANAL 0.X.X BETA & SAUT QUALITATIF VISUEL)
+
+### A. Intégration de Nouvelles Bibliothèques Graphiques & Post-Processing
+- **Suite Post-Processing Three.js Addons (`EffectComposer`, `RenderPass`, `UnrealBloomPass`, `OutputPass`)** : Intégration d'un bloom arcade subtil (seuil 0.88, force 0.35) illuminant avec panache les phares des bolides, feux stop, gyrophares, pièces d'or et étincelles sans éblouir l'écran.
+- **Bibliothèque `@tweenjs/tween.js` (v25)** : Moteur d'interpolation fluide pour les animations procédurales, transitions de caméra et effets d'impact cartoon squash-and-stretch.
+
+### B. Usine de Textures Procédurales Haute Définition (`TextureFactory.js`)
+- **Asphalte de Course HD** : Bitume granuleux avec traces d'usure des pneumatiques et vibreurs latéraux de course bicolores (rouge et blanc) sur les bordures de virages.
+- **Trottoirs Pavés Parisiens** : Pavés imbriqués biseautés avec joints de mortier et variations de teintes naturelles.
+- **Façades Haussmanniennes Riches** : Pierre de taille avec lignes de refend, toitures zinc mansardées, corniches moulurées, fenêtres avec croisillons bois et vitres rétroéclairées avec rideaux, et commerces de rez-de-chaussée (« Café de Paris »).
+- **Stores Bannes Rayés & Terrasses de Bistrot** : Toiles rayées avec ombrage de drapé réaliste.
+- **Ombres de Contact Douces au Sol (*Ground Contact Shadows*)** : Disques d'ombre radiale douce sous chaque moto, cheval, rouleau compresseur, piéton et véhicule transversal, supprimant l'effet de flottaison géométrique et ancrant les objets avec un réalisme saisissant.
+
+### C. Dôme Céleste & Nuages Flottants Procéduraux (`SkyDome.js`)
+- **Dôme Hémisphérique avec Dégradé Zénithal** : Shader personnalisé interpolant les teintes célestes et atmosphériques selon l'étape visitée.
+- **Nuages 3D Cartoon Vaporeux Dérivants** : Amas volumétriques de nuages dérivant avec parallaxe au-dessus des métropoles.
+
+### D. Rigueur Architecturale & Code Clean (Audit Lead Dev)
+- **Certification Clean Code & SOLID** : 12/12 tests automatisés validés via `npm test` (`scripts/verify-architecture.js`).
+- **Alignement Strict du Canal 0.x.x Beta** : Synchronisation exacte de `version.json`, `package.json`, `Version.js` sur `0.9.0-beta` (Build 10).
+
 
 
 

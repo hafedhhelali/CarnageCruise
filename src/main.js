@@ -15,6 +15,7 @@ import { Environment } from './entities/Environment.js';
 import { ParticleSystem } from './entities/Particles.js';
 import { IntersectionManager } from './entities/Intersections.js';
 import { UIManager } from './ui/UIManager.js';
+import * as TWEEN from '@tweenjs/tween.js';
 
 class GameApp {
   constructor() {
@@ -152,6 +153,7 @@ class GameApp {
     requestAnimationFrame(() => this.loop());
 
     const delta = Math.min(this.clock.getDelta(), 0.1); // Sécurité contre les sauts de frame
+    TWEEN.update();
 
     // Calcul du braquage final (tactile ou clavier)
     let currentSteer = this.steerInput;

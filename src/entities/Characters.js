@@ -6,6 +6,7 @@
  */
 
 import * as THREE from 'three';
+import { textureFactory } from '../gfx/TextureFactory.js';
 
 export const CHARACTER_TYPES = [
   {
@@ -157,11 +158,24 @@ export class CharacterSystem {
     const eyePupilMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
     const mouthMat = new THREE.MeshBasicMaterial({ color: 0x8b0000 });
     const starGoldMat = new THREE.MeshBasicMaterial({ color: 0xffd32a });
+    const shadowTex = textureFactory.getContactShadowTexture();
+    const shadowMat = new THREE.MeshBasicMaterial({
+      map: shadowTex,
+      transparent: true,
+      opacity: 0.65,
+      depthWrite: false
+    });
 
     for (let i = 0; i < this.poolSize; i++) {
       const typeDef = CHARACTER_TYPES[i % CHARACTER_TYPES.length];
       const charGroup = new THREE.Group();
       charGroup.scale.setScalar(typeDef.scale);
+
+      // 0. Ombre de contact au sol (ancre le piéton sur le bitume)
+      const shadowMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.9), shadowMat);
+      shadowMesh.rotation.x = -Math.PI / 2;
+      shadowMesh.position.y = 0.02;
+      charGroup.add(shadowMesh);
 
       // 1. Torse cartoon stylisé
       const torsoGeo = new THREE.BoxGeometry(0.38, 0.48, 0.25);

@@ -6,6 +6,7 @@
  */
 
 import * as THREE from 'three';
+import { textureFactory } from '../gfx/TextureFactory.js';
 
 const STREET_NAMES = [
   'BD SAINT-GERMAIN',
@@ -281,6 +282,19 @@ export class IntersectionManager {
     tailR.position.set(-2.15, 0.72, -0.65);
     carGroup.add(tailL);
     carGroup.add(tailR);
+
+    // Ombre de contact au sol sous le véhicule
+    const shadowTex = textureFactory.getContactShadowTexture();
+    const shadowMat = new THREE.MeshBasicMaterial({
+      map: shadowTex,
+      transparent: true,
+      opacity: 0.72,
+      depthWrite: false
+    });
+    const shadow = new THREE.Mesh(new THREE.PlaneGeometry(5.0, 2.6), shadowMat);
+    shadow.rotation.x = -Math.PI / 2;
+    shadow.position.y = 0.02;
+    carGroup.add(shadow);
 
     carGroup.userData = { wheels, type };
     return carGroup;

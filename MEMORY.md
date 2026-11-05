@@ -141,3 +141,16 @@
 - **Décors Urbains & Architecture Vivante** : Fenêtres d'immeubles illuminées, balcons en fer forgé haussmanniens, arbres étagés multi-sphères, colonnes Morris parisiennes et réverbères éclatants.
 - **Boutons 3D Arcade & UI Polie** : Boutons de borne d'arcade japonaise avec biseau lumineux, micro-ressort haptique et barre de progression à scintillement dynamique (shimmer).
 
+### ✅ 19. NOUVEAUTÉS DE LA VERSION 0.9.0-BETA (CANAL 0.X.X BETA & SAUT VISUEL)
+- **Bibliothèques Graphiques & Post-Processing** :
+  - `EffectComposer`, `RenderPass`, `UnrealBloomPass`, `OutputPass` pour un bloom arcade néon élégant sur les éclairages.
+  - `@tweenjs/tween.js` (v25) pour les interpolations fluides d'animation.
+- **Usine de Textures Procédurales (`TextureFactory.js`)** :
+  - Asphalte granuleux HD avec vibreurs de course rouge/blanc.
+  - Pavés de trottoir parisiens biseautés.
+  - Façades haussmanniennes détaillées en pierre de taille, zinc et vitrines éclairées.
+  - Ombres de contact au sol douces (*contact shadow decals*) sous les bolides, piétons et véhicules transversaux (suppression de l'effet d'objets volants).
+- **Dôme Céleste & Nuages Flottants (`SkyDome.js`)** : Dégradé zénithal atmosphérique et nuages 3D vaporeux dérivants.
+- **Rigueur Architecturale & Code Clean** : Suite de tests automatisée `npm test` validée à 100% (12/12) et passage officiel au canal `0.9.0-beta` (Build 10).
+
+

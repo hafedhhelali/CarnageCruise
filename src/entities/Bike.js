@@ -5,6 +5,7 @@
 
 import * as THREE from 'three';
 import { storage } from '../core/Storage.js';
+import { textureFactory } from '../gfx/TextureFactory.js';
 
 export class Bike {
   constructor(scene) {
@@ -40,6 +41,19 @@ export class Bike {
     this.crashTimer = 0;
     this.crashDuration = 1.8;
     this.invulnerableTimer = 0;
+
+    // Disque d'ombre de contact douce au sol sous le bolide (ancre le véhicule au sol)
+    const shadowTex = textureFactory.getContactShadowTexture();
+    const shadowMat = new THREE.MeshBasicMaterial({
+      map: shadowTex,
+      transparent: true,
+      opacity: 0.65,
+      depthWrite: false
+    });
+    this.contactShadow = new THREE.Mesh(new THREE.PlaneGeometry(2.0, 3.4), shadowMat);
+    this.contactShadow.rotation.x = -Math.PI / 2;
+    this.contactShadow.position.y = 0.025;
+    this.mesh.add(this.contactShadow);
 
     this.buildCurrentBike();
     this.buildRider();
