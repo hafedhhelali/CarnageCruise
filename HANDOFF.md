@@ -61,6 +61,7 @@ Ce document fournit l'ensemble des informations de conception, d'architecture lo
 
 ### G. Résolution Définitive des Mises à Jour & Versionnage
 - Keystore cryptographique permanent `android/app/motormageddon.keystore` (RSA 2048, valide 27 ans, EOMedia) garantissant l'identité de signature SHA-256 sur toutes les versions.
+- Pipeline CI/CD renforcé : `gradle/actions/setup-gradle@v4` et `networkTimeout=60000` garantissant une compilation cloud rapide et résiliente aux micro-latences réseau.
 - `versionCode` incrémenté à 3 et `versionName` à 1.2.0.
-- Nom d'APK : `Motormageddon-v1.2.0-b3-debug.apk`.
+- Nom d'APK : `Motormageddon-v1.2.0-b3-debug.apk` (avec alias `app-debug.apk`).
 - Scripts d'incrémentation : `npm run version:patch`, `version:minor`, `version:major`.
