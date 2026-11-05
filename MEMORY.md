@@ -61,16 +61,17 @@
 
 ### ✅ 9. CI/CD GITHUB ACTIONS & DÉPÔT EN LIGNE
 - **Dépôt officiel** : https://github.com/hafedhhelali/Motormageddon
-- **Exécution GitHub Actions en cours** : https://github.com/hafedhhelali/Motormageddon/actions/runs/42020236124
-- Fichier `.github/workflows/build-apk.yml` déclenché automatiquement à chaque push pour générer l'APK installable `app-debug.apk`.
+- **Exécution GitHub Actions Validée à 100% (SUCCESS)** : https://github.com/hafedhhelali/Motormageddon/actions/runs/42020627604
+- **Artefact APK téléchargeable directement sur GitHub** : `Motormageddon-Debug-APK` (~4.1 Mo).
+- Fichier `.github/workflows/build-apk.yml` compilant automatiquement l'APK Android à chaque push.
 
 ---
 
 ## DERNIÈRE MODIFICATION (05/11/2026)
 - Harmonisation de la version source Java vers `JavaVersion.VERSION_17` pour alignement parfait avec le JDK 17 du système.
 - Compilation locale réussie du projet Android natif en 1m 04s (`android/app/build/outputs/apk/debug/app-debug.apk` - 4.46 Mo).
-- Rédaction du document de transmission studio `HANDOFF.md`.
+- Rédaction complète du document de transmission studio `HANDOFF.md`.
 - Création du journal de mémoire `MEMORY.md`.
-- Création du workflow GitHub Actions `.github/workflows/build-apk.yml`.
-- Création du dépôt public `hafedhhelali/Motormageddon` sur GitHub et premier push de la branche `main`.
-- Correction du pipeline GitHub Actions : mise à jour vers Node.js 22, ajout de permissions d'exécution sur `node_modules/.bin` et appel direct `npx --yes vite build`.
+- Création et optimisation du workflow GitHub Actions `.github/workflows/build-apk.yml`.
+- Création du dépôt public `hafedhhelali/Motormageddon` sur GitHub et push de la branche `main`.
+- Validation complète du pipeline GitHub Actions avec génération et publication de l'artefact `Motormageddon-Debug-APK` (100% vert).
