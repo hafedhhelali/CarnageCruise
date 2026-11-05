@@ -61,14 +61,15 @@
 - **Résolution définitive** :
   - **Keystore permanent** `android/app/motormageddon.keystore` (RSA 2048, 10 000 jours, EOMedia) versionné dans le dépôt Git.
   - Toutes les compilations (locales et GitHub Actions) partagent la **même signature cryptographique**.
-  - `versionCode` incrémenté à **2** et `versionName` à **1.1.0**.
+  - `versionCode` incrémenté à **3** et `versionName` à **1.2.0**.
   - Single source of truth : `version.json` et `src/core/Version.js`.
-  - Nom d'APK généré automatiquement : `Motormageddon-v1.1.0-b2-debug.apk`.
+  - Nom d'APK généré automatiquement : `Motormageddon-v1.2.0-b3-debug.apk` (et copie `app-debug.apk`).
   - Script d'incrémentation : `npm run version:patch`, `version:minor`, `version:major`.
   - Affichage de la version `${FULL_VERSION}` sur l'écran titre, dans les options et dans les mentions légales.
-- *(Rappel transition : Si une version antérieure temporaire est déjà installée sur l'appareil, la désinstaller une fois. Dès cette version v1.1.0 installée, toutes les futures mises à jour s'installeront directement par-dessus sans perte).*
+- *(Rappel transition : Si une version antérieure temporaire avec une ancienne clé était installée sur l'appareil, la désinstaller une fois. Dès cette version v1.2.0 installée, toutes les futures mises à jour s'installeront directement par-dessus sans aucune désinstallation).*
 
 ### ✅ 12. VALIDATION DU BUILD ANDROID & GITHUB ACTIONS
-- **Compilation locale APK réussie** : `android/app/build/outputs/apk/debug/Motormageddon-v1.1.0-b2-debug.apk` (4.44 Mo).
-- **GitHub Actions CI/CD** : Déploiement automatique configuré sur `.github/workflows/build-apk.yml`.
+- **Compilation locale APK réussie** : `android/app/build/outputs/apk/debug/Motormageddon-v1.2.0-b3-debug.apk` et `app-debug.apk` (8.16 Mo).
+- **GitHub Actions CI/CD (Run #8)** : Workflow `42044299313` terminé avec succès (`conclusion: success`).
+- **Artefact GitHub disponible** : `Motormageddon-Debug-APK` (id: `13424022571`, 8.16 Mo) prêt au téléchargement sur GitHub Actions.
 - **Dépôt officiel** : `https://github.com/hafedhhelali/Motormageddon`
