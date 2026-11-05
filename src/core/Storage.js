@@ -1,13 +1,14 @@
 /**
  * Motormageddon - Système de Sauvegarde Persistante Robuste
- * Sauvegarde les scores, déblocages de villes, motos et paramètres.
+ * Sauvegarde les scores, déblocages de villes, motos, paramètres et profil joueur.
  */
 
 const STORAGE_KEY = 'motormageddon_save_v1';
 
 const DEFAULT_SAVE = {
-  version: 1,
-  coins: 500, // Pièces de départ pour se faire plaisir
+  version: 2,
+  playerName: 'Pilote Express',
+  coins: 500, // Pièces de départ
   unlockedCities: ['paris'],
   cityScores: {
     paris: { bestScore: 0, stars: 0, completed: false },
@@ -15,8 +16,6 @@ const DEFAULT_SAVE = {
     marseille: { bestScore: 0, stars: 0, completed: false },
     nice: { bestScore: 0, stars: 0, completed: false },
     bordeaux: { bestScore: 0, stars: 0, completed: false },
-    toulouse: { bestScore: 0, stars: 0, completed: false },
-    lille: { bestScore: 0, stars: 0, completed: false },
     strasbourg: { bestScore: 0, stars: 0, completed: false }
   },
   unlockedBikes: ['scooter'],
@@ -35,12 +34,16 @@ const DEFAULT_SAVE = {
     sfx: true,
     music: true,
     vibration: true,
-    controlMode: 'swipe' // 'swipe' ou 'buttons'
+    controlMode: 'swipe'
   },
   stats: {
-    totalInteractions: 0,
+    totalScore: 0,
+    totalInteractions: 0, // Personnes heurtées
     totalDistance: 0,
-    totalRuns: 0
+    totalRuns: 0,
+    maxCombo: 1,
+    redLightsRun: 0,
+    crashesSurvived: 0
   }
 };
 
@@ -54,7 +57,6 @@ export class Storage {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
-        // Fusion profonde avec le défaut pour garantir la compatibilité
         return {
           ...DEFAULT_SAVE,
           ...parsed,
@@ -95,7 +97,7 @@ export class Storage {
     return false;
   }
 
-  recordRunResult(cityId, score, starsEarned, coinsEarned, interactionsCount, distance) {
+  recordRunResult(cityId, score, starsEarned, coinsEarned, interactionsCount, distance, maxCombo = 1) {
     const city = this.data.cityScores[cityId] || { bestScore: 0, stars: 0, completed: false };
     const isNewBest = score > city.bestScore;
     if (isNewBest) {
@@ -107,13 +109,43 @@ export class Storage {
     this.data.cityScores[cityId] = city;
     this.data.coins += coinsEarned;
 
-    // Statistiques globales
-    this.data.stats.totalInteractions += interactionsCount;
-    this.data.stats.totalDistance += distance;
-    this.data.stats.totalRuns += 1;
+    // Statistiques globales de profil
+    this.data.stats.totalScore = (this.data.stats.totalScore || 0) + score;
+    this.data.stats.totalInteractions = (this.data.stats.totalInteractions || 0) + interactionsCount;
+    this.data.stats.totalDistance = (this.data.stats.totalDistance || 0) + distance;
+    this.data.stats.totalRuns = (this.data.stats.totalRuns || 0) + 1;
+    this.data.stats.maxCombo = Math.max(this.data.stats.maxCombo || 1, maxCombo);
 
     this.save();
     return { isNewBest, previousBest: city.bestScore };
+  }
+
+  recordCrashRecovery(redLight = false) {
+    this.data.stats.crashesSurvived = (this.data.stats.crashesSurvived || 0) + 1;
+    if (redLight) {
+      this.data.stats.redLightsRun = (this.data.stats.redLightsRun || 0) + 1;
+    }
+    this.save();
+  }
+
+  getTotalStars() {
+    return Object.values(this.data.cityScores).reduce((acc, c) => acc + (c.stars || 0), 0);
+  }
+
+  getPlayerTitle() {
+    const totalScore = this.data.stats.totalScore || 0;
+    if (totalScore < 3000) return 'Débutant du Guidon';
+    if (totalScore < 10000) return 'Slalomeur des Trottoirs';
+    if (totalScore < 25000) return 'Terreur des Boulevards';
+    if (totalScore < 60000) return 'As du Pavé Français';
+    return 'Légende du Motormageddon';
+  }
+
+  setPlayerName(name) {
+    if (name && name.trim()) {
+      this.data.playerName = name.trim().slice(0, 16);
+      this.save();
+    }
   }
 
   unlockBike(bikeId, cost) {

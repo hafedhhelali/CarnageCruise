@@ -7,14 +7,14 @@ Ce document fournit l'ensemble des informations de conception, d'architecture lo
 
 ## 1. VISION DU PROJET & SPÉCIFICATIONS
 
-- **Genre** : Jeu de course d'arcade urbain / Runner 3D humoristique
+- **Genre** : Jeu de course d'arcade urbain / Runner 3D burlesque
 - **Plateforme cible** : Android (Smartphones & Tablettes) + WebGL Mobile/Desktop
-- **Direction artistique** : Cartoon 3D éclatant, physique burlesque (slapstick), animations exagérées, identité française affirmée.
+- **Direction artistique** : Cartoon 3D éclatant, physique burlesque (slapstick), animations hilarantes et dynamiques, identité française affirmée.
 - **Moteur & Technologies** :
-  - **Moteur 3D** : Three.js (WebGL / WebGPU-ready, shaders Toon/Gouraud optimisés mobiles)
+  - **Moteur 3D** : Three.js (WebGL Toon/Gouraud optimisé mobile)
   - **Packaging Android** : Capacitor 8.6 + Android Gradle Plugin + Java 17 (SDK 36 / Android 15/14/13/12+)
-  - **Moteur Audio** : Synthétiseur procédural WebAudio API (zéro dépendance de fichiers lourds, réactivité moteur dynamique en temps réel)
-  - **Build Tooling** : Vite + Gradle Wrapper + GitHub Actions CI/CD
+  - **Moteur Audio** : Synthétiseur procédural WebAudio API haute fidélité avec gestion mémoire et cycle de vie Android strict (Background/Pause/Exit/Resume)
+  - **Build Tooling** : Vite + Gradle Wrapper + GitHub Actions CI/CD (génération automatique d'APK à chaque push)
 
 ---
 
@@ -30,191 +30,86 @@ Motormageddon/
 │   │   ├── src/main/
 │   │   │   ├── AndroidManifest.xml # Plein écran immersif, accélération matérielle, verrouillage portrait
 │   │   │   ├── assets/public/     # Distribution WebGL compilée injectée dans l'APK
-│   │   │   └── res/               # Icônes adaptatives, styles, écrans de démarrage
+│   │   │   └── res/               # Icônes adaptatives personnalisées, styles, écrans de démarrage
 │   │   └── build.gradle           # Configuration Gradle du module applicatif
 │   ├── build.gradle               # Configuration racine du projet Android
 │   ├── local.properties           # Pointeur vers le SDK Android local
 │   └── gradlew / gradlew.bat      # Wrappers Gradle exécutables
 ├── dist/                          # Fichiers de production compilés (HTML/CSS/JS minifié)
+├── scripts/
+│   └── generate-icons.ps1         # Générateur haute définition des icônes de l'application
 ├── src/
 │   ├── audio/
-│   │   └── SoundManager.js        # Moteur sonore procédural (bruit moteur réactif, SFX cartoon, musique)
+│   │   └── SoundManager.js        # Moteur sonore procédural (cycle de vie, libération mémoire, SFX, musique)
 │   ├── core/
 │   │   ├── Engine.js              # Rendu Three.js, éclairage dynamique, caméra arcade poursuite/secousse
-│   │   ├── GameState.js           # Machine à états, scores, combos, seuils de déblocage des villes
-│   │   └── Storage.js             # Système de sauvegarde persistant (LocalStorage / IndexedDB / Android)
+│   │   ├── GameState.js           # Machine à états, scores, combos, seuils de déblocage des 10 villes, freinage
+│   │   └── Storage.js             # Système de sauvegarde v2 (stats complètes, titres honorifiques, profil)
 │   ├── entities/
-│   │   ├── Bike.js                # Modélisation 3D (4 motos), pilote cartoon articulé, physique d'inclinaison
-│   │   ├── Characters.js          # Librairie de piétons (6 archétypes) et catapultage slapstick
-│   │   ├── Environment.js         # Générateur de ville procédural infini (Paris, Lyon, Marseille, Nice, Bordeaux...)
-│   │   └── Particles.js           # Fumée d'échappement, étoiles burlesques, pièces de monnaie, vitesse
+│   │   ├── Bike.js                # Modélisation 3D (4 motos), pilote cartoon articulé, physique d'inclinaison, animation de chute comique et relèvement
+│   │   ├── Characters.js          # Piétons (Parisien, Touriste, Papy canne, Poussette, Groupe) et catapultage
+│   │   ├── Environment.js         # Générateur de ville infini avec virages sinueux, monuments et arche d'arrivée 3D
+│   │   ├── Intersections.js       # Carrefours, feux tricolores réactifs, ronds-points, voitures transversales
+│   │   └── Particles.js           # Fumée d'échappement, sang cartoon modéré, étincelles de crash, confettis
 │   ├── ui/
-│   │   ├── style.css              # Interface mobile-first néon & cartoon (100vw/100vh)
-│   │   └── UIManager.js           # Écran titre, Carte de France, Garage, HUD, Modales Pause/Résultats
+│   │   ├── style.css              # Interface mobile-first cartoon & néon, carte de France SVG réaliste
+│   │   └── UIManager.js           # Carte interactive, Garage, Profil, HUD avec bouton de frein, Mentions légales
 │   └── main.js                    # Point d'entrée de l'application et boucle de jeu 60 FPS
 ├── capacitor.config.json          # Configuration du conteneur Capacitor Android
 ├── index.html                     # Balise mobile viewport sans zoom involontaire
 ├── package.json                   # Dépendances et scripts de build
 ├── vite.config.js                 # Configuration du bundler Vite
+├── MEMORY.md                      # Mémoire active du projet
 └── HANDOFF.md                     # Ce document
 ```
 
 ---
 
-## 3. SYSTÈMES DE GAMEPLAY
+## 3. AMÉLIORATIONS MAJEURES RÉALISÉES
 
-### A. Pilotage de la Moto & Physique Arcade
-- **Contrôles tactiles** :
-  - Glissement horizontal continu du doigt sur l'écran pour diriger la moto de gauche à droite.
-  - Détection automatique clavier (`Q`/`A`/`Flèche Gauche` & `D`/`Flèche Droite`) pour tests rapides.
-- **Dynamique du véhicule** :
-  - La moto s'incline jusqu'à 25° dans les virages proportionnellement au braquage.
-  - La fourche avant tourne avec le guidon.
-  - Les suspensions réagissent aux micro-aspérités de la chaussée.
-  - Le pilote compense l'inclinaison et tourne la tête vers la direction de course.
-  - Les roues avant et arrière tournent selon la vitesse réelle de déplacement.
+### A. Correction de la persistance sonore & Fuites mémoire (Sound Lifecycle)
+- **Problème résolu** : Le son persistait en tâche de fond lors de la minimisation de l'application ou lors de la sortie.
+- **Solution technique** :
+  - Intégration de `@capacitor/app` avec écoute native des événements `appStateChange`, `pause`, `resume`.
+  - Écouteurs `document.visibilitychange`, `window.pagehide`, `window.beforeunload`.
+  - Suspension immédiate du contexte WebAudio (`AudioContext.suspend()`) lors de la mise en arrière-plan.
+  - Déconnexion systématique de tous les nœuds audio éphémères (`osc.disconnect()`, `gain.disconnect()`) via `osc.onended` pour garantir le garbage collection par le moteur V8 / Android WebView.
+  - Méthode `destroy()` appelée avant `App.exitApp()`, fermant le contexte audio (`ctx.close()`) et annulant les boucles de timers.
 
-### B. Collisions Burlesques (Slapstick Cartoon)
-- **Non-violence** : Toutes les collisions sont traitées comme des sketches de dessin animé comique.
-- **Physique d'éjection** :
-  - Impulsion verticale haute (`flyVelY: 12 à 19 m/s`).
-  - Vrilles et rotations acrobatiques tridimensionnelles.
-  - Les personnages écartent les bras et les jambes de stupeur.
-  - Projection de pièces d'or et d'étoiles dorées tournoyantes.
-  - Secousse de caméra arcade (`Engine.triggerCameraShake`).
+### B. Système de Freinage Complet (Arrêt & Reprise)
+- Bouton HUD tactile "FREIN" et touches clavier (Flèche Bas / Touche S).
+- Décélération fluide jusqu'à 0 km/h avec allumage des feux stop.
+- Au point mort (0 km/h), le moteur tourne au ralenti discret, la circulation et les piétons continuent d'évoluer, et la moto peut repartir instantanément dès le relâchement du frein.
 
-### C. Bibliothèque de Personnages
-1. **Le Parisien Pressé** : Costume élégant, béret noir, baguette sous le bras (+150 pts).
-2. **Le Touriste Égaré** : Chemise hawaïenne corail, bob de soleil, appareil photo (+120 pts).
-3. **Le Trader en Retard** : Costume sombre, cravate flottante, mallette en cuir (+180 pts).
-4. **Le Jogger Fluo** : Tenue néon cyan/magenta, bandeau éponge, foulée rapide (+200 pts).
-5. **Le Garçon de Café** : Chemise blanche, tablier noir, plateau garni d'une tasse (+220 pts).
-6. **Mamie et son Caddie** : Gilet pastel, chignon argenté, caddie à roulettes (+140 pts).
+### C. Rues & Avenues Sinueuses (Virages Gauche / Droite)
+- Courbure mathématique procédurale (`getRoadCenterX` et `getRoadAngle`).
+- La moto, les décors, les carrefours, l'arche d'arrivée et les piétons s'alignent dynamiquement sur la trajectoire courbe de la chaussée.
+- La caméra de poursuite anticipe l'angle du virage pour une sensation de conduite arcade immersive.
 
-### D. Multiplicateurs & Combos
-- Enchaîner des interactions dans un délai de 3,5 secondes fait grimper le multiplicateur (x1 jusqu'à x10).
-- Des titres de combo humoristiques s'affichent : *"PAS MAL !"*, *"OUH LÀ LÀ !"*, *"STRIKE DE BAGUETTE !"*, *"C'EST LA PANURGE !"*.
-- Les pièces collectées permettent de débloquer de nouveaux bolides au Garage.
+### D. Carrefours, Ronds-points & Feux Rouges Grillés
+- Apparition périodique de carrefours urbains et ronds-points avec pelouse et fontaine.
+- Feux de circulation tricolores qui passent au rouge à l'approche de la moto.
+- En cas de franchissement du feu rouge : déclenchement d'un véhicule transversal (taxi, camionnette, citadine) percutant le motard.
+- **Animation de chute et relèvement comique** :
+  1. Glissade burlesque sur le flanc.
+  2. Le pilote s'assied et secoue comiquement la tête (effet étourdi).
+  3. Rebond élastique, la moto se redresse et repart avec 2 secondes d'immunité clignotante.
 
----
+### E. Nouveaux Piétons & Effet de Sang Cartoon Modéré
+- Ajout de :
+  - **Papy et sa canne** (+160 pts)
+  - **Parent et sa poussette** (+240 pts)
+  - **Groupe de flâneurs** (+300 pts)
+- Éjection aérienne équilibrée (4,5 à 6 mètres de haut) avec quelques gouttelettes et une discrète marque au sol rouge cartoon.
 
-## 4. LES VILLES ET ENVIRONNEMENTS
+### F. Ligne d'Arrivée 3D & Célébration
+- Arche métallique tridimensionnelle avec banderole à damier, drapeaux tricolores français et oriflammes.
+- Franchissement déclenchant une pluie de confettis multicolores, fanfare de victoire et transition vers l'écran de résultats.
 
-Chaque ville dispose d'une identité propre (couleurs du ciel, brouillard, teintes architecturales, monuments lointains) :
-- **Paris** : Façades en pierre de taille haussmanniennes, toits mansardés en zinc/ardoise, terrasses de bistrot avec parasols rouges, boîtes aux lettres jaunes La Poste, et Tour Eiffel sur l'horizon.
-- **Lyon** : Façades ocres et rouges chaudes, ruelles pavées stylisées, lanternes traditionnelles.
-- **Marseille** : Façades pastel ensoleillées, mer azur, voiliers en arrière-plan, palmiers et ambiance méditerranéenne.
-- **Nice** : Style Promenade des Anglais, rangées de palmiers côtiers, ciel bleu azur intense.
-- **Bordeaux** : Architecture néoclassique élégante, pierres blondes, arches monumentales.
-- **Strasbourg** : Maisons traditionnelles à colombages, toits pointus en tuiles rouges.
+### G. 10 Villes Françaises & Carte Réaliste
+- Paris, Lyon, Marseille, Chamonix, Annecy, Millau, Nice, Bordeaux, Saint-Malo, Strasbourg.
+- Carte SVG réaliste avec reliefs, contours côtiers et zoom cinématique d'entrée.
 
-Le monde est généré par un système de **chunks modulaires de 60 mètres** recyclés en boucle devant le joueur, assurant une consommation mémoire constante et 60 FPS garantis.
-
----
-
-## 5. LE GARAGE
-
-Quatre motos uniques modélisées en 3D avec caractéristiques distinctes :
-1. **La Guêpe 50cc** : Scooter rétro italien/français vintage. Agile (Maniabilité 5/5), vitesse modérée (3/5). Débloqué d'office.
-2. **Foudre Noire 1000** : Superbike carénée, double optique avant, double échappement racing. Vitesse maximale (5/5). Coût : 800 pièces.
-3. **Le Chopper Paname** : Guidon Ape-Hanger haut, grand empattement avant, moteur V-Twin chromé. Vitesse 4/5, style cruiser inimitable. Coût : 1500 pièces.
-4. **Le Trike Turbo** : Bolide à 3 roues avec train arrière élargi et spoiler massif. Stabilité et puissance (4/5). Coût : 2500 pièces.
-
-Le joueur peut repeindre sa moto en temps réel grâce à la palette de couleurs (Rouge Vif, Bleu Azur, Jaune Soleil, Vert Émeraude, Violet Néon, etc.).
-
----
-
-## 6. SAUVEGARDE ET PERSISTANCE
-
-Le module `src/core/Storage.js` gère la persistance automatique locale :
-- Villes débloquées et progression par étape.
-- Meilleurs scores et étoiles (1 à 3 étoiles par ville).
-- Pièces accumulées.
-- Moto actuellement équipée et couleur personnalisée choisie.
-- Préférences audio (SFX / Musique).
-
-La sauvegarde est immédiatement synchronisée dans le stockage persistant à chaque fin de course ou achat au garage.
-
----
-
-## 7. MOTEUR SONORE PROCÉDURAL (WEBAUDIO)
-
-Au lieu de charger des fichiers MP3 volumineux susceptibles d'échouer ou de ralentir le chargement mobile, `src/audio/SoundManager.js` génère les sons dynamiquement par synthèse sonore native :
-- **Son du moteur** : Oscillateur en dent de scie filtré par passe-bas, dont la fréquence fondamentale s'accélère dynamiquement selon la vitesse de la moto (de 65 Hz à 190 Hz).
-- **SFX Cartoon Boing** : Modulation exponentielle de fréquence pour les collisions burlesques.
-- **SFX Pièces & Combo** : Carillons harmoniques étincelants.
-- **Klaxon bi-ton** : Sonorité rétro italienne activable par bouton dédié.
-- **Musique Arcade Énergique** : Séquenceur d'accords pop-arcade à 132 BPM avec ligne de basse synthétique, lead enjoué et percussions hi-hat.
-
----
-
-## 8. INSTRUCTIONS DE COMPILATION ET DÉPLOIEMENT
-
-### A. Lancement en Développement Local
-```bash
-# Installer les dépendances
-npm install
-
-# Démarrer le serveur local de test
-npm run dev
-```
-
-### B. Compilation du Bundle WebGL
-```bash
-npm run build
-```
-
-### C. Synchronisation avec Android
-```bash
-npx cap sync android
-```
-
-### D. Compilation de l'APK Android (Debug)
-```bash
-cd android
-./gradlew assembleDebug --no-daemon
-```
-L'APK installable se trouve dans :
-`android/app/build/outputs/apk/debug/app-debug.apk`.
-
-### E. Compilation Automatique via GitHub Actions
-- **Dépôt GitHub** : [https://github.com/hafedhhelali/Motormageddon](https://github.com/hafedhhelali/Motormageddon)
-- **Pipeline CI/CD Actions** : [https://github.com/hafedhhelali/Motormageddon/actions](https://github.com/hafedhhelali/Motormageddon/actions)
-Le dépôt contient le workflow `.github/workflows/build-apk.yml`.
-À chaque `git push` sur `main` ou création d'un tag `v*` (ou lancement manuel dans l'onglet Actions), GitHub compile automatiquement l'APK Android et le publie dans les artefacts téléchargeables et la page Releases.
-
----
-
-## 9. GUIDE D'EXTENSION DU JEU
-
-### Ajouter une nouvelle ville
-Ouvrir `src/core/GameState.js` et ajouter un objet dans le tableau `CITIES` :
-```javascript
-{
-  id: 'toulouse',
-  name: 'Toulouse',
-  subtitle: 'La Ville Rose',
-  description: 'Briques roses, places animées et accent chantant !',
-  targetScore: 20000,
-  starThresholds: [20000, 32000, 50000],
-  unlockScoreRequired: 16000,
-  skyColor: 0xffab91,
-  fogColor: 0xfbe9e7,
-  ambientColor: 0xffffff,
-  roadColor: 0x3e2723,
-  buildingColors: [0xff8a65, 0xd84315, 0xffab91],
-  roofColor: 0xbf360c,
-  accentColor: 0xff7043,
-  unlockedByDefault: false,
-  mapCoords: { x: 44, y: 76 }
-}
-```
-
-### Ajouter une nouvelle moto
-1. Déclarer la moto dans `BIKES` dans `src/core/GameState.js`.
-2. Implémenter la géométrie 3D correspondante dans `src/entities/Bike.js` sous une méthode dédiée (ex: `buildCustomRacer()`).
-
----
-
-**Équipe de développement Motormageddon Studio AAA**
-*Projet livré avec code source complet, documentation technique, projet Android natif et pipeline GitHub Actions.*
+### H. Identité Visuelle, Icône de l'Application & Mentions Légales
+- Génération d'icônes haute définition pour toutes les résolutions Android (`mipmap-mdpi` à `mipmap-xxxhdpi`) avec casque arcade, ruban tricolore et emblème "M".
+- Section Mentions Légales et copyright : **© 2026 EOMedia. Tous droits réservés.**

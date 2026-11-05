@@ -4,74 +4,66 @@
 
 ### ✅ 1. MOTEUR 3D & CORE (THREE.JS + VITE)
 - Scène 3D optimisée pour smartphones avec éclairage doux et ombres douces PCF.
-- Caméra arcade dynamique de poursuite (suivi fluide, élargissement automatique du FOV avec la vitesse, secousses d'impact).
+- Caméra arcade dynamique de poursuite fluide qui anticipe les virages et amortit les secousses.
 - Caméra cinématique 360° pour les menus, l'écran de démarrage et le garage.
 - Résolution haute-DPI plafonnée à 2.0x pour une efficacité thermique maximale sur mobile.
 
-### ✅ 2. MODÉLISATION 3D DES VÉHICULES & DU PILOTE
-- **4 Motos uniques** créées par géométrie procédurale Three.js :
-  1. *La Guêpe 50cc* (Scooter rétro, tablier Vespa, selle cuir, phare rond).
-  2. *Foudre Noire 1000* (Superbike de course, carénage aérodynamique, double échappement).
-  3. *Le Chopper Paname* (Guidon Ape Hanger haut, moteur V-Twin chromé, selle basse).
-  4. *Le Trike Turbo* (Monster 3 roues, train arrière surdimensionné, aileron sport).
-- **Pilote cartoon articulé** : blouson en cuir, béret français incliné avec pompon, lunettes d'aviateur rétro, écharpe flottante, bras tenant le guidon, rotation de la tête et compensation d'inclinaison.
-- Roues avant/arrière synchronisées avec la vitesse de course.
+### ✅ 2. MODÉLISATION 3D, ACCIDENTS & RELÈVEMENT COMIQUE
+- **4 Motos uniques** : *La Guêpe 50cc*, *Foudre Noire 1000*, *Le Chopper Paname*, *Le Trike Turbo*.
+- **Pilote cartoon articulé** : béret tricolore, lunettes, écharpe flottante, compensation d'inclinaison.
+- **Animation d'accident burlesque en 3 phases** lors d'une collision au feu rouge :
+  1. Chute sur le flanc.
+  2. Le pilote s'assied et secoue comiquement la tête (effet étourdi).
+  3. Rebond élastique, moto redressée et reprise de course avec 2s d'immunité clignotante.
+- Roues synchronisées avec la vitesse de course.
+- Correction mathématique de la direction inversée (droite = droite écran, gauche = gauche écran).
 
-### ✅ 3. BIBLIOTHÈQUE DE PERSONNAGES & PHYSIQUE BURLESQUE
-- 6 archétypes originaux :
-  1. *Parisien Pressé* (costume, béret noir, baguette dorée).
-  2. *Touriste Égaré* (chemise hawaïenne, bob de plage, appareil photo).
-  3. *Trader en Retard* (costume cravate, attaché-case en cuir).
-  4. *Jogger Fluorescent* (survêtement néon, bandeau éponge, foulée rapide).
-  5. *Garçon de Café* (chemise blanche, tablier noir, plateau garni).
-  6. *Mamie et son Caddie* (gilet pastel, chignon argenté, caddie de courses).
-- Système de catapultage slapstick (envols comiques dans les airs avec saltos, étincelles dorées, pluie de pièces, non-violent).
+### ✅ 3. SYSTÈME DE FREINAGE COMPLET (ARRÊT & REPRISE)
+- Bouton tactile HUD "FREIN" et touches clavier (Flèche Bas / Touche S).
+- Décélération progressive jusqu'à l'arrêt complet (0 km/h).
+- Allumage des feux stop, moteur qui tourne au ralenti discret.
+- La circulation et les piétons continuent de vivre pendant l'arrêt.
+- Réaccélération progressive vers la vitesse maximale dès que le frein est relâché.
 
-### ✅ 4. ENVIRONNEMENTS URBAINS FRANÇAIS
-- Générateur infini par tronçons modulaires recyclés (chunks de 60m).
-- 6 Villes implémentées avec personnalités architecturales :
-  - **Paris** (Haussmann, toits mansardés, terrasses de café, Tour Eiffel lointaine).
-  - **Lyon** (Façades ocres/terracotta, traboules stylisées).
-  - **Marseille** (Ambiance côtière, mer azur, voiliers, palmiers).
-  - **Nice** (Promenade des Anglais, palmiers, ciel bleu éclatant).
-  - **Bordeaux** (Architecture néoclassique en pierre calcaire).
-  - **Strasbourg** (Maisons à colombages alsaciens).
+### ✅ 4. RUES & AVENUES SINUEUSES (VIRAGES GAUCHE/DROITE)
+- Courbure dynamique de la chaussée calculée selon `getRoadCenterX(z)` et `getRoadAngle(z)`.
+- La moto, les décors, les carrefours, l'arche d'arrivée et les piétons épousent parfaitement la courbure de la rue.
 
-### ✅ 5. INTERFACE UTILISATEUR & UX MOBILE
-- Écran Titre animé (Logo stylisé, moto 3D animée, bouton JOUER palpitant).
-- Carte interactive de France (Hexagone stylisé, étapes avec scores cibles et étoiles).
-- Garage interactif (inspection 3D, jauges de statistiques, palette de couleurs personnalisables).
-- HUD de course (compteur de vitesse en km/h, score temps réel, badge combo dynamique, klaxon interactif, jauge d'étape).
-- Modale de pause et modale de fin de course avec étoiles, record personnel et déblocage de ville.
+### ✅ 5. CARREFOURS, FEUX TRICOLORES & TRAFIC TRANSVERSAL
+- Carrefours à feux et ronds-points avec pelouse et fontaine.
+- Feux de signalisation qui passent au rouge à l'approche de la moto.
+- Franchir un feu rouge déclenche un véhicule transversal (taxi, camionnette, citadine) percutant la moto.
 
-### ✅ 6. SAUVEGARDE PERSISTANTE ROBUSTE
-- Fichier `src/core/Storage.js` :
-  - Sauvegarde automatique des scores, étoiles, devises (pièces), motos débloquées, couleurs et réglages.
-  - Résistant aux fermetures, recharges ou redémarrages.
+### ✅ 6. PIÉTONS DIVERSIFIÉS & IMPACTS BURLESQUES ÉQUILIBRÉS
+- Piétons enrichis : Papy avec canne, Parent avec poussette, Groupe de flâneurs, Parisien pressé, Touriste égaré.
+- Projection aérienne équilibrée (4,5 à 6 mètres de haut).
+- Gouttelettes et discrète marque au sol rouge cartoon (sang cartoon non réaliste et humoristique).
 
-### ✅ 7. MOTEUR AUDIO PROCÉDURAL (WEBAUDIO)
-- Son moteur réactif qui accélère avec la vitesse du véhicule.
-- Effets comiques : Boing cartoon, Whoosh d'air, Ting de pièces d'or, Klaxon bi-ton italien.
-- Musique arcade rythmée et mélodieuse générée en temps réel à 132 BPM.
+### ✅ 7. LIGNE D'ARRIVÉE 3D & CÉLÉBRATION DE VICTOIRE
+- Arche 3D monumentale avec banderole à damier, drapeaux français et oriflammes.
+- Franchissement déclenchant une pluie de confettis multicolores, fanfare de victoire et transition vers l'écran des scores.
 
-### ✅ 8. COMPILATION NATIVE ANDROID REUSSIE
-- **Fichier APK généré** : `android/app/build/outputs/apk/debug/app-debug.apk` (Taille : ~4.46 Mo).
-- Compatibilité Java 17 et Android SDK 36 vérifiée et validée.
-- `AndroidManifest.xml` optimisé (accélération matérielle, verrouillage plein écran portrait).
+### ✅ 8. 10 VILLES FRANÇAISES & CARTE SVG RÉALISTE
+- Paris, Lyon, Marseille, Chamonix, Annecy, Millau, Nice, Bordeaux, Saint-Malo, Strasbourg.
+- Carte SVG réaliste de France avec reliefs, contours côtiers et transition cinématique de zoom d'entrée.
 
-### ✅ 9. CI/CD GITHUB ACTIONS & DÉPÔT EN LIGNE
-- **Dépôt officiel** : https://github.com/hafedhhelali/Motormageddon
-- **Exécution GitHub Actions Validée à 100% (SUCCESS)** : https://github.com/hafedhhelali/Motormageddon/actions/runs/42020627604
-- **Artefact APK téléchargeable directement sur GitHub** : `Motormageddon-Debug-APK` (~4.1 Mo).
-- Fichier `.github/workflows/build-apk.yml` compilant automatiquement l'APK Android à chaque push.
+### ✅ 9. SECTION PROFIL JOUEUR & NAVIGATION ANDROID
+- Profil joueur avec stats persistantes (score cumulé, piétons heurtés, villes débloquées, distance totale, feux grillés, titre honorifique).
+- Gestion de la touche retour matérielle Android (fermeture des modales ouvertes, puis confirmation avant de quitter sur l'écran d'accueil).
+- Correction du Garage (sortie fluide et tabs élargis sans coupure de texte).
 
----
+### ✅ 10. CYCLE DE VIE AUDIO, MÉMOIRE & EXTINCTION COMPLÈTE
+- Intégration de `@capacitor/app` avec écouteurs `appStateChange`, `pause`, `resume`.
+- Écouteurs `visibilitychange`, `pagehide`, `beforeunload`.
+- Déconnexion systématique de tous les nœuds audio éphémères (`osc.disconnect()`, `gain.disconnect()`) sur `osc.onended`.
+- Fermeture et suspension immédiate du contexte WebAudio (`ctx.close()`, `ctx.suspend()`) lors de la sortie pour éliminer toute persistance sonore et fuite mémoire.
+- Volume moteur adouci en un ronronnement agréable.
 
-## DERNIÈRE MODIFICATION (05/11/2026)
-- Harmonisation de la version source Java vers `JavaVersion.VERSION_17` pour alignement parfait avec le JDK 17 du système.
-- Compilation locale réussie du projet Android natif en 1m 04s (`android/app/build/outputs/apk/debug/app-debug.apk` - 4.46 Mo).
-- Rédaction complète du document de transmission studio `HANDOFF.md`.
-- Création du journal de mémoire `MEMORY.md`.
-- Création et optimisation du workflow GitHub Actions `.github/workflows/build-apk.yml`.
-- Création du dépôt public `hafedhhelali/Motormageddon` sur GitHub et push de la branche `main`.
-- Validation complète du pipeline GitHub Actions avec génération et publication de l'artefact `Motormageddon-Debug-APK` (100% vert).
+### ✅ 11. IDENTITÉ VISUELLE, ICÔNES ANDROID & MENTIONS LÉGALES
+- Génération d'icônes haute résolution pour toutes les densités Android (`mipmap-mdpi` à `mipmap-xxxhdpi`) avec casque arcade, ruban tricolore et emblème "M".
+- Mentions Légales détaillées (RGPD, absence de collecte de données, fiction burlesque) et copyright : **© 2026 EOMedia. Tous droits réservés.**
+
+### ✅ 12. VALIDATION DU BUILD ANDROID & GITHUB ACTIONS
+- **Compilation locale APK réussie** : `android/app/build/outputs/apk/debug/app-debug.apk` (5.11 Mo).
+- **GitHub Actions CI/CD** : Déploiement automatique configuré sur `.github/workflows/build-apk.yml`.
+- **Dépôt officiel** : `https://github.com/hafedhhelali/Motormageddon`

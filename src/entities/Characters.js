@@ -1,6 +1,6 @@
 /**
  * Motormageddon - Système de Personnages 3D Cartoon et Collisions Burlesques
- * Génère des piétons variés avec démarches animées et envols comiques spectaculaires.
+ * Piétons variés (personnes âgées, poussettes, groupes, touristes) et physique burlesque modérée.
  */
 
 import * as THREE from 'three';
@@ -21,12 +21,45 @@ const CHARACTER_TYPES = [
     type: 'tourist',
     name: 'Touriste Égaré',
     points: 120,
-    bodyColor: 0xff7675, // Chemise hawaïenne corail
-    pantsColor: 0xfab1a0, // Short clair
-    hatColor: 0xfdcb6e, // Chapeau de paille
+    bodyColor: 0xff7675,
+    pantsColor: 0xfab1a0,
+    hatColor: 0xfdcb6e,
     hasCamera: true,
     scale: 0.95,
     speed: 0.8
+  },
+  {
+    type: 'papy',
+    name: 'Papy et sa Canne',
+    points: 160,
+    bodyColor: 0x795548, // Gilet marron tweed
+    pantsColor: 0x5d4037,
+    hatColor: 0x424242, // Casquette plate
+    hasCane: true,
+    scale: 0.9,
+    speed: 0.5
+  },
+  {
+    type: 'poussette',
+    name: 'Parent et sa Poussette',
+    points: 240,
+    bodyColor: 0x16a085, // Veste turquoise
+    pantsColor: 0x2c3e50,
+    hatColor: null,
+    hasStroller: true,
+    scale: 1.0,
+    speed: 0.9
+  },
+  {
+    type: 'group',
+    name: 'Groupe de Flâneurs',
+    points: 300,
+    bodyColor: 0x8e44ad,
+    pantsColor: 0x2980b9,
+    hatColor: 0xe67e22,
+    isGroup: true,
+    scale: 1.0,
+    speed: 0.7
   },
   {
     type: 'businessman',
@@ -43,9 +76,9 @@ const CHARACTER_TYPES = [
     type: 'jogger',
     name: 'Jogger Fluorescent',
     points: 200,
-    bodyColor: 0x00cec9, // Néon cyan
+    bodyColor: 0x00cec9,
     pantsColor: 0x0984e3,
-    hatColor: 0xff007f, // Bandeau fluo
+    hatColor: 0xff007f,
     isJogging: true,
     scale: 1.0,
     speed: 3.2
@@ -54,8 +87,8 @@ const CHARACTER_TYPES = [
     type: 'waiter',
     name: 'Garçon de Café',
     points: 220,
-    bodyColor: 0xf5f6fa, // Chemise blanche
-    vestColor: 0x2f3640, // Gilet noir
+    bodyColor: 0xf5f6fa,
+    vestColor: 0x2f3640,
     pantsColor: 0x2f3640,
     hasTray: true,
     scale: 0.98,
@@ -65,9 +98,9 @@ const CHARACTER_TYPES = [
     type: 'grandma',
     name: 'Mamie et son Caddie',
     points: 140,
-    bodyColor: 0x9b59b6, // Gilet lilas
+    bodyColor: 0x9b59b6,
     pantsColor: 0x8e44ad,
-    hatColor: 0xbdc3c7, // Chignon argenté
+    hatColor: 0xbdc3c7,
     hasCaddy: true,
     scale: 0.88,
     speed: 0.6
@@ -77,7 +110,7 @@ const CHARACTER_TYPES = [
 export class CharacterSystem {
   constructor(scene) {
     this.scene = scene;
-    this.poolSize = 24;
+    this.poolSize = 28;
     this.characters = [];
     this.materialsCache = {};
 
@@ -110,7 +143,7 @@ export class CharacterSystem {
       torso.castShadow = true;
       charGroup.add(torso);
 
-      // Détails torse (Gilet de serveur, cravate)
+      // Détails torse
       if (typeDef.hasTray) {
         const vestGeo = new THREE.BoxGeometry(0.37, 0.4, 0.23);
         const vest = new THREE.Mesh(vestGeo, this.getMaterial(typeDef.vestColor));
@@ -131,29 +164,31 @@ export class CharacterSystem {
       const head = new THREE.Mesh(headGeo, skinMat);
       headGroup.add(head);
 
-      // Chapeau ou coiffure
+      // Chapeaux et coiffures
       if (typeDef.hatColor) {
         if (typeDef.isJogging) {
-          // Bandeau fluo
           const bandGeo = new THREE.CylinderGeometry(0.17, 0.17, 0.06, 10);
           const band = new THREE.Mesh(bandGeo, this.getMaterial(typeDef.hatColor));
           band.position.y = 0.04;
           headGroup.add(band);
+        } else if (typeDef.hasCane) {
+          // Casquette de grand-père
+          const capGeo = new THREE.CylinderGeometry(0.22, 0.18, 0.08, 10);
+          const cap = new THREE.Mesh(capGeo, this.getMaterial(typeDef.hatColor));
+          cap.position.y = 0.12;
+          headGroup.add(cap);
         } else if (typeDef.hasCamera) {
-          // Bob de touriste
           const bobGeo = new THREE.CylinderGeometry(0.24, 0.18, 0.1, 10);
           const bob = new THREE.Mesh(bobGeo, this.getMaterial(typeDef.hatColor));
           bob.position.y = 0.12;
           headGroup.add(bob);
         } else if (typeDef.hasBaguette) {
-          // Béret noir
           const beretGeo = new THREE.CylinderGeometry(0.22, 0.16, 0.06, 10);
           const beret = new THREE.Mesh(beretGeo, this.getMaterial(typeDef.hatColor));
           beret.position.y = 0.14;
           beret.rotation.z = 0.12;
           headGroup.add(beret);
         } else if (typeDef.hasCaddy) {
-          // Chignon mamie
           const bunGeo = new THREE.SphereGeometry(0.08, 8, 8);
           const bun = new THREE.Mesh(bunGeo, this.getMaterial(typeDef.hatColor));
           bun.position.set(0, 0.14, -0.1);
@@ -161,7 +196,7 @@ export class CharacterSystem {
         }
       }
 
-      // Yeux expressifs cartoon
+      // Yeux expressifs
       const eyeMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
       const eyeGeo = new THREE.SphereGeometry(0.03, 6, 6);
       const eyeL = new THREE.Mesh(eyeGeo, eyeMat);
@@ -173,7 +208,7 @@ export class CharacterSystem {
 
       charGroup.add(headGroup);
 
-      // Jambes articulées
+      // Jambes
       const legGeo = new THREE.BoxGeometry(0.12, 0.45, 0.14);
       const pantsMat = this.getMaterial(typeDef.pantsColor);
 
@@ -197,10 +232,71 @@ export class CharacterSystem {
       armR.position.set(0.24, 0.8, 0);
       charGroup.add(armR);
 
-      // Accessoire tenu en main
+      // Accessoires spécifiques
       let propMesh = null;
-      if (typeDef.hasBaguette) {
-        // La fameuse baguette de pain dorée
+      if (typeDef.hasCane) {
+        // Canne de marche courbée
+        const caneGeo = new THREE.CylinderGeometry(0.025, 0.025, 0.85, 6);
+        const caneMat = this.getMaterial(0x4e342e);
+        propMesh = new THREE.Mesh(caneGeo, caneMat);
+        propMesh.position.set(0.26, 0.45, 0.2);
+        charGroup.add(propMesh);
+      } else if (typeDef.hasStroller) {
+        // Poussette de bébé 3D stylisée
+        const strollerGroup = new THREE.Group();
+        strollerGroup.position.set(0, 0, 0.7);
+
+        // Châssis poussette
+        const frameMat = this.getMaterial(0x34495e);
+        const seatMat = this.getMaterial(0xe74c3c); // Poussette rouge vif
+        const bassinet = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.35, 0.65), seatMat);
+        bassinet.position.set(0, 0.45, 0);
+        strollerGroup.add(bassinet);
+
+        // Capote pare-soleil
+        const canopy = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.24, 0.46, 8, 1, false, 0, Math.PI), seatMat);
+        canopy.rotation.z = Math.PI / 2;
+        canopy.position.set(0, 0.65, -0.15);
+        strollerGroup.add(canopy);
+
+        // Guidon poussette
+        const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.5, 6), frameMat);
+        handle.rotation.z = Math.PI / 2;
+        handle.position.set(0, 0.85, -0.35);
+        strollerGroup.add(handle);
+
+        // 4 Petites roues
+        const wheelGeo = new THREE.CylinderGeometry(0.1, 0.1, 0.05, 8);
+        const wheelMat = this.getMaterial(0x111111);
+        [[-0.24, 0.1, 0.25], [0.24, 0.1, 0.25], [-0.24, 0.1, -0.25], [0.24, 0.1, -0.25]].forEach(pos => {
+          const w = new THREE.Mesh(wheelGeo, wheelMat);
+          w.rotation.z = Math.PI / 2;
+          w.position.set(pos[0], pos[1], pos[2]);
+          strollerGroup.add(w);
+        });
+
+        propMesh = strollerGroup;
+        charGroup.add(strollerGroup);
+      } else if (typeDef.isGroup) {
+        // Deuxième et troisième silhouette pour former un groupe de personnes
+        const buddyMat1 = this.getMaterial(0x27ae60);
+        const buddy1 = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.7, 0.2), buddyMat1);
+        buddy1.position.set(-0.55, 0.75, 0.1);
+        charGroup.add(buddy1);
+
+        const buddyHead1 = new THREE.Mesh(new THREE.SphereGeometry(0.14, 8, 6), skinMat);
+        buddyHead1.position.set(-0.55, 1.2, 0.1);
+        charGroup.add(buddyHead1);
+
+        const buddyMat2 = this.getMaterial(0xe67e22);
+        const buddy2 = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.75, 0.2), buddyMat2);
+        buddy2.position.set(0.55, 0.75, -0.1);
+        charGroup.add(buddy2);
+
+        const buddyHead2 = new THREE.Mesh(new THREE.SphereGeometry(0.14, 8, 6), skinMat);
+        buddyHead2.position.set(0.55, 1.25, -0.1);
+        charGroup.add(buddyHead2);
+      } else if (typeDef.hasBaguette) {
         const bagGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.5, 6);
         const bagMat = this.getMaterial(0xd4a373);
         propMesh = new THREE.Mesh(bagGeo, bagMat);
@@ -208,7 +304,6 @@ export class CharacterSystem {
         propMesh.position.set(0.26, 0.78, 0.1);
         charGroup.add(propMesh);
       } else if (typeDef.hasTray) {
-        // Plateau de garçon de café avec tasse
         const trayGeo = new THREE.CylinderGeometry(0.2, 0.2, 0.02, 12);
         const trayMat = this.getMaterial(0xbdc3c7);
         propMesh = new THREE.Mesh(trayGeo, trayMat);
@@ -220,14 +315,12 @@ export class CharacterSystem {
         propMesh.add(cup);
         charGroup.add(propMesh);
       } else if (typeDef.hasBriefcase) {
-        // Mallette en cuir
         const caseGeo = new THREE.BoxGeometry(0.08, 0.22, 0.3);
         const caseMat = this.getMaterial(0x6d4c41);
         propMesh = new THREE.Mesh(caseGeo, caseMat);
         propMesh.position.set(0.28, 0.55, 0);
         charGroup.add(propMesh);
       } else if (typeDef.hasCamera) {
-        // Appareil photo touriste
         const camGeo = new THREE.BoxGeometry(0.12, 0.08, 0.08);
         const camMat = this.getMaterial(0x2d3436);
         propMesh = new THREE.Mesh(camGeo, camMat);
@@ -261,62 +354,54 @@ export class CharacterSystem {
     }
   }
 
-  spawnAhead(playerZ) {
-    // Activer et recycler les piétons trop loin derrière ou inactifs
+  spawnAhead(playerZ, roadCurveFunc) {
     this.characters.forEach((char, idx) => {
       if (!char.active || char.group.position.z < playerZ - 20) {
-        // Spawner devant le joueur entre 40 et 140 mètres
-        const spawnDistance = 45 + (idx * 5) + Math.random() * 10;
+        const spawnDistance = 40 + (idx * 4.5) + Math.random() * 8;
         const targetZ = playerZ + spawnDistance;
 
-        // Position latérale : trottoirs (-3.8m / +3.8m) ou passage piéton / rue (-2.5m à +2.5m)
         const isCrossing = Math.random() < 0.45;
         let targetX = 0;
         if (isCrossing) {
           targetX = (Math.random() - 0.5) * 5.0;
         } else {
-          // Sur le bord / trottoir
           targetX = (Math.random() > 0.5 ? 1 : -1) * (2.8 + Math.random() * 1.4);
         }
 
-        char.group.position.set(targetX, 0, targetZ);
+        const roadCenterX = roadCurveFunc ? roadCurveFunc(targetZ) : 0;
+        char.group.position.set(roadCenterX + targetX, 0, targetZ);
         char.group.rotation.set(0, (Math.random() - 0.5) * 0.4, 0);
         char.active = true;
         char.isFlying = false;
         char.group.visible = true;
 
-        // Reset poses
         char.legL.rotation.set(0, 0, 0);
         char.legR.rotation.set(0, 0, 0);
         char.armL.rotation.set(0, 0, 0);
         char.armR.rotation.set(0, 0, 0);
         char.headGroup.rotation.set(0, 0, 0);
-        if (char.propMesh) char.propMesh.rotation.set(0, 0, 0);
       }
     });
   }
 
   triggerSlapstickFlight(char, bikeX, bikeSpeed) {
     char.isFlying = true;
-    char.active = false; // Ne collisionne plus
+    char.active = false;
 
-    // Vitesse de projection comique cartoon vers les étoiles
+    // Projection équilibrée et agréable (pas exagérée) : 4 à 6m de haut
     const dirX = char.group.position.x > bikeX ? 1 : -1;
-    char.flyVelX = dirX * (4.0 + Math.random() * 5.0);
-    char.flyVelY = 12.0 + Math.random() * 7.0; // Projection verticale haute
-    char.flyVelZ = (bikeSpeed * 0.4) + (Math.random() * 4.0); // Propulsion en avant
+    char.flyVelX = dirX * (2.2 + Math.random() * 2.5);
+    char.flyVelY = 5.2 + Math.random() * 2.8; // Rebond comique modéré
+    char.flyVelZ = (bikeSpeed * 0.25) + (Math.random() * 2.0);
 
-    // Rotations de cabriole acrobatique
-    char.flySpinX = (Math.random() - 0.5) * 18.0;
-    char.flySpinY = (Math.random() - 0.5) * 22.0;
-    char.flySpinZ = dirX * (10.0 + Math.random() * 12.0);
-
-    // Yeux effarés comiques
-    char.headGroup.scale.set(1.4, 1.4, 1.4);
+    // Rotations comiques légères
+    char.flySpinX = (Math.random() - 0.5) * 7.0;
+    char.flySpinY = (Math.random() - 0.5) * 8.0;
+    char.flySpinZ = dirX * (4.0 + Math.random() * 4.0);
   }
 
-  update(delta, playerZ, bikeX, bikeSpeed, onCollision) {
-    this.spawnAhead(playerZ);
+  update(delta, playerZ, bikeX, bikeSpeed, onCollision, roadCurveFunc) {
+    this.spawnAhead(playerZ, roadCurveFunc);
 
     const BIKE_COLLISION_RADIUS = 1.1;
 
@@ -324,62 +409,47 @@ export class CharacterSystem {
       if (!char.group.visible) return;
 
       if (char.isFlying) {
-        // Physique cartoon de catapulte dans les airs
         char.group.position.x += char.flyVelX * delta;
         char.group.position.y += char.flyVelY * delta;
         char.group.position.z += char.flyVelZ * delta;
 
-        // Gravité cartoon exagérée
-        char.flyVelY -= 22.0 * delta;
+        // Gravité
+        char.flyVelY -= 15.0 * delta;
 
-        // Vrilles et saltos
         char.group.rotation.x += char.flySpinX * delta;
         char.group.rotation.y += char.flySpinY * delta;
         char.group.rotation.z += char.flySpinZ * delta;
 
-        // Écartement comique des bras et jambes
-        char.armL.rotation.z = -2.2;
-        char.armR.rotation.z = 2.2;
-        char.legL.rotation.z = -1.2;
-        char.legR.rotation.z = 1.2;
-
-        // Si le personnage retombe au sol après son grand saut
         if (char.group.position.y <= 0) {
           char.group.position.y = 0;
           char.isFlying = false;
-          char.group.visible = false; // Disparaît après son vol comique
+          char.group.visible = false;
         }
         return;
       }
 
       if (char.active) {
-        // Animation de marche ou jogging
-        char.walkPhase += delta * (char.typeDef.isJogging ? 11.0 : 6.0);
-        const legAngle = Math.sin(char.walkPhase) * 0.65;
+        char.walkPhase += delta * (char.typeDef.isJogging ? 11.0 : 5.0);
+        const legAngle = Math.sin(char.walkPhase) * 0.55;
         char.legL.rotation.x = legAngle;
         char.legR.rotation.x = -legAngle;
-        char.armL.rotation.x = -legAngle * 0.8;
-        char.armR.rotation.x = legAngle * 0.8;
+        char.armL.rotation.x = -legAngle * 0.7;
+        char.armR.rotation.x = legAngle * 0.7;
 
-        // Déplacement léger en travers de la rue
-        char.group.position.x += char.walkDirection * char.typeDef.speed * delta * 0.4;
+        char.group.position.x += char.walkDirection * char.typeDef.speed * delta * 0.35;
         if (Math.abs(char.group.position.x) > 4.2) {
           char.walkDirection *= -1;
           char.group.rotation.y = char.walkDirection > 0 ? 0 : Math.PI;
         }
 
-        // Réaction comique de panique si la moto est proche
         const distZ = char.group.position.z - playerZ;
         const distX = Math.abs(char.group.position.x - bikeX);
 
-        if (distZ > 0 && distZ < 8.0 && distX < 2.5) {
-          // Panique : bras levés au ciel !
-          char.armL.rotation.x = 2.8;
-          char.armR.rotation.x = 2.8;
-          char.headGroup.position.y = 1.35 + Math.sin(char.walkPhase * 2) * 0.08;
+        if (distZ > 0 && distZ < 6.0 && distX < 2.0) {
+          char.armL.rotation.x = 2.4;
+          char.armR.rotation.x = 2.4;
         }
 
-        // Détection de collision burlesque avec la moto
         if (Math.abs(distZ) < BIKE_COLLISION_RADIUS && distX < BIKE_COLLISION_RADIUS) {
           this.triggerSlapstickFlight(char, bikeX, bikeSpeed);
           if (onCollision) {

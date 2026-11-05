@@ -1,6 +1,7 @@
 /**
  * Motormageddon - Gestionnaire de l'État du Jeu (GameState)
- * Gère le cycle de vie, les scores, les combos, la vitesse et les objectifs.
+ * Villes françaises enrichies (Montagne, Corniche, Lac, Mer, Ponts, Monuments)
+ * et objectifs calibrés pour un véritable challenge d'arcade.
  */
 
 import { storage } from './Storage.js';
@@ -10,10 +11,11 @@ export const CITIES = [
   {
     id: 'paris',
     name: 'Paris',
-    subtitle: 'La Ville Lumière',
-    description: 'Foncez le long des grands boulevards haussmanniens et esquivez les serveurs de café pressés !',
-    targetScore: 1500,
-    starThresholds: [1500, 3500, 6000],
+    subtitle: 'La Ville Lumière & Grands Boulevards',
+    typeTag: 'Monument & Avenues',
+    description: 'Slalomez à vive allure sur les boulevards haussmanniens sous le regard de la Tour Eiffel !',
+    targetScore: 2500,
+    starThresholds: [2500, 5000, 8500],
     unlockScoreRequired: 0,
     skyColor: 0x87ceeb,
     fogColor: 0xd8e8f8,
@@ -23,16 +25,17 @@ export const CITIES = [
     roofColor: 0x4a5568,
     accentColor: 0x3498db,
     unlockedByDefault: true,
-    mapCoords: { x: 50, y: 32 } // Coordonnées en % sur la carte de France
+    mapCoords: { x: 50, y: 28 }
   },
   {
     id: 'lyon',
     name: 'Lyon',
-    subtitle: 'Capitale des Gaules',
-    description: 'Slalomez entre les bouchons traditionnels, les traboules et les gastronomes en balade.',
-    targetScore: 3500,
-    starThresholds: [3500, 6500, 10000],
-    unlockScoreRequired: 1500,
+    subtitle: 'Traboules & Ponts de la Saône',
+    typeTag: 'Fleuves & Ponts',
+    description: 'Franchissez les ponts entre Rhône et Saône et esquivez les gastronomes des bouchons lyonnais.',
+    targetScore: 6000,
+    starThresholds: [6000, 11000, 18000],
+    unlockScoreRequired: 2500,
     skyColor: 0x90caf9,
     fogColor: 0xfdebd0,
     ambientColor: 0xfff3e0,
@@ -41,16 +44,17 @@ export const CITIES = [
     roofColor: 0x962d22,
     accentColor: 0xe67e22,
     unlockedByDefault: false,
-    mapCoords: { x: 68, y: 58 }
+    mapCoords: { x: 67, y: 55 }
   },
   {
     id: 'marseille',
     name: 'Marseille',
-    subtitle: 'La Cité Phocéenne',
-    description: 'Plein soleil sur la Canebière et le Vieux-Port ! Ambiance pétanque, mouettes et touristes bronzés.',
-    targetScore: 6000,
-    starThresholds: [6000, 11000, 18000],
-    unlockScoreRequired: 3500,
+    subtitle: 'La Corniche Kennedy & Le Vieux-Port',
+    typeTag: 'Corniche & Mer',
+    description: 'Plein gaz face aux calanques ! Vue plongeante sur les flots azuréens et voiliers du port.',
+    targetScore: 10500,
+    starThresholds: [10500, 18000, 28000],
+    unlockScoreRequired: 6000,
     skyColor: 0x4fc3f7,
     fogColor: 0xe0f7fa,
     ambientColor: 0xfffde7,
@@ -59,16 +63,74 @@ export const CITIES = [
     roofColor: 0xd84315,
     accentColor: 0x00bcd4,
     unlockedByDefault: false,
-    mapCoords: { x: 72, y: 84 }
+    mapCoords: { x: 68, y: 84 }
+  },
+  {
+    id: 'chamonix',
+    name: 'Chamonix',
+    subtitle: 'Col Alpin & Vue sur le Mont-Blanc',
+    typeTag: 'Montagneuse & Cols',
+    description: 'Lacets serrés de haute montagne entre chalets en bois, sapins enneigés et pics rocheux vertigineux.',
+    targetScore: 16000,
+    starThresholds: [16000, 26000, 40000],
+    unlockScoreRequired: 10500,
+    skyColor: 0x74b9ff,
+    fogColor: 0xedf2f7,
+    ambientColor: 0xf7fafc,
+    roadColor: 0x2d3436,
+    buildingColors: [0x5d4037, 0x795548, 0x8d6e63, 0x4e342e],
+    roofColor: 0xecf0f1, // Toits enneigés
+    accentColor: 0x00cec9,
+    unlockedByDefault: false,
+    mapCoords: { x: 80, y: 52 }
+  },
+  {
+    id: 'annecy',
+    name: 'Annecy',
+    subtitle: 'La Venise des Alpes & Son Lac',
+    typeTag: 'Vue sur Lac Alpin',
+    description: 'Rivages scintillants du lac d’Annecy, pontons fleuris et canaux romantiques au pied des falaises.',
+    targetScore: 23000,
+    starThresholds: [23000, 36000, 54000],
+    unlockScoreRequired: 16000,
+    skyColor: 0x81ecec,
+    fogColor: 0xe0f7fa,
+    ambientColor: 0xe8f5e9,
+    roadColor: 0x37474f,
+    buildingColors: [0xffeaa7, 0xfdcb6e, 0xf8a5c2, 0x78e08f],
+    roofColor: 0xb71540,
+    accentColor: 0x0984e3,
+    unlockedByDefault: false,
+    mapCoords: { x: 74, y: 48 }
+  },
+  {
+    id: 'millau',
+    name: 'Millau',
+    subtitle: 'Le Grand Viaduc Suspendu',
+    typeTag: 'Ponts & Gorges',
+    description: 'Franchissez le viaduc des records défiant les nuages à 270 mètres au-dessus des gorges du Tarn !',
+    targetScore: 31000,
+    starThresholds: [31000, 48000, 72000],
+    unlockScoreRequired: 23000,
+    skyColor: 0x64b5f6,
+    fogColor: 0xe3f2fd,
+    ambientColor: 0xfffde7,
+    roadColor: 0x263238,
+    buildingColors: [0xcfcfcf, 0xb0bec5, 0x90a4ae, 0x78909c],
+    roofColor: 0x37474f,
+    accentColor: 0xff3838,
+    unlockedByDefault: false,
+    mapCoords: { x: 54, y: 72 }
   },
   {
     id: 'nice',
     name: 'Nice',
-    subtitle: 'La Promenade des Anglais',
-    description: 'Palmiers, soleil éclatant et baigneurs égarés sur le bitume azuréen.',
-    targetScore: 9000,
-    starThresholds: [9000, 15000, 24000],
-    unlockScoreRequired: 6000,
+    subtitle: 'La Promenade des Anglais & Riviera',
+    typeTag: 'Corniche & Palmiers',
+    description: 'Palmiers ondulants, chaleur méditerranéenne et slaloms effrénés le long des palaces de la Baie des Anges.',
+    targetScore: 40000,
+    starThresholds: [40000, 62000, 92000],
+    unlockScoreRequired: 31000,
     skyColor: 0x29b6f6,
     fogColor: 0xe1f5fe,
     ambientColor: 0xfff9c4,
@@ -77,16 +139,17 @@ export const CITIES = [
     roofColor: 0xc2185b,
     accentColor: 0xff4081,
     unlockedByDefault: false,
-    mapCoords: { x: 88, y: 81 }
+    mapCoords: { x: 86, y: 78 }
   },
   {
     id: 'bordeaux',
     name: 'Bordeaux',
-    subtitle: 'La Belle Endormie Réveillée',
-    description: 'Architecture néoclassique majestueuse, miroirs d’eau et coursiers bordelais.',
-    targetScore: 12500,
-    starThresholds: [12500, 20000, 30000],
-    unlockScoreRequired: 9000,
+    subtitle: 'Pont de Pierre & Miroir d’Eau',
+    typeTag: 'Monuments & Quais',
+    description: 'Quais impériaux de la Garonne, arches de pierre majestueuses et élégance architecturale classique.',
+    targetScore: 50000,
+    starThresholds: [50000, 78000, 115000],
+    unlockScoreRequired: 40000,
     skyColor: 0x81d4fa,
     fogColor: 0xe8eaf6,
     ambientColor: 0xf5f5f5,
@@ -95,16 +158,36 @@ export const CITIES = [
     roofColor: 0x37474f,
     accentColor: 0x8e24aa,
     unlockedByDefault: false,
-    mapCoords: { x: 30, y: 67 }
+    mapCoords: { x: 28, y: 65 }
+  },
+  {
+    id: 'saint-malo',
+    name: 'Saint-Malo',
+    subtitle: 'Cité Corsaire & Remparts Océaniques',
+    typeTag: 'Côte & Remparts Granit',
+    description: 'Vents d’ouest iodés, phares côtiers et remparts de granit imprenables face aux rouleaux atlantiques.',
+    targetScore: 62000,
+    starThresholds: [62000, 95000, 140000],
+    unlockScoreRequired: 50000,
+    skyColor: 0x487eb0,
+    fogColor: 0xdcdde1,
+    ambientColor: 0xf5f6fa,
+    roadColor: 0x2f3640,
+    buildingColors: [0x718093, 0xdcdde1, 0x57606f, 0xa4b0be],
+    roofColor: 0x2f3542,
+    accentColor: 0x00a8ff,
+    unlockedByDefault: false,
+    mapCoords: { x: 22, y: 32 }
   },
   {
     id: 'strasbourg',
     name: 'Strasbourg',
-    subtitle: 'Capitale Européenne',
-    description: 'Maisons à colombages, canaux et cigognes qui observent vos cascades.',
-    targetScore: 16000,
-    starThresholds: [16000, 25000, 40000],
-    unlockScoreRequired: 12500,
+    subtitle: 'Canaux de l’Ill & Flèche Gothique',
+    typeTag: 'Canaux & Colombages',
+    description: 'Maisons historiques à pans de bois, canaux de la Petite France et beffroi gothique monumental.',
+    targetScore: 76000,
+    starThresholds: [76000, 115000, 170000],
+    unlockScoreRequired: 62000,
     skyColor: 0x80cbc4,
     fogColor: 0xe0f2f1,
     ambientColor: 0xfff8e1,
@@ -113,7 +196,7 @@ export const CITIES = [
     roofColor: 0xb71c1c,
     accentColor: 0xd32f2f,
     unlockedByDefault: false,
-    mapCoords: { x: 86, y: 32 }
+    mapCoords: { x: 88, y: 28 }
   }
 ];
 
@@ -193,11 +276,10 @@ export const COMBO_TITLES = [
 
 export class GameState {
   constructor() {
-    this.currentMode = 'SPLASH'; // SPLASH, MENU, MAP, GARAGE, PLAYING, PAUSED, RESULTS
+    this.currentMode = 'SPLASH';
     this.selectedCity = CITIES[0];
     this.selectedBike = BIKES[0];
 
-    // Variables de course
     this.score = 0;
     this.combo = 1;
     this.comboTimer = 0;
@@ -206,9 +288,10 @@ export class GameState {
     this.interactionsCount = 0;
     this.distance = 0;
     this.speed = 0;
+    this.targetSpeed = 0;
+    this.isBraking = false;
     this.isGameOver = false;
 
-    // Listeners pour l'interface
     this.listeners = [];
   }
 
@@ -250,7 +333,9 @@ export class GameState {
     this.coinsEarned = 0;
     this.interactionsCount = 0;
     this.distance = 0;
-    this.speed = this.selectedBike.maxSpeed * 0.5;
+    this.speed = this.selectedBike.maxSpeed * 0.4;
+    this.targetSpeed = this.selectedBike.maxSpeed;
+    this.isBraking = false;
     this.isGameOver = false;
     this.currentMode = 'PLAYING';
 
@@ -259,18 +344,22 @@ export class GameState {
     this.notify('run_started', { city: this.selectedCity, bike: this.selectedBike });
   }
 
+  setBraking(braking) {
+    this.isBraking = braking;
+  }
+
   addInteraction(points = 100, itemType = 'person') {
     if (this.currentMode !== 'PLAYING') return;
 
     this.interactionsCount++;
-    this.comboTimer = 3.5; // Temps pour enchaîner
+    this.comboTimer = 3.2; // Fenêtre de combo un peu plus serrée
     this.combo = Math.min(this.combo + 1, 10);
     this.comboMax = Math.max(this.comboMax, this.combo);
 
     const totalAdded = points * this.combo;
     this.score += totalAdded;
 
-    const coinsFromHit = Math.floor(totalAdded / 50) + 1;
+    const coinsFromHit = Math.floor(totalAdded / 60) + 1;
     this.coinsEarned += coinsFromHit;
 
     soundManager.playBoing();
@@ -290,7 +379,6 @@ export class GameState {
       itemType
     });
 
-    // Vérifier si le joueur a franchi le palier pour débloquer la ville suivante
     this.checkNextCityUnlock();
   }
 
@@ -309,6 +397,15 @@ export class GameState {
   update(delta) {
     if (this.currentMode !== 'PLAYING') return;
 
+    // Gestion du frein et de la reprise de circulation
+    if (this.isBraking) {
+      // Décélération rapide jusqu'à l'arrêt complet
+      this.speed = Math.max(0, this.speed - delta * 30.0);
+    } else {
+      // Réaccélération progressive vers la vitesse de croisière
+      this.speed = Math.min(this.targetSpeed, this.speed + delta * 12.0);
+    }
+
     // Décompte du combo
     if (this.comboTimer > 0) {
       this.comboTimer -= delta;
@@ -322,10 +419,11 @@ export class GameState {
     this.distance += this.speed * delta;
     this.notify('stats_tick', {
       distance: Math.floor(this.distance),
-      speed: Math.floor(this.speed * 3.6), // km/h arcade
+      speed: Math.floor(this.speed * 3.6),
       score: this.score,
       targetScore: this.selectedCity.targetScore,
-      progressRatio: Math.min(1.0, this.score / this.selectedCity.targetScore)
+      progressRatio: Math.min(1.0, this.score / this.selectedCity.targetScore),
+      isBraking: this.isBraking
     });
   }
 
@@ -336,24 +434,23 @@ export class GameState {
     this.isGameOver = true;
     soundManager.stopEngine();
 
-    // Calcul des étoiles
+    // Calcul des étoiles avec les nouveaux seuils
     let stars = 0;
     const thresholds = this.selectedCity.starThresholds;
     if (this.score >= thresholds[2]) stars = 3;
     else if (this.score >= thresholds[1]) stars = 2;
     else if (this.score >= thresholds[0]) stars = 1;
 
-    // Enregistrement persistant
     const saveResult = storage.recordRunResult(
       this.selectedCity.id,
       this.score,
       stars,
       this.coinsEarned,
       this.interactionsCount,
-      Math.floor(this.distance)
+      Math.floor(this.distance),
+      this.comboMax
     );
 
-    // Déblocage automatique de la ville suivante si objectif atteint
     const currentIndex = CITIES.findIndex(c => c.id === this.selectedCity.id);
     let newlyUnlockedCity = null;
     if (currentIndex < CITIES.length - 1) {

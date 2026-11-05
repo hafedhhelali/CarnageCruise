@@ -1,23 +1,29 @@
 /**
  * Motormageddon - Gestionnaire d'Interface Utilisateur (UIManager)
- * Écran titre, Carte de France interactive stylisée, Garage, HUD, Résultats et Modales.
+ * Carte réaliste de France avec effets de transition cinématique,
+ * Section Profil joueur, Système de freinage HUD, Gestionnaire de bouton retour Android,
+ * et correction de la navigation du Garage.
  */
 
 import { gameState, CITIES, BIKES } from '../core/GameState.js';
 import { storage } from '../core/Storage.js';
 import { soundManager } from '../audio/SoundManager.js';
+import { App } from '@capacitor/app';
 
 export class UIManager {
   constructor(rootElement, onActionCallback) {
     this.root = rootElement;
     this.onAction = onActionCallback;
 
-    this.currentScreen = 'SPLASH'; // SPLASH, MAP, GARAGE, HUD, PAUSE, RESULTS, SETTINGS
+    this.currentScreen = 'SPLASH'; // SPLASH, MAP, GARAGE, HUD
+    this.previousScreen = 'SPLASH';
     this.selectedMapCity = gameState.selectedCity;
     this.selectedGarageBike = gameState.selectedBike;
+    this.activeModals = []; // Pile des modales actives pour le bouton retour
 
     this.init();
     this.bindGameState();
+    this.bindBackButton();
   }
 
   init() {
@@ -42,7 +48,62 @@ export class UIManager {
     });
   }
 
+  bindBackButton() {
+    // 1. Touche Échap sur PC
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        this.handleHardwareBack();
+      }
+    });
+
+    // 2. Gestionnaire d'historique de navigation du navigateur
+    window.addEventListener('popstate', () => {
+      this.handleHardwareBack();
+    });
+
+    // 3. Bouton retour natif Android (Capacitor)
+    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
+      window.Capacitor.Plugins.App.addListener('backButton', () => {
+        this.handleHardwareBack();
+      });
+    }
+  }
+
+  handleHardwareBack() {
+    // Si une modale est ouverte : la fermer en priorité
+    if (this.activeModals.length > 0) {
+      const topModal = this.activeModals.pop();
+      if (topModal && topModal.parentNode) {
+        topModal.remove();
+      }
+      return;
+    }
+
+    // Si on est dans le Garage ou la Carte : retourner à l'écran précédent
+    if (this.currentScreen === 'GARAGE') {
+      this.setScreen(this.previousScreen || 'SPLASH');
+      return;
+    }
+    if (this.currentScreen === 'MAP') {
+      this.setScreen('SPLASH');
+      return;
+    }
+    if (this.currentScreen === 'HUD') {
+      // En jeu : afficher le menu de pause
+      this.showPauseModal();
+      return;
+    }
+
+    // Si on est sur l'écran d'accueil principal : demander confirmation pour quitter
+    if (this.currentScreen === 'SPLASH') {
+      this.showQuitConfirmationModal();
+    }
+  }
+
   setScreen(screenName) {
+    if (this.currentScreen !== screenName) {
+      this.previousScreen = this.currentScreen;
+    }
     this.currentScreen = screenName;
     this.render();
   }
@@ -69,20 +130,28 @@ export class UIManager {
     splash.innerHTML = `
       <div class="logo-container">
         <h1 class="game-title">MOTORMAGEDDON</h1>
-        <div class="game-subtitle">★ TOUR DE FRANCE ARCADE ★</div>
+        <div class="game-subtitle">★ TOUR DE FRANCE ARCADE 3D ★</div>
       </div>
 
       <div class="splash-footer">
         <button id="btn-splash-play" class="btn-arcade btn-play-pulse">
-          <span>🚀 JOUER</span>
+          <span>🚀 JOUER LE TOUR</span>
         </button>
-        <div style="display: flex; gap: 12px;">
-          <button id="btn-splash-garage" class="btn-arcade btn-secondary" style="font-size: 0.95rem; padding: 10px 20px;">
+        <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
+          <button id="btn-splash-profile" class="btn-arcade btn-accent" style="font-size: 0.95rem; padding: 10px 18px;">
+            <span>👤 PROFIL</span>
+          </button>
+          <button id="btn-splash-garage" class="btn-arcade btn-secondary" style="font-size: 0.95rem; padding: 10px 18px;">
             <span>🏍️ GARAGE</span>
           </button>
-          <button id="btn-splash-settings" class="btn-arcade btn-ghost" style="font-size: 0.95rem; padding: 10px 18px;">
+          <button id="btn-splash-settings" class="btn-arcade btn-ghost" style="font-size: 0.95rem; padding: 10px 16px;">
             <span>⚙️ OPTIONS</span>
           </button>
+        </div>
+
+        <div class="splash-legal">
+          <span>© 2026 EOMedia. Tous droits réservés.</span>
+          <button id="btn-splash-legal" class="btn-legal-link">Mentions Légales</button>
         </div>
       </div>
     `;
@@ -93,8 +162,14 @@ export class UIManager {
       this.setScreen('MAP');
     });
 
+    splash.querySelector('#btn-splash-profile').addEventListener('click', () => {
+      soundManager.playClick();
+      this.showProfileModal();
+    });
+
     splash.querySelector('#btn-splash-garage').addEventListener('click', () => {
       soundManager.playClick();
+      this.previousScreen = 'SPLASH';
       this.setScreen('GARAGE');
     });
 
@@ -103,37 +178,98 @@ export class UIManager {
       this.showSettingsModal();
     });
 
+    splash.querySelector('#btn-splash-legal').addEventListener('click', () => {
+      soundManager.playClick();
+      this.showLegalModal();
+    });
+
     this.root.appendChild(splash);
   }
 
-  // --- 2. CARTE INTERACTIVE DE LA FRANCE ---
+  // --- 2. CARTE RÉALISTE DE FRANCE & EFFETS DE TRANSITION ---
   renderMapScreen() {
     const mapScreen = document.createElement('div');
     mapScreen.className = 'screen-map interactive';
 
     const coins = storage.data.coins;
+    const totalStars = storage.getTotalStars();
 
     mapScreen.innerHTML = `
       <div class="map-header">
         <button id="btn-map-back" class="btn-arcade btn-ghost" style="padding: 8px 16px; font-size: 0.9rem;">
           ← RETOUR
         </button>
-        <h2 class="map-title">ÉTAPES DU TOUR</h2>
-        <div class="currency-badge">
-          <span>🪙 ${coins}</span>
+        <div style="text-align: center;">
+          <h2 class="map-title" style="margin: 0;">CARTE DE FRANCE</h2>
+          <span style="font-size: 0.75rem; color: #fffa65; font-weight: 800;">${totalStars} / ${CITIES.length * 3} ★ ÉTOILES</span>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button id="btn-map-profile" class="btn-arcade btn-accent" style="padding: 6px 12px; font-size: 0.85rem;">
+            👤 PROFIL
+          </button>
+          <div class="currency-badge">
+            <span>🪙 ${coins}</span>
+          </div>
         </div>
       </div>
 
       <div class="france-map-svg-container" id="france-container">
-        <!-- SVG stylisé de la France hexagonale -->
-        <svg class="france-svg" viewBox="0 0 500 450">
-          <path d="M 120 40 L 320 30 L 440 100 L 470 240 L 380 410 L 260 430 L 140 400 L 60 280 L 40 160 Z"
-                fill="#2c3e50" stroke="#34495e" stroke-width="4" />
-          <path d="M 80 150 Q 140 110 240 130 T 400 110" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="2" stroke-dasharray="5,5" />
-          <path d="M 240 130 Q 300 240 350 360" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="2" stroke-dasharray="5,5" />
+        <!-- SVG Réaliste de la France avec contours géographiques, relief et autoroutes -->
+        <svg class="france-svg" viewBox="0 0 500 480">
+          <defs>
+            <radialGradient id="franceRelief" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#2c3e50" />
+              <stop offset="60%" stop-color="#1e272e" />
+              <stop offset="100%" stop-color="#0f141d" />
+            </radialGradient>
+            <filter id="glowPin" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          <!-- Mer / Océan environnant stylisé -->
+          <rect width="100%" height="100%" fill="transparent" />
+
+          <!-- Contour géographique précis de la France métropolitaine -->
+          <path class="france-mainland" d="
+            M 240 28
+            C 260 25, 290 35, 310 40
+            C 340 50, 365 42, 385 65
+            C 410 90, 440 95, 455 125
+            C 470 150, 450 180, 460 210
+            C 470 235, 440 260, 435 285
+            C 430 310, 445 340, 420 375
+            C 400 400, 370 415, 350 435
+            C 320 440, 290 430, 260 445
+            C 230 455, 195 440, 170 430
+            C 140 420, 130 380, 115 365
+            C 100 350, 65 330, 55 305
+            C 45 280, 60 250, 50 220
+            C 40 190, 25 180, 20 160
+            C 15 135, 40 120, 60 115
+            C 85 110, 105 125, 130 115
+            C 150 105, 160 85, 185 75
+            C 210 65, 225 35, 240 28 Z
+          " fill="url(#franceRelief)" stroke="#38ada9" stroke-width="2.5" />
+
+          <!-- Corse -->
+          <path d="M 445 380 C 455 375, 465 390, 460 420 C 450 445, 440 440, 435 415 Z"
+                fill="#2c3e50" stroke="#38ada9" stroke-width="2" />
+
+          <!-- Réseau des grands axes autoroutiers néon reliant les villes -->
+          <path class="highway-line" d="M 250 135 L 335 264" stroke="#fffa65" stroke-width="2" stroke-dasharray="4,4" opacity="0.45" />
+          <path class="highway-line" d="M 335 264 L 340 403" stroke="#fffa65" stroke-width="2" stroke-dasharray="4,4" opacity="0.45" />
+          <path class="highway-line" d="M 340 403 L 430 374" stroke="#fffa65" stroke-width="2" stroke-dasharray="4,4" opacity="0.45" />
+          <path class="highway-line" d="M 250 135 L 140 312" stroke="#fffa65" stroke-width="2" stroke-dasharray="4,4" opacity="0.45" />
+          <path class="highway-line" d="M 250 135 L 440 135" stroke="#fffa65" stroke-width="2" stroke-dasharray="4,4" opacity="0.45" />
+          <path class="highway-line" d="M 335 264 L 400 250" stroke="#fffa65" stroke-width="2" stroke-dasharray="4,4" opacity="0.45" />
         </svg>
 
-        <!-- Pins interactifs des villes de France -->
+        <!-- Pins interactifs des villes avec pulsion animée -->
         ${CITIES.map(city => {
           const unlocked = storage.isCityUnlocked(city.id);
           const cityData = storage.getCityData(city.id);
@@ -143,6 +279,7 @@ export class UIManager {
             <div class="city-pin ${unlocked ? 'unlocked' : 'locked'} ${isSelected ? 'selected' : ''}"
                  data-city-id="${city.id}"
                  style="left: ${city.mapCoords.x}%; top: ${city.mapCoords.y}%;">
+              <div class="city-pulse-ring"></div>
               <div class="city-pin-dot">
                 ${unlocked ? '★' : '🔒'}
               </div>
@@ -157,7 +294,7 @@ export class UIManager {
       </div>
     `;
 
-    // Attacher événements sur les pins de ville
+    // Événements sélection de ville
     const pins = mapScreen.querySelectorAll('.city-pin');
     pins.forEach(pin => {
       pin.addEventListener('click', () => {
@@ -168,6 +305,7 @@ export class UIManager {
           this.selectedMapCity = city;
           pins.forEach(p => p.classList.remove('selected'));
           pin.classList.add('selected');
+          this.triggerCityPinRipple(pin);
           this.updateCityDetail(mapScreen.querySelector('#city-detail'));
         }
       });
@@ -178,8 +316,22 @@ export class UIManager {
       this.setScreen('SPLASH');
     });
 
+    mapScreen.querySelector('#btn-map-profile').addEventListener('click', () => {
+      soundManager.playClick();
+      this.showProfileModal();
+    });
+
     this.root.appendChild(mapScreen);
     this.updateCityDetail(mapScreen.querySelector('#city-detail'));
+  }
+
+  triggerCityPinRipple(pinElement) {
+    const ring = pinElement.querySelector('.city-pulse-ring');
+    if (ring) {
+      ring.style.animation = 'none';
+      void ring.offsetHeight; // Reflow
+      ring.style.animation = 'pinRippleWave 0.8s ease-out';
+    }
   }
 
   updateCityDetail(detailCard) {
@@ -193,7 +345,8 @@ export class UIManager {
       <div class="city-detail-header">
         <div>
           <span class="city-detail-name">${city.name}</span>
-          <span class="city-detail-subtitle"> — ${city.subtitle}</span>
+          <span class="city-tag">${city.typeTag || 'Étape du Tour'}</span>
+          <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">${city.subtitle}</div>
         </div>
         <div class="city-stars">${starsHtml}</div>
       </div>
@@ -202,20 +355,20 @@ export class UIManager {
 
       <div class="city-target-info">
         <span>🏆 Record : <strong>${cityData.bestScore} pts</strong></span>
-        <span>🎯 Objectif ville : <strong>${city.targetScore} pts</strong></span>
+        <span>🎯 Objectif : <strong>${city.targetScore} pts</strong></span>
       </div>
 
-      <div style="display: flex; gap: 10px; margin-top: 6px;">
+      <div style="display: flex; gap: 10px; margin-top: 8px;">
         ${unlocked ? `
           <button id="btn-launch-city" class="btn-arcade" style="flex: 1;">
-            🏁 ROULER DANS ${city.name.toUpperCase()} !
+            🏁 ENTRER DANS ${city.name.toUpperCase()} !
           </button>
         ` : `
           <button class="btn-arcade btn-ghost" style="flex: 1; cursor: not-allowed;" disabled>
             🔒 DÉVERROUILLER À ${city.unlockScoreRequired} PTS
           </button>
         `}
-        <button id="btn-quick-garage" class="btn-arcade btn-secondary" style="padding: 12px 18px;">
+        <button id="btn-quick-garage" class="btn-arcade btn-secondary" style="padding: 12px 18px;" title="Garage">
           🏍️
         </button>
       </div>
@@ -225,23 +378,45 @@ export class UIManager {
       detailCard.querySelector('#btn-launch-city').addEventListener('click', () => {
         soundManager.playClick();
         gameState.selectCity(city.id);
-        if (this.onAction) this.onAction('START_RUN', city);
+        this.triggerCityEntryCinematic(city);
       });
     }
 
     detailCard.querySelector('#btn-quick-garage').addEventListener('click', () => {
       soundManager.playClick();
+      this.previousScreen = 'MAP';
       this.setScreen('GARAGE');
     });
   }
 
-  // --- 3. GARAGE ET PERSONNALISATION ---
+  triggerCityEntryCinematic(city) {
+    // Effet cinématique de zoom et distorsion lors de l'entrée dans la ville
+    const overlay = document.createElement('div');
+    overlay.className = 'city-entry-transition';
+    overlay.innerHTML = `
+      <div class="city-entry-content">
+        <div class="entry-sub">BIENVENUE À</div>
+        <div class="entry-title">${city.name.toUpperCase()}</div>
+        <div class="entry-tagline">${city.subtitle}</div>
+      </div>
+    `;
+    this.root.appendChild(overlay);
+
+    soundManager.playVictory();
+
+    setTimeout(() => {
+      overlay.classList.add('fade-out');
+      if (this.onAction) this.onAction('START_RUN', city);
+      setTimeout(() => overlay.remove(), 400);
+    }, 1100);
+  }
+
+  // --- 3. GARAGE ET PERSONNALISATION (AVEC NAVIGATION CORRIGÉE) ---
   renderGarageScreen() {
     const garage = document.createElement('div');
     garage.className = 'screen-garage interactive';
 
     const coins = storage.data.coins;
-    const equippedBike = storage.getEquippedBike();
 
     garage.innerHTML = `
       <div class="garage-header">
@@ -269,7 +444,7 @@ export class UIManager {
       </div>
     `;
 
-    // Événements onglets motos
+    // Événements onglets
     const tabs = garage.querySelectorAll('.bike-tab');
     tabs.forEach(tab => {
       tab.addEventListener('click', () => {
@@ -286,9 +461,10 @@ export class UIManager {
       });
     });
 
+    // Retour propre vers l'écran d'où l'on vient (SPLASH ou MAP)
     garage.querySelector('#btn-garage-back').addEventListener('click', () => {
       soundManager.playClick();
-      this.setScreen('MAP');
+      this.setScreen(this.previousScreen || 'SPLASH');
     });
 
     this.root.appendChild(garage);
@@ -374,6 +550,7 @@ export class UIManager {
         gameState.selectBike(bike.id);
         soundManager.playClick();
         if (this.onAction) this.onAction('BIKE_EQUIPPED', bike);
+        this.showToastUnlock({ name: `${bike.name} Équipé !` });
         this.updateGarageBikeInfo(container);
       });
     } else if (!isUnlocked) {
@@ -392,7 +569,7 @@ export class UIManager {
     }
   }
 
-  // --- 4. HUD DE GAMEPLAY PENDANT LA COURSE ---
+  // --- 4. HUD DE GAMEPLAY AVEC FREIN ET ARRÊT/REPRISE ---
   renderHUDScreen() {
     const hud = document.createElement('div');
     hud.className = 'screen-hud';
@@ -424,20 +601,42 @@ export class UIManager {
       </div>
 
       <div class="hud-bottom-controls">
-        <div class="speedometer">
-          <span class="speed-value" id="hud-speed-val">0</span>
-          <span class="speed-unit">KM/H</span>
+        <div style="display: flex; gap: 12px; align-items: flex-end;">
+          <div class="speedometer">
+            <span class="speed-value" id="hud-speed-val">0</span>
+            <span class="speed-unit">KM/H</span>
+          </div>
+          <!-- Bouton de freinage / arrêt et reprise de circulation -->
+          <button class="btn-brake" id="btn-hud-brake" title="Maintenir pour freiner / arrêter">
+            🛑 FREIN
+          </button>
         </div>
 
-        <button class="btn-horn" id="btn-hud-horn" title="Klaxon !">
+        <button class="btn-horn" id="btn-hud-horn" title="Klaxonner !">
           📢
         </button>
       </div>
 
       <div class="touch-hint">
-        ← Glissez le doigt pour piloter la moto →
+        ← Glissez pour braquer | Maintenez FREIN pour vous arrêter →
       </div>
     `;
+
+    // Gestion du bouton de frein
+    const brakeBtn = hud.querySelector('#btn-hud-brake');
+    const startBraking = () => {
+      gameState.setBraking(true);
+      brakeBtn.classList.add('active');
+    };
+    const stopBraking = () => {
+      gameState.setBraking(false);
+      brakeBtn.classList.remove('active');
+    };
+
+    brakeBtn.addEventListener('pointerdown', startBraking);
+    brakeBtn.addEventListener('pointerup', stopBraking);
+    brakeBtn.addEventListener('pointerleave', stopBraking);
+    brakeBtn.addEventListener('pointercancel', stopBraking);
 
     hud.querySelector('#btn-hud-pause').addEventListener('click', () => {
       soundManager.playClick();
@@ -467,7 +666,7 @@ export class UIManager {
     if (comboBadge && comboText) {
       if (data.combo > 1) {
         comboBadge.classList.add('active');
-        comboText.textContent = `${data.comboTitle} x${data.combo}` ;
+        comboText.textContent = `${data.comboTitle} x${data.combo}`;
       } else {
         comboBadge.classList.remove('active');
       }
@@ -487,10 +686,142 @@ export class UIManager {
     if (progressFill) progressFill.style.width = `${Math.floor(data.progressRatio * 100)}%`;
   }
 
-  // --- 5. MODALE DE RÉSULTATS ET PROGRESSION ---
+  // --- 5. MODALE DE PROFIL JOUEUR ---
+  showProfileModal() {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    this.activeModals.push(overlay);
+
+    const stats = storage.data.stats;
+    const title = storage.getPlayerTitle();
+    const unlockedCount = storage.data.unlockedCities.length;
+    const totalStars = storage.getTotalStars();
+
+    overlay.innerHTML = `
+      <div class="modal-card" style="max-width: 440px;">
+        <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 4px;">
+          <div style="width: 58px; height: 58px; border-radius: 50%; background: linear-gradient(135deg, #ff4757, #ffa502); display: flex; align-items: center; justify-content: center; font-size: 2rem;">
+            🏍️
+          </div>
+          <div>
+            <h2 style="font-size: 1.4rem; font-weight: 900; color: #fff;">${storage.data.playerName}</h2>
+            <div style="background: rgba(255, 71, 87, 0.2); border: 1px solid #ff4757; color: #ff6b81; font-size: 0.75rem; font-weight: 800; padding: 2px 8px; border-radius: 10px; display: inline-block;">
+              ${title}
+            </div>
+          </div>
+        </div>
+
+        <div class="results-stats">
+          <div class="result-row">
+            <span>🏆 Score Cumulé Total :</span>
+            <span style="color: #fffa65;">${stats.totalScore || 0} pts</span>
+          </div>
+          <div class="result-row">
+            <span>🤸 Personnes Heurtées :</span>
+            <span style="color: #ff4757;">${stats.totalInteractions || 0}</span>
+          </div>
+          <div class="result-row">
+            <span>🔓 Villes Débloquées :</span>
+            <span style="color: #2ed573;">${unlockedCount} / ${CITIES.length}</span>
+          </div>
+          <div class="result-row">
+            <span>⭐ Étoiles Collectées :</span>
+            <span style="color: var(--gold);">${totalStars} / ${CITIES.length * 3}</span>
+          </div>
+          <div class="result-row">
+            <span>🛣️ Distance Parcourue :</span>
+            <span>${((stats.totalDistance || 0) / 1000).toFixed(1)} km</span>
+          </div>
+          <div class="result-row">
+            <span>🏁 Parties Jouées :</span>
+            <span>${stats.totalRuns || 0}</span>
+          </div>
+          <div class="result-row">
+            <span>🔥 Combo Record :</span>
+            <span>x${stats.maxCombo || 1}</span>
+          </div>
+        </div>
+
+        <h3 style="font-size: 0.9rem; font-weight: 800; color: #ced6e0; margin-top: 4px;">ÉTAPES HOMOLOGUÉES</h3>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; max-height: 120px; overflow-y: auto;">
+          ${CITIES.map(c => {
+            const unl = storage.isCityUnlocked(c.id);
+            const data = storage.getCityData(c.id);
+            return `
+              <div style="background: rgba(255,255,255,0.06); padding: 6px; border-radius: 10px; text-align: center; font-size: 0.75rem;">
+                <div style="font-weight: 800; color: ${unl ? '#fff' : '#747d8c'};">${c.name}</div>
+                <div style="color: var(--gold); font-size: 0.7rem;">${unl ? '★'.repeat(data.stars) : '🔒'}</div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+
+        <button id="btn-close-profile" class="btn-arcade" style="margin-top: 8px;">
+          FERMER
+        </button>
+      </div>
+    `;
+
+    overlay.querySelector('#btn-close-profile').addEventListener('click', () => {
+      soundManager.playClick();
+      overlay.remove();
+      this.activeModals = this.activeModals.filter(m => m !== overlay);
+    });
+
+    this.root.appendChild(overlay);
+  }
+
+  // --- 6. MODALE DE CONFIRMATION DE QUITTER ---
+  showQuitConfirmationModal() {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    this.activeModals.push(overlay);
+
+    overlay.innerHTML = `
+      <div class="modal-card">
+        <h2 class="modal-title">QUITTER LE JEU ?</h2>
+        <p style="text-align: center; font-size: 0.9rem; color: #ced6e0;">
+          Voulez-vous vraiment quitter Motormageddon ? Toute votre progression est bien sauvegardée.
+        </p>
+
+        <div class="modal-actions" style="margin-top: 10px;">
+          <button id="btn-cancel-quit" class="btn-arcade btn-secondary">
+            ANNULER
+          </button>
+          <button id="btn-confirm-quit" class="btn-arcade btn-ghost" style="color: #ff4757; border-color: #ff4757;">
+            QUITTER
+          </button>
+        </div>
+      </div>
+    `;
+
+    overlay.querySelector('#btn-cancel-quit').addEventListener('click', () => {
+      soundManager.playClick();
+      overlay.remove();
+      this.activeModals = this.activeModals.filter(m => m !== overlay);
+    });
+
+    overlay.querySelector('#btn-confirm-quit').addEventListener('click', async () => {
+      soundManager.destroy();
+      try {
+        await App.exitApp();
+      } catch (e) {
+        if (window.Capacitor?.Plugins?.App) {
+          window.Capacitor.Plugins.App.exitApp();
+        } else {
+          window.close();
+        }
+      }
+    });
+
+    this.root.appendChild(overlay);
+  }
+
+  // --- 7. MODALE DE RÉSULTATS ---
   showResultsModal(data) {
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay';
+    this.activeModals.push(overlay);
 
     const starsHtml = '★'.repeat(data.stars) + '☆'.repeat(3 - data.stars);
 
@@ -508,8 +839,8 @@ export class UIManager {
             <span style="color: #fffa65;">${data.score} pts ${data.isNewBest ? '🏆 NOUVEAU RECORD !' : ''}</span>
           </div>
           <div class="result-row">
-            <span>Interactions Comiques :</span>
-            <span>${data.interactions} percutés</span>
+            <span>Personnes Heurtées :</span>
+            <span>${data.interactions}</span>
           </div>
           <div class="result-row">
             <span>Combo Maximum :</span>
@@ -549,28 +880,33 @@ export class UIManager {
     overlay.querySelector('#btn-results-retry').addEventListener('click', () => {
       soundManager.playClick();
       overlay.remove();
+      this.activeModals = this.activeModals.filter(m => m !== overlay);
       if (this.onAction) this.onAction('START_RUN', gameState.selectedCity);
     });
 
     overlay.querySelector('#btn-results-map').addEventListener('click', () => {
       soundManager.playClick();
       overlay.remove();
+      this.activeModals = this.activeModals.filter(m => m !== overlay);
       this.setScreen('MAP');
     });
 
     overlay.querySelector('#btn-results-garage').addEventListener('click', () => {
       soundManager.playClick();
       overlay.remove();
+      this.activeModals = this.activeModals.filter(m => m !== overlay);
+      this.previousScreen = 'MAP';
       this.setScreen('GARAGE');
     });
 
     this.root.appendChild(overlay);
   }
 
-  // --- 6. MODALE DE PAUSE ---
+  // --- 8. MODALE DE PAUSE ---
   showPauseModal() {
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay';
+    this.activeModals.push(overlay);
 
     overlay.innerHTML = `
       <div class="modal-card">
@@ -593,18 +929,21 @@ export class UIManager {
     overlay.querySelector('#btn-pause-resume').addEventListener('click', () => {
       soundManager.playClick();
       overlay.remove();
+      this.activeModals = this.activeModals.filter(m => m !== overlay);
       if (this.onAction) this.onAction('RESUME');
     });
 
     overlay.querySelector('#btn-pause-restart').addEventListener('click', () => {
       soundManager.playClick();
       overlay.remove();
+      this.activeModals = this.activeModals.filter(m => m !== overlay);
       if (this.onAction) this.onAction('START_RUN', gameState.selectedCity);
     });
 
     overlay.querySelector('#btn-pause-map').addEventListener('click', () => {
       soundManager.playClick();
       overlay.remove();
+      this.activeModals = this.activeModals.filter(m => m !== overlay);
       gameState.currentMode = 'MAP';
       soundManager.stopEngine();
       this.setScreen('MAP');
@@ -613,10 +952,11 @@ export class UIManager {
     this.root.appendChild(overlay);
   }
 
-  // --- 7. MODALE DE PARAMÈTRES ---
+  // --- 9. MODALE DE PARAMÈTRES ---
   showSettingsModal() {
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay';
+    this.activeModals.push(overlay);
 
     const sfxOn = storage.data.settings.sfx;
     const musicOn = storage.data.settings.music;
@@ -640,7 +980,17 @@ export class UIManager {
           </div>
         </div>
 
-        <button id="btn-settings-close" class="btn-arcade">
+        <div style="margin-top: 15px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.1); text-align: center;">
+          <div style="font-size: 0.78rem; color: #a4b0be; margin-bottom: 8px;">
+            Motormageddon Tour de France 3D v1.0<br>
+            © 2026 EOMedia. Tous droits réservés.
+          </div>
+          <button id="btn-settings-legal" class="btn-legal-link" style="font-size: 0.8rem;">
+            📜 Mentions Légales & Confidentialité
+          </button>
+        </div>
+
+        <button id="btn-settings-close" class="btn-arcade" style="margin-top: 14px;">
           VALIDER
         </button>
       </div>
@@ -660,15 +1010,73 @@ export class UIManager {
       e.target.className = `btn-arcade ${next ? 'btn-secondary' : 'btn-ghost'}`;
     });
 
+    overlay.querySelector('#btn-settings-legal').addEventListener('click', () => {
+      soundManager.playClick();
+      this.showLegalModal();
+    });
+
     overlay.querySelector('#btn-settings-close').addEventListener('click', () => {
       soundManager.playClick();
       overlay.remove();
+      this.activeModals = this.activeModals.filter(m => m !== overlay);
     });
 
     this.root.appendChild(overlay);
   }
 
-  showToastUnlock(city) {
+  // --- 10. MODALE MENTIONS LÉGALES & COPYRIGHT EOMEDIA 2026 ---
+  showLegalModal() {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    this.activeModals.push(overlay);
+
+    overlay.innerHTML = `
+      <div class="modal-card" style="max-height: 85vh; overflow-y: auto; text-align: left;">
+        <h2 class="modal-title" style="text-align: center;">MENTIONS LÉGALES</h2>
+
+        <div style="font-size: 0.82rem; line-height: 1.5; color: #ced6e0; display: flex; flex-direction: column; gap: 10px; margin: 12px 0;">
+          <div style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px;">
+            <strong style="color: #f1c40f;">Éditeur & Développeur :</strong><br>
+            <strong>EOMedia</strong> — Tous droits réservés © 2026.<br>
+            Contact éditeur : support@eomedia.fr
+          </div>
+
+          <div style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px;">
+            <strong style="color: #38ada9;">Jeu & Fiction Burlesque :</strong><br>
+            <em>Motormageddon : Tour de France Arcade 3D</em> est une œuvre de fiction d'action humoristique et parodique.
+            Toute ressemblance avec des personnes réelles, des incidents ou des marques existantes est purement fortuite.
+            Le jeu encourage la prudence et le respect strict du Code de la Route dans la vie réelle.
+          </div>
+
+          <div style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px;">
+            <strong style="color: #2ed573;">Protection des Données (RGPD / Confidentialité) :</strong><br>
+            Le jeu s'exécute intégralement en local sur votre appareil Android.
+            <strong>Aucune donnée personnelle</strong>, identifiant publicitaire, traceur ou géolocalisation n'est collecté ni transmis à des tiers.
+            Vos scores et vos préférences sont conservés exclusivement sur votre appareil.
+          </div>
+
+          <div style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px;">
+            <strong style="color: #e056fd;">Propriété Intellectuelle :</strong><br>
+            L'ensemble des modèles 3D, textures, interfaces utilisateur, algorithmes procéduraux, effets sonores WebAudio et univers visuels sont la propriété exclusive d'<strong>EOMedia 2026</strong>.
+          </div>
+        </div>
+
+        <button id="btn-legal-close" class="btn-arcade" style="width: 100%; margin-top: 10px;">
+          J'AI COMPRIS
+        </button>
+      </div>
+    `;
+
+    overlay.querySelector('#btn-legal-close').addEventListener('click', () => {
+      soundManager.playClick();
+      overlay.remove();
+      this.activeModals = this.activeModals.filter(m => m !== overlay);
+    });
+
+    this.root.appendChild(overlay);
+  }
+
+  showToastUnlock(data) {
     const toast = document.createElement('div');
     toast.style.cssText = `
       position: absolute;
@@ -684,8 +1092,8 @@ export class UIManager {
       z-index: 100;
       animation: modalPop 0.4s ease;
     `;
-    toast.innerHTML = `🔓 Ville débloquée : ${city.name} !`;
+    toast.innerHTML = `✨ ${data.name || 'Débloqué'} !`;
     this.root.appendChild(toast);
-    setTimeout(() => toast.remove(), 3500);
+    setTimeout(() => toast.remove(), 3000);
   }
 }

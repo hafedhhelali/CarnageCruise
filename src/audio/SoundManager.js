@@ -1,9 +1,11 @@
 /**
- * Motormageddon - Moteur Audio Procédural WebAudio
- * Génère des sons cartoon, l'ambiance moteur réactive et la musique arcade rétro-dynamique.
+ * Motormageddon - Moteur Audio Procédural WebAudio Haute Performance
+ * Sons cartoon, ambiance moteur réactive et musique arcade rétro-dynamique.
+ * Gestion mémoire stricte, déconnexion des nœuds audio et cycle de vie Android (Background/Pause/Exit).
  */
 
 import { storage } from '../core/Storage.js';
+import { App } from '@capacitor/app';
 
 export class SoundManager {
   constructor() {
@@ -12,9 +14,15 @@ export class SoundManager {
     this.isMutedMusic = !storage.data.settings.music;
     this.engineOsc = null;
     this.engineGain = null;
+    this.engineFilter = null;
     this.musicPlaying = false;
+    this.wasMusicPlaying = false;
+    this.wasEnginePlaying = false;
     this.musicTimer = null;
+    this.isDestroyed = false;
+
     this.initContext();
+    this.bindLifecycleEvents();
   }
 
   initContext() {
@@ -25,15 +33,95 @@ export class SoundManager {
   }
 
   resumeContext() {
-    if (this.ctx && this.ctx.state === 'suspended') {
-      this.ctx.resume();
+    if (this.isDestroyed) return;
+    if (!this.ctx) {
+      this.initContext();
     }
+    if (this.ctx && this.ctx.state === 'suspended') {
+      this.ctx.resume().catch(() => {});
+    }
+  }
+
+  bindLifecycleEvents() {
+    // 1. Visibilité du document (changement d'onglet ou minimisation mobile)
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        this.handleAppPause();
+      } else {
+        this.handleAppResume();
+      }
+    });
+
+    // 2. Déchargement de page / fermeture d'app
+    window.addEventListener('pagehide', () => this.destroy());
+    window.addEventListener('beforeunload', () => this.destroy());
+
+    // 3. Cycle de vie natif Capacitor (Android / iOS)
+    try {
+      App.addListener('appStateChange', ({ isActive }) => {
+        if (!isActive) {
+          this.handleAppPause();
+        } else {
+          this.handleAppResume();
+        }
+      });
+      App.addListener('pause', () => this.handleAppPause());
+      App.addListener('resume', () => this.handleAppResume());
+    } catch (e) {
+      // Navigateur web classique
+    }
+  }
+
+  handleAppPause() {
+    if (this.isDestroyed) return;
+    this.wasMusicPlaying = this.musicPlaying;
+    this.wasEnginePlaying = !!this.engineOsc;
+
+    this.stopEngine();
+    this.stopMusic();
+
+    if (this.ctx && this.ctx.state === 'running') {
+      this.ctx.suspend().catch(() => {});
+    }
+  }
+
+  handleAppResume() {
+    if (this.isDestroyed) return;
+    this.resumeContext();
+
+    if (this.wasMusicPlaying && !this.isMutedMusic) {
+      this.startMusic();
+    }
+  }
+
+  destroy() {
+    this.isDestroyed = true;
+    this.stopEngine();
+    this.stopMusic();
+
+    if (this.ctx) {
+      try {
+        this.ctx.close().catch(() => {});
+      } catch (e) {}
+      this.ctx = null;
+    }
+  }
+
+  // Utilitaire de nettoyage automatique des nœuds éphémères pour libérer la mémoire
+  cleanupNodes(...nodes) {
+    nodes.forEach(node => {
+      if (node && typeof node.disconnect === 'function') {
+        try {
+          node.disconnect();
+        } catch (e) {}
+      }
+    });
   }
 
   // --- EFFETS SONORES (SFX) ---
 
   playBoing() {
-    if (this.isMutedSfx || !this.ctx) return;
+    if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
     this.resumeContext();
 
     const now = this.ctx.currentTime;
@@ -41,23 +129,23 @@ export class SoundManager {
     const gain = this.ctx.createGain();
 
     osc.type = 'sine';
-    // Évolution rapide de fréquence comique (boing montant)
     osc.frequency.setValueAtTime(160, now);
     osc.frequency.exponentialRampToValueAtTime(750, now + 0.18);
     osc.frequency.exponentialRampToValueAtTime(220, now + 0.35);
 
     gain.gain.setValueAtTime(0.4, now);
-    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
 
     osc.connect(gain);
     gain.connect(this.ctx.destination);
 
+    osc.onended = () => this.cleanupNodes(osc, gain);
     osc.start(now);
     osc.stop(now + 0.35);
   }
 
   playComicWhoosh() {
-    if (this.isMutedSfx || !this.ctx) return;
+    if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
     this.resumeContext();
 
     const now = this.ctx.currentTime;
@@ -69,17 +157,18 @@ export class SoundManager {
     osc.frequency.exponentialRampToValueAtTime(90, now + 0.25);
 
     gain.gain.setValueAtTime(0.3, now);
-    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
 
     osc.connect(gain);
     gain.connect(this.ctx.destination);
 
+    osc.onended = () => this.cleanupNodes(osc, gain);
     osc.start(now);
     osc.stop(now + 0.25);
   }
 
   playCoin() {
-    if (this.isMutedSfx || !this.ctx) return;
+    if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
     this.resumeContext();
 
     const now = this.ctx.currentTime;
@@ -90,27 +179,78 @@ export class SoundManager {
     osc1.type = 'sine';
     osc2.type = 'triangle';
 
-    osc1.frequency.setValueAtTime(987.77, now); // B5
-    osc1.frequency.setValueAtTime(1318.51, now + 0.08); // E6
+    osc1.frequency.setValueAtTime(987.77, now);
+    osc1.frequency.setValueAtTime(1318.51, now + 0.08);
 
     osc2.frequency.setValueAtTime(987.77, now);
     osc2.frequency.setValueAtTime(1318.51, now + 0.08);
 
     gain.gain.setValueAtTime(0.25, now);
-    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
 
     osc1.connect(gain);
     osc2.connect(gain);
     gain.connect(this.ctx.destination);
 
+    osc1.onended = () => this.cleanupNodes(osc1, osc2, gain);
     osc1.start(now);
     osc2.start(now);
     osc1.stop(now + 0.3);
     osc2.stop(now + 0.3);
   }
 
+  playCrash() {
+    if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
+    this.resumeContext();
+
+    const now = this.ctx.currentTime;
+
+    // 1. Coup de basse sourd / punch de choc
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(140, now);
+    osc.frequency.exponentialRampToValueAtTime(30, now + 0.4);
+
+    gain.gain.setValueAtTime(0.45, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.onended = () => this.cleanupNodes(osc, gain);
+    osc.start(now);
+    osc.stop(now + 0.4);
+
+    // 2. Bruit blanc métallique / bris de verre cartoon
+    const bufferSize = Math.floor(this.ctx.sampleRate * 0.35);
+    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (this.ctx.sampleRate * 0.08));
+    }
+
+    const noise = this.ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const noiseFilter = this.ctx.createBiquadFilter();
+    noiseFilter.type = 'bandpass';
+    noiseFilter.frequency.setValueAtTime(2200, now);
+    noiseFilter.Q.setValueAtTime(3.0, now);
+
+    const noiseGain = this.ctx.createGain();
+    noiseGain.gain.setValueAtTime(0.35, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+
+    noise.connect(noiseFilter);
+    noiseFilter.connect(noiseGain);
+    noiseGain.connect(this.ctx.destination);
+
+    noise.onended = () => this.cleanupNodes(noise, noiseFilter, noiseGain);
+    noise.start(now);
+  }
+
   playHorn() {
-    if (this.isMutedSfx || !this.ctx) return;
+    if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
     this.resumeContext();
 
     const now = this.ctx.currentTime;
@@ -121,17 +261,17 @@ export class SoundManager {
     osc1.type = 'sawtooth';
     osc2.type = 'sawtooth';
 
-    // Bi-ton style klaxon italien / scooter rétro
     osc1.frequency.setValueAtTime(440, now); // A4
     osc2.frequency.setValueAtTime(554.37, now); // C#5
 
     gain.gain.setValueAtTime(0.2, now);
-    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
 
     osc1.connect(gain);
     osc2.connect(gain);
     gain.connect(this.ctx.destination);
 
+    osc1.onended = () => this.cleanupNodes(osc1, osc2, gain);
     osc1.start(now);
     osc2.start(now);
     osc1.stop(now + 0.25);
@@ -139,7 +279,7 @@ export class SoundManager {
   }
 
   playComboFanfare(multiplier) {
-    if (this.isMutedSfx || !this.ctx) return;
+    if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
     this.resumeContext();
 
     const baseFreq = Math.min(440 + multiplier * 50, 1100);
@@ -155,18 +295,19 @@ export class SoundManager {
       osc.frequency.setValueAtTime(freq, noteTime);
 
       gain.gain.setValueAtTime(0.2, noteTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, noteTime + 0.15);
+      gain.gain.exponentialRampToValueAtTime(0.001, noteTime + 0.15);
 
       osc.connect(gain);
       gain.connect(this.ctx.destination);
 
+      osc.onended = () => this.cleanupNodes(osc, gain);
       osc.start(noteTime);
       osc.stop(noteTime + 0.15);
     });
   }
 
   playClick() {
-    if (this.isMutedSfx || !this.ctx) return;
+    if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
     this.resumeContext();
 
     const now = this.ctx.currentTime;
@@ -178,20 +319,21 @@ export class SoundManager {
     osc.frequency.exponentialRampToValueAtTime(400, now + 0.05);
 
     gain.gain.setValueAtTime(0.15, now);
-    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
 
     osc.connect(gain);
     gain.connect(this.ctx.destination);
 
+    osc.onended = () => this.cleanupNodes(osc, gain);
     osc.start(now);
     osc.stop(now + 0.05);
   }
 
   playVictory() {
-    if (this.isMutedSfx || !this.ctx) return;
+    if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
     this.resumeContext();
 
-    const chords = [523.25, 659.25, 783.99, 1046.50]; // Do, Mi, Sol, Do
+    const chords = [523.25, 659.25, 783.99, 1046.50];
     const now = this.ctx.currentTime;
 
     chords.forEach((freq, idx) => {
@@ -203,11 +345,12 @@ export class SoundManager {
       osc.frequency.setValueAtTime(freq, t);
 
       gain.gain.setValueAtTime(0.25, t);
-      gain.gain.exponentialRampToValueAtTime(0.01, t + 0.4);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
 
       osc.connect(gain);
       gain.connect(this.ctx.destination);
 
+      osc.onended = () => this.cleanupNodes(osc, gain);
       osc.start(t);
       osc.stop(t + 0.4);
     });
@@ -216,22 +359,20 @@ export class SoundManager {
   // --- SON DU MOTEUR (DYNAMIQUE) ---
 
   startEngine() {
-    if (this.engineOsc || !this.ctx || this.isMutedSfx) return;
+    if (this.engineOsc || !this.ctx || this.isMutedSfx || this.isDestroyed) return;
     this.resumeContext();
 
     const now = this.ctx.currentTime;
     this.engineOsc = this.ctx.createOscillator();
     this.engineGain = this.ctx.createGain();
 
-    this.engineOsc.type = 'sawtooth';
-    this.engineOsc.frequency.setValueAtTime(65, now);
+    this.engineOsc.type = 'triangle';
+    this.engineOsc.frequency.setValueAtTime(55, now);
+    this.engineGain.gain.setValueAtTime(0.025, now);
 
-    this.engineGain.gain.setValueAtTime(0.08, now);
-
-    // Filtre passe-bas pour sonner comme un vrai moteur thermique
     this.engineFilter = this.ctx.createBiquadFilter();
     this.engineFilter.type = 'lowpass';
-    this.engineFilter.frequency.setValueAtTime(320, now);
+    this.engineFilter.frequency.setValueAtTime(200, now);
 
     this.engineOsc.connect(this.engineFilter);
     this.engineFilter.connect(this.engineGain);
@@ -241,15 +382,14 @@ export class SoundManager {
   }
 
   updateEngine(speedRatio) {
-    if (!this.engineOsc || !this.ctx) return;
+    if (!this.engineOsc || !this.ctx || this.isDestroyed) return;
     const now = this.ctx.currentTime;
     const clampedRatio = Math.max(0, Math.min(1.5, speedRatio));
-    // Fréquence moteur de 65Hz (ralenti) à 190Hz (plein gaz)
-    const targetFreq = 65 + clampedRatio * 110;
-    this.engineOsc.frequency.setTargetAtTime(targetFreq, now, 0.05);
+    const targetFreq = 55 + clampedRatio * 55;
+    this.engineOsc.frequency.setTargetAtTime(targetFreq, now, 0.08);
 
     if (this.engineFilter) {
-      this.engineFilter.frequency.setTargetAtTime(280 + clampedRatio * 350, now, 0.05);
+      this.engineFilter.frequency.setTargetAtTime(180 + clampedRatio * 160, now, 0.08);
     }
   }
 
@@ -257,40 +397,34 @@ export class SoundManager {
     if (this.engineOsc) {
       try {
         this.engineOsc.stop();
-        this.engineOsc.disconnect();
+        this.cleanupNodes(this.engineOsc, this.engineFilter, this.engineGain);
       } catch (e) {}
       this.engineOsc = null;
       this.engineGain = null;
+      this.engineFilter = null;
     }
   }
 
   // --- MUSIQUE D'ARCADE ÉNERGIQUE PROCÉDURALE ---
 
   startMusic() {
-    if (this.musicPlaying || this.isMutedMusic || !this.ctx) return;
+    if (this.musicPlaying || this.isMutedMusic || !this.ctx || this.isDestroyed) return;
     this.resumeContext();
     this.musicPlaying = true;
 
-    // Séquenceur d'accords pop-arcade français dynamique
-    // Pattern de basse punchy et mélodie entraînante
     const tempo = 132;
     const beatDuration = 60 / tempo;
-    const stepDuration = beatDuration / 2; // Croches
+    const stepDuration = beatDuration / 2;
     let step = 0;
 
     const bassLine = [
-      // Mesure 1 (Do)
       130.81, 130.81, 196.00, 130.81, 164.81, 130.81, 196.00, 261.63,
-      // Mesure 2 (La)
       110.00, 110.00, 164.81, 110.00, 146.83, 110.00, 164.81, 220.00,
-      // Mesure 3 (Fa)
       87.31, 87.31, 130.81, 87.31, 116.54, 87.31, 130.81, 174.61,
-      // Mesure 4 (Sol)
       98.00, 98.00, 146.83, 98.00, 123.47, 98.00, 146.83, 196.00
     ];
 
     const leadLine = [
-      // Mélodie joyeuse et rythmée
       523.25, 0, 659.25, 783.99, 0, 659.25, 523.25, 0,
       440.00, 0, 523.25, 659.25, 0, 523.25, 440.00, 0,
       349.23, 0, 440.00, 523.25, 0, 440.00, 349.23, 0,
@@ -298,10 +432,10 @@ export class SoundManager {
     ];
 
     const playStep = () => {
-      if (!this.musicPlaying) return;
+      if (!this.musicPlaying || !this.ctx || this.isDestroyed) return;
       const now = this.ctx.currentTime;
 
-      // Jouer note de basse
+      // Note de basse
       const bassFreq = bassLine[step % bassLine.length];
       if (bassFreq > 0) {
         const bassOsc = this.ctx.createOscillator();
@@ -310,16 +444,17 @@ export class SoundManager {
         bassOsc.frequency.setValueAtTime(bassFreq, now);
 
         bassGain.gain.setValueAtTime(0.12, now);
-        bassGain.gain.exponentialRampToValueAtTime(0.01, now + stepDuration * 0.9);
+        bassGain.gain.exponentialRampToValueAtTime(0.001, now + stepDuration * 0.9);
 
         bassOsc.connect(bassGain);
         bassGain.connect(this.ctx.destination);
 
+        bassOsc.onended = () => this.cleanupNodes(bassOsc, bassGain);
         bassOsc.start(now);
         bassOsc.stop(now + stepDuration * 0.9);
       }
 
-      // Jouer note de lead
+      // Note de lead
       const leadFreq = leadLine[step % leadLine.length];
       if (leadFreq > 0) {
         const leadOsc = this.ctx.createOscillator();
@@ -328,11 +463,12 @@ export class SoundManager {
         leadOsc.frequency.setValueAtTime(leadFreq, now);
 
         leadGain.gain.setValueAtTime(0.08, now);
-        leadGain.gain.exponentialRampToValueAtTime(0.005, now + stepDuration * 0.75);
+        leadGain.gain.exponentialRampToValueAtTime(0.001, now + stepDuration * 0.75);
 
         leadOsc.connect(leadGain);
         leadGain.connect(this.ctx.destination);
 
+        leadOsc.onended = () => this.cleanupNodes(leadOsc, leadGain);
         leadOsc.start(now);
         leadOsc.stop(now + stepDuration * 0.75);
       }
@@ -350,8 +486,8 @@ export class SoundManager {
   }
 
   playHiHat(time) {
-    if (!this.ctx) return;
-    const bufferSize = this.ctx.sampleRate * 0.04;
+    if (!this.ctx || this.isDestroyed) return;
+    const bufferSize = Math.floor(this.ctx.sampleRate * 0.04);
     const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
     const data = buffer.getChannelData(0);
     for (let i = 0; i < bufferSize; i++) {
@@ -373,6 +509,7 @@ export class SoundManager {
     filter.connect(gain);
     gain.connect(this.ctx.destination);
 
+    noise.onended = () => this.cleanupNodes(noise, filter, gain);
     noise.start(time);
   }
 
@@ -387,6 +524,9 @@ export class SoundManager {
   toggleSfx(enabled) {
     this.isMutedSfx = !enabled;
     storage.updateSettings({ sfx: enabled });
+    if (!enabled) {
+      this.stopEngine();
+    }
   }
 
   toggleMusic(enabled) {

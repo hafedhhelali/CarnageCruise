@@ -1,6 +1,7 @@
 /**
  * Motormageddon - Styles Modernes Mobiles Arcade
  * Typographie dynamique, couleurs néon cartoon, optimisé pour écrans tactiles 100vw/100vh.
+ * Copyright 2026 EOMedia. Tous droits réservés.
  */
 
 :root {
@@ -9,8 +10,8 @@
   --secondary: #2ed573;
   --accent: #ffa502;
   --gold: #ffd700;
-  --dark-bg: rgba(18, 20, 32, 0.92);
-  --glass-bg: rgba(25, 28, 44, 0.82);
+  --dark-bg: rgba(18, 20, 32, 0.94);
+  --glass-bg: rgba(25, 28, 44, 0.85);
   --border-light: rgba(255, 255, 255, 0.16);
   --text-main: #ffffff;
   --text-muted: #a4b0be;
@@ -76,15 +77,16 @@ html, body {
   color: #fff;
   border: none;
   border-radius: 50px;
-  padding: 14px 28px;
-  font-size: 1.15rem;
+  padding: 13px 26px;
+  font-size: 1.05rem;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
   box-shadow: 0 6px 20px var(--primary-glow), inset 0 2px 0 rgba(255,255,255,0.4);
   cursor: pointer;
   transition: transform 0.1s ease, filter 0.15s ease;
   pointer-events: auto;
+  white-space: nowrap;
 }
 
 .btn-arcade:active {
@@ -120,21 +122,20 @@ html, body {
   flex-direction: column;
   justify-content: space-between;
   align-items: center;
-  padding: 40px 20px;
-  background: radial-gradient(circle at center, rgba(12, 13, 20, 0.2) 0%, rgba(12, 13, 20, 0.75) 100%);
-  transition: opacity 0.4s ease;
+  padding: 30px 20px 16px;
+  background: radial-gradient(circle at center, rgba(12, 13, 20, 0.2) 0%, rgba(12, 13, 20, 0.8) 100%);
 }
 
 .logo-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-top: 20px;
+  margin-top: 15px;
   animation: floatTitle 3s ease-in-out infinite;
 }
 
 .game-title {
-  font-size: clamp(2.4rem, 7vw, 4.2rem);
+  font-size: clamp(2.3rem, 7vw, 4.2rem);
   font-weight: 900;
   font-style: italic;
   text-transform: uppercase;
@@ -148,29 +149,36 @@ html, body {
 }
 
 .game-subtitle {
-  font-size: clamp(0.9rem, 2.5vw, 1.3rem);
+  font-size: clamp(0.85rem, 2.5vw, 1.25rem);
   font-weight: 800;
   text-transform: uppercase;
   color: #ffffff;
   background: linear-gradient(90deg, #0055a5, #ffffff, #ef4135);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  letter-spacing: 4px;
-  margin-top: -5px;
+  letter-spacing: 3px;
+  margin-top: -4px;
 }
 
 .splash-footer {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 15px;
-  margin-bottom: 30px;
+  gap: 14px;
+  width: 100%;
 }
 
 .btn-play-pulse {
-  font-size: 1.4rem;
-  padding: 18px 48px;
+  font-size: 1.35rem;
+  padding: 16px 44px;
   animation: pulseButton 1.6s ease-in-out infinite;
+}
+
+.legal-footer {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-align: center;
+  opacity: 0.8;
 }
 
 /* --- HUD DE GAMEPLAY --- */
@@ -184,7 +192,6 @@ html, body {
   flex-direction: column;
   justify-content: space-between;
   padding: 16px;
-  transition: opacity 0.3s ease;
 }
 
 .hud-top-bar {
@@ -257,7 +264,7 @@ html, body {
 }
 
 .progress-bar-bg {
-  width: 140px;
+  width: 130px;
   height: 8px;
   background: rgba(255,255,255,0.15);
   border-radius: 10px;
@@ -301,13 +308,13 @@ html, body {
   display: flex;
   flex-direction: column;
   background: var(--glass-bg);
-  padding: 10px 16px;
+  padding: 8px 14px;
   border-radius: 16px;
   border: 1px solid var(--border-light);
 }
 
 .speed-value {
-  font-size: 2rem;
+  font-size: 1.9rem;
   font-weight: 900;
   color: #fffa65;
   line-height: 1;
@@ -319,14 +326,39 @@ html, body {
   color: var(--text-muted);
 }
 
+/* Bouton de freinage / arrêt circulation */
+.btn-brake {
+  padding: 12px 20px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #c0392b, #e74c3c);
+  border: 2px solid #ff7675;
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  pointer-events: auto;
+  box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);
+  transition: transform 0.1s, filter 0.1s;
+}
+
+.btn-brake:active, .btn-brake.active {
+  transform: scale(0.92);
+  filter: brightness(1.2);
+  background: #e74c3c;
+  box-shadow: 0 0 20px #ff4757;
+}
+
 .btn-horn {
-  width: 60px;
-  height: 60px;
+  width: 58px;
+  height: 58px;
   border-radius: 50%;
   background: linear-gradient(135deg, #ffa502, #ff7f50);
   border: none;
   color: #fff;
-  font-size: 1.6rem;
+  font-size: 1.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -342,18 +374,19 @@ html, body {
 
 .touch-hint {
   position: absolute;
-  bottom: 25px;
+  bottom: 22px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(0,0,0,0.5);
+  background: rgba(0,0,0,0.55);
   padding: 6px 14px;
   border-radius: 20px;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   color: var(--text-muted);
   pointer-events: none;
+  white-space: nowrap;
 }
 
-/* --- CARTE DE FRANCE --- */
+/* --- CARTE RÉALISTE DE FRANCE --- */
 .screen-map {
   position: absolute;
   top: 0;
@@ -363,7 +396,7 @@ html, body {
   display: flex;
   flex-direction: column;
   background: radial-gradient(circle at center, #1b2838 0%, #0d131a 100%);
-  padding: 20px;
+  padding: 16px;
   pointer-events: auto;
   overflow-y: auto;
 }
@@ -372,11 +405,11 @@ html, body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .map-title {
-  font-size: 1.6rem;
+  font-size: 1.5rem;
   font-weight: 800;
   color: #fff;
 }
@@ -388,16 +421,17 @@ html, body {
   background: rgba(255, 215, 0, 0.15);
   border: 1px solid rgba(255, 215, 0, 0.4);
   color: var(--gold);
-  padding: 6px 14px;
+  padding: 6px 12px;
   border-radius: 20px;
   font-weight: 800;
+  font-size: 0.9rem;
 }
 
 .france-map-svg-container {
   position: relative;
   width: 100%;
   max-width: 520px;
-  height: 380px;
+  height: 360px;
   margin: 0 auto;
   background: rgba(255,255,255,0.02);
   border-radius: 24px;
@@ -426,6 +460,24 @@ html, body {
   z-index: 5;
 }
 
+.city-pulse-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid #ff4757;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  opacity: 0;
+}
+
+@keyframes pinRippleWave {
+  0% { transform: translate(-50%, -50%) scale(0.8); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(2.8); opacity: 0; }
+}
+
 .city-pin-dot {
   width: 22px;
   height: 22px;
@@ -437,6 +489,7 @@ html, body {
   align-items: center;
   justify-content: center;
   font-size: 0.65rem;
+  color: #fff;
 }
 
 .city-pin.locked .city-pin-dot {
@@ -445,13 +498,13 @@ html, body {
 }
 
 .city-pin-label {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 800;
   color: #fff;
-  background: rgba(0,0,0,0.7);
-  padding: 2px 8px;
+  background: rgba(0,0,0,0.75);
+  padding: 2px 7px;
   border-radius: 10px;
-  margin-top: 3px;
+  margin-top: 2px;
   white-space: nowrap;
 }
 
@@ -460,53 +513,114 @@ html, body {
   backdrop-filter: blur(12px);
   border: 1px solid var(--border-light);
   border-radius: 20px;
-  padding: 16px;
-  margin-top: 14px;
+  padding: 14px;
+  margin-top: 12px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .city-detail-header {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: flex-start;
 }
 
 .city-detail-name {
-  font-size: 1.4rem;
+  font-size: 1.35rem;
   font-weight: 800;
   color: #fff;
 }
 
-.city-detail-subtitle {
-  font-size: 0.85rem;
-  color: var(--text-muted);
+.city-tag {
+  background: rgba(52, 152, 219, 0.25);
+  border: 1px solid #3498db;
+  color: #74b9ff;
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 8px;
+  margin-left: 6px;
 }
 
 .city-stars {
   display: flex;
-  gap: 4px;
+  gap: 3px;
   color: var(--gold);
-  font-size: 1.1rem;
+  font-size: 1.05rem;
 }
 
 .city-description {
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   color: #ced6e0;
-  line-height: 1.4;
+  line-height: 1.35;
 }
 
 .city-target-info {
   display: flex;
   justify-content: space-between;
   background: rgba(0,0,0,0.3);
-  padding: 8px 12px;
+  padding: 7px 12px;
   border-radius: 12px;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
 }
 
-/* --- GARAGE --- */
+/* Transition cinématique d'entrée dans la ville */
+.city-entry-transition {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at center, #1b2838 0%, #000 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  pointer-events: auto;
+  animation: entryZoom 1.1s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+}
+
+.city-entry-transition.fade-out {
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.city-entry-content {
+  text-align: center;
+  color: #fff;
+}
+
+.entry-sub {
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 3px;
+  color: var(--text-muted);
+}
+
+.entry-title {
+  font-size: clamp(2.5rem, 8vw, 4.5rem);
+  font-weight: 900;
+  font-style: italic;
+  color: #fffa65;
+  text-shadow: 0 4px 20px rgba(255, 71, 87, 0.8);
+  letter-spacing: 2px;
+  margin: 6px 0;
+}
+
+.entry-tagline {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #74b9ff;
+}
+
+@keyframes entryZoom {
+  0% { transform: scale(0.6); opacity: 0; }
+  50% { transform: scale(1.05); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* --- GARAGE (SANS ROGNAGE DE TEXTES) --- */
 .screen-garage {
   position: absolute;
   top: 0;
@@ -516,15 +630,17 @@ html, body {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 20px;
-  background: linear-gradient(180deg, rgba(12, 13, 20, 0.75) 0%, rgba(12, 13, 20, 0.4) 50%, rgba(12, 13, 20, 0.9) 100%);
+  padding: 16px;
+  background: linear-gradient(180deg, rgba(12, 13, 20, 0.75) 0%, rgba(12, 13, 20, 0.4) 50%, rgba(12, 13, 20, 0.95) 100%);
   pointer-events: auto;
+  overflow-y: auto;
 }
 
 .garage-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 8px;
 }
 
 .garage-bottom-panel {
@@ -532,32 +648,34 @@ html, body {
   backdrop-filter: blur(12px);
   border: 1px solid var(--border-light);
   border-radius: 24px;
-  padding: 18px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
 }
 
 .bikes-tabs {
   display: flex;
   gap: 8px;
   overflow-x: auto;
-  padding-bottom: 4px;
+  padding-bottom: 6px;
+  -webkit-overflow-scrolling: touch;
 }
 
 .bike-tab {
-  flex: 1;
-  min-width: 90px;
+  flex: 0 0 auto;
+  min-width: 120px;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid var(--border-light);
   border-radius: 14px;
-  padding: 8px;
+  padding: 9px 12px;
   text-align: center;
-  font-size: 0.8rem;
-  font-weight: 700;
+  font-size: 0.82rem;
+  font-weight: 800;
   color: var(--text-muted);
   cursor: pointer;
   transition: all 0.2s;
+  white-space: nowrap;
 }
 
 .bike-tab.active {
@@ -576,18 +694,18 @@ html, body {
   display: flex;
   flex-direction: column;
   background: rgba(0,0,0,0.3);
-  padding: 8px;
+  padding: 7px;
   border-radius: 12px;
   text-align: center;
 }
 
 .stat-name {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   color: var(--text-muted);
 }
 
 .stat-rating {
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: 800;
   color: #fffa65;
 }
@@ -595,12 +713,12 @@ html, body {
 .color-picker-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .color-dot {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   border: 2px solid #ffffff;
   cursor: pointer;
@@ -612,39 +730,42 @@ html, body {
   box-shadow: 0 0 10px #ffffff;
 }
 
-/* --- MODALES (RÉSULTATS, PAUSE, PARAMÈTRES) --- */
+/* --- MODALES (RÉSULTATS, PAUSE, PARAMÈTRES, PROFIL) --- */
 .modal-overlay {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.75);
+  background: rgba(0, 0, 0, 0.78);
   backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 16px;
   pointer-events: auto;
   z-index: 50;
+  overflow-y: auto;
 }
 
 .modal-card {
   width: 100%;
-  max-width: 400px;
+  max-width: 420px;
+  max-height: 90vh;
+  overflow-y: auto;
   background: var(--dark-bg);
   border: 1px solid var(--border-light);
-  border-radius: 28px;
-  padding: 24px;
+  border-radius: 26px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
   box-shadow: 0 15px 40px rgba(0,0,0,0.6);
   animation: modalPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .modal-title {
-  font-size: 1.8rem;
+  font-size: 1.6rem;
   font-weight: 900;
   text-align: center;
   color: #fffa65;
@@ -653,16 +774,16 @@ html, body {
 .results-stats {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 9px;
   background: rgba(255,255,255,0.05);
-  padding: 14px;
-  border-radius: 18px;
+  padding: 12px;
+  border-radius: 16px;
 }
 
 .result-row {
   display: flex;
   justify-content: space-between;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: 700;
 }
 
@@ -672,27 +793,54 @@ html, body {
   gap: 12px;
   font-size: 2.2rem;
   color: var(--gold);
-  margin: 6px 0;
+  margin: 4px 0;
 }
 
 .modal-actions {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 9px;
 }
 
 /* --- ANIMATIONS --- */
 @keyframes floatTitle {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
+  50% { transform: translateY(-7px); }
 }
 
 @keyframes pulseButton {
   0%, 100% { transform: scale(1); box-shadow: 0 6px 20px var(--primary-glow); }
-  50% { transform: scale(1.05); box-shadow: 0 10px 30px rgba(255, 71, 87, 0.7); }
+  50% { transform: scale(1.04); box-shadow: 0 10px 28px rgba(255, 71, 87, 0.7); }
 }
 
 @keyframes modalPop {
   0% { transform: scale(0.85); opacity: 0; }
   100% { transform: scale(1); opacity: 1; }
+}
+
+/* --- MENTIONS LÉGALES & COPYRIGHT EOMEDIA 2026 --- */
+.splash-legal {
+  margin-top: 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  color: #747d8c;
+  letter-spacing: 0.5px;
+}
+
+.btn-legal-link {
+  background: none;
+  border: none;
+  color: #a4b0be;
+  text-decoration: underline;
+  font-size: 0.75rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  transition: color 0.2s ease;
+}
+
+.btn-legal-link:active {
+  color: var(--primary);
 }
