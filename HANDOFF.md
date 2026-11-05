@@ -61,9 +61,10 @@ Ce document fournit l'ensemble des informations de conception, d'architecture lo
 
 ### G. Intégration CI/CD GitHub Actions & Canal BETA
 - Keystore cryptographique permanent `android/app/motormageddon.keystore` (RSA 2048, valide 27 ans, EOMedia) garantissant l'identité de signature SHA-256 sur toutes les versions.
-- Pipeline CI/CD renforcé : extraction automatique de la version et du canal depuis `version.json` via Node.js dans l'environnement GitHub Actions.
-- Nom d'artefact GitHub dynamique : `Motormageddon-v${APP_VERSION}-b${VERSION_CODE}-APK` (ex: `Motormageddon-v1.2.0-beta-b3-APK`).
+- Pipeline CI/CD consolidé : déclenchement unique sur `push: branches: [main]` (aucune double exécution lors des tags).
+- Publication unique : un seul APK officiel produit et publié (`Motormageddon-v1.2.0-beta-b3-debug.apk`), sans doublon générique `app-debug.apk`.
+- Gestion de concurrence (`concurrency: cancel-in-progress`) pour éviter tout build superflus en parallèle.
 - Pre-release GitHub Release automatique étiquetée **[BETA]** avec `prerelease: true`.
 - Badge BETA élégant affiché sur le Splash Screen et dans les mentions légales de l'application.
-- `versionCode` : 3, `versionName` : 1.2.0-beta, nom d'APK généré : `Motormageddon-v1.2.0-beta-b3-debug.apk`.
+- `versionCode` : 3, `versionName` : 1.2.0-beta.
 - Scripts d'incrémentation : `npm run version:patch`, `version:minor`, `version:major` (gérant automatiquement le suffixe `-beta`).

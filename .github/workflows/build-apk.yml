@@ -2,12 +2,12 @@ name: Build Android APK & Release
 
 on:
   push:
-    branches: [ main, master ]
-    tags:
-      - 'v*'
-  pull_request:
-    branches: [ main, master ]
+    branches: [ main ]
   workflow_dispatch:
+
+concurrency:
+  group: motormageddon-build-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: write
@@ -73,8 +73,6 @@ jobs:
         run: |
           cd android
           ./gradlew assembleDebug --no-daemon --stacktrace
-          # Créer une copie app-debug.apk pour la compatibilité
-          cp app/build/outputs/apk/debug/Motormageddon*.apk app/build/outputs/apk/debug/app-debug.apk 2>/dev/null || true
 
       - name: 📦 Build Release APK (Signed with permanent keystore)
         run: |
@@ -86,15 +84,16 @@ jobs:
         with:
           name: Motormageddon-v${{ env.APP_VERSION }}-b${{ env.VERSION_CODE }}-APK
           path: |
-            android/app/build/outputs/apk/debug/*.apk
+            android/app/build/outputs/apk/debug/Motormageddon-*.apk
           retention-days: 14
 
-      - name: 🏷️ Create GitHub Beta Release (On Tag Push or Workflow Dispatch)
-        if: startsWith(github.ref, 'refs/tags/')
+      - name: 🏷️ Publish GitHub Beta Release
+        if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: "v${{ env.APP_VERSION }}"
           files: |
-            android/app/build/outputs/apk/debug/*.apk
+            android/app/build/outputs/apk/debug/Motormageddon-*.apk
           name: "Motormageddon v${{ env.APP_VERSION }} [BETA]"
           body: |
             # 🏁 Motormageddon v${{ env.APP_VERSION }} (Canal BETA)

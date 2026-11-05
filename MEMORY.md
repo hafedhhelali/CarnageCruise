@@ -58,15 +58,17 @@
 
 ### ✅ 11. VERSIONNAGE COMPLET, CANAL BETA & GITHUB ACTIONS
 - **Canal officiel** : **BETA** (`1.2.0-beta`, Build 3).
-- **Intégration GitHub Actions** :
+- **Intégration GitHub Actions consolidée** :
+  - **1 seule exécution par push** (déclencheur unique `push: branches: [main]`, concurrency activée).
+  - **1 seul APK officiel** généré et publié : `Motormageddon-v1.2.0-beta-b3-debug.apk` (suppression du doublon `app-debug.apk`).
   - Extraction dynamique de la version depuis `version.json` dans GitHub Actions (`APP_VERSION`, `VERSION_CODE`, `CHANNEL`).
   - Nom d'artefact GitHub dynamique : `Motormageddon-v1.2.0-beta-b3-APK`.
   - Releases GitHub configurées en Pre-release (`prerelease: true`) marquées **[BETA]**.
   - Badge BETA distinctif rouge/rose sur le Splash Screen et dans les mentions légales de l'application.
 - **Keystore permanent** : `android/app/motormageddon.keystore` (RSA 2048, 10 000 jours, EOMedia) garantissant l'identité de signature SHA-256 sur toutes les versions.
-- **Nom d'APK généré automatiquement** : `Motormageddon-v1.2.0-beta-b3-debug.apk` (et copie `app-debug.apk`).
 - **Script d'incrémentation** : `npm run version:patch`, `version:minor`, `version:major` configurés pour préserver automatiquement le canal `-beta`.
 
 ### ✅ 12. VALIDATION DU BUILD ANDROID & GITHUB ACTIONS
-- **Compilation locale APK réussie** : `android/app/build/outputs/apk/debug/Motormageddon-v1.2.0-beta-b3-debug.apk` et `app-debug.apk`.
+- **Compilation locale & cloud APK réussie** : `android/app/build/outputs/apk/debug/Motormageddon-v1.2.0-beta-b3-debug.apk` (unique).
+- **Release GitHub officielle** : `https://github.com/hafedhhelali/Motormageddon/releases/tag/v1.2.0-beta`
 - **Dépôt officiel** : `https://github.com/hafedhhelali/Motormageddon`
