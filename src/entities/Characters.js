@@ -662,6 +662,8 @@ export class CharacterSystem {
         active: false,
         isFlying: false,
         isFleeing: false,
+        isHornPanicked: false,
+        hornPanicTimer: 0,
         hasNearMissed: false,
         fleeDirectionX: 0,
         fleeTimer: 0,
@@ -682,6 +684,8 @@ export class CharacterSystem {
       char.active = false;
       char.isFlying = false;
       char.isFleeing = false;
+      char.isHornPanicked = false;
+      char.hornPanicTimer = 0;
       char.hasNearMissed = false;
       char.group.visible = false;
       char.group.position.set(0, -100, 0);
@@ -819,8 +823,21 @@ export class CharacterSystem {
         const distZ = char.group.position.z - playerZ;
         const distX = Math.abs(char.group.position.x - bikeX);
 
-        // --- IA DE FUITE PANIQUÉE HYSTÉRIQUE ---
-        if (distZ > 0 && distZ < 22.0 && distX < 3.4) {
+        // Décompte de la panique au klaxon
+        if (char.hornPanicTimer > 0) {
+          char.hornPanicTimer -= delta;
+          if (char.hornPanicTimer <= 0) {
+            char.isHornPanicked = false;
+          }
+        }
+
+        // --- RÈGLE DE FUITE : NE S'ENFUIT JAMAIS À L'ARRÊT OU AU FREINAGE ---
+        // Si le véhicule est à l'arrêt ou roule au pas (vitesse <= 3.5 m/s), les piétons ne s'enfuient pas
+        // et poursuivent leur marche sereinement. Ils ne fuient qu'à vive allure (> 3.5 m/s) ou au coup de klaxon !
+        const shouldFlee = (char.isHornPanicked && char.hornPanicTimer > 0) ||
+                           (bikeSpeed > 3.5 && distZ > 0 && distZ < 22.0 && distX < 3.4);
+
+        if (shouldFlee) {
           char.isFleeing = true;
           char.fleeTimer += delta;
 
@@ -942,5 +959,26 @@ export class CharacterSystem {
         }
       }
     });
+  }
+
+  /**
+   * Déclenche la panique des piétons en avant suite à un coup de klaxon
+   */
+  triggerHornAlert(bikePos, radius = 22.0) {
+    let count = 0;
+    this.characters.forEach(char => {
+      if (!char.group.visible || char.isFlying) return;
+      const dZ = char.group.position.z - bikePos.z;
+      const dX = Math.abs(char.group.position.x - bikePos.x);
+      const dist = Math.sqrt(dZ * dZ + dX * dX);
+
+      if (dZ > -2.0 && dist < radius) {
+        char.isHornPanicked = true;
+        char.hornPanicTimer = 2.5; // 2.5 secondes de panique
+        char.fleeDirectionX = char.group.position.x >= bikePos.x ? 1 : -1;
+        count++;
+      }
+    });
+    return count;
   }
 }

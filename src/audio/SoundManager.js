@@ -835,29 +835,65 @@ export class SoundManager {
 
     this.resumeContext();
 
+    // Klaxon bi-ton compresseur italien/français ultra-expressif ("POUËT-POUËT !")
     const now = this.ctx.currentTime;
-    const osc1 = this.ctx.createOscillator();
-    const osc2 = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(1150, now);
+    filter.Q.setValueAtTime(3.0, now);
 
-    osc1.type = 'sawtooth';
-    osc2.type = 'sawtooth';
+    const masterGain = this.ctx.createGain();
+    masterGain.gain.setValueAtTime(0.38, now);
 
-    osc1.frequency.setValueAtTime(440, now); // A4
-    osc2.frequency.setValueAtTime(554.37, now); // C#5
+    filter.connect(masterGain);
+    masterGain.connect(this.ctx.destination);
 
-    gain.gain.setValueAtTime(0.2, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+    // Double impulsion rythmique caractéristique (Pulse 1: 0.11s, Pause: 0.04s, Pulse 2: 0.18s)
+    const bursts = [
+      { start: now, duration: 0.11 },
+      { start: now + 0.15, duration: 0.18 }
+    ];
 
-    osc1.connect(gain);
-    osc2.connect(gain);
-    gain.connect(this.ctx.destination);
+    bursts.forEach(b => {
+      const o1 = this.ctx.createOscillator();
+      const o2 = this.ctx.createOscillator();
+      const o3 = this.ctx.createOscillator();
+      const bGain = this.ctx.createGain();
 
-    osc1.onended = () => this.cleanupNodes(osc1, osc2, gain);
-    osc1.start(now);
-    osc2.start(now);
-    osc1.stop(now + 0.25);
-    osc2.stop(now + 0.25);
+      o1.type = 'sawtooth';
+      o2.type = 'sawtooth';
+      o3.type = 'square';
+
+      // Accord brillant fanfare : Fondamentale A4 (440Hz), Tierce Majeure C#5 (554.37Hz), Quinte E5 (659Hz)
+      o1.frequency.setValueAtTime(440, b.start);
+      o2.frequency.setValueAtTime(554.37, b.start);
+      o3.frequency.setValueAtTime(659.25, b.start);
+
+      // Vibrato compresseur pneumatique
+      o1.frequency.linearRampToValueAtTime(446, b.start + b.duration * 0.5);
+      o1.frequency.linearRampToValueAtTime(440, b.start + b.duration);
+
+      bGain.gain.setValueAtTime(0.001, b.start);
+      bGain.gain.linearRampToValueAtTime(1.0, b.start + 0.015);
+      bGain.gain.setValueAtTime(1.0, b.start + b.duration - 0.02);
+      bGain.gain.exponentialRampToValueAtTime(0.001, b.start + b.duration);
+
+      o1.connect(bGain);
+      o2.connect(bGain);
+      o3.connect(bGain);
+      bGain.connect(filter);
+
+      o1.start(b.start);
+      o2.start(b.start);
+      o3.start(b.start);
+      o1.stop(b.start + b.duration);
+      o2.stop(b.start + b.duration);
+      o3.stop(b.start + b.duration);
+
+      o1.onended = () => this.cleanupNodes(o1, o2, o3, bGain);
+    });
+
+    setTimeout(() => this.cleanupNodes(filter, masterGain), 450);
   }
 
   playComboFanfare(multiplier) {

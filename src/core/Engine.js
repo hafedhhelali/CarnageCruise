@@ -37,9 +37,13 @@ export class Engine {
     );
     this.baseFov = 60;
 
-    // Éclairage naturel, doux et équilibré (suppression des lumières colorées parasites)
-    this.ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
+    // Éclairage naturel, doux et équilibré avec lumière d'ambiance et hémisphérique de ciel
+    this.ambientLight = new THREE.AmbientLight(0xffffff, 0.75);
     this.scene.add(this.ambientLight);
+
+    // Lumière hémisphérique pour des reflets de ciel et sol riches sur les modèles 3D
+    this.hemiLight = new THREE.HemisphereLight(0xdff9fb, 0x535c68, 0.55);
+    this.scene.add(this.hemiLight);
 
     // Lumière solaire principale naturelle avec ombres douces
     this.dirLight = new THREE.DirectionalLight(0xfffdf7, 1.25);
@@ -110,17 +114,18 @@ export class Engine {
       this.shakeIntensity = Math.max(0, this.shakeIntensity - this.shakeDecay * delta);
     }
 
-    // Suivi fluide amorti de la moto
-    const targetCamX = bikePosition.x * 0.45 + shakeX;
+    // Suivi fluide dynamique de la moto : la caméra suit parfaitement latéralement
+    // pour garder le pilote 100% visible même à l'extrémité des trottoirs gauche et droite
+    const targetCamX = bikePosition.x * 0.88 + shakeX;
     const targetCamY = bikePosition.y + this.cameraOffset.y + shakeY;
     const targetCamZ = bikePosition.z + this.cameraOffset.z;
 
-    this.camera.position.x += (targetCamX - this.camera.position.x) * Math.min(1.0, delta * 8.0);
+    this.camera.position.x += (targetCamX - this.camera.position.x) * Math.min(1.0, delta * 9.5);
     this.camera.position.y += (targetCamY - this.camera.position.y) * Math.min(1.0, delta * 8.0);
     this.camera.position.z += (targetCamZ - this.camera.position.z) * Math.min(1.0, delta * 15.0);
 
-    // LookAt dynamique légèrement devant la moto
-    const lookTargetX = bikePosition.x * 0.7;
+    // LookAt centré précisément sur le couloir du joueur pour cadrage optimal
+    const lookTargetX = bikePosition.x;
     const lookTargetY = bikePosition.y + 1.2;
     const lookTargetZ = bikePosition.z + 10.0;
     this.camera.lookAt(lookTargetX, lookTargetY, lookTargetZ);

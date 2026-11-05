@@ -1,7 +1,8 @@
 /**
- * Motormageddon - Système de Circulation Urbaine 3D Réaliste (Trafic Actif)
- * Voitures, taxis, fourgons et autobus circulant sur les voies de circulation,
- * avec phares avant, feux arrière de freinage, dépassements, et collisions spectaculaires.
+ * Motormageddon - Système de Circulation Urbaine 3D Haute-Fidélité (Trafic Réduit & Graphismes Luxueux)
+ * Véhicules modélisés avec carrosseries métallisées réalistes, reflets vernis, vitrages fumés,
+ * phares LED DRL avec halos, feux arrière néon, jantes alliage 3D et physique de carambolage.
+ * Trafic équilibré et aéré : 2 à 3 voitures maximum à l'écran avec large distance de sécurité.
  */
 
 import * as THREE from 'three';
@@ -11,31 +12,63 @@ export class Traffic {
   constructor(scene) {
     this.scene = scene;
     this.vehicles = [];
-    this.vehiclePoolSize = 10;
+    this.vehiclePoolSize = 4; // Trafic réduit à 4 véhicules dans le pool
+    this.maxActiveVehicles = 2; // Au maximum 2 véhicules simultanément sur la route
     this.container = new THREE.Group();
     this.scene.add(this.container);
 
+    // Géométries partagées optimisées
     this.sharedGeos = {
-      wheel: new THREE.CylinderGeometry(0.35, 0.35, 0.24, 12),
-      wheelRim: new THREE.CylinderGeometry(0.22, 0.22, 0.25, 8),
-      headlight: new THREE.CircleGeometry(0.14, 8),
-      taillight: new THREE.PlaneGeometry(0.24, 0.12),
-      lightBeam: new THREE.ConeGeometry(1.4, 8.0, 8, 1, true)
+      wheelTire: new THREE.CylinderGeometry(0.36, 0.36, 0.24, 18),
+      wheelRim: new THREE.CylinderGeometry(0.24, 0.24, 0.25, 10),
+      wheelCap: new THREE.SphereGeometry(0.08, 8, 8),
+      headlightLens: new THREE.CylinderGeometry(0.12, 0.12, 0.05, 12),
+      taillightBar: new THREE.BoxGeometry(0.42, 0.08, 0.04),
+      lightBeam: new THREE.ConeGeometry(1.6, 12.0, 10, 1, true),
+      underglow: new THREE.PlaneGeometry(2.2, 4.4)
     };
 
+    // Matériaux PBR de qualité supérieure (vernis automobile & chrome miroir)
     this.sharedMats = {
-      rubber: new THREE.MeshLambertMaterial({ color: 0x1a1a1a }),
-      rim: new THREE.MeshStandardMaterial({ color: 0xdcdde1, metalness: 0.85, roughness: 0.2 }),
-      glass: new THREE.MeshToonMaterial({ color: 0x22313f, transparent: true, opacity: 0.85 }),
-      headlightOn: new THREE.MeshBasicMaterial({ color: 0xfffa65 }),
-      taillightNormal: new THREE.MeshBasicMaterial({ color: 0xeb4d4b }),
-      taillightBrake: new THREE.MeshBasicMaterial({ color: 0xff0000 }),
-      beam: new THREE.MeshBasicMaterial({
-        color: 0xfff9c4,
+      rubber: new THREE.MeshStandardMaterial({ color: 0x181818, roughness: 0.85, metalness: 0.1 }),
+      rim: new THREE.MeshStandardMaterial({ color: 0xecf0f1, metalness: 0.95, roughness: 0.12 }),
+      brakeCaliper: new THREE.MeshStandardMaterial({ color: 0xff3838, roughness: 0.3, metalness: 0.6 }),
+      tintedGlass: new THREE.MeshStandardMaterial({
+        color: 0x111927,
+        roughness: 0.05,
+        metalness: 0.9,
         transparent: true,
-        opacity: 0.18,
+        opacity: 0.82
+      }),
+      headlightLED: new THREE.MeshStandardMaterial({
+        color: 0xfffa65,
+        emissive: 0xfffa65,
+        emissiveIntensity: 1.2,
+        roughness: 0.1
+      }),
+      taillightLED: new THREE.MeshStandardMaterial({
+        color: 0xff1744,
+        emissive: 0xff1744,
+        emissiveIntensity: 1.0,
+        roughness: 0.1
+      }),
+      chromeTrim: new THREE.MeshStandardMaterial({
+        color: 0xf5f6fa,
+        metalness: 0.96,
+        roughness: 0.08
+      }),
+      beam: new THREE.MeshBasicMaterial({
+        color: 0xfffa65,
+        transparent: true,
+        opacity: 0.14,
         depthWrite: false,
         side: THREE.DoubleSide
+      }),
+      underglowMat: new THREE.MeshBasicMaterial({
+        color: 0x00d2d3,
+        transparent: true,
+        opacity: 0.22,
+        depthWrite: false
       })
     };
 
@@ -43,23 +76,22 @@ export class Traffic {
   }
 
   initPool() {
-    const types = ['sedan', 'taxi', 'van', 'bus', 'sport'];
+    const types = ['supercar', 'taxi_luxe', 'sedan_prestige', 'suv_urban'];
     for (let i = 0; i < this.vehiclePoolSize; i++) {
       const type = types[i % types.length];
-      const vehicle = this.createVehicleMesh(type);
+      const vehicle = this.createHighFidelityVehicle(type, i);
       vehicle.userData = {
         type: type,
         active: false,
-        speed: 14 + Math.random() * 8,
-        lane: (i % 2 === 0 ? 1 : -1) * 2.1, // Voie droite (+2.1m) ou voie gauche (-2.1m)
+        speed: 18 + Math.random() * 6,
+        lane: (i % 2 === 0 ? 1 : -1) * 2.2, // Voie droite (+2.2m) ou voie gauche (-2.2m)
         isCrashed: false,
         crashVelX: 0,
         crashVelY: 0,
         crashVelZ: 0,
         crashSpinX: 0,
         crashSpinY: 0,
-        crashSpinZ: 0,
-        brakeTime: 0
+        crashSpinZ: 0
       };
       vehicle.visible = false;
       this.vehicles.push(vehicle);
@@ -67,125 +99,207 @@ export class Traffic {
     }
   }
 
-  createVehicleMesh(type) {
+  createHighFidelityVehicle(type, index) {
     const group = new THREE.Group();
-    const bodyMatPalette = [0x2980b9, 0xc0392b, 0x27ae60, 0x8e44ad, 0xd35400, 0x2c3e50, 0xbdc3c7];
-    const bodyColor = type === 'taxi' ? 0xf1c40f : bodyMatPalette[Math.floor(Math.random() * bodyMatPalette.length)];
-    const bodyMat = new THREE.MeshToonMaterial({ color: bodyColor, roughness: 0.35, metalness: 0.25 });
-    const chromeMat = new THREE.MeshStandardMaterial({ color: 0xecf0f1, metalness: 0.9, roughness: 0.15 });
 
-    if (type === 'sedan') {
-      // 1. BERLINE EUROPÉENNE MODERNE
-      const chassis = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.65, 4.4), bodyMat);
-      chassis.position.y = 0.55;
-      const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.6, 2.3), bodyMat);
-      cabin.position.set(0, 1.1, -0.2);
-      const windShieldF = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.65), this.sharedMats.glass);
-      windShieldF.position.set(0, 1.1, 0.96);
-      windShieldF.rotation.x = -Math.PI / 4.2;
-      const windShieldR = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.65), this.sharedMats.glass);
-      windShieldR.position.set(0, 1.1, -1.36);
-      windShieldR.rotation.x = Math.PI / 4.2;
-      group.add(chassis, cabin, windShieldF, windShieldR);
+    // Palettes de peintures métallisées nacrées élégantes
+    const metallicColors = [0x0984e3, 0xd63031, 0x2d3436, 0x6c5ce7, 0x00b894, 0xe17055];
+    const carColor = type === 'taxi_luxe' ? 0xf1c40f : metallicColors[index % metallicColors.length];
 
-    } else if (type === 'taxi') {
-      // 2. TAXI PARISIEN / EUROPÉEN AVEC ENSEIGNE LUMINEUSE
-      const chassis = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.65, 4.3), bodyMat);
-      chassis.position.y = 0.55;
-      const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.72, 0.6, 2.4), bodyMat);
-      cabin.position.set(0, 1.1, -0.15);
-
-      // Enseigne lumineuse "TAXI" sur le toit
-      const signMat = new THREE.MeshBasicMaterial({ color: 0xfffa65 });
-      const sign = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.18, 0.25), signMat);
-      sign.position.set(0, 1.48, -0.2);
-      group.add(chassis, cabin, sign);
-
-    } else if (type === 'van') {
-      // 3. FOURGON DE LIVRAISON (STYLE LA POSTE / EXPRESS)
-      const vanMat = new THREE.MeshToonMaterial({ color: 0xf5f6fa, roughness: 0.5 });
-      const body = new THREE.Mesh(new THREE.BoxGeometry(2.0, 1.4, 4.6), vanMat);
-      body.position.y = 1.0;
-      const hood = new THREE.Mesh(new THREE.BoxGeometry(1.95, 0.5, 0.9), vanMat);
-      hood.position.set(0, 0.6, 2.2);
-      const windShield = new THREE.Mesh(new THREE.PlaneGeometry(1.8, 0.7), this.sharedMats.glass);
-      windShield.position.set(0, 1.15, 1.76);
-      windShield.rotation.x = -0.25;
-      group.add(body, hood, windShield);
-
-    } else if (type === 'bus') {
-      // 4. AUTOBUS URBAIN RATP / TRANSIT
-      const busMat = new THREE.MeshToonMaterial({ color: 0x00cec9, roughness: 0.4 });
-      const busRoofMat = new THREE.MeshToonMaterial({ color: 0xffffff });
-      const body = new THREE.Mesh(new THREE.BoxGeometry(2.4, 1.9, 7.8), busMat);
-      body.position.y = 1.35;
-      const roof = new THREE.Mesh(new THREE.BoxGeometry(2.45, 0.25, 7.85), busRoofMat);
-      roof.position.y = 2.38;
-
-      // Bandeau de vitres latérales
-      const sideGlassL = new THREE.Mesh(new THREE.PlaneGeometry(7.2, 0.75), this.sharedMats.glass);
-      sideGlassL.position.set(-1.21, 1.5, 0);
-      sideGlassL.rotation.y = -Math.PI / 2;
-      const sideGlassR = sideGlassL.clone();
-      sideGlassR.position.x = 1.21;
-      sideGlassR.rotation.y = Math.PI / 2;
-      const frontGlass = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 1.0), this.sharedMats.glass);
-      frontGlass.position.set(0, 1.55, 3.91);
-      group.add(body, roof, sideGlassL, sideGlassR, frontGlass);
-
-    } else {
-      // 5. COUPÉ SPORT SURBAISSÉ
-      const sportMat = new THREE.MeshToonMaterial({ color: 0xd63031, roughness: 0.2, metalness: 0.4 });
-      const chassis = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.5, 4.6), sportMat);
-      chassis.position.y = 0.45;
-      const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.45, 2.1), bodyMat);
-      cabin.position.set(0, 0.9, -0.3);
-      const spoiler = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.08, 0.35), chromeMat);
-      spoiler.position.set(0, 0.95, -2.1);
-      group.add(chassis, cabin, spoiler);
-    }
-
-    // 4 Roues en alliage
-    const wheelOffsets = [
-      [-0.95, 0.35, 1.3],
-      [0.95, 0.35, 1.3],
-      [-0.95, 0.35, -1.3],
-      [0.95, 0.35, -1.3]
-    ];
-    wheelOffsets.forEach(([wx, wy, wz]) => {
-      const wheelGroup = new THREE.Group();
-      wheelGroup.position.set(wx, wy, wz);
-      const tire = new THREE.Mesh(this.sharedGeos.wheel, this.sharedMats.rubber);
-      tire.rotation.z = Math.PI / 2;
-      const rim = new THREE.Mesh(this.sharedGeos.wheelRim, this.sharedMats.rim);
-      rim.rotation.z = Math.PI / 2;
-      wheelGroup.add(tire, rim);
-      group.add(wheelGroup);
+    const carPaint = new THREE.MeshStandardMaterial({
+      color: carColor,
+      metalness: 0.86,
+      roughness: 0.18
     });
 
-    // Phares avant blancs
-    const headL = new THREE.Mesh(this.sharedGeos.headlight, this.sharedMats.headlightOn);
-    headL.position.set(-0.68, 0.58, 2.22);
-    const headR = headL.clone();
-    headR.position.x = 0.68;
-    group.add(headL, headR);
+    const roofMat = new THREE.MeshStandardMaterial({
+      color: type === 'taxi_luxe' ? 0x1e272e : carColor,
+      metalness: 0.88,
+      roughness: 0.15
+    });
+
+    if (type === 'supercar') {
+      // 1. SUPERCAR ITALIENNE SURBAISSÉE (LIGNES ÉPURÉES & AÉRODYNAMISME)
+      // Châssis profilé en flèche
+      const chassisGeo = new THREE.BoxGeometry(2.05, 0.46, 4.7);
+      const chassis = new THREE.Mesh(chassisGeo, carPaint);
+      chassis.position.y = 0.42;
+      chassis.castShadow = true;
+      group.add(chassis);
+
+      // Nez plongeant aérodynamique
+      const noseGeo = new THREE.ConeGeometry(1.0, 1.2, 4);
+      const nose = new THREE.Mesh(noseGeo, carPaint);
+      nose.rotation.x = -Math.PI / 2;
+      nose.rotation.y = Math.PI / 4;
+      nose.position.set(0, 0.38, 2.6);
+      group.add(nose);
+
+      // Cockpit profilé avec vitrages teintés
+      const cabinGeo = new THREE.BoxGeometry(1.62, 0.48, 2.2);
+      const cabin = new THREE.Mesh(cabinGeo, roofMat);
+      cabin.position.set(0, 0.82, -0.2);
+      cabin.castShadow = true;
+      group.add(cabin);
+
+      // Pare-brise avant profilé
+      const windshield = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 0.7), this.sharedMats.tintedGlass);
+      windshield.position.set(0, 0.82, 0.95);
+      windshield.rotation.x = -Math.PI / 3.6;
+      group.add(windshield);
+
+      // Aileron arrière en carbone avec mats
+      const wing = new THREE.Mesh(new THREE.BoxGeometry(1.95, 0.06, 0.38), this.sharedMats.rim);
+      wing.position.set(0, 0.96, -2.15);
+      const strutL = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.22, 0.1), this.sharedMats.rim);
+      strutL.position.set(-0.6, 0.84, -2.15);
+      const strutR = strutL.clone();
+      strutR.position.x = 0.6;
+      group.add(wing, strutL, strutR);
+
+      // Double sortie d'échappement chromée
+      for (let s of [-0.35, 0.35]) {
+        const exhaust = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.065, 0.3, 10), this.sharedMats.chromeTrim);
+        exhaust.rotation.x = Math.PI / 2;
+        exhaust.position.set(s, 0.3, -2.36);
+        group.add(exhaust);
+      }
+
+    } else if (type === 'taxi_luxe') {
+      // 2. TAXI PARISIEN HAUT DE GAMME (STYLE MERCEDES CLASSE E)
+      const bodyGeo = new THREE.BoxGeometry(1.92, 0.68, 4.6);
+      const body = new THREE.Mesh(bodyGeo, carPaint);
+      body.position.y = 0.58;
+      body.castShadow = true;
+      group.add(body);
+
+      const cabinGeo = new THREE.BoxGeometry(1.72, 0.62, 2.5);
+      const cabin = new THREE.Mesh(cabinGeo, roofMat);
+      cabin.position.set(0, 1.15, -0.15);
+      cabin.castShadow = true;
+      group.add(cabin);
+
+      // Pare-brise et lunette arrière
+      const windshield = new THREE.Mesh(new THREE.PlaneGeometry(1.62, 0.72), this.sharedMats.tintedGlass);
+      windshield.position.set(0, 1.15, 1.15);
+      windshield.rotation.x = -Math.PI / 4.2;
+      const rearGlass = new THREE.Mesh(new THREE.PlaneGeometry(1.62, 0.72), this.sharedMats.tintedGlass);
+      rearGlass.position.set(0, 1.15, -1.45);
+      rearGlass.rotation.x = Math.PI / 4.2;
+      group.add(windshield, rearGlass);
+
+      // Calandre chromée avant luxueuse
+      const grille = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.38, 0.08), this.sharedMats.chromeTrim);
+      grille.position.set(0, 0.58, 2.32);
+      group.add(grille);
+
+      // Enseigne lumineuse de toit "TAXI PARISIEN"
+      const signBase = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.05, 0.22), this.sharedMats.rim);
+      signBase.position.set(0, 1.48, -0.2);
+      const signGlow = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.16, 0.18), this.sharedMats.headlightLED);
+      signGlow.position.set(0, 1.58, -0.2);
+      group.add(signBase, signGlow);
+
+    } else if (type === 'suv_urban') {
+      // 3. SUV CITADIN ROBUSTE & ÉLÉGANT
+      const lowerBody = new THREE.Mesh(new THREE.BoxGeometry(2.05, 0.82, 4.5), carPaint);
+      lowerBody.position.y = 0.65;
+      lowerBody.castShadow = true;
+      group.add(lowerBody);
+
+      const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.85, 0.72, 2.7), roofMat);
+      cabin.position.set(0, 1.32, -0.15);
+      cabin.castShadow = true;
+      group.add(cabin);
+
+      // Barres de toit chromées
+      for (let s of [-0.75, 0.75]) {
+        const roofRail = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.05, 2.4), this.sharedMats.chromeTrim);
+        roofRail.position.set(s, 1.72, -0.15);
+        group.add(roofRail);
+      }
+
+      // Vitrages
+      const windshield = new THREE.Mesh(new THREE.PlaneGeometry(1.75, 0.8), this.sharedMats.tintedGlass);
+      windshield.position.set(0, 1.32, 1.25);
+      windshield.rotation.x = -Math.PI / 4.6;
+      group.add(windshield);
+
+    } else {
+      // 4. BERLINE PRESTIGE ALLEMANDE
+      const body = new THREE.Mesh(new THREE.BoxGeometry(1.95, 0.65, 4.65), carPaint);
+      body.position.y = 0.56;
+      body.castShadow = true;
+      group.add(body);
+
+      const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.75, 0.6, 2.4), roofMat);
+      cabin.position.set(0, 1.12, -0.15);
+      cabin.castShadow = true;
+      group.add(cabin);
+
+      const windshield = new THREE.Mesh(new THREE.PlaneGeometry(1.65, 0.7), this.sharedMats.tintedGlass);
+      windshield.position.set(0, 1.12, 1.1);
+      windshield.rotation.x = -Math.PI / 4.2;
+      group.add(windshield);
+    }
+
+    // 4 Roues sportives avec jantes alliage 3D & étriers de frein
+    const wheelPositions = [
+      [-1.0, 0.36, 1.35],
+      [1.0, 0.36, 1.35],
+      [-1.0, 0.36, -1.35],
+      [1.0, 0.36, -1.35]
+    ];
+    group.userData.wheelMeshes = [];
+
+    wheelPositions.forEach(([wx, wy, wz]) => {
+      const wheelGroup = new THREE.Group();
+      wheelGroup.position.set(wx, wy, wz);
+
+      const tire = new THREE.Mesh(this.sharedGeos.wheelTire, this.sharedMats.rubber);
+      tire.rotation.z = Math.PI / 2;
+      tire.castShadow = true;
+
+      const rim = new THREE.Mesh(this.sharedGeos.wheelRim, this.sharedMats.rim);
+      rim.rotation.z = Math.PI / 2;
+
+      // Étriers de frein sport rouge vif visibles
+      const caliper = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.18, 0.08), this.sharedMats.brakeCaliper);
+      caliper.position.set(wx > 0 ? -0.06 : 0.06, 0.12, 0.08);
+
+      wheelGroup.add(tire, rim, caliper);
+      group.add(wheelGroup);
+      group.userData.wheelMeshes.push(wheelGroup);
+    });
+
+    // Phares avant LED DRL étincelants
+    for (let s of [-0.72, 0.72]) {
+      const headlight = new THREE.Mesh(this.sharedGeos.headlightLens, this.sharedMats.headlightLED);
+      headlight.rotation.x = Math.PI / 2;
+      headlight.position.set(s, 0.58, 2.34);
+      group.add(headlight);
+    }
+
+    // Feux arrière LED horizontaux éclatants
+    for (let s of [-0.68, 0.68]) {
+      const taillight = new THREE.Mesh(this.sharedGeos.taillightBar, this.sharedMats.taillightLED);
+      taillight.position.set(s, 0.62, -2.34);
+      group.add(taillight);
+    }
 
     // Faisceaux lumineux sur la chaussée
-    const beamL = new THREE.Mesh(this.sharedGeos.lightBeam, this.sharedMats.beam);
-    beamL.rotation.x = Math.PI / 2;
-    beamL.position.set(-0.68, 0.5, 6.0);
-    const beamR = beamL.clone();
-    beamR.position.x = 0.68;
-    group.add(beamL, beamR);
+    for (let s of [-0.68, 0.68]) {
+      const beam = new THREE.Mesh(this.sharedGeos.lightBeam, this.sharedMats.beam);
+      beam.rotation.x = Math.PI / 2;
+      beam.position.set(s, 0.45, 7.5);
+      group.add(beam);
+    }
 
-    // Feux arrière rouges
-    const tailL = new THREE.Mesh(this.sharedGeos.taillight, this.sharedMats.taillightNormal);
-    tailL.position.set(-0.7, 0.65, -2.22);
-    tailL.rotation.y = Math.PI;
-    const tailR = tailL.clone();
-    tailR.position.x = 0.7;
-    group.add(tailL, tailR);
-    group.userData.taillights = [tailL, tailR];
+    // Rétroprojecteur au sol (halo néon subtil)
+    const underglow = new THREE.Mesh(this.sharedGeos.underglow, this.sharedMats.underglowMat);
+    underglow.rotation.x = -Math.PI / 2;
+    underglow.position.y = 0.04;
+    group.add(underglow);
 
     return group;
   }
@@ -199,23 +313,34 @@ export class Traffic {
   }
 
   spawnAhead(playerZ, roadCurveFunc) {
-    const minZ = playerZ + 50;
-    const maxZ = playerZ + 220;
+    // Compter les véhicules déjà actifs
+    const activeCount = this.vehicles.filter(v => v.userData.active).length;
+    if (activeCount >= this.maxActiveVehicles) return;
 
-    this.vehicles.forEach((v, idx) => {
+    // Plage d'apparition aérée et lointaine pour ne pas étouffer le joueur
+    const minZ = playerZ + 85;
+    const maxZ = playerZ + 240;
+
+    for (let i = 0; i < this.vehicles.length; i++) {
+      const v = this.vehicles[i];
       if (!v.userData.active && (!v.visible || v.position.z < playerZ - 30)) {
-        const newZ = minZ + Math.random() * (maxZ - minZ);
-        const curveX = roadCurveFunc ? roadCurveFunc(newZ) : 0;
+        // Vérifier qu'aucun autre véhicule n'est trop proche de ce nouveau point
+        const candidateZ = minZ + Math.random() * (maxZ - minZ);
+        const tooClose = this.vehicles.some(other => other.userData.active && Math.abs(other.position.z - candidateZ) < 65);
+        if (tooClose) continue;
+
+        const curveX = roadCurveFunc ? roadCurveFunc(candidateZ) : 0;
         const laneX = v.userData.lane;
 
-        v.position.set(curveX + laneX, 0, newZ);
+        v.position.set(curveX + laneX, 0, candidateZ);
         v.rotation.set(0, 0, 0);
         v.visible = true;
         v.userData.active = true;
         v.userData.isCrashed = false;
-        v.userData.speed = 13 + Math.random() * 9;
+        v.userData.speed = 16 + Math.random() * 7;
+        break; // On ne fait apparaître qu'un véhicule à la fois
       }
-    });
+    }
   }
 
   triggerCrash(vehicle, bikeSpeed, hitDirectionX = 1) {
@@ -223,14 +348,14 @@ export class Traffic {
     vehicle.userData.active = false;
     soundManager.playCrash();
 
-    // Projection et carambolage spectaculaire
-    vehicle.userData.crashVelX = hitDirectionX * (7.0 + Math.random() * 6.0);
-    vehicle.userData.crashVelY = 8.5 + Math.random() * 6.0;
-    vehicle.userData.crashVelZ = (bikeSpeed * 0.5) + (Math.random() * 10.0);
+    // Carambolage burlesque et spectaculaire
+    vehicle.userData.crashVelX = hitDirectionX * (8.5 + Math.random() * 6.0);
+    vehicle.userData.crashVelY = 9.5 + Math.random() * 5.0;
+    vehicle.userData.crashVelZ = (bikeSpeed * 0.45) + (Math.random() * 8.0);
 
-    vehicle.userData.crashSpinX = (Math.random() - 0.5) * 12.0;
-    vehicle.userData.crashSpinY = (Math.random() - 0.5) * 15.0;
-    vehicle.userData.crashSpinZ = hitDirectionX * (8.0 + Math.random() * 6.0);
+    vehicle.userData.crashSpinX = (Math.random() - 0.5) * 14.0;
+    vehicle.userData.crashSpinY = (Math.random() - 0.5) * 16.0;
+    vehicle.userData.crashSpinZ = hitDirectionX * (9.0 + Math.random() * 6.0);
   }
 
   update(delta, playerZ, bikeX, bikeSpeed, roadCurveFunc, onVehicleCollision, isPlayerInvulnerable = false) {
@@ -239,13 +364,13 @@ export class Traffic {
     this.vehicles.forEach(v => {
       if (!v.visible) return;
 
-      // 1. Véhicule en l'air après carambolage
+      // 1. Véhicule en vol balistique après carambolage
       if (v.userData.isCrashed) {
         v.position.x += v.userData.crashVelX * delta;
         v.position.y += v.userData.crashVelY * delta;
         v.position.z += v.userData.crashVelZ * delta;
 
-        v.userData.crashVelY -= 18.0 * delta; // Gravité
+        v.userData.crashVelY -= 19.0 * delta; // Gravité
 
         v.rotation.x += v.userData.crashSpinX * delta;
         v.rotation.y += v.userData.crashSpinY * delta;
@@ -259,25 +384,35 @@ export class Traffic {
         return;
       }
 
-      // 2. Véhicule actif circulant
+      // 2. Véhicule actif circulant dans sa voie
       if (v.userData.active) {
         // Avancement selon sa vitesse
         v.position.z += v.userData.speed * delta;
 
-        // Suivre la courbure de la route en restant dans sa voie
+        // Rotation synchronisée des roues 3D
+        if (v.userData.wheelMeshes) {
+          const spinSpeed = v.userData.speed * delta * 2.8;
+          v.userData.wheelMeshes.forEach(w => {
+            w.children.forEach(part => {
+              part.rotation.x += spinSpeed;
+            });
+          });
+        }
+
+        // Suivre la trajectoire de la route en restant dans sa voie (+2.2m ou -2.2m)
         const curveX = roadCurveFunc ? roadCurveFunc(v.position.z) : 0;
         const targetX = curveX + v.userData.lane;
         v.position.x += (targetX - v.position.x) * delta * 5.0;
 
-        // Légère orientation avec la route
-        const aheadX = roadCurveFunc ? roadCurveFunc(v.position.z + 2.0) : 0;
-        v.rotation.y = (aheadX - curveX) * 0.35;
+        // Orientation naturelle avec la courbure
+        const aheadX = roadCurveFunc ? roadCurveFunc(v.position.z + 3.0) : 0;
+        v.rotation.y = (aheadX - curveX) * 0.32;
 
-        // Détection de collision avec la moto du joueur
+        // Détection de collision physique avec le bolide du joueur
         const dZ = Math.abs(v.position.z - playerZ);
         const dX = Math.abs(v.position.x - bikeX);
 
-        if (dZ < 3.2 && dX < 1.7) {
+        if (dZ < 3.0 && dX < 1.65) {
           const hitDirX = bikeX < v.position.x ? 1 : -1;
           this.triggerCrash(v, bikeSpeed, hitDirX);
           if (onVehicleCollision) {
@@ -285,8 +420,8 @@ export class Traffic {
           }
         }
 
-        // Recycler si dépassé loin derrière
-        if (v.position.z < playerZ - 40) {
+        // Recycler si dépassé loin derrière le joueur
+        if (v.position.z < playerZ - 35) {
           v.visible = false;
           v.userData.active = false;
         }

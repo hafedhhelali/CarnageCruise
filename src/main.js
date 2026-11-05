@@ -162,7 +162,37 @@ class GameApp {
   executePlayerAttack() {
     if (gameState.currentMode !== 'PLAYING') return;
     const attack = this.bike.triggerAttack();
-    if (!attack || attack.type === 'horn') return;
+    if (!attack) return;
+
+    if (attack.type === 'horn') {
+      // 1. Onde de choc sonore visuelle dorée qui se propage vers l'avant
+      this.particles.spawnShockwave(this.bike.mesh.position, 0xffd32a);
+
+      // 2. Alerte et panique des piétons situés dans le rayon du klaxon (24m)
+      const panickedCount = this.characters.triggerHornAlert(this.bike.mesh.position, attack.range);
+
+      // 3. Réaction des véhicules de circulation (accélération pour dégager la voie)
+      if (this.traffic) {
+        this.traffic.vehicles.forEach(v => {
+          if (v.userData.active && Math.abs(v.position.z - this.bike.z) < 28) {
+            v.userData.speed += 4.0;
+          }
+        });
+      }
+
+      if (panickedCount > 0) {
+        const bonusPts = 75 * panickedCount;
+        gameState.score += bonusPts;
+        const burstPos = new THREE.Vector3(
+          this.bike.mesh.position.x,
+          this.bike.mesh.position.y + 1.2,
+          this.bike.mesh.position.z + 4.0
+        );
+        this.particles.spawnComicBurst(burstPos, bonusPts, gameState.combo);
+        soundManager.playCoin();
+      }
+      return;
+    }
 
     // Détection d'impact sur les piétons situés dans l'arc d'attaque
     const bikeZ = this.bike.z;
@@ -427,8 +457,8 @@ class GameApp {
       // 11. Caméra dynamique en poursuite douce
       this.engine.updateCameraGameplay(delta, this.bike.mesh.position, currentSpeed);
 
-      // 12. Mise à jour de l'état de course (accélération, décélération, combo)
-      gameState.update(delta);
+      // 12. Mise à jour de l'état de course (accélération, décélération, combo, vitesse arrêtée lors d'un crash)
+      gameState.update(delta, this.bike.isCrashed);
 
       // 13. Franchissement de la ligne d'arrivée
       if (!this.hasCrossedFinish && this.bike.z >= this.environment.finishDistance) {

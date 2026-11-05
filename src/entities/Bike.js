@@ -135,28 +135,35 @@ export class Bike {
     const bikeId = previewBikeId || storage.getEquippedBike() || 'scooter';
     this.currentBikeId = bikeId;
     const bodyColorHex = storage.getBikeColor(bikeId);
-    const bodyMaterial = new THREE.MeshToonMaterial({
+    const bodyMaterial = new THREE.MeshStandardMaterial({
       color: bodyColorHex,
-      roughness: 0.3,
-      metalness: 0.2
+      roughness: 0.18,
+      metalness: 0.82
     });
 
     const chromeMaterial = new THREE.MeshStandardMaterial({
-      color: 0xeeeeee,
-      metalness: 0.85,
-      roughness: 0.15
+      color: 0xf5f6fa,
+      metalness: 0.96,
+      roughness: 0.08
     });
 
-    const rubberMaterial = new THREE.MeshLambertMaterial({
-      color: 0x1f1f1f
+    const rubberMaterial = new THREE.MeshStandardMaterial({
+      color: 0x181818,
+      roughness: 0.85,
+      metalness: 0.1
     });
 
-    const leatherMaterial = new THREE.MeshLambertMaterial({
-      color: 0x5c3a21
+    const leatherMaterial = new THREE.MeshStandardMaterial({
+      color: 0x4a2810,
+      roughness: 0.65,
+      metalness: 0.05
     });
 
-    const lampMaterial = new THREE.MeshBasicMaterial({
-      color: 0xfff4cc
+    const lampMaterial = new THREE.MeshStandardMaterial({
+      color: 0xfff9c4,
+      emissive: 0xfffa65,
+      emissiveIntensity: 0.85,
+      roughness: 0.1
     });
 
     if (bikeId === 'scooter') {
@@ -1852,8 +1859,9 @@ export class Bike {
     // --- CONTRÔLE NORMAL DIRECTIONNEL PROGRESSIF & AMORTI ---
     this.smoothedSteer += (steerInput - this.smoothedSteer) * Math.min(1.0, delta * 7.5);
 
-    // Largeur étendue : Chaussée (-4.2 à +4.2) + Trottoirs (-6.8 à +6.8)
-    const MAX_WIDTH = 6.8;
+    // Largeur étendue : Chaussée (-4.2 à +4.2) + Trottoirs (-6.0 à +6.0)
+    // Permet de rouler confortablement sur le trottoir sans heurter les façades de bâtiments (8.5m)
+    const MAX_WIDTH = 6.0;
     this.x -= this.smoothedSteer * 8.6 * delta;
     this.x = Math.max(-MAX_WIDTH, Math.min(MAX_WIDTH, this.x));
 
@@ -2100,14 +2108,11 @@ export class Bike {
       return { type: 'chainsaw', range: 8.0, radius: 3.0 };
     } else if (this.currentBikeId === 'rouleau') {
       soundManager.playSteamrollerHorn();
-      return { type: 'horn' };
+      return { type: 'horn', range: 25.0, radius: 5.5 };
     } else {
-      // Toutes les autres motos peuvent aussi donner un coup de massue / tir latéral
-      this.isAttacking = true;
-      this.attackTimer = 0.35;
-      this.attackType = 'whip';
-      soundManager.playAxeSlash();
-      return { type: 'axe', range: 7.5, radius: 3.0 };
+      // Scooter, Chopper, Décapotable, Dragster, Aéro-Jet : Puissant Klaxon bi-ton italien/français !
+      soundManager.playHorn(this.currentBikeId);
+      return { type: 'horn', range: 24.0, radius: 5.0 };
     }
   }
 

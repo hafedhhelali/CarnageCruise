@@ -1142,10 +1142,25 @@ export class GameState {
     }
   }
 
-  update(delta) {
-    if (this.currentMode === 'COUNTDOWN') {
+  update(delta, isCrashed = false) {
+    if (this.currentMode === 'COUNTDOWN' || isCrashed) {
       this.speed = 0;
+      this.drivingScoreAccumulator = 0;
       soundManager.updateEngine(0.08);
+      this.notify('stats_tick', {
+        distance: Math.floor(this.distance),
+        speed: 0,
+        score: this.score,
+        targetScore: this.selectedCity.targetScore,
+        progressRatio: Math.min(1.0, this.score / this.selectedCity.targetScore),
+        isBraking: this.isBraking,
+        nitroGauge: Math.round(this.nitroGauge),
+        isNitroActive: this.isNitroActive,
+        nitroTimer: Math.max(0, this.nitroTimer),
+        kills: this.killsCount,
+        killQuota: this.selectedCity.killQuota || 30,
+        worldTotal: this.worldPopulationEliminated
+      });
       return;
     }
     if (this.currentMode !== 'PLAYING') return;
