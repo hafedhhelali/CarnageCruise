@@ -22,8 +22,10 @@ const bumpType = process.argv[2] || 'patch';
 const versionData = JSON.parse(fs.readFileSync(versionJsonPath, 'utf8'));
 const currentVersion = versionData.version;
 const currentCode = versionData.versionCode || 1;
+const isBeta = versionData.channel === 'beta' || currentVersion.includes('beta');
 
-const parts = currentVersion.split('.').map(n => parseInt(n, 10));
+const cleanVersion = currentVersion.replace(/-beta$/i, '');
+const parts = cleanVersion.split('.').map(n => parseInt(n, 10));
 if (bumpType === 'major') {
   parts[0]++;
   parts[1] = 0;
@@ -35,7 +37,8 @@ if (bumpType === 'major') {
   parts[2]++;
 }
 
-const nextVersion = parts.join('.');
+const baseVersion = parts.join('.');
+const nextVersion = isBeta ? `${baseVersion}-beta` : baseVersion;
 const nextCode = currentCode + 1;
 const today = new Date().toISOString().split('T')[0];
 
@@ -43,6 +46,9 @@ versionData.version = nextVersion;
 versionData.versionCode = nextCode;
 versionData.build = nextCode;
 versionData.date = today;
+if (isBeta) {
+  versionData.channel = 'beta';
+}
 
 // 2. Écrire version.json
 fs.writeFileSync(versionJsonPath, JSON.stringify(versionData, null, 2) + '\n');
@@ -55,12 +61,14 @@ fs.writeFileSync(packageJsonPath, JSON.stringify(pkg, null, 2) + '\n');
 // 4. Écrire src/core/Version.js
 const versionJsContent = `/**
  * Motormageddon - Constantes de Versionnage Unique (Single Source of Truth)
- * Généré automatiquement par scripts/bump-version.js
+ * Canal : ${isBeta ? 'BETA' : 'RELEASE'}
  */
 
 export const APP_VERSION = "${nextVersion}";
 export const BUILD_NUMBER = ${nextCode};
 export const VERSION_NAME = "${nextVersion}";
+export const IS_BETA = ${isBeta};
+export const CHANNEL = "${isBeta ? 'BETA' : 'RELEASE'}";
 export const FULL_VERSION = "v${nextVersion} (Build ${nextCode})";
 export const RELEASE_NAME = "${versionData.releaseName || 'Arcade Edition'}";
 export const COPYRIGHT_NOTICE = "© 2026 EOMedia. Tous droits réservés.";

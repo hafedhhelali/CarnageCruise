@@ -8,7 +8,7 @@ Ce document fournit l'ensemble des informations de conception, d'architecture lo
 ## 1. VISION DU PROJET & SPÉCIFICATIONS
 
 - **Genre** : Jeu de course d'arcade urbain / Runner 3D burlesque
-- **Version actuelle** : **1.2.0** (Build / versionCode 3)
+- **Version actuelle** : **1.2.0-beta** (Build / versionCode 3 - Canal BETA)
 - **Signature & Clé** : Keystore permanent dédié `android/app/motormageddon.keystore` (validité 10 000 jours, EOMedia Paris)
 - **Plateforme cible** : Android (Smartphones & Tablettes) + WebGL Mobile/Desktop
 - **Direction artistique** : Cartoon 3D éclatant, physique burlesque (slapstick), animations hilarantes et dynamiques, identité française affirmée.
@@ -59,9 +59,11 @@ Ce document fournit l'ensemble des informations de conception, d'architecture lo
 - Jauges de performances proportionnelles (Vitesse, Maniabilité, Accélération).
 - Nuancier de peinture élargi et bouton d'action pleine largeur ("ÉQUIPER CE BOLIDE" ou "DÉBLOQUER").
 
-### G. Résolution Définitive des Mises à Jour & Versionnage
+### G. Intégration CI/CD GitHub Actions & Canal BETA
 - Keystore cryptographique permanent `android/app/motormageddon.keystore` (RSA 2048, valide 27 ans, EOMedia) garantissant l'identité de signature SHA-256 sur toutes les versions.
-- Pipeline CI/CD renforcé : `gradle/actions/setup-gradle@v4` et `networkTimeout=60000` garantissant une compilation cloud rapide et résiliente aux micro-latences réseau.
-- `versionCode` incrémenté à 3 et `versionName` à 1.2.0.
-- Nom d'APK : `Motormageddon-v1.2.0-b3-debug.apk` (avec alias `app-debug.apk`).
-- Scripts d'incrémentation : `npm run version:patch`, `version:minor`, `version:major`.
+- Pipeline CI/CD renforcé : extraction automatique de la version et du canal depuis `version.json` via Node.js dans l'environnement GitHub Actions.
+- Nom d'artefact GitHub dynamique : `Motormageddon-v${APP_VERSION}-b${VERSION_CODE}-APK` (ex: `Motormageddon-v1.2.0-beta-b3-APK`).
+- Pre-release GitHub Release automatique étiquetée **[BETA]** avec `prerelease: true`.
+- Badge BETA élégant affiché sur le Splash Screen et dans les mentions légales de l'application.
+- `versionCode` : 3, `versionName` : 1.2.0-beta, nom d'APK généré : `Motormageddon-v1.2.0-beta-b3-debug.apk`.
+- Scripts d'incrémentation : `npm run version:patch`, `version:minor`, `version:major` (gérant automatiquement le suffixe `-beta`).

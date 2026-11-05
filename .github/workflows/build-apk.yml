@@ -35,6 +35,26 @@ jobs:
         with:
           node-version: 22
 
+      - name: 🏷️ Extract App Version & Beta Channel
+        id: version_info
+        run: |
+          APP_VER=$(node -p "require('./version.json').version")
+          VER_CODE=$(node -p "require('./version.json').versionCode")
+          CHANNEL=$(node -p "require('./version.json').channel || 'beta'")
+          RELEASE_TITLE=$(node -p "require('./version.json').releaseName || 'Tour de France Arcade'")
+          echo "APP_VERSION=$APP_VER" >> $GITHUB_ENV
+          echo "VERSION_CODE=$VER_CODE" >> $GITHUB_ENV
+          echo "CHANNEL=$CHANNEL" >> $GITHUB_ENV
+          echo "RELEASE_TITLE=$RELEASE_TITLE" >> $GITHUB_ENV
+          echo "app_version=$APP_VER" >> $GITHUB_OUTPUT
+          echo "version_code=$VER_CODE" >> $GITHUB_OUTPUT
+          echo "channel=$CHANNEL" >> $GITHUB_OUTPUT
+          echo "==============================================="
+          echo "📦 Motormageddon Version: v$APP_VER (Build $VER_CODE)"
+          echo "🏷️ Canal: $CHANNEL"
+          echo "🎯 Titre: $RELEASE_TITLE"
+          echo "==============================================="
+
       - name: 📥 Install dependencies
         run: |
           npm install
@@ -61,38 +81,41 @@ jobs:
           cd android
           ./gradlew assembleRelease --stacktrace || echo "Release build step completed"
 
-      - name: 📤 Upload Debug APK Artifact
+      - name: 📤 Upload Versioned Debug APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Motormageddon-Debug-APK
+          name: Motormageddon-v${{ env.APP_VERSION }}-b${{ env.VERSION_CODE }}-APK
           path: |
             android/app/build/outputs/apk/debug/*.apk
           retention-days: 14
 
-      - name: 🏷️ Create GitHub Release (On Tag Push)
+      - name: 🏷️ Create GitHub Beta Release (On Tag Push or Workflow Dispatch)
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
           files: |
             android/app/build/outputs/apk/debug/*.apk
-          name: "Motormageddon ${{ github.ref_name }}"
+          name: "Motormageddon v${{ env.APP_VERSION }} [BETA]"
           body: |
-            # 🏁 Motormageddon - Nouvelle Version Arcade Android
+            # 🏁 Motormageddon v${{ env.APP_VERSION }} (Canal BETA)
             
-            Bienvenue dans la nouvelle release officielle de **Motormageddon** !
+            **Version :** `v${{ env.APP_VERSION }}` (Build `${{ env.VERSION_CODE }}`)  
+            **Canal :** `BETA - Version de Test Publique`  
+            **Édition :** `${{ env.RELEASE_TITLE }}`  
             
-            ### ✨ Nouveautés :
-            - 🏍️ Pilotage arcade 3D avec virages gauche/droite et physique d'inclinaison
-            - 🛑 Système complet d'arrêt et reprise de circulation (freinage à 0 km/h)
-            - 🚦 Carrefours, ronds-points, feux rouges et collision avec véhicules transversaux
-            - 🩹 Animation burlesque de relèvement en 3 phases
-            - 🩸 Éclaboussures cartoon rouges modérées
-            - 👴 Piétons enrichis (Papy avec canne, Parent avec poussette, Groupe de flâneurs)
-            - 🏁 Ligne d'arrivée monumentale 3D et célébration victoire
-            - 🗺️ Carte réaliste de France avec 10 villes
-            - 👤 Section Profil avec statistiques complètes
-            - 🔑 Signature permanente APK garantissant des mises à jour fluides sans désinstallation
+            ---
             
-            Téléchargez l'APK ci-dessous et profitez de l'expérience arcade !
+            ### ✨ Nouveautés de cette version Beta :
+            - 🔄 **Vrais Ronds-points français** : Anneau 24m, îlot paysager, obélisque, panneaux B21f et véhicules circulant en continu.
+            - 🏍️ **Pilotage adouci** : Direction progressive avec filtrage d'inertie (suppression des à-coups brutaux).
+            - 💥 **Effets d'impact optimisés** : Étincelles compactes orange mandarine au lieu des gros éléments jaunes.
+            - 🚦 **Carrefours urbains & Trafic transversal** : Feux synchronisés, collision avec taxis/camionnettes et relèvement burlesque en 3 phases.
+            - 🗺️ **Carte du Tour de France** : Tracé néon doré animé, carrousel d'étapes et emblèmes de villes.
+            - 🛵 **Garage nouvelle ergonomie** : Carrousel ◀ / ▶, pilules de catégories claires, sans coupure de texte.
+            - 🔇 **Gestion audio & mémoire** : Nettoyage WebAudio natif `@capacitor/app` sans son résiduel.
+            - 🔑 **Signature permanente** : Keystore fixe garantissant les futures mises à jour directes sans désinstallation.
+            
+            ---
+            ⚠️ *Note : Cette version est officiellement en phase BETA. Vos retours et signalements de bugs sont précieux.*
           draft: false
-          prerelease: false
+          prerelease: true

@@ -56,20 +56,17 @@
 - Fermeture et suspension immédiate du contexte WebAudio (`ctx.close()`, `ctx.suspend()`) lors de la sortie pour éliminer toute persistance sonore et fuite mémoire.
 - Volume moteur adouci en un ronronnement agréable.
 
-### ✅ 11. VERSIONNAGE COMPLET & SIGNATURE PERMANENTE (RÉSOLUTION MISE À JOUR IMPOSSIBLE)
-- **Origine du problème de mise à jour** : Les runners GitHub Actions utilisaient un keystore temporaire aléatoire différent à chaque compilation (signatures SHA-256 divergentes), et le `versionCode` restait bloqué à 1.
-- **Résolution définitive** :
-  - **Keystore permanent** `android/app/motormageddon.keystore` (RSA 2048, 10 000 jours, EOMedia) versionné dans le dépôt Git.
-  - Toutes les compilations (locales et GitHub Actions) partagent la **même signature cryptographique**.
-  - `versionCode` incrémenté à **3** et `versionName` à **1.2.0**.
-  - Single source of truth : `version.json` et `src/core/Version.js`.
-  - Nom d'APK généré automatiquement : `Motormageddon-v1.2.0-b3-debug.apk` (et copie `app-debug.apk`).
-  - Script d'incrémentation : `npm run version:patch`, `version:minor`, `version:major`.
-  - Affichage de la version `${FULL_VERSION}` sur l'écran titre, dans les options et dans les mentions légales.
-- *(Rappel transition : Si une version antérieure temporaire avec une ancienne clé était installée sur l'appareil, la désinstaller une fois. Dès cette version v1.2.0 installée, toutes les futures mises à jour s'installeront directement par-dessus sans aucune désinstallation).*
+### ✅ 11. VERSIONNAGE COMPLET, CANAL BETA & GITHUB ACTIONS
+- **Canal officiel** : **BETA** (`1.2.0-beta`, Build 3).
+- **Intégration GitHub Actions** :
+  - Extraction dynamique de la version depuis `version.json` dans GitHub Actions (`APP_VERSION`, `VERSION_CODE`, `CHANNEL`).
+  - Nom d'artefact GitHub dynamique : `Motormageddon-v1.2.0-beta-b3-APK`.
+  - Releases GitHub configurées en Pre-release (`prerelease: true`) marquées **[BETA]**.
+  - Badge BETA distinctif rouge/rose sur le Splash Screen et dans les mentions légales de l'application.
+- **Keystore permanent** : `android/app/motormageddon.keystore` (RSA 2048, 10 000 jours, EOMedia) garantissant l'identité de signature SHA-256 sur toutes les versions.
+- **Nom d'APK généré automatiquement** : `Motormageddon-v1.2.0-beta-b3-debug.apk` (et copie `app-debug.apk`).
+- **Script d'incrémentation** : `npm run version:patch`, `version:minor`, `version:major` configurés pour préserver automatiquement le canal `-beta`.
 
 ### ✅ 12. VALIDATION DU BUILD ANDROID & GITHUB ACTIONS
-- **Compilation locale APK réussie** : `android/app/build/outputs/apk/debug/Motormageddon-v1.2.0-b3-debug.apk` et `app-debug.apk` (8.16 Mo).
-- **GitHub Actions CI/CD (Run #8)** : Workflow `42044299313` terminé avec succès (`conclusion: success`).
-- **Artefact GitHub disponible** : `Motormageddon-Debug-APK` (id: `13424022571`, 8.16 Mo) prêt au téléchargement sur GitHub Actions.
+- **Compilation locale APK réussie** : `android/app/build/outputs/apk/debug/Motormageddon-v1.2.0-beta-b3-debug.apk` et `app-debug.apk`.
 - **Dépôt officiel** : `https://github.com/hafedhhelali/Motormageddon`

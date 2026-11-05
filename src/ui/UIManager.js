@@ -9,7 +9,7 @@ import { gameState, CITIES, BIKES } from '../core/GameState.js';
 import { storage } from '../core/Storage.js';
 import { soundManager } from '../audio/SoundManager.js';
 import { App } from '@capacitor/app';
-import { FULL_VERSION, APP_VERSION, COPYRIGHT_NOTICE, RELEASE_NAME } from '../core/Version.js';
+import { FULL_VERSION, APP_VERSION, COPYRIGHT_NOTICE, RELEASE_NAME, IS_BETA } from '../core/Version.js';
 
 export class UIManager {
   constructor(rootElement, onActionCallback) {
@@ -129,7 +129,7 @@ export class UIManager {
     splash.className = 'screen-splash interactive';
 
     splash.innerHTML = `
-      <div class="splash-badge-version">${FULL_VERSION}</div>
+      <div class="splash-badge-version">${IS_BETA ? '<span class="badge-beta-pill">BETA</span>' : ''}${FULL_VERSION}</div>
 
       <div class="logo-container">
         <h1 class="game-title">MOTORMAGEDDON</h1>
@@ -1129,7 +1129,7 @@ export class UIManager {
           <div style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px;">
             <strong style="color: #f1c40f;">Éditeur & Développeur :</strong><br>
             <strong>EOMedia</strong> — Tous droits réservés © 2026.<br>
-            Version installée : <strong style="color: #2ed573;">${FULL_VERSION}</strong> (${RELEASE_NAME})<br>
+            Version installée : <strong style="color: #2ed573;">${FULL_VERSION}</strong> (${RELEASE_NAME}) <span style="background: #ff4757; color: #fff; font-size: 0.65rem; font-weight: 800; padding: 2px 6px; border-radius: 4px; vertical-align: middle;">CANAL BETA</span><br>
             Contact éditeur : support@eomedia.fr
           </div>
 
