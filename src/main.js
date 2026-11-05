@@ -185,9 +185,9 @@ class GameApp {
       }
 
       // 7. Génération et recyclage du monde 3D
-      this.environment.update(this.bike.z);
+      this.environment.update(this.bike.z, delta);
 
-      // 8. Gestion des piétons, poussettes, papys et collisions burlesques avec sang
+      // 8. Gestion des piétons, poussettes, papys, collisions burlesques et frôlements (near-miss)
       this.characters.update(
         delta,
         this.bike.z,
@@ -200,7 +200,12 @@ class GameApp {
           this.particles.spawnBloodBurst(hitChar.group.position);
           gameState.addInteraction(hitChar.typeDef.points, hitChar.typeDef.type, hitChar.category);
         },
-        (z) => this.environment.getRoadCenterX(z)
+        (z) => this.environment.getRoadCenterX(z),
+        (nearChar) => {
+          // Frôlement / Near-Miss à pleine vitesse !
+          gameState.addNearMiss();
+          this.particles.spawnComicBurst(nearChar.group.position, 75, gameState.combo);
+        }
       );
 
       // 9. Gestion des carrefours réalistes, feux et trafic transversal
@@ -248,6 +253,20 @@ class GameApp {
           gameState.endRun();
         }, 1200);
       }
+    } else if (gameState.currentMode === 'COUNTDOWN') {
+      // MODE COMPTE À REBOURS : Moto strictement à l'arrêt sur la ligne de départ
+      const roadCenterX = this.environment.getRoadCenterX(this.bike.z);
+      const roadAngle = this.environment.getRoadAngle(this.bike.z);
+
+      this.bike.update(delta, 0, 0);
+      this.bike.mesh.position.x = roadCenterX + this.bike.x;
+      this.bike.mesh.position.z = this.bike.z;
+      this.bike.mesh.rotation.y = roadAngle;
+
+      soundManager.updateEngine(0.08); // Ralenti moteur doux à l'arrêt
+      this.environment.update(this.bike.z, delta);
+      this.particles.update(delta, this.bike.z, 0);
+      this.engine.updateCameraGameplay(delta, this.bike.mesh.position, 0);
     } else {
       // Modes SPLASH, MENU, GARAGE, PAUSE : Caméra cinématique 360°
       this.engine.updateCameraCinematic(delta, this.bike.mesh.position);

@@ -200,15 +200,15 @@ export class UIManager {
     mapScreen.innerHTML = `
       <div class="map-header">
         <button id="btn-map-back" class="btn-arcade btn-ghost" style="padding: 8px 16px; font-size: 0.9rem;">
-          ← RETOUR
+          ← ACCUEIL
         </button>
         <div style="text-align: center;">
-          <h2 class="map-title" style="margin: 0; font-size: 1.3rem;">LE TOUR DE FRANCE 3D</h2>
-          <span style="font-size: 0.78rem; color: #fffa65; font-weight: 800;">${totalStars} / ${CITIES.length * 3} ★ ÉTOILES DU TOUR</span>
+          <h2 class="map-title" style="margin: 0; font-size: 1.35rem; color: #fffa65; letter-spacing: 1px;">LE TOUR DE FRANCE 3D</h2>
+          <span style="font-size: 0.8rem; color: #7bed9f; font-weight: 800;">${totalStars} / ${CITIES.length * 3} ★ ÉTOILES DU TOUR</span>
         </div>
         <div style="display: flex; gap: 8px;">
-          <button id="btn-map-profile" class="btn-arcade btn-accent" style="padding: 6px 12px; font-size: 0.85rem;">
-            👤 PROFIL
+          <button id="btn-map-garage" class="btn-arcade btn-secondary" style="padding: 7px 14px; font-size: 0.85rem;" title="Changer de moto">
+            🏍️ GARAGE
           </button>
           <div class="currency-badge">
             <span>🪙 ${coins}</span>
@@ -232,39 +232,55 @@ export class UIManager {
       </div>
 
       <div class="france-map-svg-container" id="france-container">
-        <!-- SVG Cartographique Haute Fidélité : France Réaliste, Pays Frontaliers & Reliefs -->
-        <svg class="france-svg" viewBox="0 0 540 500">
+        <!-- SVG Cartographique Haute Fidélité : France Réaliste, Reliefs, Pays Frontaliers & Tracé Doré -->
+        <svg class="france-svg" viewBox="0 0 540 500" preserveAspectRatio="xMidYMid meet">
           <defs>
-            <radialGradient id="franceRelief" cx="50%" cy="48%" r="58%">
-              <stop offset="0%" stop-color="#3d566e" />
-              <stop offset="45%" stop-color="#2c3e50" />
-              <stop offset="85%" stop-color="#1e272e" />
-              <stop offset="100%" stop-color="#0f171e" />
+            <!-- Dégradé de la France : Vert forêt / émeraude stylisé prestige -->
+            <linearGradient id="franceLuxury" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#1b4d3e" />
+              <stop offset="40%" stop-color="#14362b" />
+              <stop offset="80%" stop-color="#0e231c" />
+              <stop offset="100%" stop-color="#081510" />
+            </linearGradient>
+
+            <!-- Dégradé de l'océan : Bleu nuit profond avec nuances côtières -->
+            <radialGradient id="oceanShading" cx="50%" cy="50%" r="75%">
+              <stop offset="0%" stop-color="#162b44" />
+              <stop offset="70%" stop-color="#0a1522" />
+              <stop offset="100%" stop-color="#050a10" />
             </radialGradient>
-            <radialGradient id="oceanShading" cx="50%" cy="50%" r="70%">
-              <stop offset="0%" stop-color="#142334" />
-              <stop offset="100%" stop-color="#09101a" />
-            </radialGradient>
+
             <filter id="glowTourRoute" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation="3.5" result="blur" />
+              <feGaussianBlur stdDeviation="3.2" result="blur" />
               <feMerge>
                 <feMergeNode in="blur" />
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
-            <filter id="softShadow" x="-10%" y="-10%" width="120%" height="120%">
-              <feDropShadow dx="2" dy="5" stdDeviation="4" flood-color="#000" flood-opacity="0.6" />
+
+            <filter id="coastalGlow" x="-10%" y="-10%" width="120%" height="120%">
+              <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#00cec9" flood-opacity="0.3" />
             </filter>
           </defs>
 
           <!-- Fond Océanique / Mer -->
           <rect width="100%" height="100%" fill="url(#oceanShading)" />
 
-          <!-- Vagues et rides marines subtiles -->
-          <path d="M 40 330 Q 60 325 80 330 T 120 330" fill="none" stroke="#2980b9" stroke-width="1" opacity="0.35" />
-          <path d="M 60 380 Q 80 375 100 380 T 140 380" fill="none" stroke="#2980b9" stroke-width="1" opacity="0.3" />
-          <path d="M 330 465 Q 350 460 370 465 T 410 465" fill="none" stroke="#2980b9" stroke-width="1" opacity="0.35" />
-          <path d="M 160 85 Q 180 80 200 85 T 240 85" fill="none" stroke="#2980b9" stroke-width="1" opacity="0.3" />
+          <!-- Vagues et rides marines élégantes -->
+          <path d="M 30 330 Q 55 322 80 330 T 130 330" fill="none" stroke="#38ada9" stroke-width="1.2" opacity="0.35" />
+          <path d="M 50 380 Q 75 372 100 380 T 150 380" fill="none" stroke="#38ada9" stroke-width="1.2" opacity="0.3" />
+          <path d="M 320 465 Q 345 458 370 465 T 420 465" fill="none" stroke="#38ada9" stroke-width="1.2" opacity="0.35" />
+          <path d="M 140 85 Q 165 78 190 85 T 240 85" fill="none" stroke="#38ada9" stroke-width="1.2" opacity="0.3" />
+
+          <!-- Rose des sables / Boussole nautique stylisée dans l'Atlantique -->
+          <g transform="translate(65, 230) scale(0.65)" opacity="0.55">
+            <circle cx="0" cy="0" r="28" fill="none" stroke="#ffd700" stroke-width="1.2" stroke-dasharray="3,3" />
+            <polygon points="0,-34 6,-8 0,0 -6,-8" fill="#ffd700" />
+            <polygon points="0,34 6,8 0,0 -6,8" fill="#e17055" />
+            <polygon points="34,0 8,6 0,0 8,-6" fill="#a4b0be" />
+            <polygon points="-34,0 -8,6 0,0 -8,-6" fill="#a4b0be" />
+            <text x="-4" y="-38" fill="#ffd700" font-size="10" font-weight="900">N</text>
+          </g>
 
           <!-- PAYS FRONTALIERS RÉALISTES AVEC FRONTIÈRES ET DRAPEAUX -->
           <!-- 1. ROYAUME-UNI (UK) / Angleterre au nord-ouest -->
@@ -273,8 +289,8 @@ export class UIManager {
             C 185 25, 175 40, 150 48
             C 120 52, 90 42, 65 58
             C 35 62, 15 50, 0 55 Z
-          " fill="#182330" stroke="#34495e" stroke-width="1.8" />
-          <text x="50" y="30" fill="#a4b0be" font-size="9.5" font-weight="900" letter-spacing="0.8">ROYAUME-UNI 🇬🇧</text>
+          " fill="#131922" stroke="#2c3e50" stroke-width="1.8" />
+          <text x="45" y="28" fill="#74b9ff" font-size="10" font-weight="900" letter-spacing="0.8">ROYAUME-UNI 🇬🇧</text>
 
           <!-- 2. BELGIQUE & LUXEMBOURG au nord-est -->
           <path class="border-country belgique" d="
@@ -282,58 +298,58 @@ export class UIManager {
             C 435 60, 420 70, 395 62
             C 365 52, 330 45, 298 32
             C 285 20, 280 5, 275 0 Z
-          " fill="#182330" stroke="#34495e" stroke-width="1.8" />
-          <text x="325" y="24" fill="#a4b0be" font-size="9.5" font-weight="900" letter-spacing="0.8">BELGIQUE 🇧🇪</text>
+          " fill="#131922" stroke="#2c3e50" stroke-width="1.8" />
+          <text x="325" y="22" fill="#74b9ff" font-size="10" font-weight="900" letter-spacing="0.8">BELGIQUE 🇧🇪</text>
 
           <!-- 3. ALLEMAGNE à l'est au-delà du Rhin -->
           <path class="border-country allemagne" d="
             M 450 65 L 540 65 L 540 185
             C 505 180, 480 170, 465 145
             C 455 125, 452 90, 450 65 Z
-          " fill="#182330" stroke="#34495e" stroke-width="1.8" />
-          <text x="452" y="125" fill="#a4b0be" font-size="9.5" font-weight="900" letter-spacing="0.8">ALLEMAGNE 🇩🇪</text>
+          " fill="#131922" stroke="#2c3e50" stroke-width="1.8" />
+          <text x="450" y="115" fill="#74b9ff" font-size="10" font-weight="900" letter-spacing="0.8">ALLEMAGNE 🇩🇪</text>
 
           <!-- 4. SUISSE à l'est (Jura & Alpes) -->
           <path class="border-country suisse" d="
             M 465 185 L 540 185 L 540 265
             C 515 260, 490 270, 460 255
             C 440 245, 435 220, 450 195 Z
-          " fill="#182330" stroke="#34495e" stroke-width="1.8" />
-          <text x="456" y="225" fill="#a4b0be" font-size="9.5" font-weight="900" letter-spacing="0.8">SUISSE 🇨🇭</text>
+          " fill="#131922" stroke="#2c3e50" stroke-width="1.8" />
+          <text x="456" y="215" fill="#74b9ff" font-size="10" font-weight="900" letter-spacing="0.8">SUISSE 🇨🇭</text>
 
           <!-- 5. ITALIE au sud-est (au-delà des Alpes) -->
           <path class="border-country italie" d="
             M 460 255 L 540 265 L 540 430
             C 510 415, 475 390, 455 370
             C 435 345, 442 300, 450 270 Z
-          " fill="#182330" stroke="#34495e" stroke-width="1.8" />
-          <text x="470" y="335" fill="#a4b0be" font-size="9.5" font-weight="900" letter-spacing="0.8">ITALIE 🇮🇹</text>
+          " fill="#131922" stroke="#2c3e50" stroke-width="1.8" />
+          <text x="465" y="325" fill="#74b9ff" font-size="10" font-weight="900" letter-spacing="0.8">ITALIE 🇮🇹</text>
 
           <!-- 6. ESPAGNE au sud (au-delà des Pyrénées) -->
           <path class="border-country espagne" d="
             M 85 455 L 375 455 L 375 500 L 0 500 L 0 455
             C 35 452, 60 454, 85 455 Z
-          " fill="#182330" stroke="#34495e" stroke-width="1.8" />
-          <text x="175" y="482" fill="#a4b0be" font-size="10" font-weight="900" letter-spacing="1">ESPAGNE 🇪🇸</text>
+          " fill="#131922" stroke="#2c3e50" stroke-width="1.8" />
+          <text x="175" y="482" fill="#74b9ff" font-size="10.5" font-weight="900" letter-spacing="1">ESPAGNE 🇪🇸</text>
 
-          <!-- Mers et Océans : Typographie cartographique -->
-          <text x="25" y="320" fill="#38ada9" font-size="9" font-weight="800" font-style="italic" opacity="0.6">OCÉAN ATLANTIQUE</text>
-          <text x="45" y="240" fill="#38ada9" font-size="8.5" font-weight="700" font-style="italic" opacity="0.55">GOLFE DE GASCOGNE</text>
-          <text x="110" y="85" fill="#38ada9" font-size="8.5" font-weight="700" font-style="italic" opacity="0.6">LA MANCHE</text>
-          <text x="325" y="455" fill="#38ada9" font-size="9" font-weight="800" font-style="italic" opacity="0.6">MER MÉDITERRANÉE</text>
+          <!-- Mers et Océans : Typographie cartographique prestige -->
+          <text x="25" y="315" fill="#00cec9" font-size="9" font-weight="800" font-style="italic" opacity="0.75">OCÉAN ATLANTIQUE</text>
+          <text x="35" y="260" fill="#00cec9" font-size="8.5" font-weight="700" font-style="italic" opacity="0.65">GOLFE DE GASCOGNE</text>
+          <text x="110" y="80" fill="#00cec9" font-size="8.5" font-weight="700" font-style="italic" opacity="0.75">LA MANCHE</text>
+          <text x="325" y="455" fill="#00cec9" font-size="9" font-weight="800" font-style="italic" opacity="0.75">MER MÉDITERRANÉE</text>
 
           <!-- Relief montagneux ombré (Pyrénées & Alpes) -->
-          <path d="M 370 240 Q 410 270 435 320 Q 400 360 380 395 Z" fill="#202b38" opacity="0.75" />
-          <path d="M 125 430 Q 210 440 300 445 Q 235 420 145 425 Z" fill="#202b38" opacity="0.75" />
+          <path d="M 370 240 Q 410 270 435 320 Q 400 360 380 395 Z" fill="#2d3436" opacity="0.65" />
+          <path d="M 125 430 Q 210 440 300 445 Q 235 420 145 425 Z" fill="#2d3436" opacity="0.65" />
 
           <!-- Fleuves majeurs réalistes (Seine, Loire, Rhône, Garonne) -->
-          <path d="M 230 40 Q 255 100 250 135 Q 230 160 170 120" fill="none" stroke="#00cec9" stroke-width="1.2" opacity="0.4" />
-          <path d="M 340 330 Q 320 280 260 240 Q 180 230 115 220" fill="none" stroke="#00cec9" stroke-width="1.2" opacity="0.4" />
-          <path d="M 425 240 Q 355 260 335 285 Q 340 350 345 405" fill="none" stroke="#00cec9" stroke-width="1.2" opacity="0.4" />
-          <path d="M 270 435 Q 235 375 140 320" fill="none" stroke="#00cec9" stroke-width="1.2" opacity="0.4" />
+          <path d="M 230 40 Q 255 100 250 135 Q 230 160 170 120" fill="none" stroke="#00cec9" stroke-width="1.5" opacity="0.45" />
+          <path d="M 340 330 Q 320 280 260 240 Q 180 230 115 220" fill="none" stroke="#00cec9" stroke-width="1.5" opacity="0.45" />
+          <path d="M 425 240 Q 355 260 335 285 Q 340 350 345 405" fill="none" stroke="#00cec9" stroke-width="1.5" opacity="0.45" />
+          <path d="M 270 435 Q 235 375 140 320" fill="none" stroke="#00cec9" stroke-width="1.5" opacity="0.45" />
 
           <!-- CONTOUR GÉOGRAPHIQUE HAUTE FIDÉLITÉ DE LA FRANCE MÉTROPOLITAINE -->
-          <path class="france-mainland" filter="url(#softShadow)" d="
+          <path class="france-mainland" filter="url(#coastalGlow)" d="
             M 275 30
             C 295 28, 325 36, 345 42
             C 375 52, 400 45, 420 68
@@ -353,14 +369,14 @@ export class UIManager {
             C 145 110, 155 90, 180 80
             C 205 70, 220 40, 245 32
             C 255 28, 265 30, 275 30 Z
-          " fill="url(#franceRelief)" stroke="#2ed573" stroke-width="2.6" />
+          " fill="url(#franceLuxury)" stroke="#00cec9" stroke-width="2.8" />
 
           <!-- Île de Corse -->
           <path d="M 450 395 C 460 390, 470 405, 465 435 C 455 460, 445 455, 440 430 Z"
-                fill="#2c3e50" stroke="#2ed573" stroke-width="2" filter="url(#softShadow)" />
-          <text x="444" y="468" fill="#2ed573" font-size="8" font-weight="800">CORSE</text>
+                fill="url(#franceLuxury)" stroke="#00cec9" stroke-width="2.2" filter="url(#coastalGlow)" />
+          <text x="444" y="468" fill="#00cec9" font-size="8.5" font-weight="900">CORSE</text>
 
-          <!-- Tracé Lumineux Officiel du Tour de France -->
+          <!-- Tracé Lumineux Officiel du Tour de France (Or Éclatant) -->
           <path class="tour-route-glow" d="
             M 270 140
             L 360 275
@@ -372,10 +388,10 @@ export class UIManager {
             L 150 325
             L 120 160
             L 470 140
-          " fill="none" stroke="#fffa65" stroke-width="3" stroke-dasharray="7,4" opacity="0.8" filter="url(#glowTourRoute)" />
+          " fill="none" stroke="#ffd700" stroke-width="3.5" stroke-dasharray="8,5" opacity="0.9" filter="url(#glowTourRoute)" />
         </svg>
 
-        <!-- Pins interactifs des villes avec emblèmes français -->
+        <!-- Pins interactifs des villes avec médaillons dorés 3D -->
         ${CITIES.map((city, idx) => {
           const unlocked = storage.isCityUnlocked(city.id);
           const cityData = storage.getCityData(city.id);
@@ -387,10 +403,11 @@ export class UIManager {
                  style="left: ${city.mapCoords.x}%; top: ${city.mapCoords.y}%;">
               <div class="city-pulse-ring"></div>
               <div class="city-pin-dot">
-                ${unlocked ? (city.emblem || '★') : '🔒'}
+                <span class="pin-badge-idx">${idx + 1}</span>
+                <span class="pin-emblem-icon">${unlocked ? (city.emblem || '★') : '🔒'}</span>
               </div>
               <div class="city-pin-label">
-                <span style="color: #fffa65; font-size: 0.65rem;">#${idx + 1}</span> ${city.name}
+                ${city.name}
               </div>
             </div>
           `;
@@ -440,10 +457,14 @@ export class UIManager {
       this.setScreen('SPLASH');
     });
 
-    mapScreen.querySelector('#btn-map-profile').addEventListener('click', () => {
-      soundManager.playClick();
-      this.showProfileModal();
-    });
+    const garageBtn = mapScreen.querySelector('#btn-map-garage');
+    if (garageBtn) {
+      garageBtn.addEventListener('click', () => {
+        soundManager.playClick();
+        this.previousScreen = 'MAP';
+        this.setScreen('GARAGE');
+      });
+    }
 
     this.root.appendChild(mapScreen);
     this.updateCityDetail(mapScreen.querySelector('#city-detail'));
@@ -536,41 +557,38 @@ export class UIManager {
     }, 1100);
   }
 
-  // --- 3. GARAGE ET PERSONNALISATION (AVEC NAVIGATION CORRIGÉE) ---
+  // --- 3. GARAGE ET PERSONNALISATION (NAVIGATION FLÈCHES ◀ ▶ ET RETOUR CARTE) ---
   renderGarageScreen() {
     const garage = document.createElement('div');
     garage.className = 'screen-garage interactive';
 
     const coins = storage.data.coins;
+    let currentIdx = BIKES.findIndex(b => b.id === this.selectedGarageBike.id);
+    if (currentIdx === -1) currentIdx = 0;
 
     garage.innerHTML = `
       <div class="garage-header">
         <button id="btn-garage-back" class="btn-arcade btn-ghost" style="padding: 8px 16px; font-size: 0.9rem;">
           ← RETOUR
         </button>
-        <h2 style="font-size: 1.5rem; font-weight: 800; margin: 0;">LE GARAGE</h2>
+        <div style="text-align: center;">
+          <h2 style="font-size: 1.45rem; font-weight: 900; margin: 0; color: #fffa65; letter-spacing: 1px;">LE GARAGE 3D</h2>
+          <span style="font-size: 0.78rem; color: #7bed9f; font-weight: 800;" id="garage-bike-counter">
+            BOLIDE ${currentIdx + 1} / ${BIKES.length}
+          </span>
+        </div>
         <div class="currency-badge">
           <span>🪙 ${coins}</span>
         </div>
       </div>
 
+      <!-- Boutons Flèches Gauche / Droite GRAND FORMAT pour basculer facilement -->
+      <div class="garage-carousel-overlay-nav">
+        <button id="btn-prev-bike" class="btn-garage-arrow-large left" title="Bolide précédent">◀</button>
+        <button id="btn-next-bike" class="btn-garage-arrow-large right" title="Bolide suivant">▶</button>
+      </div>
+
       <div class="garage-bottom-panel">
-        <!-- Barre de navigation tactile ergonomique avec flèches et catégories -->
-        <div class="garage-carousel-nav">
-          <button id="btn-prev-bike" class="btn-carousel-arrow" title="Bolide précédent">◀</button>
-          
-          <div class="bikes-category-row">
-            ${BIKES.map(b => `
-              <div class="bike-category-pill ${this.selectedGarageBike.id === b.id ? 'active' : ''}" data-bike-id="${b.id}">
-                <span class="bike-icon">${b.icon || '🏍️'}</span>
-                <span class="bike-category-name">${b.shortName || b.name}</span>
-              </div>
-            `).join('')}
-          </div>
-
-          <button id="btn-next-bike" class="btn-carousel-arrow" title="Bolide suivant">▶</button>
-        </div>
-
         <div id="garage-bike-info">
           <!-- Rempli dynamiquement -->
         </div>
@@ -586,35 +604,20 @@ export class UIManager {
       soundManager.playClick();
       if (this.onAction) this.onAction('PREVIEW_BIKE', nextBike);
       
-      const pills = garage.querySelectorAll('.bike-category-pill');
-      pills.forEach(p => p.classList.toggle('active', p.getAttribute('data-bike-id') === nextBike.id));
+      const counterEl = garage.querySelector('#garage-bike-counter');
+      if (counterEl) {
+        counterEl.textContent = `BOLIDE ${idx + 1} / ${BIKES.length} • ${nextBike.category}`;
+      }
       this.updateGarageBikeInfo(garage.querySelector('#garage-bike-info'));
     };
 
     garage.querySelector('#btn-prev-bike').addEventListener('click', () => changeBikeByIndex(-1));
     garage.querySelector('#btn-next-bike').addEventListener('click', () => changeBikeByIndex(1));
 
-    // Événements clics directs sur les catégories
-    const pills = garage.querySelectorAll('.bike-category-pill');
-    pills.forEach(pill => {
-      pill.addEventListener('click', () => {
-        const bikeId = pill.getAttribute('data-bike-id');
-        const bike = BIKES.find(b => b.id === bikeId);
-        if (bike) {
-          soundManager.playClick();
-          this.selectedGarageBike = bike;
-          pills.forEach(p => p.classList.remove('active'));
-          pill.classList.add('active');
-          if (this.onAction) this.onAction('PREVIEW_BIKE', bike);
-          this.updateGarageBikeInfo(garage.querySelector('#garage-bike-info'));
-        }
-      });
-    });
-
-    // Retour propre vers l'écran d'où l'on vient (SPLASH ou MAP)
+    // Retour propre vers MAP ou SPLASH
     garage.querySelector('#btn-garage-back').addEventListener('click', () => {
       soundManager.playClick();
-      this.setScreen(this.previousScreen || 'SPLASH');
+      this.setScreen(this.previousScreen || 'MAP');
     });
 
     this.root.appendChild(garage);
@@ -685,15 +688,15 @@ export class UIManager {
 
       <div style="margin-top: 10px;">
         ${isEquipped ? `
-          <button class="btn-arcade btn-secondary" style="width: 100%; cursor: default; padding: 12px;">
-            ✓ ÉQUIPÉE ACTUELLEMENT
+          <button id="btn-already-equipped" class="btn-arcade btn-secondary" style="width: 100%; padding: 13px; font-size: 1rem;">
+            ✓ BOLIDE ÉQUIPÉ (RETOURNER AU TOUR)
           </button>
         ` : isUnlocked ? `
-          <button id="btn-equip-bike" class="btn-arcade btn-play-pulse" style="width: 100%; padding: 12px;">
-            ÉQUIPER CE BOLIDE
+          <button id="btn-equip-bike" class="btn-arcade btn-play-pulse" style="width: 100%; padding: 13px; font-size: 1rem;">
+            ⚡ ÉQUIPER ET ALLER AU TOUR
           </button>
         ` : `
-          <button id="btn-buy-bike" class="btn-arcade btn-accent" style="width: 100%; padding: 12px;">
+          <button id="btn-buy-bike" class="btn-arcade btn-accent" style="width: 100%; padding: 13px; font-size: 1rem;">
             DÉBLOQUER CE VÉHICULE (🪙 ${bike.cost})
           </button>
         `}
@@ -712,23 +715,34 @@ export class UIManager {
       });
     });
 
-    if (!isEquipped && isUnlocked) {
+    if (isEquipped) {
+      const alreadyBtn = container.querySelector('#btn-already-equipped');
+      if (alreadyBtn) {
+        alreadyBtn.addEventListener('click', () => {
+          soundManager.playClick();
+          this.setScreen('MAP');
+        });
+      }
+    } else if (isUnlocked) {
       container.querySelector('#btn-equip-bike').addEventListener('click', () => {
         storage.equipBike(bike.id);
         gameState.selectBike(bike.id);
         soundManager.playClick();
         if (this.onAction) this.onAction('BIKE_EQUIPPED', bike);
         this.showToastUnlock({ name: `${bike.name} Équipé !` });
-        this.updateGarageBikeInfo(container);
+        // REVIENS DIRECTEMENT À LA CARTE DU TOUR !
+        this.setScreen('MAP');
       });
     } else if (!isUnlocked) {
       container.querySelector('#btn-buy-bike').addEventListener('click', () => {
         const res = storage.unlockBike(bike.id, bike.cost);
         if (res.success) {
+          storage.equipBike(bike.id);
           gameState.selectBike(bike.id);
           soundManager.playVictory();
           if (this.onAction) this.onAction('BIKE_EQUIPPED', bike);
-          this.updateGarageBikeInfo(container);
+          this.showToastUnlock({ name: `${bike.name} Débloqué & Équipé !` });
+          this.setScreen('MAP');
         } else {
           soundManager.playBoing();
           alert(res.reason);
@@ -737,33 +751,43 @@ export class UIManager {
     }
   }
 
-  // --- 4. HUD DE GAMEPLAY AVEC FREIN ET ARRÊT/REPRISE ---
+  // --- 4. HUD DE GAMEPLAY AVEC FREIN, SCORE DYNAMIQUE ET COMPTE À REBOURS ---
   renderHUDScreen() {
     const hud = document.createElement('div');
     hud.className = 'screen-hud';
 
     hud.innerHTML = `
       <div class="hud-top-bar">
-        <div class="score-box">
-          <span class="score-label">SCORE</span>
-          <span class="score-value" id="hud-score-val">0</span>
+        <!-- Badge Score Lumineux Arcade -->
+        <div class="score-box-arcade">
+          <div class="score-badge-header">
+            <span class="score-badge-icon">⚡</span>
+            <span class="score-badge-label">SCORE</span>
+          </div>
+          <span class="score-value" id="hud-score-val">${gameState.score.toLocaleString('fr-FR')}</span>
           <div class="combo-badge" id="hud-combo-badge">
-            <span>🔥</span>
+            <span class="combo-flame">🔥</span>
             <span id="hud-combo-text">COMBO x1</span>
           </div>
         </div>
 
-        <div class="progress-container">
-          <span class="city-target-title" id="hud-city-name">${gameState.selectedCity.name.toUpperCase()}</span>
+        <!-- Grande Carte d'Objectif et de Progression de l'Étape -->
+        <div class="progress-objective-card">
+          <div class="objective-header-row">
+            <span class="city-target-title" id="hud-city-name">${gameState.selectedCity.emblem || '📍'} ${gameState.selectedCity.name.toUpperCase()}</span>
+            <span class="objective-target-pts" id="hud-target-pts">🎯 ${gameState.selectedCity.targetScore.toLocaleString('fr-FR')} PTS</span>
+          </div>
           <div class="progress-bar-bg">
             <div class="progress-bar-fill" id="hud-progress-fill"></div>
+            <span class="progress-pct-text" id="hud-progress-pct">0%</span>
           </div>
-          <span style="font-size: 0.65rem; color: #a4b0be; margin-top: 2px;" id="hud-target-text">
-            Objectif: ${gameState.selectedCity.targetScore} pts
+          <span class="objective-status-sub" id="hud-target-remaining">
+            Roulez et percutez pour débloquer la suite !
           </span>
         </div>
 
-        <button class="btn-icon-pause" id="btn-hud-pause">
+        <!-- Bouton Pause Chrome -->
+        <button class="btn-icon-pause" id="btn-hud-pause" title="Mettre en pause">
           ⏸️
         </button>
       </div>
@@ -827,6 +851,71 @@ export class UIManager {
     });
 
     this.root.appendChild(hud);
+
+    // Déclencher le compte à rebours 3-2-1-GO si on entre en course
+    if (gameState.currentMode === 'COUNTDOWN') {
+      this.triggerCountdown();
+    }
+  }
+
+  triggerCountdown() {
+    const existing = this.root.querySelector('.hud-countdown-overlay');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.className = 'hud-countdown-overlay';
+    overlay.innerHTML = `
+      <div class="countdown-pulse-box">
+        <div class="countdown-number" id="countdown-display">3</div>
+        <div class="countdown-sub" id="countdown-sub">MOTO À L’ARRÊT...</div>
+      </div>
+    `;
+    this.root.appendChild(overlay);
+
+    soundManager.playCountdownBeep(false);
+
+    // 3 -> 2
+    setTimeout(() => {
+      const display = overlay.querySelector('#countdown-display');
+      const sub = overlay.querySelector('#countdown-sub');
+      if (display) {
+        display.textContent = '2';
+        display.className = 'countdown-number pulse-pop';
+        if (sub) sub.textContent = 'PRÉPAREZ-VOUS !';
+        soundManager.playCountdownBeep(false);
+      }
+    }, 850);
+
+    // 2 -> 1
+    setTimeout(() => {
+      const display = overlay.querySelector('#countdown-display');
+      const sub = overlay.querySelector('#countdown-sub');
+      if (display) {
+        display.textContent = '1';
+        display.className = 'countdown-number pulse-pop';
+        if (sub) sub.textContent = 'ATTENTION...';
+        soundManager.playCountdownBeep(false);
+      }
+    }, 1700);
+
+    // 1 -> GO !
+    setTimeout(() => {
+      const display = overlay.querySelector('#countdown-display');
+      const sub = overlay.querySelector('#countdown-sub');
+      if (display) {
+        display.textContent = 'GO !';
+        display.className = 'countdown-number go-pop';
+        if (sub) sub.textContent = 'PLEIN GAZ !';
+        soundManager.playCountdownBeep(true);
+      }
+      gameState.triggerGo();
+    }, 2550);
+
+    // Disparition douce
+    setTimeout(() => {
+      overlay.classList.add('fade-out');
+      setTimeout(() => overlay.remove(), 400);
+    }, 3200);
   }
 
   updateHUDScore(data) {
@@ -835,9 +924,9 @@ export class UIManager {
     const comboText = this.root.querySelector('#hud-combo-text');
 
     if (scoreVal) {
-      scoreVal.textContent = data.score;
-      scoreVal.style.transform = 'scale(1.15)';
-      setTimeout(() => { if (scoreVal) scoreVal.style.transform = 'scale(1)'; }, 100);
+      scoreVal.textContent = data.score.toLocaleString('fr-FR');
+      scoreVal.style.transform = 'scale(1.18)';
+      setTimeout(() => { if (scoreVal) scoreVal.style.transform = 'scale(1)'; }, 110);
     }
 
     if (comboBadge && comboText) {
@@ -859,13 +948,32 @@ export class UIManager {
     const speedVal = this.root.querySelector('#hud-speed-val');
     const speedGauge = this.root.querySelector('#hud-speed-gauge');
     const progressFill = this.root.querySelector('#hud-progress-fill');
+    const progressPct = this.root.querySelector('#hud-progress-pct');
+    const scoreVal = this.root.querySelector('#hud-score-val');
+    const targetRemaining = this.root.querySelector('#hud-target-remaining');
 
     if (speedVal) speedVal.textContent = data.speed;
     if (speedGauge) {
       const pct = Math.min(100, Math.floor((data.speed / 160) * 100));
       speedGauge.style.width = `${pct}%`;
     }
-    if (progressFill) progressFill.style.width = `${Math.floor(data.progressRatio * 100)}%`;
+    if (progressFill) {
+      const pct = Math.min(100, Math.floor(data.progressRatio * 100));
+      progressFill.style.width = `${pct}%`;
+      if (progressPct) progressPct.textContent = `${pct}%`;
+    }
+    // Score dynamique au volant
+    if (scoreVal) {
+      scoreVal.textContent = data.score.toLocaleString('fr-FR');
+    }
+    if (targetRemaining) {
+      const diff = Math.max(0, data.targetScore - data.score);
+      if (diff === 0) {
+        targetRemaining.innerHTML = '<span style="color: #2ed573; font-weight: 900;">★ OBJECTIF ATTEINT !</span>';
+      } else {
+        targetRemaining.textContent = `Reste : ${diff.toLocaleString('fr-FR')} pts`;
+      }
+    }
   }
 
   // --- 5. MODALE DE PROFIL JOUEUR ---

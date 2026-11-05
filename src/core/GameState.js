@@ -286,6 +286,63 @@ export const BIKES = [
     maxSpeed: 30,
     accel: 18,
     steerSpeed: 15
+  },
+  {
+    id: 'dragster',
+    name: 'Nitro V8 Dragster',
+    shortName: 'V8 Dragster',
+    category: 'NITRO DRAGSTER',
+    icon: '💀',
+    tagline: 'V8 Blower & Double lance-flammes',
+    type: 'Dragster Pro-Street',
+    description: 'Pneu arrière dragster 300mm, compresseur soufflant géant et bonbonnes de protoxyde d’azote pour pulvériser le bitume.',
+    speedRating: 5,
+    handlingRating: 2,
+    bounceRating: 5,
+    cost: 3400,
+    unlocked: false,
+    scale: 1.28,
+    maxSpeed: 38,
+    accel: 28,
+    steerSpeed: 13
+  },
+  {
+    id: 'diablo',
+    name: 'Diablo Hypersport',
+    shortName: 'Diablo 1200',
+    category: 'HYPERBIKE',
+    icon: '😈',
+    tagline: 'Cadre treillis rouge & Carbone brut',
+    type: 'Streetfighter Brutale',
+    description: 'Fureur mécanique dénudée taillée pour l’attaque avec ailerons déporteurs et double silencieux titane hurlant.',
+    speedRating: 5,
+    handlingRating: 4,
+    bounceRating: 5,
+    cost: 4900,
+    unlocked: false,
+    scale: 1.1,
+    maxSpeed: 36,
+    accel: 26,
+    steerSpeed: 17
+  },
+  {
+    id: 'ravageur',
+    name: 'Ravageur Apocalypse 750',
+    shortName: 'Ravageur 750',
+    category: 'APOCALYPSE CROSS',
+    icon: '⛓️',
+    tagline: 'Blindage d’assaut & Pneus crampons',
+    type: 'Rallye Raid Blindé',
+    description: 'Garde au sol colossale, pare-buffles d’acier tubulaire et crampons tout-terrain capables de broyer tout obstacle.',
+    speedRating: 4,
+    handlingRating: 5,
+    bounceRating: 5,
+    cost: 6500,
+    unlocked: false,
+    scale: 1.18,
+    maxSpeed: 33,
+    accel: 24,
+    steerSpeed: 18
   }
 ];
 
@@ -307,6 +364,7 @@ export class GameState {
     this.selectedBike = BIKES[0];
 
     this.score = 0;
+    this.drivingScoreAccumulator = 0;
     this.combo = 1;
     this.comboTimer = 0;
     this.comboMax = 1;
@@ -353,21 +411,31 @@ export class GameState {
 
   startRun() {
     this.score = 0;
+    this.drivingScoreAccumulator = 0;
     this.combo = 1;
     this.comboTimer = 0;
     this.comboMax = 1;
     this.coinsEarned = 0;
     this.interactionsCount = 0;
     this.distance = 0;
-    this.speed = this.selectedBike.maxSpeed * 0.4;
-    this.targetSpeed = this.selectedBike.maxSpeed;
+    // La moto est STRICTEMENT À L'ARRÊT au démarrage dans la ville
+    this.speed = 0;
+    this.targetSpeed = 0;
     this.isBraking = false;
     this.isGameOver = false;
-    this.currentMode = 'PLAYING';
+    // Compte à rebours 3, 2, 1, GO !
+    this.currentMode = 'COUNTDOWN';
 
     soundManager.startEngine();
+    soundManager.updateEngine(0.08); // Ronronnement au ralenti à l'arrêt
     soundManager.startMusic();
     this.notify('run_started', { city: this.selectedCity, bike: this.selectedBike });
+  }
+
+  triggerGo() {
+    this.currentMode = 'PLAYING';
+    this.targetSpeed = this.selectedBike.maxSpeed;
+    this.notify('countdown_go', {});
   }
 
   setBraking(braking) {
@@ -378,14 +446,14 @@ export class GameState {
     if (this.currentMode !== 'PLAYING') return;
 
     this.interactionsCount++;
-    this.comboTimer = 3.2; // Fenêtre de combo un peu plus serrée
+    this.comboTimer = 3.5;
     this.combo = Math.min(this.combo + 1, 10);
     this.comboMax = Math.max(this.comboMax, this.combo);
 
     const totalAdded = points * this.combo;
     this.score += totalAdded;
 
-    const coinsFromHit = Math.floor(totalAdded / 60) + 1;
+    const coinsFromHit = Math.floor(totalAdded / 50) + 1;
     this.coinsEarned += coinsFromHit;
 
     // Réaction sonore réaliste selon la personne heurtée (enfant, vieux, femme, homme)
@@ -409,6 +477,26 @@ export class GameState {
     this.checkNextCityUnlock();
   }
 
+  addNearMiss() {
+    if (this.currentMode !== 'PLAYING') return;
+
+    const nearMissPoints = 75 * this.combo;
+    this.score += nearMissPoints;
+    this.coinsEarned += 1;
+    soundManager.playNearMiss();
+
+    this.notify('score_updated', {
+      score: this.score,
+      added: nearMissPoints,
+      combo: this.combo,
+      comboTitle: 'FRÔLEMENT !',
+      coinsEarned: this.coinsEarned,
+      itemType: 'near_miss'
+    });
+
+    this.checkNextCityUnlock();
+  }
+
   checkNextCityUnlock() {
     const currentIndex = CITIES.findIndex(c => c.id === this.selectedCity.id);
     if (currentIndex < CITIES.length - 1) {
@@ -422,6 +510,11 @@ export class GameState {
   }
 
   update(delta) {
+    if (this.currentMode === 'COUNTDOWN') {
+      this.speed = 0;
+      soundManager.updateEngine(0.08);
+      return;
+    }
     if (this.currentMode !== 'PLAYING') return;
 
     // Gestion du frein et de la reprise de circulation
@@ -430,7 +523,18 @@ export class GameState {
       this.speed = Math.max(0, this.speed - delta * 30.0);
     } else {
       // Réaccélération progressive vers la vitesse de croisière
-      this.speed = Math.min(this.targetSpeed, this.speed + delta * 12.0);
+      this.speed = Math.min(this.targetSpeed, this.speed + delta * 14.0);
+    }
+
+    // Points de conduite continue arcade : rouler vite fait monter le score !
+    if (this.speed > 2.0) {
+      this.drivingScoreAccumulator += this.speed * delta * 1.6;
+      if (this.drivingScoreAccumulator >= 10) {
+        const pts = Math.floor(this.drivingScoreAccumulator);
+        this.score += pts;
+        this.drivingScoreAccumulator -= pts;
+        this.checkNextCityUnlock();
+      }
     }
 
     // Décompte du combo

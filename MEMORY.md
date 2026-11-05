@@ -57,7 +57,7 @@
 - Volume moteur adouci en un ronronnement agréable.
 
 ### ✅ 11. VERSIONNAGE COMPLET, CANAL BETA & GITHUB ACTIONS
-- **Canal officiel** : **BETA** (`1.2.1-beta`, Build 4).
+- **Canal officiel** : **BETA** (`1.2.2-beta`, Build 5).
 - **Intégration GitHub Actions consolidée** :
   - **1 seule exécution par push** (déclencheur unique `push: branches: [main]`, concurrency activée).
   - **1 seul APK officiel** généré et publié : `Motormageddon-v1.2.1-beta-b4-debug.apk` (sans doublon).
@@ -76,5 +76,16 @@
 - **Carte Haute Fidélité & Zéro Scroll** : Décalage sous la barre d'état du téléphone, suppression totale du défilement horizontal, géographie française exacte, rivières et pays frontaliers réels (Espagne 🇪🇸, Italie 🇮🇹, Suisse 🇨🇭, Allemagne 🇩🇪, Belgique 🇧🇪, Royaume-Uni 🇬🇧).
 
 ### ✅ 13. VALIDATION DU BUILD ANDROID & GITHUB ACTIONS
-- **Compilation locale & cloud APK** : `android/app/build/outputs/apk/debug/Motormageddon-v1.2.1-beta-b4-debug.apk`.
+- **Compilation locale & cloud APK** : `android/app/build/outputs/apk/debug/Motormageddon-v1.2.2-beta-b5-debug.apk`.
 - **Dépôt officiel** : `https://github.com/hafedhhelali/Motormageddon`
+
+### ✅ 14. NOUVEAUTÉS DE LA VERSION 1.2.2-BETA
+- **Contenu Abaissé sur Tous les Écrans** : `calc(env(safe-area-inset-top, 36px) + 36px)` appliqué à Splash, Carte, Garage, HUD et Modales pour dégager l'encoche et la barre d'état.
+- **Résolution du Score à 0 & Entête HUD Prestige** : Swept collision anti-tunneling, accumulation continue de points de conduite au volant, bonus Frôlement (+75 PTS x combo), badge score LED or et carte d'objectif dynamique avec jauge et points restants.
+- **Carte 3D Somptueuse & Alignement Parfait** : Ratio 540x500 calé 1:1, métropole vert émeraude de luxe avec halo côtier turquoise, océan bleu nuit avec boussole dorée, tracé or étincelant et médaillons dorés 3D officiels.
+- **Garage Ultra-Simple, Modèles Hard & Retour Carte** :
+  - Flèches géantes ◀ et ▶ pour naviguer sans effort entre les modèles.
+  - 3 nouveaux bolides hard : *Nitro V8 Dragster* (blower géant, flammes zoomies, NOS), *Diablo Hypersport* (treillis rouge, winglets MotoGP), *Ravageur 750* (rallye-raid tout-terrain blindé).
+  - Bouton équiper renvoyant automatiquement à la carte.
+- **Compte à Rebours 3-2-1-GO & Moto à l'Arrêt** : Moto strictement arrêtée (speed = 0) au ralenti à l'arrivée en ville, séquence 3... 2... 1... GO ! avec bips sonores et fanfare triomphale avant démarrage en trombe.
+- **Animations Enrichies** : Drapeaux français 🇫🇷 flottant au vent sur les monuments et l'arche, IA de fuite rééquilibrée et vivante.

@@ -8,7 +8,7 @@ Ce document fournit l'ensemble des informations de conception, d'architecture lo
 ## 1. VISION DU PROJET & SPÉCIFICATIONS
 
 - **Genre** : Jeu de course d'arcade urbain / Runner 3D burlesque
-- **Version actuelle** : **1.2.1-beta** (Build / versionCode 4 - Canal BETA)
+- **Version actuelle** : **1.2.2-beta** (Build / versionCode 5 - Canal BETA)
 - **Signature & Clé** : Keystore permanent dédié `android/app/motormageddon.keystore` (validité 10 000 jours, EOMedia Paris)
 - **Plateforme cible** : Android (Smartphones & Tablettes) + WebGL Mobile/Desktop
 - **Direction artistique** : Cartoon 3D éclatant, physique burlesque (slapstick), animations hilarantes et dynamiques, identité française affirmée.
@@ -106,3 +106,55 @@ Ce document fournit l'ensemble des informations de conception, d'architecture lo
   - Contours géographiques précis de la France (Bretagne, Cotentin, Golfe de Gascogne, Côte d'Azur, Corse).
   - Pays frontaliers réels intégrés avec frontières et drapeaux : 🇪🇸 **ESPAGNE**, 🇮🇹 **ITALIE**, 🇨🇭 **SUISSE**, 🇩🇪 **ALLEMAGNE**, 🇧🇪 **BELGIQUE**, 🇬🇧 **ROYAUME-UNI**.
   - Rivières majeures (Seine, Loire, Rhône, Garonne) et typographie marine (Océan Atlantique, Mer Méditerranée, La Manche).
+
+---
+
+## 4. NOUVEAUTÉS DE LA VERSION 1.2.2-BETA
+
+### A. Décalage Vers le Bas sur Tous les Écrans (Encoches & Barre d'État Mobile)
+- Application systématique d'une marge haute confortable (`calc(env(safe-area-inset-top, 36px) + 36px)`) sur l'ensemble des écrans :
+  - Écran de lancement (`.screen-splash`)
+  - Carte de France 3D (`.screen-map`)
+  - Garage et personnalisation (`.screen-garage`)
+  - Interface de pilotage HUD (`.screen-hud`)
+  - Fenêtres modales et dialogues (`.modal-overlay`, `.modal-card`)
+- Les caméras poinçons (punch-hole) et encoches d'écran ne recouvrent plus aucun titre ni bouton.
+
+### B. Refonte Majeure de l'Entête Score / Objectif & Résolution du Score à 0
+- **Résolution du Score à 0** :
+  - Élimination complète du problème de tunneling grâce à une détection de collision balayée (*swept collision box*) adaptée à la vitesse de frame.
+  - Ajout de points continus de conduite arcade : piloter à haute vitesse fait monter le score en direct.
+  - Ajout du bonus de **Frôlement / Near-Miss (+75 PTS x combo)** quand un piéton est évité de justesse, avec effet sonore dédié et particules.
+  - Synchronisation temps réel de `#hud-score-val` à chaque tick de course (`stats_tick`).
+- **Nouvel Entête HUD Prestige** :
+  - Badge Score arcade avec bordure or lumineuse et compteur LED dynamique.
+  - Carte d'objectif centrale avec nom de la ville, cible en points, jauge de progression bicolore avec pourcentage et calcul du reste à marquer.
+  - Badge combo avec flamme animée et bouton pause chromé.
+
+### C. Carte de France 3D Somptueuse & Alignement Parfait des Étapes
+- Conteneur cartographique calé au ratio exact du SVG (540x500) pour un alignement géographique 1:1 sans dérive.
+- Dégradé de la métropole en vert émeraude prestige avec halo côtier turquoise (`#00cec9`).
+- Océan bleu nuit profond avec vagues et **rose des sables dorée (boussole nautique)** dans le Golfe de Gascogne.
+- Tracé officiel du Tour de France en néon or éclatant (`#ffd700`) avec pulsation dynamique.
+- Médaillons 3D dorés pour chaque ville avec numéro d'étape officiel (`#1` à `#10`), emblème et halo de sélection.
+- Raccourci direct vers le Garage depuis l'entête de la carte.
+
+### D. Ergonomie du Garage, Modèles "Hard" & Retour Direct à la Carte
+- **Navigation ultra-simple par flèches gauche / droite ◀ et ▶** : boutons grand format flottants permettant de basculer instantanément d'un modèle 3D à l'autre sans friction.
+- **3 Nouveaux Modèles Badass / Hard** :
+  - 💀 **Nitro V8 Dragster** (Pneu dragster slick 300mm, compresseur soufflant géant blower, échappements zoomies à 45° cracheurs de flammes, bonbonne de NOS bleue).
+  - 😈 **Diablo Hypersport** (Streetfighter italienne brutale, cadre treillis tubulaire rouge sang, ailerons winglets MotoGP carbone, double pot sous selle).
+  - ⛓️ **Ravageur Apocalypse 750** (Rallye-raid blindé, roues à crampons tout-terrain, pare-buffles tubulaire cage et sabot moteur).
+- **Retour automatique à la carte** : cliquer sur "ÉQUIPER" ou sur un véhicule déjà équipé renvoie immédiatement à l'écran de la carte du Tour.
+
+### E. Séquence de Départ en Ville : Moto à l'Arrêt & Compte à Rebours 3 - 2 - 1 - GO !
+- À l'arrivée dans une étape, la moto est **strictement à l'arrêt** (`speed = 0`, ralenti moteur ronronnant).
+- Compte à rebours animé plein écran avec pops d'échelle et sons électroniques dédiés :
+  - **3** (Rouge intense, son bip court)
+  - **2** (Orange vif, son bip court)
+  - **1** (Ambre clair, son bip court)
+  - **GO ! PLEIN GAZ !** (Vert éclatant, fanfare triomphale et ouverture immédiate de l'accélérateur).
+
+### F. Animations Enrichies (Environnement, Rues & Piétons)
+- Drapeaux français 🇫🇷 animés flottant au vent sur l'arche d'arrivée et les façades de la ville.
+- IA de fuite ajustée : foulées comiques, bras levés et trajectoire vers les trottoirs laissant la possibilité au bolide de les intercepter s'il braque vers eux.

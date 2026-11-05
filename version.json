@@ -1,9 +1,8 @@
 {
-  "version": "1.2.1-beta",
-  "versionCode": 4,
-  "build": 4,
+  "version": "1.2.2-beta",
+  "versionCode": 5,
+  "build": 5,
+  "releaseName": "Motormageddon v1.2.2-beta",
   "channel": "beta",
-  "name": "Motormageddon",
-  "releaseName": "Édition Carrefours & Virages (Beta)",
-  "date": "2026-11-05"
+  "updatedAt": "2026-11-05T16:08:00+01:00"
 }

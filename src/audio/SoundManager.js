@@ -267,6 +267,65 @@ export class SoundManager {
     osc.stop(now + 0.25);
   }
 
+  playCountdownBeep(isGo = false) {
+    if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
+    this.resumeContext();
+
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    if (isGo) {
+      // Bip triomphal aigu pour "GO !"
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(880, now);
+      osc.frequency.exponentialRampToValueAtTime(1760, now + 0.12);
+      osc.frequency.setValueAtTime(1760, now + 0.12);
+
+      gain.gain.setValueAtTime(0.45, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.onended = () => this.cleanupNodes(osc, gain);
+      osc.start(now);
+      osc.stop(now + 0.45);
+    } else {
+      // Bip net et clair pour 3, 2, 1
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(587.33, now); // Ré5
+      gain.gain.setValueAtTime(0.35, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.onended = () => this.cleanupNodes(osc, gain);
+      osc.start(now);
+      osc.stop(now + 0.16);
+    }
+  }
+
+  playNearMiss() {
+    if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
+    this.resumeContext();
+
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(1200, now);
+    osc.frequency.exponentialRampToValueAtTime(1900, now + 0.1);
+    gain.gain.setValueAtTime(0.2, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.onended = () => this.cleanupNodes(osc, gain);
+    osc.start(now);
+    osc.stop(now + 0.18);
+  }
+
   playCoin() {
     if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
     this.resumeContext();

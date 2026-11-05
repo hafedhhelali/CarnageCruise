@@ -420,6 +420,7 @@ export class CharacterSystem {
         char.active = true;
         char.isFlying = false;
         char.isFleeing = false;
+        char.hasNearMissed = false;
         char.fleeTimer = 0;
         char.group.visible = true;
 
@@ -449,10 +450,8 @@ export class CharacterSystem {
     char.flySpinZ = dirX * (4.2 + Math.random() * 4.0);
   }
 
-  update(delta, playerZ, bikeX, bikeSpeed, onCollision, roadCurveFunc) {
+  update(delta, playerZ, bikeX, bikeSpeed, onCollision, roadCurveFunc, onNearMiss) {
     this.spawnAhead(playerZ, roadCurveFunc);
-
-    const BIKE_COLLISION_RADIUS = 1.15;
 
     this.characters.forEach(char => {
       if (!char.group.visible) return;
@@ -483,9 +482,9 @@ export class CharacterSystem {
         const distZ = char.group.position.z - playerZ;
         const distX = Math.abs(char.group.position.x - bikeX);
 
-        // --- NOUVEAUTÉ : IA DE FUITE PANIQUÉE ("ILS TENTENT DE S'ENFUIR !") ---
-        // Quand la moto approche à moins de 26m et sur une trajectoire dangereuse
-        if (distZ > 0 && distZ < 26.0 && distX < 3.8) {
+        // --- IA DE FUITE PANIQUÉE AMÉLIORÉE ("ILS TENTENT DE S'ENFUIR !") ---
+        // Quand la moto approche à moins de 20m et sur une trajectoire directe
+        if (distZ > 0 && distZ < 20.0 && distX < 3.2) {
           char.isFleeing = true;
           char.fleeTimer += delta;
 
@@ -494,27 +493,26 @@ export class CharacterSystem {
             char.fleeDirectionX = char.group.position.x >= bikeX ? 1 : -1;
           }
 
-          // Sprint frénétique vers le trottoir
-          const sprintSpeed = char.typeDef.speed * 2.8;
+          // Sprint paniqué vers le trottoir (accessible si le joueur braque dans leur direction)
+          const sprintSpeed = char.typeDef.speed * 2.3;
           char.group.position.x += char.fleeDirectionX * sprintSpeed * delta;
 
           // Orientation du regard terrifié vers la direction de fuite
           char.group.rotation.y = char.fleeDirectionX > 0 ? Math.PI / 2 : -Math.PI / 2;
 
           // Animation de panique comique : bras levés au ciel agités frénétiquement
-          char.walkPhase += delta * 18.0; // Foulées ultra rapides
-          char.armL.rotation.x = 2.4 + Math.sin(char.fleeTimer * 24.0) * 0.45;
-          char.armR.rotation.x = 2.4 + Math.cos(char.fleeTimer * 24.0) * 0.45;
+          char.walkPhase += delta * 16.0;
+          char.armL.rotation.x = 2.4 + Math.sin(char.fleeTimer * 22.0) * 0.55;
+          char.armR.rotation.x = 2.4 + Math.cos(char.fleeTimer * 22.0) * 0.55;
           char.headGroup.rotation.y = (char.fleeDirectionX > 0 ? -0.4 : 0.4) + Math.sin(char.fleeTimer * 16.0) * 0.25;
 
           // Foulées rapides
-          const legAngle = Math.sin(char.walkPhase) * 0.85;
+          const legAngle = Math.sin(char.walkPhase) * 0.9;
           char.legL.rotation.x = legAngle;
           char.legR.rotation.x = -legAngle;
 
           // Si le piéton a réussi à atteindre le trottoir hors de portée (> 4.8m)
           if (Math.abs(char.group.position.x) > 4.8) {
-            // Sauvé ! Il saute de soulagement sur le trottoir
             char.armL.rotation.x = 0;
             char.armR.rotation.x = 0;
           }
@@ -539,11 +537,22 @@ export class CharacterSystem {
           }
         }
 
-        // 3. Détection de collision physique avec la moto
-        if (distZ > 0 && distZ < BIKE_COLLISION_RADIUS && distX < BIKE_COLLISION_RADIUS) {
+        // 3. Détection de collision physique balayée (SWEPT COLLISION anti-tunneling)
+        // Vérifie la zone parcourue par la moto dans ce frame
+        const frameTravel = Math.max(1.8, (bikeSpeed * delta) + 0.8);
+        const inZCollisionZone = (distZ >= -1.0 && distZ <= frameTravel);
+        const inXCollisionZone = (distX <= 1.75); // Largeur généreuse guidon + corps
+
+        if (inZCollisionZone && inXCollisionZone) {
           this.triggerSlapstickFlight(char, bikeX, bikeSpeed);
           if (onCollision) {
             onCollision(char);
+          }
+        } else if (!char.hasNearMissed && inZCollisionZone && distX > 1.75 && distX < 2.95) {
+          // Frôlement / Near-Miss à haute intensité !
+          char.hasNearMissed = true;
+          if (onNearMiss) {
+            onNearMiss(char);
           }
         }
       }
@@ -555,6 +564,7 @@ export class CharacterSystem {
       char.active = false;
       char.isFlying = false;
       char.isFleeing = false;
+      char.hasNearMissed = false;
       char.group.visible = false;
     });
   }

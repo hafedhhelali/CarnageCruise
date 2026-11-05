@@ -17,6 +17,8 @@ export class Environment {
     this.finishArch = null;
     this.finishDistance = 1000; // Arrivée à 1000 mètres
     this.finishReached = false;
+    this.animTime = 0;
+    this.animatedFlags = [];
 
     this.container = new THREE.Group();
     this.scene.add(this.container);
@@ -46,6 +48,7 @@ export class Environment {
     this.cityTheme = cityDef;
     this.finishDistance = finishDistance;
     this.finishReached = false;
+    this.animatedFlags = [];
 
     // Nettoyer la scène
     while (this.container.children.length > 0) {
@@ -209,6 +212,8 @@ export class Environment {
       f3.position.set(0.75, 1.2, 0);
       flagGroup.add(f1, f2, f3);
 
+      flagGroup.userData = { seed: Math.random() * Math.PI * 2 };
+      this.animatedFlags.push(flagGroup);
       archGroup.add(flagGroup);
     });
 
@@ -436,7 +441,12 @@ export class Environment {
     });
   }
 
-  update(playerZ) {
+  update(playerZ, delta = 0.016) {
+    this.animTime += delta;
+    this.animatedFlags.forEach(f => {
+      f.rotation.y = Math.sin(this.animTime * 4.5 + f.userData.seed) * 0.28;
+    });
+
     const threshold = playerZ - this.chunkLength;
 
     this.chunks.forEach(chunk => {
