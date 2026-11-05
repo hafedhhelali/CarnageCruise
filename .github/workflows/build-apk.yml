@@ -69,22 +69,17 @@ jobs:
       - name: 🔨 Grant execute permissions for gradlew
         run: chmod +x android/gradlew
 
-      - name: 📦 Build Debug APK (Signed with permanent keystore)
-        run: |
-          cd android
-          ./gradlew assembleDebug --no-daemon --stacktrace
-
       - name: 📦 Build Release APK (Signed with permanent keystore)
         run: |
           cd android
-          ./gradlew assembleRelease --stacktrace || echo "Release build step completed"
+          ./gradlew assembleRelease --no-daemon --stacktrace
 
-      - name: 📤 Upload Versioned Debug APK Artifact
+      - name: 📤 Upload Versioned Release APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Motormageddon-v${{ env.APP_VERSION }}-b${{ env.VERSION_CODE }}-APK
+          name: Motormageddon-v${{ env.APP_VERSION }}-b${{ env.VERSION_CODE }}-Release-APK
           path: |
-            android/app/build/outputs/apk/debug/Motormageddon-*.apk
+            android/app/build/outputs/apk/release/Motormageddon-*-release.apk
           retention-days: 14
 
       - name: 🏷️ Publish GitHub Beta Release
@@ -93,7 +88,7 @@ jobs:
         with:
           tag_name: "v${{ env.APP_VERSION }}"
           files: |
-            android/app/build/outputs/apk/debug/Motormageddon-*.apk
+            android/app/build/outputs/apk/release/Motormageddon-*-release.apk
           name: "Motormageddon v${{ env.APP_VERSION }} [BETA]"
           body: |
             # 🏁 Motormageddon v${{ env.APP_VERSION }} (Canal BETA)

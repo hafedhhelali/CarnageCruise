@@ -41,7 +41,11 @@ export class Environment {
       palmLeaf: new THREE.BoxGeometry(0.3, 0.05, 2.2),
       lampPost: new THREE.CylinderGeometry(0.06, 0.08, 4.2, 6),
       lampBulb: new THREE.SphereGeometry(0.2, 8, 8),
-      mailbox: new THREE.BoxGeometry(0.4, 0.7, 0.35)
+      mailbox: new THREE.BoxGeometry(0.4, 0.7, 0.35),
+      romanColumn: new THREE.CylinderGeometry(0.28, 0.32, 4.2, 8),
+      romanCapital: new THREE.BoxGeometry(0.85, 0.35, 0.85),
+      amphora: new THREE.CylinderGeometry(0.22, 0.15, 0.9, 8),
+      amphoraBelly: new THREE.SphereGeometry(0.35, 8, 8)
     };
   }
 
@@ -419,6 +423,316 @@ export class Environment {
       palace.add(mainBuilding, dome);
       lmGroup.add(palace);
 
+    } else if (cityId === 'madrid') {
+      // PUERTA DE ALCALÁ & PALAIS DE CIBELES (Monument néo-classique en granit royal)
+      const graniteMat = new THREE.MeshToonMaterial({ color: 0xdcdde1, roughness: 0.6 });
+      const goldMat = new THREE.MeshBasicMaterial({ color: 0xffd700 });
+      const redMat = new THREE.MeshToonMaterial({ color: 0xc0392b });
+      const waterMat = new THREE.MeshBasicMaterial({ color: 0x00cec9 });
+
+      const puerta = new THREE.Group();
+      puerta.position.set(34, 0, 235);
+
+      const baseAlcala = new THREE.Mesh(new THREE.BoxGeometry(46, 22, 10), graniteMat);
+      baseAlcala.position.y = 11;
+      puerta.add(baseAlcala);
+
+      for (let s of [-12, 0, 12]) {
+        const archVoid = new THREE.Mesh(new THREE.BoxGeometry(6.5, 14, 10.4), new THREE.MeshBasicMaterial({ color: 0x1e272e }));
+        archVoid.position.set(s, 7, 0);
+        puerta.add(archVoid);
+      }
+
+      const attique = new THREE.Mesh(new THREE.BoxGeometry(32, 7, 9), graniteMat);
+      attique.position.y = 25.5;
+      puerta.add(attique);
+
+      const royalShield = new THREE.Mesh(new THREE.CylinderGeometry(2.5, 2.5, 1.2, 8), goldMat);
+      royalShield.rotation.x = Math.PI / 2;
+      royalShield.position.set(0, 31, 4.6);
+      puerta.add(royalShield);
+
+      for (let sx of [-12, -4, 4, 12]) {
+        const statue = new THREE.Mesh(new THREE.ConeGeometry(1.2, 5, 5), graniteMat);
+        statue.position.set(sx, 31.5, 0);
+        puerta.add(statue);
+      }
+
+      const fountainBasin = new THREE.Mesh(new THREE.CylinderGeometry(10, 10, 1.5, 16), graniteMat);
+      fountainBasin.position.set(0, 0.75, 16);
+      const fountainWater = new THREE.Mesh(new THREE.CylinderGeometry(9.5, 9.5, 0.4, 16), waterMat);
+      fountainWater.position.set(0, 1.3, 16);
+      puerta.add(fountainBasin, fountainWater);
+
+      for (let side of [-20, 20]) {
+        const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 28, 6), graniteMat);
+        mast.position.set(side, 14, 12);
+        const flag = new THREE.Mesh(new THREE.BoxGeometry(4.5, 2.5, 0.1), redMat);
+        flag.position.set(side + 2.3, 24, 12);
+        puerta.add(mast, flag);
+      }
+
+      lmGroup.add(puerta);
+
+    } else if (cityId === 'lisbonne') {
+      // TOUR DE BELÉM & TRAMWAY JAUNE n°28 SUR LE TAGE (Style manuélin portugais)
+      const stoneMat = new THREE.MeshToonMaterial({ color: 0xf5f6fa, roughness: 0.5 });
+      const riverMat = new THREE.MeshBasicMaterial({ color: 0x0984e3 });
+      const roofMat = new THREE.MeshToonMaterial({ color: 0xd35400 });
+      const tramYellowMat = new THREE.MeshToonMaterial({ color: 0xf1c40f });
+      const tramCreamMat = new THREE.MeshToonMaterial({ color: 0xfffae6 });
+
+      const lisbonGroup = new THREE.Group();
+      lisbonGroup.position.set(32, 0, 230);
+
+      const river = new THREE.Mesh(new THREE.PlaneGeometry(350, 220), riverMat);
+      river.rotation.x = -Math.PI / 2;
+      river.position.set(0, 0.1, 0);
+      lisbonGroup.add(river);
+
+      const bastion = new THREE.Mesh(new THREE.BoxGeometry(26, 10, 32), stoneMat);
+      bastion.position.set(0, 5, 0);
+      lisbonGroup.add(bastion);
+
+      const cornerOffsets = [[-13, -16], [13, -16], [-13, 16], [13, 16]];
+      cornerOffsets.forEach(([cx, cz]) => {
+        const turret = new THREE.Mesh(new THREE.CylinderGeometry(1.6, 1.2, 8, 8), stoneMat);
+        turret.position.set(cx, 11, cz);
+        const turretDome = new THREE.Mesh(new THREE.SphereGeometry(1.7, 8, 8), stoneMat);
+        turretDome.position.set(cx, 15, cz);
+        lisbonGroup.add(turret, turretDome);
+      });
+
+      const donjon = new THREE.Mesh(new THREE.BoxGeometry(16, 28, 16), stoneMat);
+      donjon.position.set(0, 22, -6);
+      lisbonGroup.add(donjon);
+
+      const loggia = new THREE.Mesh(new THREE.BoxGeometry(14, 5, 4), stoneMat);
+      loggia.position.set(0, 26, 2.5);
+      lisbonGroup.add(loggia);
+
+      const roof = new THREE.Mesh(new THREE.ConeGeometry(9.5, 10, 4), roofMat);
+      roof.rotation.y = Math.PI / 4;
+      roof.position.set(0, 41, -6);
+      lisbonGroup.add(roof);
+
+      const tram = new THREE.Group();
+      tram.position.set(-16, 2.2, 38);
+      const tramBody = new THREE.Mesh(new THREE.BoxGeometry(4.2, 3.4, 9.5), tramYellowMat);
+      tramBody.position.y = 1.7;
+      const tramRoof = new THREE.Mesh(new THREE.BoxGeometry(4.4, 0.8, 9.8), tramCreamMat);
+      tramRoof.position.y = 3.6;
+      const pantograph = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 2.5, 6), new THREE.MeshBasicMaterial({ color: 0x2d3436 }));
+      pantograph.position.set(0, 4.8, 0);
+      pantograph.rotation.z = 0.3;
+      tram.add(tramBody, tramRoof, pantograph);
+      lisbonGroup.add(tram);
+
+      lmGroup.add(lisbonGroup);
+
+    } else if (cityId === 'rome') {
+      // LE COLISÉE FLAVIER (Amphithéâtre impérial géant en travertin romain ocre)
+      const travertineMat = new THREE.MeshToonMaterial({ color: 0xecd5b3, roughness: 0.7 });
+      const darkInterior = new THREE.MeshBasicMaterial({ color: 0x2d3436 });
+
+      const colosseum = new THREE.Group();
+      colosseum.position.set(34, 0, 235);
+
+      const baseCol = new THREE.Mesh(new THREE.CylinderGeometry(28, 30, 28, 24, 1, true), travertineMat);
+      baseCol.position.y = 14;
+      colosseum.add(baseCol);
+
+      const arena = new THREE.Mesh(new THREE.CylinderGeometry(22, 22, 2, 24), darkInterior);
+      arena.position.y = 1;
+      colosseum.add(arena);
+
+      for (let rot = 0; rot < 16; rot++) {
+        const ang = (rot / 16) * Math.PI * 2;
+        const archPillar = new THREE.Mesh(new THREE.BoxGeometry(2.5, 26, 3), travertineMat);
+        archPillar.position.set(Math.cos(ang) * 28.5, 13, Math.sin(ang) * 28.5);
+        archPillar.lookAt(0, 13, 0);
+        colosseum.add(archPillar);
+      }
+
+      const topAttic = new THREE.Mesh(new THREE.CylinderGeometry(27.8, 28, 12, 16, 1, true, 0, Math.PI * 1.2), travertineMat);
+      topAttic.position.y = 33;
+      colosseum.add(topAttic);
+
+      for (let c of [-14, 14]) {
+        const col = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.4, 22, 8), travertineMat);
+        col.position.set(c, 11, 35);
+        const capital = new THREE.Mesh(new THREE.BoxGeometry(3.2, 1.5, 3.2), travertineMat);
+        capital.position.set(c, 22.5, 35);
+        colosseum.add(col, capital);
+      }
+
+      lmGroup.add(colosseum);
+
+    } else if (cityId === 'napoli') {
+      // LE MONT VÉSUVE AVEC CRATÈRE FUMANT & CASTEL DELL'OVO
+      const rockMat = new THREE.MeshToonMaterial({ color: 0x485460, roughness: 0.9 });
+      const lavaMat = new THREE.MeshBasicMaterial({ color: 0xff3838 });
+      const smokeMat = new THREE.MeshBasicMaterial({ color: 0xdfe4ea, transparent: true, opacity: 0.75 });
+      const bayMat = new THREE.MeshBasicMaterial({ color: 0x0652dd });
+      const fortMat = new THREE.MeshToonMaterial({ color: 0xf7d794 });
+
+      const vesuvius = new THREE.Group();
+      vesuvius.position.set(36, 0, 240);
+
+      const bay = new THREE.Mesh(new THREE.PlaneGeometry(350, 220), bayMat);
+      bay.rotation.x = -Math.PI / 2;
+      bay.position.set(0, 0.1, 0);
+      vesuvius.add(bay);
+
+      const cone = new THREE.Mesh(new THREE.ConeGeometry(68, 80, 16, 1, true), rockMat);
+      cone.position.set(0, 40, -20);
+      vesuvius.add(cone);
+
+      const crater = new THREE.Mesh(new THREE.CylinderGeometry(14, 18, 5, 16), rockMat);
+      crater.position.set(0, 78, -20);
+      const lava = new THREE.Mesh(new THREE.CircleGeometry(12, 16), lavaMat);
+      lava.rotation.x = -Math.PI / 2;
+      lava.position.set(0, 79, -20);
+      vesuvius.add(crater, lava);
+
+      for (let s = 0; s < 4; s++) {
+        const puff = new THREE.Mesh(new THREE.SphereGeometry(6 + s * 3.5, 8, 8), smokeMat);
+        puff.position.set(Math.sin(s) * 4, 86 + s * 10, -20 + s * 3);
+        vesuvius.add(puff);
+      }
+
+      const castle = new THREE.Group();
+      castle.position.set(-20, 0, 32);
+      const wall = new THREE.Mesh(new THREE.BoxGeometry(22, 14, 18), fortMat);
+      wall.position.y = 7;
+      const keep = new THREE.Mesh(new THREE.CylinderGeometry(4, 4.5, 20, 8), fortMat);
+      keep.position.set(8, 10, 6);
+      castle.add(wall, keep);
+      vesuvius.add(castle);
+
+      lmGroup.add(vesuvius);
+
+    } else if (cityId === 'tunis') {
+      // GRANDE MOSQUÉE ZITOUNA (Minaret Mauresque & Arcades de Sidi Bou Saïd)
+      const stoneMat = new THREE.MeshToonMaterial({ color: 0xf7d794, roughness: 0.6 });
+      const whiteMat = new THREE.MeshToonMaterial({ color: 0xffffff });
+      const blueMat = new THREE.MeshToonMaterial({ color: 0x0abde3 });
+      const goldMat = new THREE.MeshBasicMaterial({ color: 0xffd700 });
+
+      const tunisGroup = new THREE.Group();
+      tunisGroup.position.set(34, 0, 235);
+
+      const minaretBody = new THREE.Mesh(new THREE.BoxGeometry(11, 44, 11), stoneMat);
+      minaretBody.position.y = 22;
+      tunisGroup.add(minaretBody);
+
+      const balcony = new THREE.Mesh(new THREE.BoxGeometry(13, 3, 13), stoneMat);
+      balcony.position.y = 44.5;
+      tunisGroup.add(balcony);
+
+      const topLantern = new THREE.Mesh(new THREE.BoxGeometry(6.5, 12, 6.5), stoneMat);
+      topLantern.position.y = 51;
+      tunisGroup.add(topLantern);
+
+      const dome = new THREE.Mesh(new THREE.SphereGeometry(3.8, 12, 12), whiteMat);
+      dome.position.y = 57.5;
+      tunisGroup.add(dome);
+
+      for (let b = 0; b < 3; b++) {
+        const sphere = new THREE.Mesh(new THREE.SphereGeometry(0.8 - b * 0.2, 8, 8), goldMat);
+        sphere.position.y = 61 + b * 1.4;
+        tunisGroup.add(sphere);
+      }
+
+      for (let h = -24; h <= 24; h += 24) {
+        const house = new THREE.Group();
+        house.position.set(h, 0, 18);
+        const houseMesh = new THREE.Mesh(new THREE.BoxGeometry(18, 12, 14), whiteMat);
+        houseMesh.position.y = 6;
+        const blueDoor = new THREE.Mesh(new THREE.BoxGeometry(3.5, 6, 0.4), blueMat);
+        blueDoor.position.set(0, 3, 7.2);
+        house.add(houseMesh, blueDoor);
+        tunisGroup.add(house);
+      }
+
+      lmGroup.add(tunisGroup);
+
+    } else if (cityId === 'alger') {
+      // MAQAM ECHAHID (Mémorial du Martyr à 3 Palmes Géantes & Baie d'Alger la Blanche)
+      const concreteMat = new THREE.MeshStandardMaterial({ color: 0xecf0f1, roughness: 0.3, metalness: 0.1 });
+      const flameMat = new THREE.MeshBasicMaterial({ color: 0xff4757 });
+      const seaMat = new THREE.MeshBasicMaterial({ color: 0x10ac84 });
+
+      const algerGroup = new THREE.Group();
+      algerGroup.position.set(34, 0, 235);
+
+      const bay = new THREE.Mesh(new THREE.PlaneGeometry(350, 220), seaMat);
+      bay.rotation.x = -Math.PI / 2;
+      bay.position.set(0, 0.1, 0);
+      algerGroup.add(bay);
+
+      for (let p = 0; p < 3; p++) {
+        const angle = (p / 3) * Math.PI * 2;
+        const palmGroup = new THREE.Group();
+        palmGroup.rotation.y = angle;
+
+        const palmBlade = new THREE.Mesh(new THREE.CylinderGeometry(2.2, 5.5, 78, 8), concreteMat);
+        palmBlade.position.set(9, 39, 0);
+        palmBlade.rotation.z = -0.16;
+        palmGroup.add(palmBlade);
+
+        algerGroup.add(palmGroup);
+      }
+
+      const zenithDome = new THREE.Mesh(new THREE.SphereGeometry(6.5, 16, 16), concreteMat);
+      zenithDome.position.y = 76;
+      algerGroup.add(zenithDome);
+
+      const eternalFlame = new THREE.Mesh(new THREE.ConeGeometry(2.5, 9, 8), flameMat);
+      eternalFlame.position.y = 8;
+      algerGroup.add(eternalFlame);
+
+      const casbahBase = new THREE.Mesh(new THREE.BoxGeometry(38, 7, 38), new THREE.MeshToonMaterial({ color: 0xffffff }));
+      casbahBase.position.y = 3.5;
+      algerGroup.add(casbahBase);
+
+      lmGroup.add(algerGroup);
+
+    } else if (cityId === 'annaba') {
+      // BASILIQUE SAINT-AUGUSTIN D'HIPPONE (Style romano-byzantin et mauresque)
+      const marbleMat = new THREE.MeshToonMaterial({ color: 0xf5f6fa, roughness: 0.5 });
+      const domeTurquoiseMat = new THREE.MeshToonMaterial({ color: 0x00cec9, roughness: 0.3 });
+      const redMarbleMat = new THREE.MeshToonMaterial({ color: 0xb33939 });
+      const seaMat = new THREE.MeshBasicMaterial({ color: 0x0984e3 });
+
+      const annabaGroup = new THREE.Group();
+      annabaGroup.position.set(34, 0, 235);
+
+      const sea = new THREE.Mesh(new THREE.PlaneGeometry(350, 220), seaMat);
+      sea.rotation.x = -Math.PI / 2;
+      sea.position.set(0, 0.1, 0);
+      annabaGroup.add(sea);
+
+      const hill = new THREE.Mesh(new THREE.ConeGeometry(55, 24, 16), new THREE.MeshToonMaterial({ color: 0x2ed573 }));
+      hill.position.y = 12;
+      annabaGroup.add(hill);
+
+      const basilicaNave = new THREE.Mesh(new THREE.BoxGeometry(32, 22, 22), marbleMat);
+      basilicaNave.position.set(0, 35, 0);
+      annabaGroup.add(basilicaNave);
+
+      const centralDome = new THREE.Mesh(new THREE.SphereGeometry(9.5, 16, 16), domeTurquoiseMat);
+      centralDome.position.set(0, 48, 0);
+      annabaGroup.add(centralDome);
+
+      const bellTower = new THREE.Mesh(new THREE.BoxGeometry(7, 38, 7), redMarbleMat);
+      bellTower.position.set(-18, 43, 8);
+      const bellDome = new THREE.Mesh(new THREE.SphereGeometry(4, 10, 10), domeTurquoiseMat);
+      bellDome.position.set(-18, 63, 8);
+      annabaGroup.add(bellTower, bellDome);
+
+      lmGroup.add(annabaGroup);
+
     } else {
       // MONUMENT D'ÉLÉGANCE CLASSIQUE / BEFFROI
       const classicMat = new THREE.MeshToonMaterial({ color: 0xdcdde1 });
@@ -686,12 +1000,19 @@ export class Environment {
 
   populateStreetProps(chunk) {
     const isRiviera = (this.cityTheme.id === 'nice' || this.cityTheme.id === 'marseille');
-    const foliageMat1 = new THREE.MeshToonMaterial({ color: isRiviera ? 0x27ae60 : 0x2ecc71 });
-    const foliageMat2 = new THREE.MeshToonMaterial({ color: isRiviera ? 0x1e8449 : 0x27ae60 });
+    const isMed = ['nice', 'marseille', 'barcelone', 'madrid', 'lisbonne', 'rome', 'napoli', 'tunis', 'annaba', 'alger'].includes(this.cityTheme.id);
+    const isItaly = (this.cityTheme.id === 'rome' || this.cityTheme.id === 'napoli' || this.cityTheme.id === 'milan');
+    const isIberia = (this.cityTheme.id === 'barcelone' || this.cityTheme.id === 'madrid' || this.cityTheme.id === 'lisbonne');
+    const isMaghreb = (this.cityTheme.id === 'tunis' || this.cityTheme.id === 'alger' || this.cityTheme.id === 'annaba');
+
+    const foliageMat1 = new THREE.MeshToonMaterial({ color: (isRiviera || isMed) ? 0x27ae60 : 0x2ecc71 });
+    const foliageMat2 = new THREE.MeshToonMaterial({ color: (isRiviera || isMed) ? 0x1e8449 : 0x27ae60 });
     const woodMat = new THREE.MeshToonMaterial({ color: 0x5d4037 });
     const lampMat = new THREE.MeshToonMaterial({ color: 0x263238 });
     const glowMat = new THREE.MeshBasicMaterial({ color: 0xfffae6 });
     const yellowMat = new THREE.MeshToonMaterial({ color: 0xf1c40f });
+    const marbleMat = new THREE.MeshToonMaterial({ color: 0xf5f6fa });
+    const terracottaMat = new THREE.MeshToonMaterial({ color: 0xd35400 });
 
     const propPositionsZ = [-22, -11, 4, 18];
 
@@ -699,7 +1020,7 @@ export class Environment {
       const side = (idx % 2 === 0 ? 1 : -1);
       const xSidewalk = side * 5.2;
 
-      // Réverbère parisien avec lanterne brillante
+      // Réverbère parisien ou lanterne méditerranéenne
       const lamp = new THREE.Group();
       lamp.position.set(side * 4.6, 0, z);
 
@@ -714,7 +1035,7 @@ export class Environment {
 
       // Végétation volumétrique riche
       if (idx % 2 === 1) {
-        if (isRiviera) {
+        if (isRiviera || isMed) {
           const palm = new THREE.Group();
           palm.position.set(xSidewalk, 0, z + 5);
 
@@ -750,27 +1071,60 @@ export class Environment {
         }
       }
 
-      // Terrasse de bistrot
+      // Spécificités par Pays / Région au trottoir
       if (idx === 0) {
-        const terrace = new THREE.Group();
-        terrace.position.set(xSidewalk + side * 0.4, 0, z + 2);
+        if (isItaly) {
+          // Colonne antique romaine sculptée avec amphore en terre cuite
+          const colGroup = new THREE.Group();
+          colGroup.position.set(xSidewalk + side * 0.3, 0, z + 2);
+          const colShaft = new THREE.Mesh(this.sharedGeos.romanColumn, marbleMat);
+          colShaft.position.y = 2.1;
+          const colCap = new THREE.Mesh(this.sharedGeos.romanCapital, marbleMat);
+          colCap.position.y = 4.3;
+          const amphora = new THREE.Group();
+          amphora.position.set(-side * 0.6, 0.5, 0);
+          const aBody = new THREE.Mesh(this.sharedGeos.amphoraBelly, terracottaMat);
+          aBody.position.y = 0.35;
+          const aNeck = new THREE.Mesh(this.sharedGeos.amphora, terracottaMat);
+          aNeck.position.y = 0.55;
+          amphora.add(aBody, aNeck);
+          colGroup.add(colShaft, colCap, amphora);
+          chunk.add(colGroup);
+        } else if (isMaghreb) {
+          // Terracotta amphore géante et palmette d'oasis
+          const oaseGroup = new THREE.Group();
+          oaseGroup.position.set(xSidewalk + side * 0.3, 0, z + 2);
+          const aBody = new THREE.Mesh(this.sharedGeos.amphoraBelly, terracottaMat);
+          aBody.scale.set(1.4, 1.4, 1.4);
+          aBody.position.y = 0.55;
+          const aNeck = new THREE.Mesh(this.sharedGeos.amphora, terracottaMat);
+          aNeck.scale.set(1.4, 1.4, 1.4);
+          aNeck.position.y = 0.9;
+          oaseGroup.add(aBody, aNeck);
+          chunk.add(oaseGroup);
+        } else {
+          // Terrasse de bistrot / tapas bar
+          const terrace = new THREE.Group();
+          terrace.position.set(xSidewalk + side * 0.4, 0, z + 2);
 
-        const tableLeg = new THREE.Mesh(this.sharedGeos.tableLeg, lampMat);
-        tableLeg.position.y = 0.35;
-        terrace.add(tableLeg);
+          const tableLeg = new THREE.Mesh(this.sharedGeos.tableLeg, lampMat);
+          tableLeg.position.y = 0.35;
+          terrace.add(tableLeg);
 
-        const tableTop = new THREE.Mesh(this.sharedGeos.table, woodMat);
-        tableTop.position.y = 0.7;
-        terrace.add(tableTop);
+          const tableTop = new THREE.Mesh(this.sharedGeos.table, woodMat);
+          tableTop.position.y = 0.7;
+          terrace.add(tableTop);
 
-        const parasolPole = new THREE.Mesh(this.sharedGeos.parasolPole, lampMat);
-        parasolPole.position.set(0.3, 1.0, 0);
-        terrace.add(parasolPole);
+          const parasolPole = new THREE.Mesh(this.sharedGeos.parasolPole, lampMat);
+          parasolPole.position.set(0.3, 1.0, 0);
+          terrace.add(parasolPole);
 
-        const parasol = new THREE.Mesh(this.sharedGeos.parasol, new THREE.MeshToonMaterial({ color: 0xe74c3c }));
-        parasol.position.set(0.3, 2.1, 0);
-        terrace.add(parasol);
-        chunk.add(terrace);
+          const parasolColor = isIberia ? (side > 0 ? 0xf1c40f : 0xe74c3c) : 0xe74c3c;
+          const parasol = new THREE.Mesh(this.sharedGeos.parasol, new THREE.MeshToonMaterial({ color: parasolColor }));
+          parasol.position.set(0.3, 2.1, 0);
+          terrace.add(parasol);
+          chunk.add(terrace);
+        }
       }
 
       // Colonne Morris ou boîte aux lettres

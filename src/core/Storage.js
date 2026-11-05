@@ -11,6 +11,7 @@ const DEFAULT_SAVE = {
   coins: 5000, // Pièces de départ
   unlockedCities: [
     'paris', 'bruxelles', 'londres', 'saint-malo', 'bordeaux', 'barcelone',
+    'madrid', 'lisbonne',
     'millau', 'marseille', 'nice', 'milan', 'geneve', 'chamonix',
     'annecy', 'lyon', 'strasbourg', 'rome', 'napoli', 'tunis', 'annaba', 'alger'
   ],

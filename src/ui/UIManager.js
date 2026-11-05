@@ -372,18 +372,33 @@ export class UIManager {
                   fill="url(#franceLuxury)" stroke="#00cec9" stroke-width="2.5" filter="url(#coastalGlow)" />
             <text x="668" y="780" fill="#00cec9" font-size="10" font-weight="900">CORSE 🇫🇷</text>
 
-            <!-- 6. ESPAGNE & CATALOGNE AVEC BARCELONE 🇪🇸 (RÉALISME GÉOGRAPHIQUE ACCRU) -->
+            <!-- 6. PÉNINSULE IBÉRIQUE : PORTUGAL 🇵🇹 (LISBONNE) & ESPAGNE 🇪🇸 (MADRID & BARCELONE) -->
+            <!-- Portugal (Façade Atlantique Ouest) -->
+            <path class="country-portugal" filter="url(#coastalGlow)" d="
+              M 80 690
+              C 120 685, 150 695, 155 725
+              C 160 760, 150 815, 135 845
+              C 105 850, 75 835, 70 790
+              C 65 750, 70 710, 80 690 Z
+            " fill="url(#neighborCountryGrad)" stroke="#2ed573" stroke-width="2.6" />
+            <text x="82" y="740" fill="#2ed573" font-size="13" font-weight="900" letter-spacing="1.5">PORTUGAL 🇵🇹</text>
+            <text x="75" y="805" fill="#ffd700" font-size="10" font-weight="900">LISBONNE 🏰</text>
+            <!-- Estuaire du Tage -->
+            <path d="M 68 792 Q 105 790 135 792" fill="none" stroke="#00cec9" stroke-width="2.5" opacity="0.8" />
+
+            <!-- Espagne (Castille, Madrid, Catalogne, Barcelone) -->
             <path class="country-spain" filter="url(#coastalGlow)" d="
               M 190 685
               C 260 685, 330 695, 400 700
               C 440 705, 460 735, 440 770
               C 420 810, 390 850, 340 860
-              C 270 870, 190 860, 140 840
-              C 100 810, 110 740, 140 710
-              C 160 695, 175 685, 190 685 Z
-            " fill="url(#neighborCountryGrad)" stroke="#38ada9" stroke-width="2.8" />
-            <text x="230" y="770" fill="#74b9ff" font-size="15" font-weight="900" letter-spacing="2">ESPAGNE 🇪🇸</text>
-            <text x="365" y="730" fill="#ffd700" font-size="11" font-weight="900">CATALOGNE • BARCELONE</text>
+              C 270 870, 190 860, 155 845
+              C 155 760, 150 725, 155 700
+              C 165 690, 175 685, 190 685 Z
+            " fill="url(#neighborCountryGrad)" stroke="#e74c3c" stroke-width="2.8" />
+            <text x="210" y="745" fill="#74b9ff" font-size="15" font-weight="900" letter-spacing="2">ESPAGNE 🇪🇸</text>
+            <text x="245" y="795" fill="#ffd700" font-size="11" font-weight="900">MADRID 👑</text>
+            <text x="355" y="725" fill="#ff7675" font-size="11" font-weight="900">CATALOGNE • BARCELONE</text>
             <!-- Îles Baléares (Majorque, Minorque, Ibiza) -->
             <ellipse cx="460" cy="800" rx="14" ry="8" fill="url(#neighborCountryGrad)" stroke="#38ada9" stroke-width="1.8" />
             <ellipse cx="485" cy="785" rx="9" ry="5" fill="url(#neighborCountryGrad)" stroke="#38ada9" stroke-width="1.8" />
@@ -431,23 +446,25 @@ export class UIManager {
             <!-- Mer Méditerranée (Vagues bleues décoratives) -->
             <text x="460" y="860" fill="#00cec9" font-size="14" font-weight="900" letter-spacing="4" opacity="0.45">MER MÉDITERRANÉE</text>
 
-            <!-- Tracé Lumineux Officiel du Grand Tour (Néon Or Éclatant reliant les 20 villes) -->
+            <!-- Tracé Lumineux Officiel du Grand Tour (Néon Or Éclatant reliant les 22 étapes) -->
             <path class="tour-route-glow" d="
-              M 442 308
-              L 518 198
+              M 460 418
+              L 556 308
               L 326 154
               L 250 352
               L 307 528
               L 384 704
-              L 451 572
-              L 528 616
-              L 614 605
-              L 710 528
-              L 605 484
-              L 643 484
-              L 586 506
-              L 528 484
-              L 653 286
+              L 268 781
+              L 134 792
+              L 422 583
+              L 518 605
+              L 595 594
+              L 672 506
+              L 576 506
+              L 614 528
+              L 566 550
+              L 499 528
+              L 633 396
               L 720 704
               L 768 770
               L 710 968
@@ -496,17 +513,26 @@ export class UIManager {
       </div>
     `;
 
-    // Gestion du Zoom Interactif (Agrandir / Réduire / Recentrer)
+    // Gestion du Zoom Interactif (Agrandir / Réduire / Recentrer) & Pincement à 2 doigts
     const canvasContainer = mapScreen.querySelector('#europe-canvas');
     const zoomBadge = mapScreen.querySelector('#zoom-badge');
-    const applyZoom = (newZoom) => {
-      this.mapZoom = Math.max(0.65, Math.min(2.4, newZoom));
+    const viewportEl = mapScreen.querySelector('#europe-viewport');
+
+    const applyZoom = (newZoom, focalPoint = null) => {
+      const prevZoom = this.mapZoom;
+      this.mapZoom = Math.max(0.65, Math.min(2.5, newZoom));
       if (canvasContainer) {
         canvasContainer.style.transform = `scale(${this.mapZoom})`;
         canvasContainer.style.transformOrigin = 'top left';
       }
       if (zoomBadge) {
         zoomBadge.textContent = `${Math.round(this.mapZoom * 100)}%`;
+      }
+      // Ajustement fluide du scroll pour centrer le zoom sur le point focal
+      if (focalPoint && viewportEl && prevZoom !== this.mapZoom) {
+        const ratio = this.mapZoom / prevZoom;
+        viewportEl.scrollLeft = (viewportEl.scrollLeft + focalPoint.x) * ratio - focalPoint.x;
+        viewportEl.scrollTop = (viewportEl.scrollTop + focalPoint.y) * ratio - focalPoint.y;
       }
     };
 
@@ -523,13 +549,91 @@ export class UIManager {
       applyZoom(1.0);
     });
 
-    const viewportEl = mapScreen.querySelector('#europe-viewport');
     if (viewportEl) {
+      // Zoom molette pour desktop
       viewportEl.addEventListener('wheel', (e) => {
         e.preventDefault();
         const delta = e.deltaY < 0 ? 0.15 : -0.15;
-        applyZoom(this.mapZoom + delta);
+        const rect = viewportEl.getBoundingClientRect();
+        const focal = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+        applyZoom(this.mapZoom + delta, focal);
       }, { passive: false });
+
+      // PINCH-TO-ZOOM À 2 DOIGTS NATUREL & DÉPLACEMENT TACTILE FLUIDE
+      let initialPinchDist = 0;
+      let initialZoom = this.mapZoom;
+      let isPinching = false;
+      let touchStartPos = { x: 0, y: 0 };
+      let scrollStart = { x: 0, y: 0 };
+      let isDragging = false;
+      let lastTapTime = 0;
+
+      const getTouchDist = (t1, t2) => {
+        return Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+      };
+
+      const getMidpoint = (t1, t2, rect) => {
+        return {
+          x: (t1.clientX + t2.clientX) / 2 - rect.left,
+          y: (t1.clientY + t2.clientY) / 2 - rect.top
+        };
+      };
+
+      viewportEl.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 2) {
+          isPinching = true;
+          isDragging = false;
+          initialPinchDist = getTouchDist(e.touches[0], e.touches[1]);
+          initialZoom = this.mapZoom;
+          e.preventDefault();
+        } else if (e.touches.length === 1) {
+          const now = Date.now();
+          if (now - lastTapTime < 320) {
+            // Double-tap : bascule zoom 100% <=> 165%
+            const targetZoom = this.mapZoom > 1.25 ? 1.0 : 1.65;
+            const rect = viewportEl.getBoundingClientRect();
+            applyZoom(targetZoom, { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top });
+            lastTapTime = 0;
+            return;
+          }
+          lastTapTime = now;
+
+          isPinching = false;
+          isDragging = true;
+          touchStartPos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+          scrollStart = { x: viewportEl.scrollLeft, y: viewportEl.scrollTop };
+        }
+      }, { passive: false });
+
+      viewportEl.addEventListener('touchmove', (e) => {
+        if (isPinching && e.touches.length === 2) {
+          const currentDist = getTouchDist(e.touches[0], e.touches[1]);
+          if (initialPinchDist > 0) {
+            const zoomRatio = currentDist / initialPinchDist;
+            const rect = viewportEl.getBoundingClientRect();
+            const midpoint = getMidpoint(e.touches[0], e.touches[1], rect);
+            applyZoom(initialZoom * zoomRatio, midpoint);
+          }
+          e.preventDefault();
+        } else if (isDragging && e.touches.length === 1) {
+          const dx = e.touches[0].clientX - touchStartPos.x;
+          const dy = e.touches[0].clientY - touchStartPos.y;
+          viewportEl.scrollLeft = scrollStart.x - dx;
+          viewportEl.scrollTop = scrollStart.y - dy;
+        }
+      }, { passive: false });
+
+      const endTouch = (e) => {
+        if (e.touches.length < 2) {
+          isPinching = false;
+        }
+        if (e.touches.length === 0) {
+          isDragging = false;
+        }
+      };
+
+      viewportEl.addEventListener('touchend', endTouch);
+      viewportEl.addEventListener('touchcancel', endTouch);
     }
 
     // Gestion du déplacement et de la sélection de ville
