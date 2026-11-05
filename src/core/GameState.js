@@ -11,6 +11,7 @@ export const CITIES = [
   {
     id: 'paris',
     name: 'Paris',
+    emblem: '🗼',
     subtitle: 'La Ville Lumière & Grands Boulevards',
     typeTag: 'Monument & Avenues',
     description: 'Slalomez à vive allure sur les boulevards haussmanniens sous le regard de la Tour Eiffel !',
@@ -30,6 +31,7 @@ export const CITIES = [
   {
     id: 'lyon',
     name: 'Lyon',
+    emblem: '🦁',
     subtitle: 'Traboules & Ponts de la Saône',
     typeTag: 'Fleuves & Ponts',
     description: 'Franchissez les ponts entre Rhône et Saône et esquivez les gastronomes des bouchons lyonnais.',
@@ -49,6 +51,7 @@ export const CITIES = [
   {
     id: 'marseille',
     name: 'Marseille',
+    emblem: '⚓',
     subtitle: 'La Corniche Kennedy & Le Vieux-Port',
     typeTag: 'Corniche & Mer',
     description: 'Plein gaz face aux calanques ! Vue plongeante sur les flots azuréens et voiliers du port.',
@@ -68,6 +71,7 @@ export const CITIES = [
   {
     id: 'chamonix',
     name: 'Chamonix',
+    emblem: '🏔️',
     subtitle: 'Col Alpin & Vue sur le Mont-Blanc',
     typeTag: 'Montagneuse & Cols',
     description: 'Lacets serrés de haute montagne entre chalets en bois, sapins enneigés et pics rocheux vertigineux.',
@@ -79,7 +83,7 @@ export const CITIES = [
     ambientColor: 0xf7fafc,
     roadColor: 0x2d3436,
     buildingColors: [0x5d4037, 0x795548, 0x8d6e63, 0x4e342e],
-    roofColor: 0xecf0f1, // Toits enneigés
+    roofColor: 0xecf0f1,
     accentColor: 0x00cec9,
     unlockedByDefault: false,
     mapCoords: { x: 80, y: 52 }
@@ -87,6 +91,7 @@ export const CITIES = [
   {
     id: 'annecy',
     name: 'Annecy',
+    emblem: '⛵',
     subtitle: 'La Venise des Alpes & Son Lac',
     typeTag: 'Vue sur Lac Alpin',
     description: 'Rivages scintillants du lac d’Annecy, pontons fleuris et canaux romantiques au pied des falaises.',
@@ -106,6 +111,7 @@ export const CITIES = [
   {
     id: 'millau',
     name: 'Millau',
+    emblem: '🌉',
     subtitle: 'Le Grand Viaduc Suspendu',
     typeTag: 'Ponts & Gorges',
     description: 'Franchissez le viaduc des records défiant les nuages à 270 mètres au-dessus des gorges du Tarn !',
@@ -125,6 +131,7 @@ export const CITIES = [
   {
     id: 'nice',
     name: 'Nice',
+    emblem: '🌴',
     subtitle: 'La Promenade des Anglais & Riviera',
     typeTag: 'Corniche & Palmiers',
     description: 'Palmiers ondulants, chaleur méditerranéenne et slaloms effrénés le long des palaces de la Baie des Anges.',
@@ -144,6 +151,7 @@ export const CITIES = [
   {
     id: 'bordeaux',
     name: 'Bordeaux',
+    emblem: '🍇',
     subtitle: 'Pont de Pierre & Miroir d’Eau',
     typeTag: 'Monuments & Quais',
     description: 'Quais impériaux de la Garonne, arches de pierre majestueuses et élégance architecturale classique.',
@@ -163,6 +171,7 @@ export const CITIES = [
   {
     id: 'saint-malo',
     name: 'Saint-Malo',
+    emblem: '🏰',
     subtitle: 'Cité Corsaire & Remparts Océaniques',
     typeTag: 'Côte & Remparts Granit',
     description: 'Vents d’ouest iodés, phares côtiers et remparts de granit imprenables face aux rouleaux atlantiques.',
@@ -182,6 +191,7 @@ export const CITIES = [
   {
     id: 'strasbourg',
     name: 'Strasbourg',
+    emblem: '🥨',
     subtitle: 'Canaux de l’Ill & Flèche Gothique',
     typeTag: 'Canaux & Colombages',
     description: 'Maisons historiques à pans de bois, canaux de la Petite France et beffroi gothique monumental.',
@@ -203,9 +213,13 @@ export const CITIES = [
 export const BIKES = [
   {
     id: 'scooter',
-    name: 'La Guêpe 50cc',
+    name: 'Guêpe 50cc',
+    shortName: 'Guêpe 50cc',
+    category: 'SCOOTER',
+    icon: '🛵',
+    tagline: 'Léger & Agile en ville',
     type: 'Scooter Rétro',
-    description: 'Le charme vintage à la française ! Léger, vif et passe-partout.',
+    description: 'Le charme vintage à la française ! Léger, vif et parfait pour se faufiler entre les terrasses de café.',
     speedRating: 3,
     handlingRating: 5,
     bounceRating: 4,
@@ -218,9 +232,13 @@ export const BIKES = [
   },
   {
     id: 'sport',
-    name: 'Foudre Noire 1000',
+    name: 'Foudre 1000',
+    shortName: 'Foudre 1000',
+    category: 'SUPERBIKE',
+    icon: '⚡',
+    tagline: 'Vitesse pure & Aérodynamisme',
     type: 'Superbike',
-    description: 'Une bête de course carénée prête à pulvériser le bitume urbain.',
+    description: 'Une bête de course carénée prête à pulvériser le bitume urbain avec des pointes de vitesse fulgurantes.',
     speedRating: 5,
     handlingRating: 3,
     bounceRating: 5,
@@ -233,9 +251,13 @@ export const BIKES = [
   },
   {
     id: 'chopper',
-    name: 'Le Chopper Paname',
+    name: 'Paname V-Twin',
+    shortName: 'Paname V-Twin',
+    category: 'CHOPPER',
+    icon: '🏍️',
+    tagline: 'Son lourd & Chromes étincelants',
     type: 'Custom Cruiser',
-    description: 'Guidon haut, chromes étincelants et bruit d’échappement noble.',
+    description: 'Guidon haut, chromes étincelants et gros moteur bi-cylindre pour rider avec une classe absolue.',
     speedRating: 4,
     handlingRating: 3,
     bounceRating: 5,
@@ -248,9 +270,13 @@ export const BIKES = [
   },
   {
     id: 'trike',
-    name: 'Le Trike Turbo',
+    name: 'Turbo Trike 3R',
+    shortName: 'Turbo 3R',
+    category: 'MONSTER TRIKE',
+    icon: '🏎️',
+    tagline: 'Stabilité colossale & Double train arrière',
     type: 'Monster 3-Roues',
-    description: 'Stabilité maximale et propulseur arrière démesuré pour bousculer la ville.',
+    description: 'Stabilité maximale et propulseur arrière démesuré pour bousculer la ville sans jamais perdre l’équilibre.',
     speedRating: 4,
     handlingRating: 4,
     bounceRating: 5,

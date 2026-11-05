@@ -29,6 +29,7 @@ export class Bike {
     this.x = 0;
     this.z = 0;
     this.targetX = 0;
+    this.smoothedSteer = 0;
     this.currentLean = 0;
     this.targetLean = 0;
     this.bouncePhase = 0;
@@ -597,17 +598,18 @@ export class Bike {
       return;
     }
 
-    // --- CONTRÔLE NORMAL DIRECTIONNEL ---
-    // Correction de l'inversion : en Three.js avec caméra orientée +Z :
-    // Aller à DROITE à l'écran correspond à diminuer X (-X).
-    // Aller à GAUCHE à l'écran correspond à augmenter X (+X).
+    // --- CONTRÔLE NORMAL DIRECTIONNEL PROGRESSIF & AMORTI ---
+    // Filtrage doux pour éliminer les à-coups et secousses brutales
+    this.smoothedSteer += (steerInput - this.smoothedSteer) * Math.min(1.0, delta * 7.5);
+
+    // Vitesse latérale modérée et agréable (8.2 m/s max avec amorti fluide)
     const ROAD_WIDTH = 4.2;
-    this.x -= steerInput * 12.0 * delta;
+    this.x -= this.smoothedSteer * 8.2 * delta;
     this.x = Math.max(-ROAD_WIDTH, Math.min(ROAD_WIDTH, this.x));
 
-    // Inclinaison de la moto dans le virage (vers la droite de l'écran = rotation.z positif)
-    this.targetLean = steerInput * 0.45;
-    this.currentLean += (this.targetLean - this.currentLean) * Math.min(1.0, delta * 12.0);
+    // Inclinaison douce du bolide (angle réaliste et progressif d'environ 18°)
+    this.targetLean = this.smoothedSteer * 0.32;
+    this.currentLean += (this.targetLean - this.currentLean) * Math.min(1.0, delta * 6.5);
 
     // Positionnement et rotation de la moto
     this.mesh.position.x = this.x;
@@ -623,17 +625,17 @@ export class Bike {
 
     // Orientation de la fourche avant
     if (this.frontFork) {
-      this.frontFork.rotation.y = steerInput * 0.35;
+      this.frontFork.rotation.y = this.smoothedSteer * 0.25;
     }
 
-    // Animation du pilote (le pilote compense légèrement l'angle de la moto)
+    // Animation du pilote (le pilote compense avec souplesse l'angle de la moto)
     if (this.riderTorso) {
-      this.riderTorso.rotation.z = this.currentLean * 0.85;
+      this.riderTorso.rotation.z = this.currentLean * 0.75;
       this.riderTorso.rotation.x = 0.25 + Math.sin(this.bouncePhase * 2) * 0.03;
     }
     if (this.riderHead) {
-      this.riderHead.rotation.y = steerInput * 0.4;
-      this.riderHead.rotation.z = -this.currentLean * 0.5;
+      this.riderHead.rotation.y = this.smoothedSteer * 0.28;
+      this.riderHead.rotation.z = -this.currentLean * 0.4;
     }
 
     // Rotation des roues selon la vitesse

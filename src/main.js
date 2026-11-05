@@ -76,7 +76,11 @@ class GameApp {
       if (!this.isPointerDown || gameState.currentMode !== 'PLAYING') return;
 
       const deltaX = e.clientX - this.touchStartX;
-      const sensitivity = 0.007; // Réactivité fluide tactile
+      if (Math.abs(deltaX) < 4) {
+        this.steerInput = 0;
+        return;
+      }
+      const sensitivity = 0.0045; // Pilotage souple, précis et non brutal
       this.steerInput = Math.max(-1.0, Math.min(1.0, deltaX * sensitivity));
     });
 

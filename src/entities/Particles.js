@@ -144,48 +144,48 @@ export class ParticleSystem {
   }
 
   spawnComicBurst(pos, score, combo) {
-    // 1. Étoiles cartoon dorées qui tournoient
-    const numStars = 8;
+    // 1. Étoiles cartoon orange vif et compactes (effets réduits et plus percutants)
+    const numStars = 6;
     for (let i = 0; i < numStars; i++) {
-      const starGeo = new THREE.ConeGeometry(0.18, 0.35, 4);
-      const starMat = new THREE.MeshBasicMaterial({ color: 0xf1c40f });
+      const starGeo = new THREE.ConeGeometry(0.08, 0.16, 4);
+      const starMat = new THREE.MeshBasicMaterial({ color: 0xff6b00 }); // Orange vif percutant
       const star = new THREE.Mesh(starGeo, starMat);
       star.position.copy(pos);
-      star.position.y += 1.0;
+      star.position.y += 0.8;
 
       const angle = (i / numStars) * Math.PI * 2;
-      const speed = 4.0 + Math.random() * 4.0;
+      const speed = 2.5 + Math.random() * 3.0;
 
       this.scene.add(star);
       this.stars.push({
         mesh: star,
         velX: Math.cos(angle) * speed,
-        velY: 3.5 + Math.random() * 5.0,
+        velY: 2.2 + Math.random() * 3.0,
         velZ: Math.sin(angle) * speed,
-        spinX: Math.random() * 15,
-        spinY: Math.random() * 15,
-        life: 0.8,
-        maxLife: 0.8
+        spinX: Math.random() * 12,
+        spinY: Math.random() * 12,
+        life: 0.55,
+        maxLife: 0.55
       });
     }
 
-    // 2. Pièces d'or qui giclent comiquement
-    const numCoins = Math.min(8, 2 + combo);
+    // 2. Petites étincelles d'impact orange mandarine fines
+    const numCoins = Math.min(5, 2 + combo);
     for (let c = 0; c < numCoins; c++) {
-      const coinGeo = new THREE.CylinderGeometry(0.14, 0.14, 0.04, 8);
-      const coinMat = new THREE.MeshBasicMaterial({ color: 0xffd700 });
-      const coin = new THREE.Mesh(coinGeo, coinMat);
-      coin.position.copy(pos);
-      coin.position.y += 1.2;
+      const sparkGeo = new THREE.CylinderGeometry(0.06, 0.06, 0.02, 6);
+      const sparkMat = new THREE.MeshBasicMaterial({ color: 0xff9f1a }); // Teinte orange mandarine
+      const spark = new THREE.Mesh(sparkGeo, sparkMat);
+      spark.position.copy(pos);
+      spark.position.y += 0.9;
 
-      this.scene.add(coin);
+      this.scene.add(spark);
       this.particles.push({
-        mesh: coin,
-        velX: (Math.random() - 0.5) * 6.0,
-        velY: 5.0 + Math.random() * 4.0,
-        velZ: (Math.random() - 0.5) * 6.0,
-        life: 1.0,
-        maxLife: 1.0,
+        mesh: spark,
+        velX: (Math.random() - 0.5) * 4.0,
+        velY: 3.2 + Math.random() * 2.5,
+        velZ: (Math.random() - 0.5) * 4.0,
+        life: 0.6,
+        maxLife: 0.6,
         isCoin: true
       });
     }

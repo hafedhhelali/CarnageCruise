@@ -1,31 +1,53 @@
 apply plugin: 'com.android.application'
 
+def versionJsonFile = file('../../version.json')
+def versionProps = new groovy.json.JsonSlurper().parseText(versionJsonFile.text)
+
 android {
     namespace = "com.motormageddon.game"
     compileSdk = rootProject.ext.compileSdkVersion
+
     defaultConfig {
         applicationId "com.motormageddon.game"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode versionProps.versionCode.toInteger()
+        versionName versionProps.version.toString()
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
-             // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
-             // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+
+    signingConfigs {
+        motormageddonKey {
+            storeFile file('motormageddon.keystore')
+            storePassword 'motormageddon'
+            keyAlias 'motormageddon'
+            keyPassword 'motormageddon'
+        }
+    }
+
     buildTypes {
+        debug {
+            signingConfig signingConfigs.motormageddonKey
+        }
         release {
+            signingConfig signingConfigs.motormageddonKey
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    applicationVariants.all { variant ->
+        variant.outputs.all {
+            outputFileName = "Motormageddon-v${variant.versionName}-b${variant.versionCode}-${variant.buildType.name}.apk"
         }
     }
 }
 
 repositories {
-    flatDir{
+    flatDir {
         dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
     }
 }

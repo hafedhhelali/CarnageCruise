@@ -9,6 +9,7 @@ import { gameState, CITIES, BIKES } from '../core/GameState.js';
 import { storage } from '../core/Storage.js';
 import { soundManager } from '../audio/SoundManager.js';
 import { App } from '@capacitor/app';
+import { FULL_VERSION, APP_VERSION, COPYRIGHT_NOTICE, RELEASE_NAME } from '../core/Version.js';
 
 export class UIManager {
   constructor(rootElement, onActionCallback) {
@@ -128,6 +129,8 @@ export class UIManager {
     splash.className = 'screen-splash interactive';
 
     splash.innerHTML = `
+      <div class="splash-badge-version">${FULL_VERSION}</div>
+
       <div class="logo-container">
         <h1 class="game-title">MOTORMAGEDDON</h1>
         <div class="game-subtitle">★ TOUR DE FRANCE ARCADE 3D ★</div>
@@ -150,8 +153,8 @@ export class UIManager {
         </div>
 
         <div class="splash-legal">
-          <span>© 2026 EOMedia. Tous droits réservés.</span>
-          <button id="btn-splash-legal" class="btn-legal-link">Mentions Légales</button>
+          <span>${COPYRIGHT_NOTICE}</span>
+          <button id="btn-splash-legal" class="btn-legal-link">Mentions Légales & Version</button>
         </div>
       </div>
     `;
@@ -200,8 +203,8 @@ export class UIManager {
           ← RETOUR
         </button>
         <div style="text-align: center;">
-          <h2 class="map-title" style="margin: 0;">CARTE DE FRANCE</h2>
-          <span style="font-size: 0.75rem; color: #fffa65; font-weight: 800;">${totalStars} / ${CITIES.length * 3} ★ ÉTOILES</span>
+          <h2 class="map-title" style="margin: 0; font-size: 1.3rem;">LE TOUR DE FRANCE 3D</h2>
+          <span style="font-size: 0.78rem; color: #fffa65; font-weight: 800;">${totalStars} / ${CITIES.length * 3} ★ ÉTOILES DU TOUR</span>
         </div>
         <div style="display: flex; gap: 8px;">
           <button id="btn-map-profile" class="btn-arcade btn-accent" style="padding: 6px 12px; font-size: 0.85rem;">
@@ -213,17 +216,33 @@ export class UIManager {
         </div>
       </div>
 
+      <!-- Bandeau sélecteur rapide des 10 étapes du Tour -->
+      <div class="stages-carousel-bar">
+        ${CITIES.map((c, idx) => {
+          const isUnlocked = storage.isCityUnlocked(c.id);
+          const isSelected = this.selectedMapCity.id === c.id;
+          return `
+            <div class="stage-pill ${isUnlocked ? 'unlocked' : 'locked'} ${isSelected ? 'active' : ''}" data-city-id="${c.id}">
+              <span class="stage-num">${idx + 1}</span>
+              <span class="stage-emblem">${c.emblem || '📍'}</span>
+              <span class="stage-name">${c.name}</span>
+            </div>
+          `;
+        }).join('')}
+      </div>
+
       <div class="france-map-svg-container" id="france-container">
-        <!-- SVG Réaliste de la France avec contours géographiques, relief et autoroutes -->
+        <!-- SVG Réaliste de la France avec contours géographiques et reliefs -->
         <svg class="france-svg" viewBox="0 0 500 480">
           <defs>
-            <radialGradient id="franceRelief" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stop-color="#2c3e50" />
-              <stop offset="60%" stop-color="#1e272e" />
+            <radialGradient id="franceRelief" cx="50%" cy="50%" r="55%">
+              <stop offset="0%" stop-color="#34495e" />
+              <stop offset="50%" stop-color="#2c3e50" />
+              <stop offset="85%" stop-color="#1e272e" />
               <stop offset="100%" stop-color="#0f141d" />
             </radialGradient>
-            <filter id="glowPin" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="3" result="blur" />
+            <filter id="glowTourRoute" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="3.5" result="blur" />
               <feMerge>
                 <feMergeNode in="blur" />
                 <feMergeNode in="SourceGraphic" />
@@ -231,8 +250,12 @@ export class UIManager {
             </filter>
           </defs>
 
-          <!-- Mer / Océan environnant stylisé -->
+          <!-- Mer / Océan environnant -->
           <rect width="100%" height="100%" fill="transparent" />
+
+          <!-- Relief montagneux stylisé (Alpes & Pyrénées) -->
+          <path d="M 360 220 Q 400 240 430 300 Q 390 350 370 380 Z" fill="#2d3436" opacity="0.4" />
+          <path d="M 120 420 Q 200 430 280 440 Q 220 410 140 415 Z" fill="#2d3436" opacity="0.4" />
 
           <!-- Contour géographique précis de la France métropolitaine -->
           <path class="france-mainland" d="
@@ -260,17 +283,23 @@ export class UIManager {
           <path d="M 445 380 C 455 375, 465 390, 460 420 C 450 445, 440 440, 435 415 Z"
                 fill="#2c3e50" stroke="#38ada9" stroke-width="2" />
 
-          <!-- Réseau des grands axes autoroutiers néon reliant les villes -->
-          <path class="highway-line" d="M 250 135 L 335 264" stroke="#fffa65" stroke-width="2" stroke-dasharray="4,4" opacity="0.45" />
-          <path class="highway-line" d="M 335 264 L 340 403" stroke="#fffa65" stroke-width="2" stroke-dasharray="4,4" opacity="0.45" />
-          <path class="highway-line" d="M 340 403 L 430 374" stroke="#fffa65" stroke-width="2" stroke-dasharray="4,4" opacity="0.45" />
-          <path class="highway-line" d="M 250 135 L 140 312" stroke="#fffa65" stroke-width="2" stroke-dasharray="4,4" opacity="0.45" />
-          <path class="highway-line" d="M 250 135 L 440 135" stroke="#fffa65" stroke-width="2" stroke-dasharray="4,4" opacity="0.45" />
-          <path class="highway-line" d="M 335 264 L 400 250" stroke="#fffa65" stroke-width="2" stroke-dasharray="4,4" opacity="0.45" />
+          <!-- Tracé dynamique du Tour de France reliant les étapes en séquence -->
+          <path class="tour-route-glow" d="
+            M 250 134
+            L 335 264
+            L 370 230
+            L 400 250
+            L 270 345
+            L 340 403
+            L 430 374
+            L 140 312
+            L 110 153
+            L 440 134
+          " fill="none" stroke="#f1c40f" stroke-width="2.8" stroke-dasharray="6,4" opacity="0.65" filter="url(#glowTourRoute)" />
         </svg>
 
-        <!-- Pins interactifs des villes avec pulsion animée -->
-        ${CITIES.map(city => {
+        <!-- Pins interactifs des villes avec emblèmes français -->
+        ${CITIES.map((city, idx) => {
           const unlocked = storage.isCityUnlocked(city.id);
           const cityData = storage.getCityData(city.id);
           const isSelected = this.selectedMapCity.id === city.id;
@@ -281,9 +310,11 @@ export class UIManager {
                  style="left: ${city.mapCoords.x}%; top: ${city.mapCoords.y}%;">
               <div class="city-pulse-ring"></div>
               <div class="city-pin-dot">
-                ${unlocked ? '★' : '🔒'}
+                ${unlocked ? (city.emblem || '★') : '🔒'}
               </div>
-              <div class="city-pin-label">${city.name}</div>
+              <div class="city-pin-label">
+                <span style="color: #fffa65; font-size: 0.65rem;">#${idx + 1}</span> ${city.name}
+              </div>
             </div>
           `;
         }).join('')}
@@ -294,20 +325,36 @@ export class UIManager {
       </div>
     `;
 
-    // Événements sélection de ville
+    // Événements sélection de ville sur la carte
     const pins = mapScreen.querySelectorAll('.city-pin');
+    const updateSelection = (cityId) => {
+      const city = CITIES.find(c => c.id === cityId);
+      if (city) {
+        soundManager.playClick();
+        this.selectedMapCity = city;
+        pins.forEach(p => p.classList.toggle('selected', p.getAttribute('data-city-id') === cityId));
+        
+        const pills = mapScreen.querySelectorAll('.stage-pill');
+        pills.forEach(p => p.classList.toggle('active', p.getAttribute('data-city-id') === cityId));
+
+        const targetPin = mapScreen.querySelector(`.city-pin[data-city-id="${cityId}"]`);
+        if (targetPin) this.triggerCityPinRipple(targetPin);
+
+        this.updateCityDetail(mapScreen.querySelector('#city-detail'));
+      }
+    };
+
     pins.forEach(pin => {
       pin.addEventListener('click', () => {
-        const cityId = pin.getAttribute('data-city-id');
-        const city = CITIES.find(c => c.id === cityId);
-        if (city) {
-          soundManager.playClick();
-          this.selectedMapCity = city;
-          pins.forEach(p => p.classList.remove('selected'));
-          pin.classList.add('selected');
-          this.triggerCityPinRipple(pin);
-          this.updateCityDetail(mapScreen.querySelector('#city-detail'));
-        }
+        updateSelection(pin.getAttribute('data-city-id'));
+      });
+    });
+
+    // Événements sur la barre des étapes
+    const pills = mapScreen.querySelectorAll('.stage-pill');
+    pills.forEach(pill => {
+      pill.addEventListener('click', () => {
+        updateSelection(pill.getAttribute('data-city-id'));
       });
     });
 
@@ -336,6 +383,7 @@ export class UIManager {
 
   updateCityDetail(detailCard) {
     const city = this.selectedMapCity;
+    const stageIndex = CITIES.findIndex(c => c.id === city.id) + 1;
     const unlocked = storage.isCityUnlocked(city.id);
     const cityData = storage.getCityData(city.id);
 
@@ -344,9 +392,9 @@ export class UIManager {
     detailCard.innerHTML = `
       <div class="city-detail-header">
         <div>
-          <span class="city-detail-name">${city.name}</span>
-          <span class="city-tag">${city.typeTag || 'Étape du Tour'}</span>
-          <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">${city.subtitle}</div>
+          <span class="city-detail-name">${city.emblem || '📍'} ${city.name}</span>
+          <span class="city-tag">ÉTAPE ${stageIndex} / 10 • ${city.typeTag || 'Étape du Tour'}</span>
+          <div style="font-size: 0.82rem; color: var(--text-muted); margin-top: 3px;">${city.subtitle}</div>
         </div>
         <div class="city-stars">${starsHtml}</div>
       </div>
@@ -355,13 +403,13 @@ export class UIManager {
 
       <div class="city-target-info">
         <span>🏆 Record : <strong>${cityData.bestScore} pts</strong></span>
-        <span>🎯 Objectif : <strong>${city.targetScore} pts</strong></span>
+        <span>🎯 Objectif Étape : <strong>${city.targetScore} pts</strong></span>
       </div>
 
       <div style="display: flex; gap: 10px; margin-top: 8px;">
         ${unlocked ? `
-          <button id="btn-launch-city" class="btn-arcade" style="flex: 1;">
-            🏁 ENTRER DANS ${city.name.toUpperCase()} !
+          <button id="btn-launch-city" class="btn-arcade btn-play-pulse" style="flex: 1;">
+            🏁 DÉPART ÉTAPE ${stageIndex} : ${city.name.toUpperCase()} !
           </button>
         ` : `
           <button class="btn-arcade btn-ghost" style="flex: 1; cursor: not-allowed;" disabled>
@@ -423,19 +471,27 @@ export class UIManager {
         <button id="btn-garage-back" class="btn-arcade btn-ghost" style="padding: 8px 16px; font-size: 0.9rem;">
           ← RETOUR
         </button>
-        <h2 style="font-size: 1.5rem; font-weight: 800;">LE GARAGE</h2>
+        <h2 style="font-size: 1.5rem; font-weight: 800; margin: 0;">LE GARAGE</h2>
         <div class="currency-badge">
           <span>🪙 ${coins}</span>
         </div>
       </div>
 
       <div class="garage-bottom-panel">
-        <div class="bikes-tabs">
-          ${BIKES.map(b => `
-            <div class="bike-tab ${this.selectedGarageBike.id === b.id ? 'active' : ''}" data-bike-id="${b.id}">
-              ${b.name.split(' ')[0]}
-            </div>
-          `).join('')}
+        <!-- Barre de navigation tactile ergonomique avec flèches et catégories -->
+        <div class="garage-carousel-nav">
+          <button id="btn-prev-bike" class="btn-carousel-arrow" title="Bolide précédent">◀</button>
+          
+          <div class="bikes-category-row">
+            ${BIKES.map(b => `
+              <div class="bike-category-pill ${this.selectedGarageBike.id === b.id ? 'active' : ''}" data-bike-id="${b.id}">
+                <span class="bike-icon">${b.icon || '🏍️'}</span>
+                <span class="bike-category-name">${b.shortName || b.name}</span>
+              </div>
+            `).join('')}
+          </div>
+
+          <button id="btn-next-bike" class="btn-carousel-arrow" title="Bolide suivant">▶</button>
         </div>
 
         <div id="garage-bike-info">
@@ -444,17 +500,34 @@ export class UIManager {
       </div>
     `;
 
-    // Événements onglets
-    const tabs = garage.querySelectorAll('.bike-tab');
-    tabs.forEach(tab => {
-      tab.addEventListener('click', () => {
-        const bikeId = tab.getAttribute('data-bike-id');
+    // Événements boutons flèches carrousel gauche / droite
+    const changeBikeByIndex = (offset) => {
+      let idx = BIKES.findIndex(b => b.id === this.selectedGarageBike.id);
+      idx = (idx + offset + BIKES.length) % BIKES.length;
+      const nextBike = BIKES[idx];
+      this.selectedGarageBike = nextBike;
+      soundManager.playClick();
+      if (this.onAction) this.onAction('PREVIEW_BIKE', nextBike);
+      
+      const pills = garage.querySelectorAll('.bike-category-pill');
+      pills.forEach(p => p.classList.toggle('active', p.getAttribute('data-bike-id') === nextBike.id));
+      this.updateGarageBikeInfo(garage.querySelector('#garage-bike-info'));
+    };
+
+    garage.querySelector('#btn-prev-bike').addEventListener('click', () => changeBikeByIndex(-1));
+    garage.querySelector('#btn-next-bike').addEventListener('click', () => changeBikeByIndex(1));
+
+    // Événements clics directs sur les catégories
+    const pills = garage.querySelectorAll('.bike-category-pill');
+    pills.forEach(pill => {
+      pill.addEventListener('click', () => {
+        const bikeId = pill.getAttribute('data-bike-id');
         const bike = BIKES.find(b => b.id === bikeId);
         if (bike) {
           soundManager.playClick();
           this.selectedGarageBike = bike;
-          tabs.forEach(t => t.classList.remove('active'));
-          tab.classList.add('active');
+          pills.forEach(p => p.classList.remove('active'));
+          pill.classList.add('active');
           if (this.onAction) this.onAction('PREVIEW_BIKE', bike);
           this.updateGarageBikeInfo(garage.querySelector('#garage-bike-info'));
         }
@@ -480,31 +553,49 @@ export class UIManager {
     const colors = ['#e74c3c', '#3498db', '#f39c12', '#2ecc71', '#9b59b6', '#1abc9c', '#34495e'];
 
     container.innerHTML = `
-      <div style="display: flex; justify-content: space-between; align-items: baseline;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
         <div>
-          <h3 style="font-size: 1.3rem; font-weight: 800; color: #fff;">${bike.name}</h3>
-          <span style="font-size: 0.8rem; color: var(--text-muted);">${bike.type}</span>
+          <div class="garage-category-tag">${bike.icon || '🏍️'} ${bike.category || 'MOTO'}</div>
+          <h3 style="font-size: 1.35rem; font-weight: 900; color: #fff; margin: 2px 0;">${bike.name}</h3>
+          <span style="font-size: 0.8rem; color: #fffa65; font-weight: 700;">${bike.tagline || bike.type}</span>
         </div>
-        <span style="font-size: 0.85rem; color: #ced6e0;">${bike.description}</span>
+        <div style="font-size: 0.78rem; color: #ced6e0; max-width: 48%; text-align: right; line-height: 1.3;">
+          ${bike.description}
+        </div>
       </div>
 
       <div class="stats-grid">
         <div class="stat-item">
-          <span class="stat-name">VITESSE</span>
-          <span class="stat-rating">${'⚡'.repeat(bike.speedRating)}</span>
+          <div style="display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 800;">
+            <span class="stat-name">VITESSE</span>
+            <span style="color: #fffa65;">${bike.maxSpeed} km/h</span>
+          </div>
+          <div class="stat-gauge-bar">
+            <div class="stat-gauge-fill" style="width: ${(bike.speedRating / 5) * 100}%;"></div>
+          </div>
         </div>
         <div class="stat-item">
-          <span class="stat-name">MANIABILITÉ</span>
-          <span class="stat-rating">${'🎯'.repeat(bike.handlingRating)}</span>
+          <div style="display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 800;">
+            <span class="stat-name">MANIABILITÉ</span>
+            <span style="color: #38ada9;">${bike.handlingRating}/5</span>
+          </div>
+          <div class="stat-gauge-bar">
+            <div class="stat-gauge-fill" style="width: ${(bike.handlingRating / 5) * 100}%; background: linear-gradient(90deg, #38ada9, #78e08f);"></div>
+          </div>
         </div>
         <div class="stat-item">
-          <span class="stat-name">REBOND CARTOON</span>
-          <span class="stat-rating">${'💥'.repeat(bike.bounceRating)}</span>
+          <div style="display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 800;">
+            <span class="stat-name">ACCÉLÉRATION</span>
+            <span style="color: #ff6348;">${bike.bounceRating}/5</span>
+          </div>
+          <div class="stat-gauge-bar">
+            <div class="stat-gauge-fill" style="width: ${(bike.bounceRating / 5) * 100}%; background: linear-gradient(90deg, #ffa502, #ff6348);"></div>
+          </div>
         </div>
       </div>
 
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
-        <span style="font-size: 0.85rem; font-weight: 700;">PEINTURE :</span>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
+        <span style="font-size: 0.8rem; font-weight: 800; color: #dfe4ea;">PEINTURE PERSONNALISÉE :</span>
         <div class="color-picker-row">
           ${colors.map(col => `
             <div class="color-dot ${currentColor.toLowerCase() === col.toLowerCase() ? 'active' : ''}"
@@ -515,18 +606,18 @@ export class UIManager {
         </div>
       </div>
 
-      <div style="margin-top: 8px;">
+      <div style="margin-top: 10px;">
         ${isEquipped ? `
-          <button class="btn-arcade btn-secondary" style="width: 100%; cursor: default;">
+          <button class="btn-arcade btn-secondary" style="width: 100%; cursor: default; padding: 12px;">
             ✓ ÉQUIPÉE ACTUELLEMENT
           </button>
         ` : isUnlocked ? `
-          <button id="btn-equip-bike" class="btn-arcade" style="width: 100%;">
+          <button id="btn-equip-bike" class="btn-arcade btn-play-pulse" style="width: 100%; padding: 12px;">
             ÉQUIPER CE BOLIDE
           </button>
         ` : `
-          <button id="btn-buy-bike" class="btn-arcade btn-accent" style="width: 100%;">
-            DÉBLOQUER POUR 🪙 ${bike.cost} PIÈCES
+          <button id="btn-buy-bike" class="btn-arcade btn-accent" style="width: 100%; padding: 12px;">
+            DÉBLOQUER CE VÉHICULE (🪙 ${bike.cost})
           </button>
         `}
       </div>
@@ -982,11 +1073,11 @@ export class UIManager {
 
         <div style="margin-top: 15px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.1); text-align: center;">
           <div style="font-size: 0.78rem; color: #a4b0be; margin-bottom: 8px;">
-            Motormageddon Tour de France 3D v1.0<br>
-            © 2026 EOMedia. Tous droits réservés.
+            Motormageddon Tour de France 3D ${FULL_VERSION}<br>
+            ${COPYRIGHT_NOTICE}
           </div>
           <button id="btn-settings-legal" class="btn-legal-link" style="font-size: 0.8rem;">
-            📜 Mentions Légales & Confidentialité
+            📜 Mentions Légales & Version
           </button>
         </div>
 
@@ -1038,6 +1129,7 @@ export class UIManager {
           <div style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px;">
             <strong style="color: #f1c40f;">Éditeur & Développeur :</strong><br>
             <strong>EOMedia</strong> — Tous droits réservés © 2026.<br>
+            Version installée : <strong style="color: #2ed573;">${FULL_VERSION}</strong> (${RELEASE_NAME})<br>
             Contact éditeur : support@eomedia.fr
           </div>
 

@@ -15,19 +15,16 @@
   1. Chute sur le flanc.
   2. Le pilote s'assied et secoue comiquement la tête (effet étourdi).
   3. Rebond élastique, moto redressée et reprise de course avec 2s d'immunité clignotante.
-- Roues synchronisées avec la vitesse de course.
 - Correction mathématique de la direction inversée (droite = droite écran, gauche = gauche écran).
 
 ### ✅ 3. SYSTÈME DE FREINAGE COMPLET (ARRÊT & REPRISE)
 - Bouton tactile HUD "FREIN" et touches clavier (Flèche Bas / Touche S).
 - Décélération progressive jusqu'à l'arrêt complet (0 km/h).
-- Allumage des feux stop, moteur qui tourne au ralenti discret.
-- La circulation et les piétons continuent de vivre pendant l'arrêt.
-- Réaccélération progressive vers la vitesse maximale dès que le frein est relâché.
+- Allumage des feux stop, moteur au ralenti feutré, circulation qui continue, réaccélération fluide au relâchement.
 
 ### ✅ 4. RUES & AVENUES SINUEUSES (VIRAGES GAUCHE/DROITE)
 - Courbure dynamique de la chaussée calculée selon `getRoadCenterX(z)` et `getRoadAngle(z)`.
-- La moto, les décors, les carrefours, l'arche d'arrivée et les piétons épousent parfaitement la courbure de la rue.
+- La moto, les décors, les carrefours, l'arche d'arrivée et les piétons épousent parfaitement la trajectoire des virages.
 
 ### ✅ 5. CARREFOURS, FEUX TRICOLORES & TRAFIC TRANSVERSAL
 - Carrefours à feux et ronds-points avec pelouse et fontaine.
@@ -37,11 +34,11 @@
 ### ✅ 6. PIÉTONS DIVERSIFIÉS & IMPACTS BURLESQUES ÉQUILIBRÉS
 - Piétons enrichis : Papy avec canne, Parent avec poussette, Groupe de flâneurs, Parisien pressé, Touriste égaré.
 - Projection aérienne équilibrée (4,5 à 6 mètres de haut).
-- Gouttelettes et discrète marque au sol rouge cartoon (sang cartoon non réaliste et humoristique).
+- Gouttelettes et discrète marque au sol rouge cartoon.
 
 ### ✅ 7. LIGNE D'ARRIVÉE 3D & CÉLÉBRATION DE VICTOIRE
 - Arche 3D monumentale avec banderole à damier, drapeaux français et oriflammes.
-- Franchissement déclenchant une pluie de confettis multicolores, fanfare de victoire et transition vers l'écran des scores.
+- Franchissement déclenchant une pluie de confettis multicolores, fanfare de victoire et transition vers les résultats.
 
 ### ✅ 8. 10 VILLES FRANÇAISES & CARTE SVG RÉALISTE
 - Paris, Lyon, Marseille, Chamonix, Annecy, Millau, Nice, Bordeaux, Saint-Malo, Strasbourg.
@@ -59,11 +56,19 @@
 - Fermeture et suspension immédiate du contexte WebAudio (`ctx.close()`, `ctx.suspend()`) lors de la sortie pour éliminer toute persistance sonore et fuite mémoire.
 - Volume moteur adouci en un ronronnement agréable.
 
-### ✅ 11. IDENTITÉ VISUELLE, ICÔNES ANDROID & MENTIONS LÉGALES
-- Génération d'icônes haute résolution pour toutes les densités Android (`mipmap-mdpi` à `mipmap-xxxhdpi`) avec casque arcade, ruban tricolore et emblème "M".
-- Mentions Légales détaillées (RGPD, absence de collecte de données, fiction burlesque) et copyright : **© 2026 EOMedia. Tous droits réservés.**
+### ✅ 11. VERSIONNAGE COMPLET & SIGNATURE PERMANENTE (RÉSOLUTION MISE À JOUR IMPOSSIBLE)
+- **Origine du problème de mise à jour** : Les runners GitHub Actions utilisaient un keystore temporaire aléatoire différent à chaque compilation (signatures SHA-256 divergentes), et le `versionCode` restait bloqué à 1.
+- **Résolution définitive** :
+  - **Keystore permanent** `android/app/motormageddon.keystore` (RSA 2048, 10 000 jours, EOMedia) versionné dans le dépôt Git.
+  - Toutes les compilations (locales et GitHub Actions) partagent la **même signature cryptographique**.
+  - `versionCode` incrémenté à **2** et `versionName` à **1.1.0**.
+  - Single source of truth : `version.json` et `src/core/Version.js`.
+  - Nom d'APK généré automatiquement : `Motormageddon-v1.1.0-b2-debug.apk`.
+  - Script d'incrémentation : `npm run version:patch`, `version:minor`, `version:major`.
+  - Affichage de la version `${FULL_VERSION}` sur l'écran titre, dans les options et dans les mentions légales.
+- *(Rappel transition : Si une version antérieure temporaire est déjà installée sur l'appareil, la désinstaller une fois. Dès cette version v1.1.0 installée, toutes les futures mises à jour s'installeront directement par-dessus sans perte).*
 
 ### ✅ 12. VALIDATION DU BUILD ANDROID & GITHUB ACTIONS
-- **Compilation locale APK réussie** : `android/app/build/outputs/apk/debug/app-debug.apk` (5.11 Mo).
+- **Compilation locale APK réussie** : `android/app/build/outputs/apk/debug/Motormageddon-v1.1.0-b2-debug.apk` (4.44 Mo).
 - **GitHub Actions CI/CD** : Déploiement automatique configuré sur `.github/workflows/build-apk.yml`.
 - **Dépôt officiel** : `https://github.com/hafedhhelali/Motormageddon`

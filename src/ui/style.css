@@ -654,12 +654,180 @@ html, body {
   gap: 12px;
 }
 
-.bikes-tabs {
+/* --- SÉLECTEUR RAPIDE D'ÉTAPES DU TOUR (CARTE) --- */
+.stages-carousel-bar {
   display: flex;
   gap: 8px;
   overflow-x: auto;
-  padding-bottom: 6px;
+  padding: 6px 4px 10px 4px;
   -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.stages-carousel-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.stage-pill {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.stage-pill:hover, .stage-pill.active {
+  background: linear-gradient(135deg, #0984e3, #00cec9);
+  border-color: #74b9ff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(9, 132, 227, 0.5);
+}
+
+.stage-pill.locked {
+  opacity: 0.55;
+  filter: grayscale(0.5);
+}
+
+.stage-num {
+  background: rgba(0, 0, 0, 0.4);
+  color: #fffa65;
+  font-size: 0.7rem;
+  font-weight: 900;
+  padding: 2px 6px;
+  border-radius: 10px;
+}
+
+.stage-emblem {
+  font-size: 0.95rem;
+}
+
+.stage-name {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #fff;
+  white-space: nowrap;
+}
+
+.tour-route-glow {
+  animation: routePulse 3s infinite linear;
+}
+
+@keyframes routePulse {
+  0% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: 40; }
+}
+
+/* --- ERGONOMIE DU GARAGE MODERNE (CARROUSEL & CATÉGORIES) --- */
+.garage-carousel-nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.btn-carousel-arrow {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--border-light);
+  color: #fffa65;
+  font-size: 1.15rem;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+  flex: 0 0 auto;
+}
+
+.btn-carousel-arrow:active {
+  transform: scale(0.9);
+  background: var(--primary);
+  color: #fff;
+}
+
+.bikes-category-row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  flex: 1;
+  padding: 2px;
+  scrollbar-width: none;
+}
+
+.bikes-category-row::-webkit-scrollbar {
+  display: none;
+}
+
+.bike-category-pill {
+  flex: 1 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-light);
+  border-radius: 14px;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.bike-category-pill.active {
+  background: linear-gradient(135deg, var(--primary), #ff6b81);
+  border-color: #ff7675;
+  box-shadow: 0 4px 14px var(--primary-glow);
+  transform: translateY(-2px);
+}
+
+.bike-icon {
+  font-size: 1.05rem;
+}
+
+.bike-category-name {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #fff;
+}
+
+.garage-category-tag {
+  display: inline-block;
+  background: rgba(255, 250, 101, 0.2);
+  border: 1px solid #fffa65;
+  color: #fffa65;
+  font-size: 0.68rem;
+  font-weight: 900;
+  padding: 2px 8px;
+  border-radius: 8px;
+  letter-spacing: 0.5px;
+}
+
+.stat-gauge-bar {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  margin-top: 4px;
+  overflow: hidden;
+}
+
+.stat-gauge-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #fffa65, #ffa502);
+  border-radius: 6px;
+  transition: width 0.3s ease;
+}
+
+.bikes-tabs {
+  display: none; /* Remplacé par le sélecteur carrousel */
 }
 
 .bike-tab {
@@ -819,6 +987,23 @@ html, body {
 }
 
 /* --- MENTIONS LÉGALES & COPYRIGHT EOMEDIA 2026 --- */
+.splash-badge-version {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(8px);
+  color: #a4b0be;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 12px;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 10;
+}
+
 .splash-legal {
   margin-top: 18px;
   display: flex;
