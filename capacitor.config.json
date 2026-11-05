@@ -1,0 +1,13 @@
+{
+  "appId": "com.motormageddon.game",
+  "appName": "Motormageddon",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "backgroundColor": "#0c0d14",
+    "allowMixedContent": false
+  }
+}

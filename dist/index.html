@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0c0d14">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>Motormageddon : Tour de France Arcade 3D</title>
+  <style>
+    /* Empêcher tout défilement et zoom tactile involontaire sur smartphone */
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #0c0d14;
+      touch-action: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+  </style>
+  <script type="module" crossorigin src="./assets/index-DokRBRYe.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-CK1DAqBd.css">
+</head>
+<body>
+  <!-- Conteneur WebGL Three.js -->
+  <div id="canvas-container">
+    <canvas id="webgl-canvas"></canvas>
+  </div>
+
+  <!-- Conteneur d'interface utilisateur réactive -->
+  <div id="ui-root"></div>
+
+  <!-- Point d'entrée de l'application -->
+</body>
+</html>
