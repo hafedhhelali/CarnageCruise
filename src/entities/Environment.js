@@ -92,31 +92,337 @@ export class Environment {
     }
 
     const lmGroup = new THREE.Group();
+    const cityId = cityDef.id;
 
-    if (cityDef.id === 'paris') {
-      const eiffelMat = new THREE.MeshToonMaterial({ color: 0x5a4d41 });
-      const base = new THREE.Mesh(new THREE.ConeGeometry(18, 50, 4), eiffelMat);
-      base.position.set(28, 25, 260);
-      const top = new THREE.Mesh(new THREE.ConeGeometry(6, 60, 4), eiffelMat);
-      top.position.set(28, 70, 260);
-      const spire = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 1.5, 20, 6), eiffelMat);
-      spire.position.set(28, 110, 260);
-      lmGroup.add(base);
-      lmGroup.add(top);
-      lmGroup.add(spire);
-    } else if (cityDef.id === 'marseille' || cityDef.id === 'nice') {
+    if (cityId === 'paris') {
+      // 1. TOUR EIFFEL MONUMENTALE
+      const eiffelMat = new THREE.MeshToonMaterial({ color: 0x5a4d41, metalness: 0.5, roughness: 0.5 });
+      const platMat = new THREE.MeshToonMaterial({ color: 0x3d352e });
+      
+      const eiffel = new THREE.Group();
+      eiffel.position.set(34, 0, 240);
+      
+      // 4 Piliers évasés
+      const p1 = new THREE.Mesh(new THREE.CylinderGeometry(2.5, 4.5, 28, 4), eiffelMat);
+      p1.position.set(-8, 14, -8);
+      p1.rotation.z = -0.15;
+      const p2 = new THREE.Mesh(new THREE.CylinderGeometry(2.5, 4.5, 28, 4), eiffelMat);
+      p2.position.set(8, 14, -8);
+      p2.rotation.z = 0.15;
+      const p3 = new THREE.Mesh(new THREE.CylinderGeometry(2.5, 4.5, 28, 4), eiffelMat);
+      p3.position.set(-8, 14, 8);
+      p3.rotation.z = -0.15;
+      const p4 = new THREE.Mesh(new THREE.CylinderGeometry(2.5, 4.5, 28, 4), eiffelMat);
+      p4.position.set(8, 14, 8);
+      p4.rotation.z = 0.15;
+      eiffel.add(p1, p2, p3, p4);
+
+      // Plateforme 1
+      const plat1 = new THREE.Mesh(new THREE.BoxGeometry(20, 3, 20), platMat);
+      plat1.position.y = 28;
+      eiffel.add(plat1);
+
+      // Étage 2
+      const mid = new THREE.Mesh(new THREE.ConeGeometry(8, 38, 4), eiffelMat);
+      mid.position.y = 48;
+      eiffel.add(mid);
+
+      // Plateforme 2
+      const plat2 = new THREE.Mesh(new THREE.BoxGeometry(11, 2, 11), platMat);
+      plat2.position.y = 67;
+      eiffel.add(plat2);
+
+      // Flèche terminale & Phare
+      const topSpire = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 3.2, 42, 6), eiffelMat);
+      topSpire.position.y = 88;
+      eiffel.add(topSpire);
+
+      const beacon = new THREE.Mesh(new THREE.SphereGeometry(1.2, 8, 8), new THREE.MeshBasicMaterial({ color: 0xfffa65 }));
+      beacon.position.y = 110;
+      eiffel.add(beacon);
+
+      lmGroup.add(eiffel);
+
+      // ARC DE TRIOMPHE sur le côté gauche
+      const archMat = new THREE.MeshToonMaterial({ color: 0xecd5b3 });
+      const arch = new THREE.Group();
+      arch.position.set(-36, 0, 220);
+      const pillarL = new THREE.Mesh(new THREE.BoxGeometry(7, 24, 12), archMat);
+      pillarL.position.set(-8, 12, 0);
+      const pillarR = new THREE.Mesh(new THREE.BoxGeometry(7, 24, 12), archMat);
+      pillarR.position.set(8, 12, 0);
+      const archTop = new THREE.Mesh(new THREE.BoxGeometry(26, 9, 14), archMat);
+      archTop.position.set(0, 28.5, 0);
+      arch.add(pillarL, pillarR, archTop);
+      lmGroup.add(arch);
+
+    } else if (cityId === 'londres') {
+      // BIG BEN (ELIZABETH TOWER) & CABINE TÉLÉPHONIQUE
+      const brickMat = new THREE.MeshToonMaterial({ color: 0xb9770e });
+      const stoneMat = new THREE.MeshToonMaterial({ color: 0xdfe4ea });
+      const dialMat = new THREE.MeshBasicMaterial({ color: 0xfffa65 });
+      const roofMat = new THREE.MeshToonMaterial({ color: 0x1e272e });
+
+      const tower = new THREE.Group();
+      tower.position.set(32, 0, 230);
+
+      // Fût de la tour
+      const body = new THREE.Mesh(new THREE.BoxGeometry(14, 65, 14), brickMat);
+      body.position.y = 32.5;
+      tower.add(body);
+
+      // Horloge à 4 cadrans
+      const clockBox = new THREE.Mesh(new THREE.BoxGeometry(16, 14, 16), stoneMat);
+      clockBox.position.y = 72;
+      tower.add(clockBox);
+
+      // Cadrans lumineux
+      for (let rot = 0; rot < 4; rot++) {
+        const dial = new THREE.Mesh(new THREE.CircleGeometry(4.2, 16), dialMat);
+        dial.rotation.y = rot * (Math.PI / 2);
+        dial.position.set(
+          Math.sin(rot * (Math.PI / 2)) * 8.1,
+          72,
+          Math.cos(rot * (Math.PI / 2)) * 8.1
+        );
+        tower.add(dial);
+      }
+
+      // Toit pyramidal et beffroi
+      const roof = new THREE.Mesh(new THREE.ConeGeometry(9.5, 26, 4), roofMat);
+      roof.rotation.y = Math.PI / 4;
+      roof.position.y = 92;
+      tower.add(roof);
+
+      // Flèche or
+      const goldSpire = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 1.2, 14, 6), new THREE.MeshBasicMaterial({ color: 0xffd700 }));
+      goldSpire.position.y = 110;
+      tower.add(goldSpire);
+
+      lmGroup.add(tower);
+
+      // Cabine téléphonique rouge anglaise sur le trottoir
+      const phoneBox = new THREE.Mesh(new THREE.BoxGeometry(2.4, 6.2, 2.4), new THREE.MeshToonMaterial({ color: 0xff4757 }));
+      phoneBox.position.set(-9, 3.1, 190);
+      lmGroup.add(phoneBox);
+
+    } else if (cityId === 'bruxelles') {
+      // L'ATOMIUM (9 sphères géantes connectées en cristal / chrome)
+      const chromeMat = new THREE.MeshStandardMaterial({ color: 0xecf0f1, metalness: 0.9, roughness: 0.1 });
+      const tubeMat = new THREE.MeshStandardMaterial({ color: 0x95a5a6, metalness: 0.8, roughness: 0.2 });
+
+      const atomium = new THREE.Group();
+      atomium.position.set(34, 45, 240);
+
+      const sphereGeo = new THREE.SphereGeometry(5.2, 14, 14);
+      const spherePositions = [
+        [0, 0, 0], // Centre
+        [-16, -16, -16], [16, -16, -16], [-16, 16, -16], [16, 16, -16], // 4 coins bas
+        [-16, -16, 16], [16, -16, 16], [-16, 16, 16], [16, 16, 16], // 4 coins haut
+        [0, 24, 0] // Sphère zénithale
+      ];
+
+      spherePositions.forEach(pos => {
+        const sphere = new THREE.Mesh(sphereGeo, chromeMat);
+        sphere.position.set(pos[0], pos[1], pos[2]);
+        atomium.add(sphere);
+
+        // Tubes de liaison vers le centre
+        const tubeGeo = new THREE.CylinderGeometry(1.2, 1.2, Math.hypot(pos[0], pos[1], pos[2]), 8);
+        const tube = new THREE.Mesh(tubeGeo, tubeMat);
+        tube.position.set(pos[0] / 2, pos[1] / 2, pos[2] / 2);
+        tube.lookAt(pos[0], pos[1], pos[2]);
+        atomium.add(tube);
+      });
+
+      lmGroup.add(atomium);
+
+    } else if (cityId === 'barcelone') {
+      // LA SAGRADA FAMÍLIA (Tours élancées paraboliques & mosaïques)
+      const stoneMat = new THREE.MeshToonMaterial({ color: 0xe58e26 });
+      const mosaicMat = new THREE.MeshBasicMaterial({ color: 0xf6b93b });
+      const crossMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+
+      const sagrada = new THREE.Group();
+      sagrada.position.set(34, 0, 240);
+
+      const bodyBase = new THREE.Mesh(new THREE.BoxGeometry(32, 28, 20), stoneMat);
+      bodyBase.position.y = 14;
+      sagrada.add(bodyBase);
+
+      // 4 Tours paraboliques
+      const towerOffsets = [-10, -3.5, 3.5, 10];
+      towerOffsets.forEach((xOff, idx) => {
+        const height = (idx === 1 || idx === 2) ? 68 : 58;
+        const tower = new THREE.Mesh(new THREE.ConeGeometry(3.6, height, 10), stoneMat);
+        tower.position.set(xOff, 28 + height / 2, 0);
+        sagrada.add(tower);
+
+        // Clocheton en mosaïque
+        const pinn = new THREE.Mesh(new THREE.SphereGeometry(2.0, 8, 8), mosaicMat);
+        pinn.position.set(xOff, 28 + height + 1.5, 0);
+        sagrada.add(pinn);
+      });
+
+      // Croix gaudienne
+      const crossV = new THREE.Mesh(new THREE.BoxGeometry(1.2, 8, 1.2), crossMat);
+      crossV.position.set(0, 104, 0);
+      const crossH = new THREE.Mesh(new THREE.BoxGeometry(5, 1.2, 1.2), crossMat);
+      crossH.position.set(0, 104, 0);
+      sagrada.add(crossV, crossH);
+
+      lmGroup.add(sagrada);
+
+    } else if (cityId === 'milan') {
+      // DUOMO DI MILANO (Cathédrale en marbre blanc éclatant et pinacles)
+      const marbleMat = new THREE.MeshToonMaterial({ color: 0xf5f6fa });
+      const goldMat = new THREE.MeshBasicMaterial({ color: 0xffd700 });
+
+      const duomo = new THREE.Group();
+      duomo.position.set(34, 0, 235);
+
+      const nave = new THREE.Mesh(new THREE.BoxGeometry(36, 32, 22), marbleMat);
+      nave.position.y = 16;
+      duomo.add(nave);
+
+      const roofFront = new THREE.Mesh(new THREE.ConeGeometry(18, 18, 4), marbleMat);
+      roofFront.rotation.y = Math.PI / 4;
+      roofFront.position.y = 41;
+      duomo.add(roofFront);
+
+      // Forêt de pinacles gothiques
+      for (let i = -16; i <= 16; i += 4) {
+        const pin = new THREE.Mesh(new THREE.ConeGeometry(0.8, 14, 4), marbleMat);
+        pin.position.set(i, 38, 10);
+        duomo.add(pin);
+      }
+
+      // Grande flèche centrale et Madonnina d'or
+      const mainSpire = new THREE.Mesh(new THREE.ConeGeometry(2.8, 38, 6), marbleMat);
+      mainSpire.position.set(0, 64, 0);
+      duomo.add(mainSpire);
+
+      const madonnina = new THREE.Mesh(new THREE.SphereGeometry(1.8, 8, 8), goldMat);
+      madonnina.position.set(0, 84, 0);
+      duomo.add(madonnina);
+
+      lmGroup.add(duomo);
+
+    } else if (cityId === 'geneve') {
+      // LE JET D'EAU DE GENÈVE (140m panache d'eau blanche sur le lac Léman)
+      const waterPlumeMat = new THREE.MeshBasicMaterial({ color: 0xdff9fb, transparent: true, opacity: 0.85 });
+      const sprayMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+      const lakeMat = new THREE.MeshBasicMaterial({ color: 0x0984e3 });
+
+      const jetGroup = new THREE.Group();
+      jetGroup.position.set(30, 0, 230);
+
+      // Nappe du Lac Léman
+      const lake = new THREE.Mesh(new THREE.PlaneGeometry(350, 220), lakeMat);
+      lake.rotation.x = -Math.PI / 2;
+      lake.position.set(0, 0.1, 0);
+      jetGroup.add(lake);
+
+      // Jet d'eau vertical géant (120 unités)
+      const plume = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 4.5, 110, 12), waterPlumeMat);
+      plume.position.set(0, 55, 0);
+      jetGroup.add(plume);
+
+      // Éventail d'embruns au sommet
+      const spray = new THREE.Mesh(new THREE.ConeGeometry(8.5, 24, 10), sprayMat);
+      spray.rotation.x = Math.PI;
+      spray.position.set(0, 115, 0);
+      jetGroup.add(spray);
+
+      lmGroup.add(jetGroup);
+
+    } else if (cityId === 'strasbourg') {
+      // CATHÉDRALE EN GRÈS ROSE (Flèche asymétrique gothique)
+      const pinkSandMat = new THREE.MeshToonMaterial({ color: 0xc0392b });
+      const tower = new THREE.Group();
+      tower.position.set(32, 0, 230);
+
+      const body = new THREE.Mesh(new THREE.BoxGeometry(22, 45, 18), pinkSandMat);
+      body.position.y = 22.5;
+      tower.add(body);
+
+      const spire = new THREE.Mesh(new THREE.ConeGeometry(5.5, 62, 8), pinkSandMat);
+      spire.position.set(5.5, 76, 0);
+      tower.add(spire);
+
+      lmGroup.add(tower);
+
+    } else if (cityId === 'chamonix') {
+      // MONT-BLANC & AIGUILLE DU MIDI (Sommets enneigés et téléphérique)
+      const snowMat = new THREE.MeshToonMaterial({ color: 0xffffff });
+      const rockMat = new THREE.MeshToonMaterial({ color: 0x57606f });
+      const peakGroup = new THREE.Group();
+      peakGroup.position.set(35, 0, 240);
+
+      const montBlanc = new THREE.Mesh(new THREE.ConeGeometry(45, 80, 8), snowMat);
+      montBlanc.position.set(0, 40, 0);
+      peakGroup.add(montBlanc);
+
+      const needle = new THREE.Mesh(new THREE.ConeGeometry(12, 100, 6), rockMat);
+      needle.position.set(-22, 50, 10);
+      peakGroup.add(needle);
+
+      // Télécabine rouge suspendue
+      const cableCar = new THREE.Mesh(new THREE.BoxGeometry(4, 3, 2.5), new THREE.MeshToonMaterial({ color: 0xff4757 }));
+      cableCar.position.set(-12, 58, 8);
+      peakGroup.add(cableCar);
+
+      lmGroup.add(peakGroup);
+
+    } else if (cityId === 'millau') {
+      // GRAND VIADUC DE MILLAU (Pylônes et haubans)
+      const viaductMat = new THREE.MeshToonMaterial({ color: 0xf1f2f6 });
+      const viaduct = new THREE.Group();
+      viaduct.position.set(30, 0, 230);
+
+      for (let p = -30; p <= 30; p += 30) {
+        const pillar = new THREE.Mesh(new THREE.CylinderGeometry(2, 4.5, 65, 8), viaductMat);
+        pillar.position.set(p, 32.5, 0);
+        const pylon = new THREE.Mesh(new THREE.ConeGeometry(1.6, 35, 4), viaductMat);
+        pylon.position.set(p, 82.5, 0);
+        viaduct.add(pillar, pylon);
+      }
+      const deck = new THREE.Mesh(new THREE.BoxGeometry(90, 3, 8), viaductMat);
+      deck.position.set(0, 65, 0);
+      viaduct.add(deck);
+
+      lmGroup.add(viaduct);
+
+    } else if (cityId === 'marseille' || cityId === 'nice') {
+      // NOTRE-DAME DE LA GARDE / NEGRESCO SUR FOND DE MER BLEUE
       const seaMat = new THREE.MeshBasicMaterial({ color: 0x0077be });
-      const sea = new THREE.Mesh(new THREE.PlaneGeometry(400, 300), seaMat);
+      const sea = new THREE.Mesh(new THREE.PlaneGeometry(450, 320), seaMat);
       sea.rotation.x = -Math.PI / 2;
-      sea.position.set(-100, -0.5, 180);
+      sea.position.set(-80, -0.2, 200);
       lmGroup.add(sea);
 
-      const sail = new THREE.Mesh(new THREE.ConeGeometry(4, 12, 3), new THREE.MeshBasicMaterial({ color: 0xffffff }));
-      sail.position.set(-50, 6, 200);
-      lmGroup.add(sail);
+      const sail1 = new THREE.Mesh(new THREE.ConeGeometry(3.5, 14, 3), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+      sail1.position.set(-50, 7, 210);
+      const sail2 = new THREE.Mesh(new THREE.ConeGeometry(2.8, 11, 3), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+      sail2.position.set(-75, 5.5, 185);
+      lmGroup.add(sail1, sail2);
+
+      const palaceMat = new THREE.MeshToonMaterial({ color: 0xffffff });
+      const domeMat = new THREE.MeshToonMaterial({ color: cityId === 'nice' ? 0xff6b81 : 0xffd700 });
+      const palace = new THREE.Group();
+      palace.position.set(34, 0, 230);
+      const mainBuilding = new THREE.Mesh(new THREE.BoxGeometry(32, 26, 18), palaceMat);
+      mainBuilding.position.y = 13;
+      const dome = new THREE.Mesh(new THREE.SphereGeometry(8.5, 16, 16), domeMat);
+      dome.position.set(0, 28, 0);
+      palace.add(mainBuilding, dome);
+      lmGroup.add(palace);
+
     } else {
-      const spire = new THREE.Mesh(new THREE.ConeGeometry(10, 75, 6), new THREE.MeshToonMaterial({ color: 0x616161 }));
-      spire.position.set(30, 37.5, 240);
+      // MONUMENT D'ÉLÉGANCE CLASSIQUE / BEFFROI
+      const classicMat = new THREE.MeshToonMaterial({ color: 0xdcdde1 });
+      const spire = new THREE.Mesh(new THREE.ConeGeometry(9, 75, 6), classicMat);
+      spire.position.set(32, 37.5, 235);
       lmGroup.add(spire);
     }
 

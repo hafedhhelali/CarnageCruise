@@ -217,14 +217,16 @@ class GameApp {
         this.bike.mesh.position.x,
         currentSpeed,
         (crossingCar) => {
-          // Collision suite à un feu rouge grillé !
+          // Heurté par un véhicule transversal / carrefour !
           const crashed = this.bike.triggerCrash();
           if (crashed) {
-            this.engine.triggerCameraShake(0.65);
+            this.engine.triggerCameraShake(0.75);
             soundManager.playCrash();
+            soundManager.playPenaltyBuzzer();
             this.particles.spawnCrashBurst(this.bike.mesh.position);
-            gameState.speed = 0;
+            gameState.applyVehicleCrashPenalty(350);
             storage.recordRedLightRun();
+            if (this.ui) this.ui.triggerCrashPenaltyUI(350);
           }
         },
         (streetName) => {

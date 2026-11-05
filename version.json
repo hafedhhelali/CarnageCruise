@@ -1,8 +1,8 @@
 {
-  "version": "1.2.3-beta",
-  "versionCode": 6,
-  "build": 6,
-  "releaseName": "Motormageddon v1.2.3-beta",
+  "version": "1.2.4-beta",
+  "versionCode": 7,
+  "build": 7,
+  "releaseName": "Motormageddon v1.2.4-beta",
   "channel": "beta",
-  "updatedAt": "2026-11-05T16:35:00+01:00"
+  "updatedAt": "2026-11-05T16:55:00+01:00"
 }

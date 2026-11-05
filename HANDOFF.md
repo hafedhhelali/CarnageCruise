@@ -8,7 +8,7 @@ Ce document fournit l'ensemble des informations de conception, d'architecture lo
 ## 1. VISION DU PROJET & SPÉCIFICATIONS
 
 - **Genre** : Jeu de course d'arcade urbain / Runner 3D burlesque
-- **Version actuelle** : **1.2.3-beta** (Build / versionCode 6 - Canal BETA)
+- **Version actuelle** : **1.2.4-beta** (Build / versionCode 7 - Canal BETA)
 - **Signature & Clé** : Keystore permanent dédié `android/app/motormageddon.keystore` (validité 10 000 jours, EOMedia Paris)
 - **Plateforme cible** : Android (Smartphones & Tablettes) + WebGL Mobile/Desktop
 - **Direction artistique** : Cartoon 3D éclatant, physique burlesque (slapstick), animations hilarantes et dynamiques, identité française affirmée.
@@ -179,4 +179,42 @@ Ce document fournit l'ensemble des informations de conception, d'architecture lo
 
 ### D. Refonte Visuelle des Boutons et Textes de l'Application
 - Modernisation de tous les boutons (`.btn-arcade`, `.btn-secondary`, `.btn-accent`, `.btn-ghost`) : biseau intérieur, ombrage lumineux arcade, retour tactile `:active` avec translation douce, typographie punchy sans débordement de texte.
+
+---
+
+## 5. NOUVEAUTÉS DE LA VERSION 1.2.4-BETA
+
+### A. Règle Stricte du Score à l'Arrêt
+- Le score de conduite continue n'avance **jamais à l'arrêt** : condition stricte `speed > 3.5 m/s (~13 km/h)`, sans freinage et hors accident.
+- Remise à zéro immédiate de l'accumulateur lors du freinage ou de l'arrêt complet.
+
+### B. Pénalité de Score aux Heurts Véhicules avec Effets Visuels et Sonores
+- Lors d'une collision avec un véhicule transversal (carrefour) : pénalité de score `-350 PTS` (avec plancher à 0).
+- Réinitialisation du combo à x1.
+- Effets visuels arcade percutants : flash vignette rouge sang sur l'écran (`.hud-penalty-flash`), pop-up flottante rouge vif animée (`💥 -350 PTS !`), secousse et clignotement rouge du compteur de score.
+- Effet sonore dédié : buzzer de pénalité bitonal dissonant (`playPenaltyBuzzer()`).
+
+### C. Extension Internationale du Grand Tour (15 Villes d'Europe)
+- Intégration de 5 métropoles frontalières majeures :
+  - **Bruxelles 🇧🇪** : L'Atomium en acier chromé et la Grand-Place.
+  - **Londres 🇬🇧** : Big Ben, cabines téléphoniques rouges et Westminster Bridge.
+  - **Barcelone 🇪🇸** : La Sagrada Família (tours paraboliques ajourées de Gaudí) et palmiers.
+  - **Milan 🇮🇹** : Duomo di Milano en marbre blanc éclatant avec forêt de pinacles et Madonnina d'or.
+  - **Genève 🇨🇭** : Le Jet d'Eau monumental de 140m sur le lac Léman.
+- 15 étapes consécutives réparties géographiquement avec progression calibrée.
+
+### D. Carte d'Europe Scrollable en 2D & Suppression des Villes au-dessus
+- Suppression définitive du bandeau `.stages-carousel-bar` au-dessus de la carte pour libérer l'espace visuel.
+- Viewport cartographique scrollable et panoramique en 2D (`.europe-map-scroll-viewport`) avec carte SVG haute fidélité (960x820) représentant l'Europe occidentale (France, UK, Belgique, Allemagne, Suisse, Italie, Espagne).
+- Centrage automatique fluide (`smooth scrollTo`) sur la ville sélectionnée à l'ouverture et lors des changements d'étape.
+
+### E. Effet de Déplacement Animé de Ville en Ville
+- Jeton voyageur motard animé (`.moto-traveler`) filant de la ville de départ à la ville d'arrivée le long d'un tracé doré avec traînée d'échappement.
+- Son de vrombissement et souffle d'accélération (`playTravelWhoosh()`).
+- Onde de choc dorée circulaire (`pinRippleWave`) à l'arrivée sur le médaillon de la ville cible.
+
+### F. Monuments 3D Emblématiques Dédiés dans Chaque Ville
+- Construction 3D personnalisée de chaque monument dans la scène Three.js : Tour Eiffel et Arc de Triomphe (Paris), Big Ben et cabine rouge (Londres), Atomium chromé (Bruxelles), Sagrada Família (Barcelone), Duomo de marbre blanc (Milan), Jet d'Eau de 140m (Genève), Cathédrale de grès rose (Strasbourg), Fourvière (Lyon), Notre-Dame de la Garde et Negresco (Marseille / Nice), Mont-Blanc et Aiguille du Midi (Chamonix), Viaduc suspendu (Millau), etc.
+- Affichage du monument dans la fiche descriptive et lors de la cinématique de bienvenue.
+
 

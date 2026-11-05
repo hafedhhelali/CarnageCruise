@@ -408,6 +408,71 @@ export class SoundManager {
     noise.start(now);
   }
 
+  playPenaltyBuzzer() {
+    if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
+    this.resumeContext();
+
+    const now = this.ctx.currentTime;
+    const osc1 = this.ctx.createOscillator();
+    const osc2 = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    osc1.type = 'sawtooth';
+    osc2.type = 'sawtooth';
+
+    // Dissonance comique sévère pour pénalité (fausse quinte)
+    osc1.frequency.setValueAtTime(146.83, now); // D3
+    osc1.frequency.exponentialRampToValueAtTime(73.41, now + 0.38);
+
+    osc2.frequency.setValueAtTime(155.56, now); // Eb3 dissonant
+    osc2.frequency.exponentialRampToValueAtTime(77.78, now + 0.38);
+
+    gain.gain.setValueAtTime(0.35, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
+
+    osc1.connect(gain);
+    osc2.connect(gain);
+    gain.connect(this.ctx.destination);
+
+    osc1.onended = () => this.cleanupNodes(osc1, osc2, gain);
+    osc1.start(now);
+    osc2.start(now);
+    osc1.stop(now + 0.38);
+    osc2.stop(now + 0.38);
+  }
+
+  playTravelWhoosh() {
+    if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
+    this.resumeContext();
+
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const filter = this.ctx.createBiquadFilter();
+    const gain = this.ctx.createGain();
+
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(180, now);
+    osc.frequency.exponentialRampToValueAtTime(480, now + 0.25);
+    osc.frequency.exponentialRampToValueAtTime(220, now + 0.55);
+
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(600, now);
+    filter.frequency.exponentialRampToValueAtTime(2800, now + 0.25);
+    filter.frequency.exponentialRampToValueAtTime(800, now + 0.55);
+
+    gain.gain.setValueAtTime(0.01, now);
+    gain.gain.linearRampToValueAtTime(0.28, now + 0.2);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
+
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.ctx.destination);
+
+    osc.onended = () => this.cleanupNodes(osc, filter, gain);
+    osc.start(now);
+    osc.stop(now + 0.55);
+  }
+
   playHorn() {
     if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
     this.resumeContext();

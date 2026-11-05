@@ -45,6 +45,8 @@ export class UIManager {
         this.showResultsModal(data);
       } else if (event === 'city_unlocked') {
         this.showToastUnlock(data);
+      } else if (event === 'crash_penalty') {
+        this.triggerCrashPenaltyUI(data.penalty);
       }
     });
   }
@@ -203,8 +205,8 @@ export class UIManager {
           <span>🏠</span>
         </button>
         <div class="map-header-center">
-          <h2 class="map-title" style="margin: 0; font-size: 1.35rem; color: #fffa65; letter-spacing: 1px;">TOUR DE FRANCE</h2>
-          <span class="map-stars-badge">★ ${totalStars} / ${CITIES.length * 3} ÉTOILES</span>
+          <h2 class="map-title" style="margin: 0; font-size: 1.35rem; color: #fffa65; letter-spacing: 1px;">GRAND TOUR D'EUROPE</h2>
+          <span class="map-stars-badge">★ ${totalStars} / ${CITIES.length * 3} ÉTOILES DU TOUR</span>
         </div>
         <div class="map-header-right">
           <button id="btn-map-garage" class="btn-round-action btn-garage-glow" title="Accéder au Garage">
@@ -216,202 +218,234 @@ export class UIManager {
         </div>
       </div>
 
-      <!-- Bandeau sélecteur rapide des 10 étapes du Tour -->
-      <div class="stages-carousel-bar">
-        ${CITIES.map((c, idx) => {
-          const isUnlocked = storage.isCityUnlocked(c.id);
-          const isSelected = this.selectedMapCity.id === c.id;
-          return `
-            <div class="stage-pill ${isUnlocked ? 'unlocked' : 'locked'} ${isSelected ? 'active' : ''}" data-city-id="${c.id}">
-              <span class="stage-num">${idx + 1}</span>
-              <span class="stage-emblem">${c.emblem || '📍'}</span>
-              <span class="stage-name">${c.name}</span>
-            </div>
-          `;
-        }).join('')}
-      </div>
+      <!-- CARTE D'EUROPE OCCIDENTALE HAUTE-FIDÉLITÉ, FLUIDE ET SCROLLABLE EN 2D -->
+      <div class="europe-map-scroll-viewport" id="europe-viewport">
+        <div class="europe-map-canvas-container" id="europe-canvas">
+          <svg class="europe-svg" viewBox="0 0 960 820" preserveAspectRatio="none">
+            <defs>
+              <!-- Dégradé de relief européen : Verts luxuriants, ocres et sommets -->
+              <linearGradient id="franceLuxury" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#1b4d3e" />
+                <stop offset="35%" stop-color="#163e32" />
+                <stop offset="70%" stop-color="#102e24" />
+                <stop offset="100%" stop-color="#0a1d17" />
+              </linearGradient>
 
-      <div class="france-map-svg-container" id="france-container">
-        <!-- SVG Cartographique Haute Fidélité : France Réaliste, Reliefs, Pays Frontaliers & Tracé Doré -->
-        <svg class="france-svg" viewBox="0 0 540 500" preserveAspectRatio="xMidYMid meet">
-          <defs>
-            <!-- Dégradé de la France : Vert forêt / émeraude stylisé prestige -->
-            <linearGradient id="franceLuxury" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#1b4d3e" />
-              <stop offset="40%" stop-color="#14362b" />
-              <stop offset="80%" stop-color="#0e231c" />
-              <stop offset="100%" stop-color="#081510" />
-            </linearGradient>
+              <!-- Dégradé des pays frontaliers -->
+              <linearGradient id="neighborCountryGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#182330" />
+                <stop offset="100%" stop-color="#0e1722" />
+              </linearGradient>
 
-            <!-- Dégradé de l'océan : Bleu nuit profond avec nuances côtières -->
-            <radialGradient id="oceanShading" cx="50%" cy="50%" r="75%">
-              <stop offset="0%" stop-color="#162b44" />
-              <stop offset="70%" stop-color="#0a1522" />
-              <stop offset="100%" stop-color="#050a10" />
-            </radialGradient>
+              <!-- Dégradé des océans et mers européennes -->
+              <radialGradient id="oceanShading" cx="50%" cy="50%" r="75%">
+                <stop offset="0%" stop-color="#12253a" />
+                <stop offset="65%" stop-color="#0a1522" />
+                <stop offset="100%" stop-color="#04090e" />
+              </radialGradient>
 
-            <filter id="glowTourRoute" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation="3.2" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
+              <!-- Filtre néon doré éclatant pour le tracé du Tour -->
+              <filter id="glowTourRoute" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="3.5" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
 
-            <filter id="coastalGlow" x="-10%" y="-10%" width="120%" height="120%">
-              <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#00cec9" flood-opacity="0.3" />
-            </filter>
-          </defs>
+              <!-- Halo côtier turquoise -->
+              <filter id="coastalGlow" x="-10%" y="-10%" width="120%" height="120%">
+                <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#00cec9" flood-opacity="0.35" />
+              </filter>
+            </defs>
 
-          <!-- Fond Océanique / Mer -->
-          <rect width="100%" height="100%" fill="url(#oceanShading)" />
+            <!-- Fond Océanique / Mers Européennes -->
+            <rect width="100%" height="100%" fill="url(#oceanShading)" />
 
-          <!-- Vagues et rides marines élégantes -->
-          <path d="M 30 330 Q 55 322 80 330 T 130 330" fill="none" stroke="#38ada9" stroke-width="1.2" opacity="0.35" />
-          <path d="M 50 380 Q 75 372 100 380 T 150 380" fill="none" stroke="#38ada9" stroke-width="1.2" opacity="0.3" />
-          <path d="M 320 465 Q 345 458 370 465 T 420 465" fill="none" stroke="#38ada9" stroke-width="1.2" opacity="0.35" />
-          <path d="M 140 85 Q 165 78 190 85 T 240 85" fill="none" stroke="#38ada9" stroke-width="1.2" opacity="0.3" />
+            <!-- Rides marines de l'Atlantique et Manche -->
+            <path d="M 60 480 Q 95 470 130 480 T 200 480" fill="none" stroke="#00cec9" stroke-width="1.4" opacity="0.25" />
+            <path d="M 120 220 Q 155 210 190 220 T 260 220" fill="none" stroke="#00cec9" stroke-width="1.4" opacity="0.25" />
+            <path d="M 520 740 Q 555 730 590 740 T 660 740" fill="none" stroke="#00cec9" stroke-width="1.4" opacity="0.25" />
 
-          <!-- Rose des sables / Boussole nautique stylisée dans l'Atlantique -->
-          <g transform="translate(65, 230) scale(0.65)" opacity="0.55">
-            <circle cx="0" cy="0" r="28" fill="none" stroke="#ffd700" stroke-width="1.2" stroke-dasharray="3,3" />
-            <polygon points="0,-34 6,-8 0,0 -6,-8" fill="#ffd700" />
-            <polygon points="0,34 6,8 0,0 -6,8" fill="#e17055" />
-            <polygon points="34,0 8,6 0,0 8,-6" fill="#a4b0be" />
-            <polygon points="-34,0 -8,6 0,0 -8,-6" fill="#a4b0be" />
-            <text x="-4" y="-38" fill="#ffd700" font-size="10" font-weight="900">N</text>
-          </g>
+            <!-- Rose des sables / Boussole nautique d'époque dans l'Atlantique -->
+            <g transform="translate(130, 430) scale(0.9)" opacity="0.6">
+              <circle cx="0" cy="0" r="34" fill="none" stroke="#ffd700" stroke-width="1.4" stroke-dasharray="4,4" />
+              <polygon points="0,-42 8,-10 0,0 -8,-10" fill="#ffd700" />
+              <polygon points="0,42 8,10 0,0 -8,10" fill="#e17055" />
+              <polygon points="42,0 10,8 0,0 10,-8" fill="#a4b0be" />
+              <polygon points="-42,0 -10,8 0,0 -10,-8" fill="#a4b0be" />
+              <text x="-5" y="-48" fill="#ffd700" font-size="12" font-weight="900">N</text>
+            </g>
 
-          <!-- PAYS FRONTALIERS RÉALISTES AVEC FRONTIÈRES ET DRAPEAUX -->
-          <!-- 1. ROYAUME-UNI (UK) / Angleterre au nord-ouest -->
-          <path class="border-country uk" d="
-            M 0 0 L 195 0
-            C 185 25, 175 40, 150 48
-            C 120 52, 90 42, 65 58
-            C 35 62, 15 50, 0 55 Z
-          " fill="#131922" stroke="#2c3e50" stroke-width="1.8" />
-          <text x="45" y="28" fill="#74b9ff" font-size="10" font-weight="900" letter-spacing="0.8">ROYAUME-UNI 🇬🇧</text>
+            <!-- ================= GÉOGRAPHIE RÉALISTE DE L'EUROPE OCCIDENTALE ================= -->
 
-          <!-- 2. BELGIQUE & LUXEMBOURG au nord-est -->
-          <path class="border-country belgique" d="
-            M 275 0 L 450 0 L 450 65
-            C 435 60, 420 70, 395 62
-            C 365 52, 330 45, 298 32
-            C 285 20, 280 5, 275 0 Z
-          " fill="#131922" stroke="#2c3e50" stroke-width="1.8" />
-          <text x="325" y="22" fill="#74b9ff" font-size="10" font-weight="900" letter-spacing="0.8">BELGIQUE 🇧🇪</text>
+            <!-- 1. ROYAUME-UNI (GRANDE-BRETAGNE / ANGLETERRE) AVEC LONDRES 🇬🇧 -->
+            <path class="country-uk" filter="url(#coastalGlow)" d="
+              M 160 30
+              C 220 25, 290 35, 340 50
+              C 380 65, 410 90, 430 130
+              C 435 155, 395 180, 360 185
+              C 320 190, 290 170, 250 180
+              C 210 190, 160 170, 120 180
+              C 90 160, 110 120, 130 90
+              C 145 70, 150 45, 160 30 Z
+            " fill="url(#neighborCountryGrad)" stroke="#38ada9" stroke-width="2.5" />
+            <text x="260" y="95" fill="#74b9ff" font-size="13" font-weight="900" letter-spacing="1.2">ROYAUME-UNI 🇬🇧</text>
+            <!-- Tamise (Thames) -->
+            <path d="M 280 145 Q 330 135 365 138 Q 400 135 425 142" fill="none" stroke="#00cec9" stroke-width="2.2" opacity="0.6" />
 
-          <!-- 3. ALLEMAGNE à l'est au-delà du Rhin -->
-          <path class="border-country allemagne" d="
-            M 450 65 L 540 65 L 540 185
-            C 505 180, 480 170, 465 145
-            C 455 125, 452 90, 450 65 Z
-          " fill="#131922" stroke="#2c3e50" stroke-width="1.8" />
-          <text x="450" y="115" fill="#74b9ff" font-size="10" font-weight="900" letter-spacing="0.8">ALLEMAGNE 🇩🇪</text>
+            <!-- 2. BELGIQUE & PAYS-BAS AVEC BRUXELLES 🇧🇪 -->
+            <path class="country-benelux" filter="url(#coastalGlow)" d="
+              M 480 95
+              C 520 85, 570 95, 600 115
+              C 625 135, 630 175, 615 205
+              C 590 230, 545 225, 510 220
+              C 485 200, 470 160, 465 130
+              C 460 110, 470 100, 480 95 Z
+            " fill="url(#neighborCountryGrad)" stroke="#38ada9" stroke-width="2.5" />
+            <text x="500" y="145" fill="#74b9ff" font-size="13" font-weight="900" letter-spacing="1">BELGIQUE 🇧🇪</text>
 
-          <!-- 4. SUISSE à l'est (Jura & Alpes) -->
-          <path class="border-country suisse" d="
-            M 465 185 L 540 185 L 540 265
-            C 515 260, 490 270, 460 255
-            C 440 245, 435 220, 450 195 Z
-          " fill="#131922" stroke="#2c3e50" stroke-width="1.8" />
-          <text x="456" y="215" fill="#74b9ff" font-size="10" font-weight="900" letter-spacing="0.8">SUISSE 🇨🇭</text>
+            <!-- 3. ALLEMAGNE AU-DELÀ DU RHIN 🇩🇪 -->
+            <path class="country-germany" filter="url(#coastalGlow)" d="
+              M 630 175
+              C 670 165, 750 170, 800 190
+              C 840 215, 870 270, 860 330
+              C 840 370, 780 380, 740 370
+              C 710 350, 690 300, 670 260
+              C 650 220, 640 190, 630 175 Z
+            " fill="url(#neighborCountryGrad)" stroke="#2c3e50" stroke-width="2.2" />
+            <text x="730" y="240" fill="#74b9ff" font-size="13" font-weight="900" letter-spacing="1.2">ALLEMAGNE 🇩🇪</text>
 
-          <!-- 5. ITALIE au sud-est (au-delà des Alpes) -->
-          <path class="border-country italie" d="
-            M 460 255 L 540 265 L 540 430
-            C 510 415, 475 390, 455 370
-            C 435 345, 442 300, 450 270 Z
-          " fill="#131922" stroke="#2c3e50" stroke-width="1.8" />
-          <text x="465" y="325" fill="#74b9ff" font-size="10" font-weight="900" letter-spacing="0.8">ITALIE 🇮🇹</text>
+            <!-- 4. SUISSE AVEC GENÈVE & ALPES 🇨🇭 -->
+            <path class="country-switzerland" filter="url(#coastalGlow)" d="
+              M 640 370
+              C 680 360, 740 370, 760 395
+              C 775 425, 760 460, 730 475
+              C 690 485, 640 475, 610 455
+              C 595 435, 610 390, 640 370 Z
+            " fill="url(#neighborCountryGrad)" stroke="#38ada9" stroke-width="2.4" />
+            <text x="655" y="420" fill="#74b9ff" font-size="13" font-weight="900" letter-spacing="1">SUISSE 🇨🇭</text>
+            <!-- Lac Léman -->
+            <ellipse cx="612" cy="438" rx="14" ry="7" fill="#00cec9" opacity="0.8" />
 
-          <!-- 6. ESPAGNE au sud (au-delà des Pyrénées) -->
-          <path class="border-country espagne" d="
-            M 85 455 L 375 455 L 375 500 L 0 500 L 0 455
-            C 35 452, 60 454, 85 455 Z
-          " fill="#131922" stroke="#2c3e50" stroke-width="1.8" />
-          <text x="175" y="482" fill="#74b9ff" font-size="10.5" font-weight="900" letter-spacing="1">ESPAGNE 🇪🇸</text>
+            <!-- 5. ITALIE DU NORD AVEC MILAN & PLAINE DU PÔ 🇮🇹 -->
+            <path class="country-italy" filter="url(#coastalGlow)" d="
+              M 730 475
+              C 770 465, 840 480, 890 515
+              C 920 545, 930 600, 910 655
+              C 880 700, 810 710, 760 670
+              C 720 630, 715 570, 710 525
+              C 715 500, 725 485, 730 475 Z
+            " fill="url(#neighborCountryGrad)" stroke="#38ada9" stroke-width="2.5" />
+            <text x="770" y="540" fill="#74b9ff" font-size="13.5" font-weight="900" letter-spacing="1.2">ITALIE 🇮🇹</text>
+            <!-- Fleuve Pô -->
+            <path d="M 725 515 Q 770 510 820 518 Q 870 525 905 530" fill="none" stroke="#00cec9" stroke-width="2.0" opacity="0.6" />
 
-          <!-- Mers et Océans : Typographie cartographique prestige -->
-          <text x="25" y="315" fill="#00cec9" font-size="9" font-weight="800" font-style="italic" opacity="0.75">OCÉAN ATLANTIQUE</text>
-          <text x="35" y="260" fill="#00cec9" font-size="8.5" font-weight="700" font-style="italic" opacity="0.65">GOLFE DE GASCOGNE</text>
-          <text x="110" y="80" fill="#00cec9" font-size="8.5" font-weight="700" font-style="italic" opacity="0.75">LA MANCHE</text>
-          <text x="325" y="455" fill="#00cec9" font-size="9" font-weight="800" font-style="italic" opacity="0.75">MER MÉDITERRANÉE</text>
+            <!-- 6. ESPAGNE & CATALOGNE AVEC BARCELONE 🇪🇸 -->
+            <path class="country-spain" filter="url(#coastalGlow)" d="
+              M 190 625
+              C 260 625, 340 635, 430 645
+              C 480 655, 520 700, 500 750
+              C 480 790, 420 815, 340 815
+              C 260 815, 180 810, 120 790
+              C 90 740, 130 660, 190 625 Z
+            " fill="url(#neighborCountryGrad)" stroke="#38ada9" stroke-width="2.5" />
+            <text x="270" y="730" fill="#74b9ff" font-size="14" font-weight="900" letter-spacing="1.5">ESPAGNE 🇪🇸</text>
 
-          <!-- Relief montagneux ombré (Pyrénées & Alpes) -->
-          <path d="M 370 240 Q 410 270 435 320 Q 400 360 380 395 Z" fill="#2d3436" opacity="0.65" />
-          <path d="M 125 430 Q 210 440 300 445 Q 235 420 145 425 Z" fill="#2d3436" opacity="0.65" />
+            <!-- 7. FRANCE MÉTROPOLITAINE HAUTE FIDÉLITÉ (COEUR DU GRAND TOUR) 🇫🇷 -->
+            <path class="france-mainland" filter="url(#coastalGlow)" d="
+              M 440 215
+              C 460 215, 490 225, 520 235
+              C 560 250, 600 240, 630 270
+              C 665 305, 680 330, 685 365
+              C 690 400, 655 435, 670 475
+              C 685 510, 650 545, 645 580
+              C 635 615, 660 655, 625 700
+              C 595 735, 550 755, 525 780
+              C 485 785, 440 770, 395 790
+              C 350 805, 300 785, 265 770
+              C 225 755, 210 705, 190 685
+              C 170 665, 120 635, 105 600
+              C 90 565, 110 525, 95 485
+              C 80 445, 60 430, 50 400
+              C 45 365, 80 345, 110 340
+              C 145 330, 175 350, 210 335
+              C 240 320, 255 295, 290 280
+              C 325 265, 350 225, 385 218
+              C 400 215, 420 215, 440 215 Z
+            " fill="url(#franceLuxury)" stroke="#00cec9" stroke-width="3.2" />
+            <text x="400" y="470" fill="#00cec9" font-size="17" font-weight="900" letter-spacing="3" opacity="0.45">FRANCE</text>
 
-          <!-- Fleuves majeurs réalistes (Seine, Loire, Rhône, Garonne) -->
-          <path d="M 230 40 Q 255 100 250 135 Q 230 160 170 120" fill="none" stroke="#00cec9" stroke-width="1.5" opacity="0.45" />
-          <path d="M 340 330 Q 320 280 260 240 Q 180 230 115 220" fill="none" stroke="#00cec9" stroke-width="1.5" opacity="0.45" />
-          <path d="M 425 240 Q 355 260 335 285 Q 340 350 345 405" fill="none" stroke="#00cec9" stroke-width="1.5" opacity="0.45" />
-          <path d="M 270 435 Q 235 375 140 320" fill="none" stroke="#00cec9" stroke-width="1.5" opacity="0.45" />
+            <!-- Île de Corse -->
+            <path d="M 680 680 C 695 670, 710 690, 705 735 C 690 770, 675 765, 665 730 Z"
+                  fill="url(#franceLuxury)" stroke="#00cec9" stroke-width="2.5" filter="url(#coastalGlow)" />
+            <text x="668" y="780" fill="#00cec9" font-size="10" font-weight="900">CORSE 🇫🇷</text>
 
-          <!-- CONTOUR GÉOGRAPHIQUE HAUTE FIDÉLITÉ DE LA FRANCE MÉTROPOLITAINE -->
-          <path class="france-mainland" filter="url(#coastalGlow)" d="
-            M 275 30
-            C 295 28, 325 36, 345 42
-            C 375 52, 400 45, 420 68
-            C 445 92, 455 110, 460 135
-            C 465 160, 440 185, 450 215
-            C 460 240, 435 265, 430 290
-            C 425 315, 440 345, 415 380
-            C 395 405, 365 420, 345 440
-            C 315 445, 285 435, 255 450
-            C 225 460, 190 445, 165 435
-            C 135 425, 125 385, 110 370
-            C 95 355, 60 335, 50 310
-            C 40 285, 55 255, 45 225
-            C 35 195, 20 185, 15 165
-            C 10 140, 35 125, 55 120
-            C 80 115, 100 130, 125 120
-            C 145 110, 155 90, 180 80
-            C 205 70, 220 40, 245 32
-            C 255 28, 265 30, 275 30 Z
-          " fill="url(#franceLuxury)" stroke="#00cec9" stroke-width="2.8" />
+            <!-- Reliefs montagneux ombrés réalistes (Pyrénées, Alpes, Massif Central) -->
+            <path d="M 230 630 Q 320 645 440 655 Q 350 625 240 625 Z" fill="#2d3436" opacity="0.8" /> <!-- Pyrénées -->
+            <path d="M 600 440 Q 660 480 690 550 Q 640 590 610 640 Q 580 570 595 490 Z" fill="#2d3436" opacity="0.8" /> <!-- Alpes -->
+            <path d="M 400 530 Q 470 560 480 630 Q 420 660 380 600 Z" fill="#222f3e" opacity="0.7" /> <!-- Massif Central -->
 
-          <!-- Île de Corse -->
-          <path d="M 450 395 C 460 390, 470 405, 465 435 C 455 460, 445 455, 440 430 Z"
-                fill="url(#franceLuxury)" stroke="#00cec9" stroke-width="2.2" filter="url(#coastalGlow)" />
-          <text x="444" y="468" fill="#00cec9" font-size="8.5" font-weight="900">CORSE</text>
+            <!-- Fleuves français majeurs (Seine, Loire, Rhône, Garonne, Rhin) -->
+            <path d="M 360 230 Q 400 310 390 355 Q 360 395 270 340" fill="none" stroke="#00cec9" stroke-width="2.0" opacity="0.5" />
+            <path d="M 530 610 Q 500 530 410 470 Q 290 455 190 440" fill="none" stroke="#00cec9" stroke-width="2.0" opacity="0.5" />
+            <path d="M 650 470 Q 550 500 520 540 Q 530 635 535 720" fill="none" stroke="#00cec9" stroke-width="2.0" opacity="0.5" />
+            <path d="M 420 765 Q 370 670 230 585" fill="none" stroke="#00cec9" stroke-width="2.0" opacity="0.5" />
+            <path d="M 640 370 Q 665 310 660 250" fill="none" stroke="#00cec9" stroke-width="2.0" opacity="0.5" />
 
-          <!-- Tracé Lumineux Officiel du Tour de France (Or Éclatant) -->
-          <path class="tour-route-glow" d="
-            M 270 140
-            L 360 275
-            L 395 240
-            L 430 260
-            L 290 360
-            L 365 420
-            L 460 390
-            L 150 325
-            L 120 160
-            L 470 140
-          " fill="none" stroke="#ffd700" stroke-width="3.5" stroke-dasharray="8,5" opacity="0.9" filter="url(#glowTourRoute)" />
-        </svg>
+            <!-- Tracé Lumineux Officiel du Grand Tour (Néon Or Éclatant) -->
+            <path class="tour-route-glow" d="
+              M 442 270
+              L 518 156
+              L 336 123
+              L 259 295
+              L 317 492
+              L 432 705
+              L 461 541
+              L 557 607
+              L 653 590
+              L 739 500
+              L 605 426
+              L 653 443
+              L 605 459
+              L 538 443
+              L 662 279
+              Z
+            " fill="none" stroke="#ffd700" stroke-width="4.2" stroke-dasharray="10,6" opacity="0.9" filter="url(#glowTourRoute)" />
+          </svg>
 
-        <!-- Pins interactifs des villes avec médaillons dorés 3D -->
-        ${CITIES.map((city, idx) => {
-          const unlocked = storage.isCityUnlocked(city.id);
-          const cityData = storage.getCityData(city.id);
-          const isSelected = this.selectedMapCity.id === city.id;
+          <!-- SVG Overlay pour ligne active animée lors des déplacements -->
+          <svg class="travel-line-overlay" viewBox="0 0 960 820" preserveAspectRatio="none">
+            <line id="travel-active-line" x1="0" y1="0" x2="0" y2="0" stroke="#ffd700" stroke-width="5" stroke-dasharray="10,7" opacity="0" filter="url(#glowTourRoute)" />
+          </svg>
 
-          return `
-            <div class="city-pin ${unlocked ? 'unlocked' : 'locked'} ${isSelected ? 'selected' : ''}"
-                 data-city-id="${city.id}"
-                 style="left: ${city.mapCoords.x}%; top: ${city.mapCoords.y}%;">
-              <div class="city-pulse-ring"></div>
-              <div class="city-pin-dot">
-                <span class="pin-badge-idx">${idx + 1}</span>
-                <span class="pin-emblem-icon">${unlocked ? (city.emblem || '★') : '🔒'}</span>
+          <!-- Jeton Motard Voyageur Animé se déplaçant d'une ville à une autre -->
+          <div class="moto-traveler" id="moto-traveler" style="left: 46%; top: 33%;">
+            <div class="moto-traveler-icon">🏍️</div>
+            <div class="moto-traveler-exhaust">💨</div>
+          </div>
+
+          <!-- Pins interactifs des 15 villes d'Europe avec médaillons 3D et drapeaux -->
+          ${CITIES.map((city, idx) => {
+            const unlocked = storage.isCityUnlocked(city.id);
+            const isSelected = this.selectedMapCity.id === city.id;
+
+            return `
+              <div class="city-pin ${unlocked ? 'unlocked' : 'locked'} ${isSelected ? 'selected' : ''}"
+                   data-city-id="${city.id}"
+                   style="left: ${city.mapCoords.x}%; top: ${city.mapCoords.y}%;">
+                <div class="city-pulse-ring"></div>
+                <div class="city-pin-dot">
+                  <span class="pin-badge-idx">${idx + 1}</span>
+                  <span class="pin-emblem-icon">${unlocked ? (city.countryFlag || city.emblem || '★') : '🔒'}</span>
+                </div>
+                <div class="city-pin-label">
+                  ${city.name}
+                </div>
               </div>
-              <div class="city-pin-label">
-                ${city.name}
-              </div>
-            </div>
-          `;
-        }).join('')}
+            `;
+          }).join('')}
+        </div>
       </div>
 
       <div class="city-detail-card" id="city-detail">
@@ -419,36 +453,77 @@ export class UIManager {
       </div>
     `;
 
-    // Événements sélection de ville sur la carte
+    // Gestion du déplacement et de la sélection de ville
     const pins = mapScreen.querySelectorAll('.city-pin');
     const updateSelection = (cityId) => {
       const city = CITIES.find(c => c.id === cityId);
-      if (city) {
-        soundManager.playClick();
-        this.selectedMapCity = city;
-        pins.forEach(p => p.classList.toggle('selected', p.getAttribute('data-city-id') === cityId));
-        
-        const pills = mapScreen.querySelectorAll('.stage-pill');
-        pills.forEach(p => p.classList.toggle('active', p.getAttribute('data-city-id') === cityId));
+      if (!city) return;
 
-        const targetPin = mapScreen.querySelector(`.city-pin[data-city-id="${cityId}"]`);
-        if (targetPin) this.triggerCityPinRipple(targetPin);
+      const previousCity = this.selectedMapCity;
+      soundManager.playClick();
 
-        this.updateCityDetail(mapScreen.querySelector('#city-detail'));
+      // Déclenchement de l'effet de déplacement animé si la ville est différente
+      if (previousCity && previousCity.id !== city.id) {
+        soundManager.playTravelWhoosh();
+
+        const traveler = mapScreen.querySelector('#moto-traveler');
+        const travelLine = mapScreen.querySelector('#travel-active-line');
+
+        if (traveler) {
+          const fromCoords = previousCity.mapCoords;
+          const toCoords = city.mapCoords;
+
+          // Calculer l'angle d'orientation de la moto vers la ville cible
+          const angle = Math.atan2(toCoords.y - fromCoords.y, toCoords.x - fromCoords.x) * (180 / Math.PI);
+          traveler.classList.add('traveling');
+          traveler.style.transform = `translate(-50%, -50%) rotate(${angle > 90 || angle < -90 ? '180deg scaleY(-1)' : `${angle}deg`})`;
+          traveler.style.left = `${toCoords.x}%`;
+          traveler.style.top = `${toCoords.y}%`;
+
+          // Tracer temporairement un trait lumineux doré actif
+          if (travelLine) {
+            travelLine.setAttribute('x1', (fromCoords.x / 100) * 960);
+            travelLine.setAttribute('y1', (fromCoords.y / 100) * 820);
+            travelLine.setAttribute('x2', (toCoords.x / 100) * 960);
+            travelLine.setAttribute('y2', (toCoords.y / 100) * 820);
+            travelLine.setAttribute('opacity', '1');
+            setTimeout(() => travelLine.setAttribute('opacity', '0'), 700);
+          }
+
+          setTimeout(() => {
+            traveler.classList.remove('traveling');
+            traveler.style.transform = 'translate(-50%, -50%) scale(1.2)';
+            setTimeout(() => traveler.style.transform = 'translate(-50%, -50%) scale(1)', 150);
+          }, 600);
+        }
       }
+
+      this.selectedMapCity = city;
+      pins.forEach(p => p.classList.toggle('selected', p.getAttribute('data-city-id') === cityId));
+
+      // Centrer automatiquement le viewport scrollable sur la ville sélectionnée
+      const viewport = mapScreen.querySelector('#europe-viewport');
+      if (viewport) {
+        const targetPxX = (city.mapCoords.x / 100) * 960;
+        const targetPxY = (city.mapCoords.y / 100) * 820;
+        viewport.scrollTo({
+          left: Math.max(0, Math.min(960 - viewport.clientWidth, targetPxX - viewport.clientWidth / 2)),
+          top: Math.max(0, Math.min(820 - viewport.clientHeight, targetPxY - viewport.clientHeight / 2)),
+          behavior: 'smooth'
+        });
+      }
+
+      const targetPin = mapScreen.querySelector(`.city-pin[data-city-id="${cityId}"]`);
+      if (targetPin) {
+        setTimeout(() => this.triggerCityPinRipple(targetPin), 300);
+      }
+
+      this.updateCityDetail(mapScreen.querySelector('#city-detail'));
     };
 
     pins.forEach(pin => {
       pin.addEventListener('click', () => {
         updateSelection(pin.getAttribute('data-city-id'));
-      });
-    });
-
-    // Événements sur la barre des étapes
-    const pills = mapScreen.querySelectorAll('.stage-pill');
-    pills.forEach(pill => {
-      pill.addEventListener('click', () => {
-        updateSelection(pill.getAttribute('data-city-id'));
       });
     });
 
@@ -468,6 +543,20 @@ export class UIManager {
 
     this.root.appendChild(mapScreen);
     this.updateCityDetail(mapScreen.querySelector('#city-detail'));
+
+    // Centrage initial de la vue sur la ville sélectionnée
+    setTimeout(() => {
+      const viewport = mapScreen.querySelector('#europe-viewport');
+      if (viewport && this.selectedMapCity) {
+        const targetPxX = (this.selectedMapCity.mapCoords.x / 100) * 960;
+        const targetPxY = (this.selectedMapCity.mapCoords.y / 100) * 820;
+        viewport.scrollTo({
+          left: Math.max(0, Math.min(960 - viewport.clientWidth, targetPxX - viewport.clientWidth / 2)),
+          top: Math.max(0, Math.min(820 - viewport.clientHeight, targetPxY - viewport.clientHeight / 2)),
+          behavior: 'auto'
+        });
+      }
+    }, 50);
   }
 
   triggerCityPinRipple(pinElement) {
@@ -490,9 +579,12 @@ export class UIManager {
     detailCard.innerHTML = `
       <div class="city-detail-header">
         <div>
-          <span class="city-detail-name">${city.emblem || '📍'} ${city.name}</span>
-          <span class="city-tag">ÉTAPE ${stageIndex} / 10 • ${city.typeTag || 'Étape du Tour'}</span>
-          <div style="font-size: 0.82rem; color: var(--text-muted); margin-top: 3px;">${city.subtitle}</div>
+          <span class="city-detail-name">${city.countryFlag || ''} ${city.name}</span>
+          <span class="city-tag">ÉTAPE ${stageIndex} / ${CITIES.length} • ${city.country || 'Europe'}</span>
+          <div style="font-size: 0.82rem; color: #fffa65; font-weight: 800; margin-top: 3px;">
+            🏛️ Monument : <strong>${city.monument || 'Monument Historique'}</strong>
+          </div>
+          <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 2px;">${city.subtitle}</div>
         </div>
         <div class="city-stars">${starsHtml}</div>
       </div>
@@ -530,14 +622,15 @@ export class UIManager {
   }
 
   triggerCityEntryCinematic(city) {
-    // Effet cinématique de zoom et distorsion lors de l'entrée dans la ville
+    // Effet cinématique de zoom et distorsion lors de l'entrée dans la ville avec monument
     const overlay = document.createElement('div');
     overlay.className = 'city-entry-transition';
     overlay.innerHTML = `
       <div class="city-entry-content">
-        <div class="entry-sub">BIENVENUE À</div>
-        <div class="entry-title">${city.name.toUpperCase()}</div>
-        <div class="entry-tagline">${city.subtitle}</div>
+        <div class="entry-sub">BIENVENUE EN ${city.country ? city.country.toUpperCase() : 'EUROPE'} • GRAND TOUR</div>
+        <div class="entry-title">${city.countryFlag || ''} ${city.name.toUpperCase()}</div>
+        <div class="entry-tagline" style="color: #ffd700; font-weight: 800; margin-top: 4px;">🏛️ ${city.monument || city.subtitle}</div>
+        <div style="font-size: 0.88rem; color: #ced6e0; margin-top: 4px;">${city.subtitle}</div>
       </div>
     `;
     this.root.appendChild(overlay);
@@ -943,6 +1036,36 @@ export class UIManager {
       } else {
         comboBadge.classList.remove('active');
       }
+    }
+  }
+
+  triggerCrashPenaltyUI(penalty) {
+    // 1. Flash d'impact rouge sang sur l'écran
+    const flash = document.createElement('div');
+    flash.className = 'hud-penalty-flash';
+    this.root.appendChild(flash);
+    setTimeout(() => flash.remove(), 450);
+
+    // 2. Pop-up pénalité de score rouge cartoon
+    const pop = document.createElement('div');
+    pop.className = 'hud-penalty-popup';
+    pop.innerHTML = `<span>💥 -${penalty} PTS !</span>`;
+    this.root.appendChild(pop);
+    setTimeout(() => pop.remove(), 1100);
+
+    // 3. Score clignotant rouge dans l'en-tête
+    const scoreVal = this.root.querySelector('#hud-score-val');
+    if (scoreVal) {
+      scoreVal.style.color = '#ff4757';
+      scoreVal.style.textShadow = '0 0 18px #ff4757';
+      scoreVal.style.transform = 'scale(1.28)';
+      setTimeout(() => {
+        if (scoreVal) {
+          scoreVal.style.color = '';
+          scoreVal.style.textShadow = '';
+          scoreVal.style.transform = '';
+        }
+      }, 550);
     }
   }
 

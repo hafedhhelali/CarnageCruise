@@ -57,10 +57,10 @@
 - Volume moteur adouci en un ronronnement agréable.
 
 ### ✅ 11. VERSIONNAGE COMPLET, CANAL BETA & GITHUB ACTIONS
-- **Canal officiel** : **BETA** (`1.2.3-beta`, Build 6).
+- **Canal officiel** : **BETA** (`1.2.4-beta`, Build 7).
 - **Intégration GitHub Actions consolidée** :
   - **1 seule exécution par push** (déclencheur unique `push: branches: [main]`, concurrency activée).
-  - **1 seul APK officiel** généré et publié : `Motormageddon-v1.2.3-beta-b6-debug.apk` (sans doublon).
+  - **1 seul APK officiel** généré et publié : `Motormageddon-v1.2.4-beta-b7-debug.apk` (sans doublon).
   - Extraction dynamique de la version depuis `version.json` dans GitHub Actions (`APP_VERSION`, `VERSION_CODE`, `CHANNEL`).
   - Nom d'artefact GitHub dynamique : `Motormageddon-v1.2.3-beta-b6-APK`.
   - Releases GitHub configurées en Pre-release (`prerelease: true`) marquées **[BETA]**.
@@ -105,3 +105,18 @@
 - **Amélioration Globale des Boutons et Textes** :
   - Retouche de `.btn-arcade`, `.btn-secondary`, `.btn-accent`, `.btn-ghost` : micro-relief, biseau intérieur, ombres portées douces, état `:active` dynamique (translation `translateY(2px)` + échelle amortie).
   - Typographie nette et lisible sans texte coupé.
+
+### ✅ 16. NOUVEAUTÉS DE LA VERSION 1.2.4-BETA
+- **Règle Stricte du Score à l'Arrêt** : Le score de conduite ne progresse sous aucun prétexte à l'arrêt ou lors du freinage.
+- **Pénalité de Score aux Chocs Véhicules (-350 PTS)** :
+  - Déduction immédiate de 350 pts sur le score en cas de collision avec un véhicule au carrefour.
+  - Flash écran rouge sang, pop-up animée `💥 -350 PTS !`, clignotement rouge du compteur et buzzer sonore de pénalité.
+- **Extension Internationale (15 Villes d'Europe)** :
+  - Ajout des capitales et métropoles frontalières : Bruxelles 🇧🇪, Londres 🇬🇧, Barcelone 🇪🇸, Milan 🇮🇹, Genève 🇨🇭.
+- **Carte d'Europe Scrollable en 2D & Nettoyage** :
+  - Suppression du bandeau supérieur des villes.
+  - Viewport panoramique scrollable et tactile avec centrage automatique sur l'étape choisie.
+- **Effet de Déplacement Animé de Ville en Ville** :
+  - Jeton motard voyageur filant sur la carte avec traînée d'échappement, trait néon actif et bruitage d'accélération.
+- **Monuments 3D Réalistes dans Chaque Ville** :
+  - Tour Eiffel, Arc de Triomphe, Big Ben, Atomium, Sagrada Família, Duomo de Milan, Jet d'Eau de Genève, etc. modélisés en 3D cartoon dans la scène de course.
