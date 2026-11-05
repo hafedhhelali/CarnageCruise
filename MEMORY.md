@@ -133,3 +133,11 @@
   - Klaxon industriel de chantier ultra-lourd (`playSteamrollerHorn()`).
 - **Conformité & Éthique Stores Mobiles** :
   - Remplacement de l'arme à feu par la cravache équestre et le compresseur de chantier pour respecter strictement les directives Google Play / App Store (rejet des armes à feu réelles ciblant des piétons).
+
+### ✅ 18. NOUVEAUTÉS DE LA VERSION 1.2.6-BETA (REFONTE GRAPHIQUE & ARCHITECTURALE)
+- **Rendu Three.js sRGB & ACES Filmic Tone Mapping** : Couleurs vives, saturées et éclatantes sans pâleur. Éclairage hémisphérique bicolore et lumière de contre-jour (rim light) cyan cartoon.
+- **Piétons Expressifs & Visages Complets** : Yeux blancs et pupilles noires brillantes, sourcils articulés, bouche s'ouvrant en grand cri lors de la panique, regard terrifié en arrière et halo d'étoiles de vertige (dizzy stars) à l'impact.
+- **VFX Cartoon Nouvelle Génération & Zéro Fuite Mémoire** : Pooling strict de géométries et matériaux partagés dans `Particles.js`. Ondes de choc circulaires (`shockwave rings`), volutes de fumée d'échappement volumétriques et fumée de dérapage de pneus au freinage (`spawnSkidSmoke`).
+- **Décors Urbains & Architecture Vivante** : Fenêtres d'immeubles illuminées, balcons en fer forgé haussmanniens, arbres étagés multi-sphères, colonnes Morris parisiennes et réverbères éclatants.
+- **Boutons 3D Arcade & UI Polie** : Boutons de borne d'arcade japonaise avec biseau lumineux, micro-ressort haptique et barre de progression à scintillement dynamique (shimmer).
+

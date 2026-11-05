@@ -596,19 +596,22 @@ export class Environment {
     let currentZ = -this.chunkLength / 2;
 
     const buildingMatPalette = this.cityTheme.buildingColors.map(c =>
-      new THREE.MeshToonMaterial({ color: c })
+      new THREE.MeshToonMaterial({ color: c, roughness: 0.4 })
     );
-    const roofMat = new THREE.MeshToonMaterial({ color: this.cityTheme.roofColor });
-    const windowMat = new THREE.MeshBasicMaterial({ color: 0x22313f });
+    const roofMat = new THREE.MeshToonMaterial({ color: this.cityTheme.roofColor, roughness: 0.3 });
+    const darkWinMat = new THREE.MeshBasicMaterial({ color: 0x1e272e });
+    const litWinMat = new THREE.MeshBasicMaterial({ color: 0xfff2a3 }); // Fenêtres chaleureuses illuminées
+    const balconyMat = new THREE.MeshToonMaterial({ color: 0x2d3436, metalness: 0.5 });
     const awningMats = [
       new THREE.MeshToonMaterial({ color: 0xc0392b }),
       new THREE.MeshToonMaterial({ color: 0x27ae60 }),
-      new THREE.MeshToonMaterial({ color: 0x2980b9 })
+      new THREE.MeshToonMaterial({ color: 0x2980b9 }),
+      new THREE.MeshToonMaterial({ color: 0xf39c12 })
     ];
 
     while (currentZ < this.chunkLength / 2) {
-      const bWidth = 8.0 + Math.random() * 5.0;
-      const bHeight = 12.0 + Math.random() * 14.0;
+      const bWidth = 8.5 + Math.random() * 5.0;
+      const bHeight = 13.0 + Math.random() * 14.0;
       const bDepth = 10.0;
 
       const randomMat = buildingMatPalette[Math.floor(Math.random() * buildingMatPalette.length)];
@@ -618,36 +621,47 @@ export class Environment {
       bMesh.castShadow = true;
       chunk.add(bMesh);
 
+      // Toiture haussmannienne zinc ou classique
       if (this.cityTheme.id === 'paris') {
-        const roofGeo = new THREE.BoxGeometry(bDepth * 0.9, 2.5, bWidth);
+        const roofGeo = new THREE.BoxGeometry(bDepth * 0.92, 2.8, bWidth);
         const roof = new THREE.Mesh(roofGeo, roofMat);
-        roof.position.set(xBase + side * (bDepth / 2), bHeight + 1.25, currentZ + bWidth / 2);
+        roof.position.set(xBase + side * (bDepth / 2), bHeight + 1.4, currentZ + bWidth / 2);
         chunk.add(roof);
       } else {
-        const roofGeo = new THREE.BoxGeometry(bDepth + 0.4, 0.6, bWidth + 0.4);
+        const roofGeo = new THREE.BoxGeometry(bDepth + 0.4, 0.7, bWidth + 0.4);
         const roof = new THREE.Mesh(roofGeo, roofMat);
-        roof.position.set(xBase + side * (bDepth / 2), bHeight + 0.3, currentZ + bWidth / 2);
+        roof.position.set(xBase + side * (bDepth / 2), bHeight + 0.35, currentZ + bWidth / 2);
         chunk.add(roof);
       }
 
-      // Fenêtres
+      // Fenêtres vivantes (alternance jour/nuit avec lumières d'intérieur) et balcons en fer forgé
       const floors = Math.floor(bHeight / 3.2);
       for (let f = 1; f < floors; f++) {
         const winY = f * 3.2;
+        const hasBalcony = (f === 2 || f === 4); // Étage noble haussmannien
+
         for (let w = -bWidth / 2 + 1.8; w < bWidth / 2 - 1.0; w += 2.6) {
-          const win = new THREE.Mesh(new THREE.BoxGeometry(0.1, 1.4, 1.0), windowMat);
-          win.position.set(xBase - side * 0.05, winY, currentZ + bWidth / 2 + w);
+          const isLit = Math.random() < 0.45;
+          const win = new THREE.Mesh(new THREE.BoxGeometry(0.12, 1.45, 1.05), isLit ? litWinMat : darkWinMat);
+          win.position.set(xBase - side * 0.06, winY, currentZ + bWidth / 2 + w);
           chunk.add(win);
+
+          // Garde-corps de balcon stylisé
+          if (hasBalcony) {
+            const balc = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.5, 1.25), balconyMat);
+            balc.position.set(xBase - side * 0.18, winY - 0.5, currentZ + bWidth / 2 + w);
+            chunk.add(balc);
+          }
         }
       }
 
-      // Store banne
-      if (Math.random() < 0.65) {
+      // Store banne de bistrot ou boutique
+      if (Math.random() < 0.7) {
         const awningMat = awningMats[Math.floor(Math.random() * awningMats.length)];
-        const awningGeo = new THREE.BoxGeometry(1.6, 0.3, bWidth * 0.7);
+        const awningGeo = new THREE.BoxGeometry(1.8, 0.35, bWidth * 0.75);
         const awning = new THREE.Mesh(awningGeo, awningMat);
         awning.rotation.z = side * 0.35;
-        awning.position.set(xBase - side * 0.6, 3.2, currentZ + bWidth / 2);
+        awning.position.set(xBase - side * 0.7, 3.2, currentZ + bWidth / 2);
         chunk.add(awning);
       }
 
@@ -657,7 +671,8 @@ export class Environment {
 
   populateStreetProps(chunk) {
     const isRiviera = (this.cityTheme.id === 'nice' || this.cityTheme.id === 'marseille');
-    const foliageMat = new THREE.MeshToonMaterial({ color: isRiviera ? 0x2e7d32 : 0x388e3c });
+    const foliageMat1 = new THREE.MeshToonMaterial({ color: isRiviera ? 0x27ae60 : 0x2ecc71 });
+    const foliageMat2 = new THREE.MeshToonMaterial({ color: isRiviera ? 0x1e8449 : 0x27ae60 });
     const woodMat = new THREE.MeshToonMaterial({ color: 0x5d4037 });
     const lampMat = new THREE.MeshToonMaterial({ color: 0x263238 });
     const glowMat = new THREE.MeshBasicMaterial({ color: 0xfffae6 });
@@ -669,7 +684,7 @@ export class Environment {
       const side = (idx % 2 === 0 ? 1 : -1);
       const xSidewalk = side * 5.2;
 
-      // Réverbère
+      // Réverbère parisien avec lanterne brillante
       const lamp = new THREE.Group();
       lamp.position.set(side * 4.6, 0, z);
 
@@ -682,7 +697,7 @@ export class Environment {
       lamp.add(bulb);
       chunk.add(lamp);
 
-      // Végétation
+      // Végétation volumétrique riche
       if (idx % 2 === 1) {
         if (isRiviera) {
           const palm = new THREE.Group();
@@ -693,7 +708,7 @@ export class Environment {
           palm.add(trunk);
 
           for (let l = 0; l < 6; l++) {
-            const leaf = new THREE.Mesh(this.sharedGeos.palmLeaf, foliageMat);
+            const leaf = new THREE.Mesh(this.sharedGeos.palmLeaf, foliageMat1);
             leaf.position.set(0, 4.0, 0);
             leaf.rotation.y = (l * Math.PI) / 3;
             leaf.rotation.z = 0.55;
@@ -701,6 +716,7 @@ export class Environment {
           }
           chunk.add(palm);
         } else {
+          // Arbre étagé touffu cartoon (multi-sphères volumétriques)
           const tree = new THREE.Group();
           tree.position.set(xSidewalk, 0, z + 5);
 
@@ -708,14 +724,18 @@ export class Environment {
           trunk.position.y = 0.9;
           tree.add(trunk);
 
-          const foliage = new THREE.Mesh(this.sharedGeos.treeFoliage, foliageMat);
-          foliage.position.y = 2.4;
-          tree.add(foliage);
+          const fol1 = new THREE.Mesh(this.sharedGeos.treeFoliage, foliageMat1);
+          fol1.position.set(0, 2.3, 0);
+          const fol2 = new THREE.Mesh(this.sharedGeos.treeFoliage, foliageMat2);
+          fol2.scale.set(0.85, 0.85, 0.85);
+          fol2.position.set(0.3, 2.8, -0.2);
+          tree.add(fol1, fol2);
+
           chunk.add(tree);
         }
       }
 
-      // Terrasse
+      // Terrasse de bistrot
       if (idx === 0) {
         const terrace = new THREE.Group();
         terrace.position.set(xSidewalk + side * 0.4, 0, z + 2);
@@ -738,11 +758,19 @@ export class Environment {
         chunk.add(terrace);
       }
 
-      // Boîte aux lettres
+      // Colonne Morris ou boîte aux lettres
       if (idx === 2) {
-        const mb = new THREE.Mesh(this.sharedGeos.mailbox, yellowMat);
-        mb.position.set(side * 4.9, 0.45, z - 3);
-        chunk.add(mb);
+        // Colonne Morris parisienne
+        const morris = new THREE.Group();
+        morris.position.set(side * 4.9, 0, z - 3);
+        const colBase = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.4, 0.4, 12), lampMat);
+        colBase.position.y = 0.2;
+        const colBody = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 2.0, 12), new THREE.MeshBasicMaterial({ color: 0x006266 }));
+        colBody.position.y = 1.4;
+        const colRoof = new THREE.Mesh(new THREE.ConeGeometry(0.42, 0.6, 12), lampMat);
+        colRoof.position.y = 2.7;
+        morris.add(colBase, colBody, colRoof);
+        chunk.add(morris);
       }
     });
   }

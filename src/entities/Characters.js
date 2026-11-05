@@ -1,7 +1,8 @@
 /**
- * Motormageddon - Système de Personnages 3D Cartoon Haute Définition
- * Piétons détaillés (Enfants, Vieux, Femmes, Hommes), animations de marche expressives,
- * et IA de fuite paniquée : quand la moto approche, ils crient, agitent les bras et tentent de s'enfuir vers le trottoir !
+ * Motormageddon - Système de Personnages 3D Cartoon Haute Définition (Graphismes & Animations Experts)
+ * Piétons vivants et expressifs : Yeux cartoon brillants, bouches animées (cri de terreur), sourcils expressifs,
+ * démarches uniques, IA de panique hystérique (bras moulinant en l'air, tête jetée en arrière vers la moto),
+ * et voltige burlesque avec étoiles de vertige tournantes (dizzy stars) à l'impact.
  */
 
 import * as THREE from 'three';
@@ -24,9 +25,9 @@ export const CHARACTER_TYPES = [
     name: 'Parisienne Chic',
     category: 'woman',
     points: 170,
-    bodyColor: 0xe84393, // Chemisier fuchsia
+    bodyColor: 0xe84393, // Chemisier fuchsia éclatant
     pantsColor: 0x2d3436, // Jupe/pantalon chic
-    hatColor: 0xfdcb6e,  // Chapeau de paille / coiffure dorée
+    hatColor: 0xfdcb6e,  // Coiffure dorée stylée
     hasHandbag: true,
     scale: 0.96,
     speed: 1.1
@@ -36,9 +37,9 @@ export const CHARACTER_TYPES = [
     name: 'Papy et sa Canne',
     category: 'elderly',
     points: 160,
-    bodyColor: 0x795548, // Tweed marron
+    bodyColor: 0x795548, // Veste tweed marron
     pantsColor: 0x4e342e,
-    hatColor: 0x424242,  // Casquette feutre
+    hatColor: 0x576574,  // Casquette feutre
     hasCane: true,
     scale: 0.9,
     speed: 0.65
@@ -50,7 +51,7 @@ export const CHARACTER_TYPES = [
     points: 210,
     bodyColor: 0x0984e3, // T-shirt bleu vif
     pantsColor: 0xff7675, // Short corail
-    hatColor: 0xff4757,  // Casquette à l'envers
+    hatColor: 0xff4757,  // Casquette rouge à l'envers
     hasScooter: true,
     scale: 0.78,
     speed: 2.2
@@ -60,8 +61,8 @@ export const CHARACTER_TYPES = [
     name: 'Parent & Poussette',
     category: 'child',
     points: 240,
-    bodyColor: 0x16a085, // Veste turquoise
-    pantsColor: 0x2c3e50,
+    bodyColor: 0x10ac84, // Parka turquoise
+    pantsColor: 0x222f3e,
     hatColor: null,
     hasStroller: true,
     scale: 1.0,
@@ -74,7 +75,7 @@ export const CHARACTER_TYPES = [
     points: 150,
     bodyColor: 0x8e44ad, // Cardigan violet
     pantsColor: 0x6c5ce7,
-    hatColor: 0xbdc3c7,  // Chignon argenté
+    hatColor: 0xc8d6e5,  // Chignon gris perle
     hasCaddy: true,
     scale: 0.88,
     speed: 0.6
@@ -84,9 +85,9 @@ export const CHARACTER_TYPES = [
     name: 'Touriste Flâneuse',
     category: 'woman',
     points: 130,
-    bodyColor: 0x00cec9, // Robe estivale turquoise
-    pantsColor: 0x55efc4,
-    hatColor: 0xff7675,
+    bodyColor: 0x00d2d3, // Robe menthe
+    pantsColor: 0x1dd1a1,
+    hatColor: 0xff9ff3,
     hasCamera: true,
     scale: 0.94,
     speed: 0.85
@@ -98,10 +99,9 @@ export const CHARACTER_TYPES = [
     points: 180,
     bodyColor: 0x1e272e,
     pantsColor: 0x1e272e,
-    tieColor: 0xe74c3c,
-    hasBriefcase: true,
-    scale: 1.05,
-    speed: 1.8
+    tieColor: 0xff3838,
+    scale: 1.02,
+    speed: 1.45
   },
   {
     type: 'waiter',
@@ -139,7 +139,7 @@ export class CharacterSystem {
     this.initPool();
   }
 
-  getMaterial(color, roughness = 0.4) {
+  getMaterial(color, roughness = 0.35) {
     const key = `${color}_${roughness}`;
     if (!this.materialsCache[key]) {
       this.materialsCache[key] = new THREE.MeshToonMaterial({
@@ -151,102 +151,135 @@ export class CharacterSystem {
   }
 
   initPool() {
-    const skinMat = this.getMaterial(0xffdbac);
-    const shoeMat = this.getMaterial(0x1e272e);
+    const skinMat = this.getMaterial(0xffdbac, 0.4);
+    const shoeMat = this.getMaterial(0x1e272e, 0.5);
+    const eyeWhiteMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    const eyePupilMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
+    const mouthMat = new THREE.MeshBasicMaterial({ color: 0x8b0000 });
+    const starGoldMat = new THREE.MeshBasicMaterial({ color: 0xffd32a });
 
     for (let i = 0; i < this.poolSize; i++) {
       const typeDef = CHARACTER_TYPES[i % CHARACTER_TYPES.length];
       const charGroup = new THREE.Group();
       charGroup.scale.setScalar(typeDef.scale);
 
-      // 1. Torse et vêtements
-      const torsoGeo = new THREE.BoxGeometry(0.36, 0.48, 0.24);
+      // 1. Torse cartoon stylisé
+      const torsoGeo = new THREE.BoxGeometry(0.38, 0.48, 0.25);
       const torsoMat = this.getMaterial(typeDef.bodyColor);
       const torso = new THREE.Mesh(torsoGeo, torsoMat);
       torso.position.y = 0.88;
       torso.castShadow = true;
       charGroup.add(torso);
 
-      // Détails torse (Gilet garçon de café, cravate trader, col)
+      // Détails torse (gilet, cravate rouge, col)
       if (typeDef.hasTray) {
-        const vestGeo = new THREE.BoxGeometry(0.38, 0.44, 0.25);
+        const vestGeo = new THREE.BoxGeometry(0.40, 0.45, 0.27);
         const vest = new THREE.Mesh(vestGeo, this.getMaterial(typeDef.vestColor));
         vest.position.y = 0.86;
         charGroup.add(vest);
       } else if (typeDef.tieColor) {
-        const tieGeo = new THREE.BoxGeometry(0.08, 0.32, 0.04);
+        const tieGeo = new THREE.BoxGeometry(0.09, 0.34, 0.04);
         const tie = new THREE.Mesh(tieGeo, this.getMaterial(typeDef.tieColor));
-        tie.position.set(0, 0.88, 0.13);
+        tie.position.set(0, 0.88, 0.14);
         charGroup.add(tie);
       }
 
-      // 2. Tête détaillée et coiffure
+      // 2. Tête cartoon expressive avec traits complets
       const headGroup = new THREE.Group();
       headGroup.position.y = 1.30;
 
-      const headGeo = new THREE.SphereGeometry(0.17, 12, 10);
+      const headGeo = new THREE.SphereGeometry(0.18, 12, 10);
       const head = new THREE.Mesh(headGeo, skinMat);
       headGroup.add(head);
 
-      // Chapeaux, chignons et coiffures selon le type
+      // Coiffure ou couvre-chef
       if (typeDef.hatColor) {
         if (typeDef.hasCane) {
-          // Casquette feutre de grand-père
+          // Casquette feutre papy
           const capGeo = new THREE.CylinderGeometry(0.23, 0.19, 0.08, 12);
           const cap = new THREE.Mesh(capGeo, this.getMaterial(typeDef.hatColor));
-          cap.position.y = 0.13;
+          cap.position.y = 0.14;
           headGroup.add(cap);
-
-          // Visière
-          const visorGeo = new THREE.BoxGeometry(0.24, 0.03, 0.12);
+          const visorGeo = new THREE.BoxGeometry(0.24, 0.03, 0.13);
           const visor = new THREE.Mesh(visorGeo, this.getMaterial(typeDef.hatColor));
-          visor.position.set(0, 0.1, 0.14);
+          visor.position.set(0, 0.11, 0.15);
           headGroup.add(visor);
         } else if (typeDef.hasScooter) {
-          // Casquette à l'envers d'enfant
-          const capGeo = new THREE.SphereGeometry(0.18, 10, 8, 0, Math.PI * 2, 0, Math.PI / 2);
+          // Casquette enfant à l'envers
+          const capGeo = new THREE.SphereGeometry(0.19, 10, 8, 0, Math.PI * 2, 0, Math.PI / 2);
           const cap = new THREE.Mesh(capGeo, this.getMaterial(typeDef.hatColor));
-          cap.position.y = 0.04;
+          cap.position.y = 0.05;
           headGroup.add(cap);
         } else if (typeDef.hasHandbag) {
-          // Chevelure volumineuse femme chic
-          const hairGeo = new THREE.SphereGeometry(0.20, 10, 8);
+          // Chevelure volumineuse stylée
+          const hairGeo = new THREE.SphereGeometry(0.21, 10, 8);
           const hair = new THREE.Mesh(hairGeo, this.getMaterial(typeDef.hatColor));
-          hair.position.set(0, 0.03, -0.04);
+          hair.position.set(0, 0.04, -0.04);
           headGroup.add(hair);
         } else if (typeDef.hasBaguette) {
-          // Béret classique parisien penché
-          const beretGeo = new THREE.CylinderGeometry(0.23, 0.17, 0.07, 12);
+          // Béret parisien penché
+          const beretGeo = new THREE.CylinderGeometry(0.24, 0.18, 0.07, 12);
           const beret = new THREE.Mesh(beretGeo, this.getMaterial(typeDef.hatColor));
-          beret.position.set(0.04, 0.15, 0);
-          beret.rotation.z = 0.15;
+          beret.position.set(0.04, 0.16, 0);
+          beret.rotation.z = 0.16;
           headGroup.add(beret);
         } else if (typeDef.hasCaddy) {
           // Chignon mamie
-          const bunGeo = new THREE.SphereGeometry(0.1, 8, 8);
+          const bunGeo = new THREE.SphereGeometry(0.11, 8, 8);
           const bun = new THREE.Mesh(bunGeo, this.getMaterial(typeDef.hatColor));
-          bun.position.set(0, 0.15, -0.12);
+          bun.position.set(0, 0.16, -0.13);
           headGroup.add(bun);
         }
       }
 
-      // Yeux expressifs avec bouche cartoon
-      const eyeMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
-      const eyeGeo = new THREE.SphereGeometry(0.032, 6, 6);
-      const eyeL = new THREE.Mesh(eyeGeo, eyeMat);
-      eyeL.position.set(-0.065, 0.02, 0.15);
-      const eyeR = eyeL.clone();
-      eyeR.position.set(0.065, 0.02, 0.15);
-      headGroup.add(eyeL);
-      headGroup.add(eyeR);
+      // --- VISAGE EXPRESSIF CARTOON ---
+      // Yeux blancs avec reflets
+      const eyeGeo = new THREE.SphereGeometry(0.045, 8, 8);
+      const pupilGeo = new THREE.SphereGeometry(0.024, 6, 6);
 
-      // Petite bouche ouverte comique (qui s'ouvre en cri lors de la panique)
-      const mouthGeo = new THREE.SphereGeometry(0.028, 6, 6);
-      const mouthMat = new THREE.MeshBasicMaterial({ color: 0x990000 });
+      const eyeL = new THREE.Mesh(eyeGeo, eyeWhiteMat);
+      eyeL.position.set(-0.065, 0.03, 0.16);
+      eyeL.scale.set(1.0, 1.25, 0.6);
+      const pupilL = new THREE.Mesh(pupilGeo, eyePupilMat);
+      pupilL.position.set(-0.065, 0.03, 0.19);
+      headGroup.add(eyeL, pupilL);
+
+      const eyeR = new THREE.Mesh(eyeGeo, eyeWhiteMat);
+      eyeR.position.set(0.065, 0.03, 0.16);
+      eyeR.scale.set(1.0, 1.25, 0.6);
+      const pupilR = new THREE.Mesh(pupilGeo, eyePupilMat);
+      pupilR.position.set(0.065, 0.03, 0.19);
+      headGroup.add(eyeR, pupilR);
+
+      // Sourcils expressifs
+      const browGeo = new THREE.BoxGeometry(0.07, 0.02, 0.03);
+      const browMat = this.getMaterial(0x2f3640);
+      const browL = new THREE.Mesh(browGeo, browMat);
+      browL.position.set(-0.065, 0.09, 0.16);
+      browL.rotation.z = -0.15;
+      const browR = new THREE.Mesh(browGeo, browMat);
+      browR.position.set(0.065, 0.09, 0.16);
+      browR.rotation.z = 0.15;
+      headGroup.add(browL, browR);
+
+      // Bouche animée (s'ouvre en grand cri "O" lors de la panique)
+      const mouthGeo = new THREE.SphereGeometry(0.035, 8, 8);
       const mouth = new THREE.Mesh(mouthGeo, mouthMat);
-      mouth.position.set(0, -0.06, 0.14);
-      mouth.scale.set(1.2, 0.8, 0.6);
+      mouth.position.set(0, -0.06, 0.16);
+      mouth.scale.set(1.1, 0.6, 0.5);
       headGroup.add(mouth);
+
+      // Étoiles de vertige (Dizzy Stars) au-dessus de la tête lors de l'envol
+      const dizzyGroup = new THREE.Group();
+      dizzyGroup.position.set(0, 0.32, 0);
+      dizzyGroup.visible = false;
+      for (let s = 0; s < 3; s++) {
+        const star = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.1, 4), starGoldMat);
+        const ang = (s / 3) * Math.PI * 2;
+        star.position.set(Math.cos(ang) * 0.25, 0, Math.sin(ang) * 0.25);
+        dizzyGroup.add(star);
+      }
+      headGroup.add(dizzyGroup);
 
       charGroup.add(headGroup);
 
@@ -275,13 +308,13 @@ export class CharacterSystem {
       legRGroup.add(shoeR);
       charGroup.add(legRGroup);
 
-      // 4. Bras articulés
+      // 4. Bras articulés avec mains
       const armLGroup = new THREE.Group();
       armLGroup.position.set(-0.25, 1.05, 0);
       const armLMesh = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.42, 0.11), torsoMat);
       armLMesh.position.y = -0.21;
       armLGroup.add(armLMesh);
-      const handL = new THREE.Mesh(new THREE.SphereGeometry(0.055, 6, 6), skinMat);
+      const handL = new THREE.Mesh(new THREE.SphereGeometry(0.06, 6, 6), skinMat);
       handL.position.y = -0.42;
       armLGroup.add(handL);
       charGroup.add(armLGroup);
@@ -291,138 +324,129 @@ export class CharacterSystem {
       const armRMesh = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.42, 0.11), torsoMat);
       armRMesh.position.y = -0.21;
       armRGroup.add(armRMesh);
-      const handR = new THREE.Mesh(new THREE.SphereGeometry(0.055, 6, 6), skinMat);
+      const handR = new THREE.Mesh(new THREE.SphereGeometry(0.06, 6, 6), skinMat);
       handR.position.y = -0.42;
       armRGroup.add(handR);
       charGroup.add(armRGroup);
 
-      // 5. Accessoires 3D spécifiques
+      // 5. Accessoires 3D
       let propMesh = null;
       if (typeDef.hasCane) {
-        // Canne de marche courbée
         const caneGeo = new THREE.CylinderGeometry(0.025, 0.025, 0.85, 6);
         propMesh = new THREE.Mesh(caneGeo, this.getMaterial(0x4e342e));
         propMesh.position.set(0.28, 0.45, 0.22);
         charGroup.add(propMesh);
       } else if (typeDef.hasScooter) {
-        // Trottinette sous l'enfant
         const scGroup = new THREE.Group();
         const deck = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.04, 0.75), this.getMaterial(0xff4757));
         deck.position.set(0, 0.05, 0);
         scGroup.add(deck);
-
         const tBar = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.65, 6), this.getMaterial(0xdcdde1));
         tBar.position.set(0, 0.35, 0.32);
         scGroup.add(tBar);
         charGroup.add(scGroup);
         propMesh = scGroup;
       } else if (typeDef.hasHandbag) {
-        // Sac à main stylé
-        const bagGeo = new THREE.BoxGeometry(0.18, 0.18, 0.08);
-        propMesh = new THREE.Mesh(bagGeo, this.getMaterial(0x2d3436));
-        propMesh.position.set(0.32, 0.55, 0.05);
+        const bagGeo = new THREE.BoxGeometry(0.14, 0.18, 0.08);
+        propMesh = new THREE.Mesh(bagGeo, this.getMaterial(0x6c5ce7));
+        propMesh.position.set(0.28, 0.65, 0.08);
         charGroup.add(propMesh);
-      } else if (typeDef.hasStroller) {
-        // Poussette de bébé 3D
-        const strollerGroup = new THREE.Group();
-        strollerGroup.position.set(0, 0, 0.75);
-        const frameMat = this.getMaterial(0x34495e);
-
-        const basin = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.42, 0.85), this.getMaterial(0x0984e3));
-        basin.position.y = 0.48;
-        strollerGroup.add(basin);
-
-        const hood = new THREE.Mesh(new THREE.SphereGeometry(0.35, 8, 8, 0, Math.PI * 2, 0, Math.PI / 2), this.getMaterial(0x00cec9));
-        hood.position.set(0, 0.65, 0.2);
-        strollerGroup.add(hood);
-
-        // Bébé cartoon visible dans la poussette
-        const babyHead = new THREE.Mesh(new THREE.SphereGeometry(0.13, 8, 8), skinMat);
-        babyHead.position.set(0, 0.58, 0.12);
-        strollerGroup.add(babyHead);
-
-        // 4 Roues de la poussette
-        const wMat = this.getMaterial(0x111111);
-        [[-0.35, 0.14, -0.32], [0.35, 0.14, -0.32], [-0.35, 0.14, 0.32], [0.35, 0.14, 0.32]].forEach(p => {
-          const w = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 0.06, 8), wMat);
-          w.rotation.z = Math.PI / 2;
-          w.position.set(p[0], p[1], p[2]);
-          strollerGroup.add(w);
-        });
-
-        charGroup.add(strollerGroup);
-        propMesh = strollerGroup;
       } else if (typeDef.hasBaguette) {
-        // Baguette de pain dorée
-        const bagGeo = new THREE.CylinderGeometry(0.045, 0.045, 0.75, 8);
-        propMesh = new THREE.Mesh(bagGeo, this.getMaterial(0xe58e26));
-        propMesh.rotation.x = Math.PI / 3;
-        propMesh.position.set(-0.28, 0.65, 0.18);
+        const baguetteGeo = new THREE.CylinderGeometry(0.045, 0.04, 0.62, 8);
+        propMesh = new THREE.Mesh(baguetteGeo, this.getMaterial(0xd3a356));
+        baguetteGeo.rotateZ(Math.PI / 2.8);
+        propMesh.position.set(-0.24, 0.85, 0.12);
         charGroup.add(propMesh);
       } else if (typeDef.hasCaddy) {
-        // Caddie de courses rouge
         const caddyGroup = new THREE.Group();
-        caddyGroup.position.set(0.38, 0.42, 0.18);
-        const basket = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.55, 0.38), this.getMaterial(0xe74c3c));
-        caddyGroup.add(basket);
+        const bag = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.55, 0.25), this.getMaterial(0xe17055));
+        bag.position.set(0, 0.35, 0);
+        caddyGroup.add(bag);
+        const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.6, 6), this.getMaterial(0x2d3436));
+        handle.position.set(0, 0.65, -0.05);
+        caddyGroup.add(handle);
+        caddyGroup.position.set(0.32, 0, 0.1);
         charGroup.add(caddyGroup);
         propMesh = caddyGroup;
+      } else if (typeDef.hasStroller) {
+        const stroller = new THREE.Group();
+        const pram = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.32, 0.68), this.getMaterial(0x0984e3));
+        pram.position.set(0, 0.42, 0.5);
+        stroller.add(pram);
+        charGroup.add(stroller);
+        propMesh = stroller;
       }
 
-      this.scene.add(charGroup);
       charGroup.visible = false;
+      this.scene.add(charGroup);
 
       this.characters.push({
+        id: i,
         group: charGroup,
         typeDef,
-        category: typeDef.category || 'man',
+        headGroup,
+        mouth,
+        dizzyGroup,
+        browL,
+        browR,
         legL: legLGroup,
         legR: legRGroup,
         armL: armLGroup,
         armR: armRGroup,
-        headGroup,
-        mouth,
         propMesh,
         active: false,
         isFlying: false,
         isFleeing: false,
+        hasNearMissed: false,
         fleeDirectionX: 0,
         fleeTimer: 0,
+        walkPhase: Math.random() * Math.PI * 2,
+        walkDirection: (i % 2 === 0) ? 1 : -1,
         flyVelX: 0,
         flyVelY: 0,
         flyVelZ: 0,
         flySpinX: 0,
         flySpinY: 0,
-        flySpinZ: 0,
-        walkPhase: Math.random() * Math.PI * 2,
-        walkDirection: (Math.random() > 0.5 ? 1 : -1)
+        flySpinZ: 0
       });
     }
   }
 
+  reset() {
+    this.characters.forEach(char => {
+      char.active = false;
+      char.isFlying = false;
+      char.isFleeing = false;
+      char.hasNearMissed = false;
+      char.group.visible = false;
+      char.group.position.set(0, -100, 0);
+      char.group.rotation.set(0, 0, 0);
+      if (char.dizzyGroup) char.dizzyGroup.visible = false;
+      if (char.mouth) char.mouth.scale.set(1.1, 0.6, 0.5);
+    });
+  }
+
   spawnAhead(playerZ, roadCurveFunc) {
-    this.characters.forEach((char, idx) => {
-      if (!char.active || char.group.position.z < playerZ - 20) {
-        const spawnDistance = 42 + (idx * 4.8) + Math.random() * 8;
-        const targetZ = playerZ + spawnDistance;
+    const minZ = playerZ + 40;
+    const maxZ = playerZ + 160;
 
-        const isCrossing = Math.random() < 0.55;
-        let targetX = 0;
-        if (isCrossing) {
-          targetX = (Math.random() - 0.5) * 5.2;
-        } else {
-          targetX = (Math.random() > 0.5 ? 1 : -1) * (2.8 + Math.random() * 1.5);
-        }
+    this.characters.forEach(char => {
+      if (!char.group.visible || char.group.position.z < playerZ - 20) {
+        const newZ = minZ + Math.random() * (maxZ - minZ);
+        const curveX = roadCurveFunc ? roadCurveFunc(newZ) : 0;
+        const laneOffset = (Math.random() - 0.5) * 6.4;
 
-        const roadCenterX = roadCurveFunc ? roadCurveFunc(targetZ) : 0;
-        char.group.position.set(roadCenterX + targetX, 0, targetZ);
-        char.group.rotation.set(0, (Math.random() - 0.5) * 0.4, 0);
+        char.group.position.set(curveX + laneOffset, 0, newZ);
+        char.group.rotation.set(0, char.walkDirection > 0 ? 0 : Math.PI, 0);
         char.active = true;
         char.isFlying = false;
         char.isFleeing = false;
         char.hasNearMissed = false;
         char.fleeTimer = 0;
         char.group.visible = true;
+
+        if (char.dizzyGroup) char.dizzyGroup.visible = false;
+        if (char.mouth) char.mouth.scale.set(1.1, 0.6, 0.5);
 
         char.legL.rotation.set(0, 0, 0);
         char.legR.rotation.set(0, 0, 0);
@@ -438,16 +462,23 @@ export class CharacterSystem {
     char.active = false;
     char.isFleeing = false;
 
-    // Projection burlesque équilibrée : 4 à 6m de haut
+    if (char.dizzyGroup) {
+      char.dizzyGroup.visible = true;
+    }
+    if (char.mouth) {
+      char.mouth.scale.set(2.2, 2.0, 1.4); // Bouche béante de cri
+    }
+
+    // Projection burlesque spectaculaire : 4.5 à 6.5m de hauteur
     const dirX = char.group.position.x > bikeX ? 1 : -1;
-    char.flyVelX = dirX * (2.4 + Math.random() * 2.6);
-    char.flyVelY = 5.4 + Math.random() * 2.8;
-    char.flyVelZ = (bikeSpeed * 0.28) + (Math.random() * 2.0);
+    char.flyVelX = dirX * (2.8 + Math.random() * 3.0);
+    char.flyVelY = 6.2 + Math.random() * 3.2;
+    char.flyVelZ = (bikeSpeed * 0.3) + (Math.random() * 2.5);
 
     // Rotations comiques en vol
-    char.flySpinX = (Math.random() - 0.5) * 7.5;
-    char.flySpinY = (Math.random() - 0.5) * 8.5;
-    char.flySpinZ = dirX * (4.2 + Math.random() * 4.0);
+    char.flySpinX = (Math.random() - 0.5) * 8.5;
+    char.flySpinY = (Math.random() - 0.5) * 9.5;
+    char.flySpinZ = dirX * (4.8 + Math.random() * 4.5);
   }
 
   update(delta, playerZ, bikeX, bikeSpeed, onCollision, roadCurveFunc, onNearMiss) {
@@ -456,23 +487,29 @@ export class CharacterSystem {
     this.characters.forEach(char => {
       if (!char.group.visible) return;
 
-      // 1. Chute et vol burlesque après impact
+      // 1. Chute et voltige burlesque après choc
       if (char.isFlying) {
         char.group.position.x += char.flyVelX * delta;
         char.group.position.y += char.flyVelY * delta;
         char.group.position.z += char.flyVelZ * delta;
 
-        // Gravité
-        char.flyVelY -= 15.0 * delta;
+        // Gravité dynamique
+        char.flyVelY -= 15.5 * delta;
 
         char.group.rotation.x += char.flySpinX * delta;
         char.group.rotation.y += char.flySpinY * delta;
         char.group.rotation.z += char.flySpinZ * delta;
 
+        // Rotation des étoiles de vertige
+        if (char.dizzyGroup && char.dizzyGroup.visible) {
+          char.dizzyGroup.rotation.y += delta * 15.0;
+        }
+
         if (char.group.position.y <= 0) {
           char.group.position.y = 0;
           char.isFlying = false;
           char.group.visible = false;
+          if (char.dizzyGroup) char.dizzyGroup.visible = false;
         }
         return;
       }
@@ -482,46 +519,55 @@ export class CharacterSystem {
         const distZ = char.group.position.z - playerZ;
         const distX = Math.abs(char.group.position.x - bikeX);
 
-        // --- IA DE FUITE PANIQUÉE AMÉLIORÉE ("ILS TENTENT DE S'ENFUIR !") ---
-        // Quand la moto approche à moins de 20m et sur une trajectoire directe
-        if (distZ > 0 && distZ < 20.0 && distX < 3.2) {
+        // --- IA DE FUITE PANIQUÉE HYSTÉRIQUE ---
+        if (distZ > 0 && distZ < 22.0 && distX < 3.4) {
           char.isFleeing = true;
           char.fleeTimer += delta;
 
-          // Ils choisissent le trottoir le plus proche pour s'échapper
           if (char.fleeDirectionX === 0) {
             char.fleeDirectionX = char.group.position.x >= bikeX ? 1 : -1;
           }
 
-          // Sprint paniqué vers le trottoir (accessible si le joueur braque dans leur direction)
-          const sprintSpeed = char.typeDef.speed * 2.3;
+          // Sprint rapide vers le bord
+          const sprintSpeed = char.typeDef.speed * 2.4;
           char.group.position.x += char.fleeDirectionX * sprintSpeed * delta;
 
-          // Orientation du regard terrifié vers la direction de fuite
+          // Orientation vers la fuite
           char.group.rotation.y = char.fleeDirectionX > 0 ? Math.PI / 2 : -Math.PI / 2;
 
-          // Animation de panique comique : bras levés au ciel agités frénétiquement
-          char.walkPhase += delta * 16.0;
-          char.armL.rotation.x = 2.4 + Math.sin(char.fleeTimer * 22.0) * 0.55;
-          char.armR.rotation.x = 2.4 + Math.cos(char.fleeTimer * 22.0) * 0.55;
-          char.headGroup.rotation.y = (char.fleeDirectionX > 0 ? -0.4 : 0.4) + Math.sin(char.fleeTimer * 16.0) * 0.25;
+          // Animation de panique : bras en l'air qui moulinent, tête tournée en arrière
+          char.walkPhase += delta * 18.0;
+          char.armL.rotation.x = 2.5 + Math.sin(char.fleeTimer * 24.0) * 0.7;
+          char.armR.rotation.x = 2.5 + Math.cos(char.fleeTimer * 24.0) * 0.7;
+          
+          // Regard terrifié en arrière vers le bolide qui arrive
+          char.headGroup.rotation.y = (char.fleeDirectionX > 0 ? -0.55 : 0.55) + Math.sin(char.fleeTimer * 18.0) * 0.2;
+          
+          // Bouche ouverte de cri
+          if (char.mouth) {
+            char.mouth.scale.set(1.8, 1.6, 1.2);
+          }
 
-          // Foulées rapides
-          const legAngle = Math.sin(char.walkPhase) * 0.9;
+          // Foulées de sprint
+          const legAngle = Math.sin(char.walkPhase) * 1.05;
           char.legL.rotation.x = legAngle;
           char.legR.rotation.x = -legAngle;
 
-          // Si le piéton a réussi à atteindre le trottoir hors de portée (> 4.8m)
           if (Math.abs(char.group.position.x) > 4.8) {
             char.armL.rotation.x = 0;
             char.armR.rotation.x = 0;
+            if (char.mouth) char.mouth.scale.set(1.1, 0.6, 0.5);
           }
         } else {
-          // Marche normale de flâneur
+          // Marche normale décontractée
           char.isFleeing = false;
           char.fleeDirectionX = 0;
 
-          char.walkPhase += delta * 5.5;
+          if (char.mouth) {
+            char.mouth.scale.set(1.1, 0.6, 0.5);
+          }
+
+          char.walkPhase += delta * 5.8;
           const legAngle = Math.sin(char.walkPhase) * 0.55;
           char.legL.rotation.x = legAngle;
           char.legR.rotation.x = -legAngle;
@@ -529,7 +575,6 @@ export class CharacterSystem {
           char.armR.rotation.x = legAngle * 0.65;
           char.headGroup.rotation.y = 0;
 
-          // Déplacement régulier traversant
           char.group.position.x += char.walkDirection * char.typeDef.speed * delta * 0.45;
           if (Math.abs(char.group.position.x) > 4.2) {
             char.walkDirection *= -1;
@@ -538,34 +583,22 @@ export class CharacterSystem {
         }
 
         // 3. Détection de collision physique balayée (SWEPT COLLISION anti-tunneling)
-        // Vérifie la zone parcourue par la moto dans ce frame
-        const frameTravel = Math.max(1.8, (bikeSpeed * delta) + 0.8);
+        const frameTravel = Math.max(1.85, (bikeSpeed * delta) + 0.85);
         const inZCollisionZone = (distZ >= -1.0 && distZ <= frameTravel);
-        const inXCollisionZone = (distX <= 1.75); // Largeur généreuse guidon + corps
+        const inXCollisionZone = (distX <= 1.75);
 
         if (inZCollisionZone && inXCollisionZone) {
           this.triggerSlapstickFlight(char, bikeX, bikeSpeed);
           if (onCollision) {
             onCollision(char);
           }
-        } else if (!char.hasNearMissed && inZCollisionZone && distX > 1.75 && distX < 2.95) {
-          // Frôlement / Near-Miss à haute intensité !
+        } else if (!char.hasNearMissed && inZCollisionZone && distX > 1.75 && distX < 3.0) {
           char.hasNearMissed = true;
           if (onNearMiss) {
             onNearMiss(char);
           }
         }
       }
-    });
-  }
-
-  reset() {
-    this.characters.forEach(char => {
-      char.active = false;
-      char.isFlying = false;
-      char.isFleeing = false;
-      char.hasNearMissed = false;
-      char.group.visible = false;
     });
   }
 }

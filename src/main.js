@@ -181,9 +181,12 @@ class GameApp {
       // 5. Son moteur réactif (ronronnement ralenti à l'arrêt, accélération dynamique)
       soundManager.updateEngine(currentSpeed / 20.0);
 
-      // 6. Fumée d'échappement (uniquement quand la moto roule)
+      // 6. Fumée d'échappement et fumée de dérapage au freinage
       if (currentSpeed > 1.0) {
         this.particles.spawnExhaustSmoke(this.bike.getExhaustPosition(), currentSpeed / 20.0);
+      }
+      if (gameState.isBraking && currentSpeed > 3.5) {
+        this.particles.spawnSkidSmoke(this.bike.mesh.position);
       }
 
       // 7. Génération et recyclage du monde 3D

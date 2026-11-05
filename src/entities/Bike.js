@@ -888,11 +888,18 @@ export class Bike {
     torso.castShadow = true;
     torsoGroup.add(torso);
 
-    // Écharpe rouge qui flotte
+    // Écharpe rouge qui flotte avec pan arrière animé au vent
     const scarfGeo = new THREE.BoxGeometry(0.3, 0.1, 0.28);
     const scarf = new THREE.Mesh(scarfGeo, beretMat);
     scarf.position.set(0, 0.44, 0);
     torsoGroup.add(scarf);
+
+    const scarfTailGeo = new THREE.BoxGeometry(0.12, 0.05, 0.38);
+    const scarfTail = new THREE.Mesh(scarfTailGeo, beretMat);
+    scarfTail.position.set(0.08, 0.42, -0.24);
+    scarfTail.rotation.x = -0.35;
+    torsoGroup.add(scarfTail);
+    this.scarfTail = scarfTail;
 
     // Tête cartoon
     const headGroup = new THREE.Group();
@@ -1110,6 +1117,13 @@ export class Bike {
     if (this.riderHead) {
       this.riderHead.rotation.y = this.smoothedSteer * 0.28;
       this.riderHead.rotation.z = -this.currentLean * 0.4;
+    }
+    if (this.scarfTail) {
+      this.scarfTail.rotation.x = -0.35 + Math.sin(this.bouncePhase * 3.5) * 0.22;
+      this.scarfTail.rotation.y = Math.cos(this.bouncePhase * 2.8) * 0.18;
+    }
+    if (this.riderWhip && this.currentBikeId === 'cheval') {
+      this.riderWhip.rotation.x = -Math.PI / 4 + Math.sin(this.bouncePhase * 3.8) * 0.32;
     }
 
     // Rotation des roues selon la vitesse

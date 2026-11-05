@@ -8,7 +8,7 @@ Ce document fournit l'ensemble des informations de conception, d'architecture lo
 ## 1. VISION DU PROJET & SPÉCIFICATIONS
 
 - **Genre** : Jeu de course d'arcade urbain / Runner 3D burlesque
-- **Version actuelle** : **1.2.5-beta** (Build / versionCode 8 - Canal BETA)
+- **Version actuelle** : **1.2.6-beta** (Build / versionCode 9 - Canal BETA)
 - **Signature & Clé** : Keystore permanent dédié `android/app/motormageddon.keystore` (validité 10 000 jours, EOMedia Paris)
 - **Plateforme cible** : Android (Smartphones & Tablettes) + WebGL Mobile/Desktop
 - **Direction artistique** : Cartoon 3D éclatant, physique burlesque (slapstick), animations hilarantes et dynamiques, identité française affirmée.
@@ -236,6 +236,35 @@ Ce document fournit l'ensemble des informations de conception, d'architecture lo
 
 ### C. Respect des Politiques des Stores Mobiles (Conformité & Éthique)
 - Remplacement du concept d'arme à feu réelle (Kalachnikov sur piétons, prohibé sur le Google Play Store et l'Apple App Store en vertu des règles de lutte contre la violence armée et les fusillades de rue) par des éléments d'arcade slapstick loufoques (cravache équestre, cylindre compresseur de chantier), garantissant l'acceptation sans réserve et la certification PEGI / ESRB du jeu.
+
+---
+
+## 7. NOUVEAUTÉS DE LA VERSION 1.2.6-BETA (REFONTE GRAPHIQUE & ARCHITECTURALE MAJEURE)
+
+### A. Rendu 3D & Colorimétrie Haute Fidélité
+- **Espace Colorimétrique sRGB & ACES Filmic Tone Mapping** : Intégration de `THREE.SRGBColorSpace` et `THREE.ACESFilmicToneMapping` (exposition 1.25) dans `Engine.js`, éliminant les teintes délavées pour des couleurs saturées et éclatantes dignes des productions d'arcade japonaises.
+- **Éclairage Bicolore Hémisphérique & Contre-Jour (Rim Light)** : Remplacement de l'éclairage ambiant plat par un `HemisphereLight` (ciel bleu azur / rebond doré du bitume) combiné à une lumière de rim cyan pastel (`0x81ecec`) pour détacher la silhouette du motard et de sa monture.
+- **Ombres Filtrées PCF Soft & Bias Calibré** : Élimination totale de l'effet d'acné d'ombre (`normalBias: 0.025`).
+
+### B. Piétons Expressifs & Visages Cartoon Vivants
+- **Traits de Visage Complets** : Finis les mannequins sphériques aveugles ! Chaque piéton dispose d'yeux expressifs blancs à pupilles noires brillantes, de sourcils inclinés et d'une bouche animée.
+- **Réactions de Panique Hystérique** : Lorsque le bolide approche, la bouche s'ouvre en grand cri béant "O", les sourcils s'arquent, les bras moulinent frénétiquement en l'air et la tête se tourne en arrière avec terreur.
+- **Voltige Burlesque avec Étoiles de Vertige (Dizzy Stars)** : Lors d'un impact, 3 étoiles cartoon dorées tourbillonnent en halo au-dessus de la tête du personnage projeté en l'air.
+
+### C. Système de Particules & VFX Nouvelle Génération
+- **Zéro Garbage Collection (Architecture Propre)** : Pooling strict des géométries (`sharedGeos`) et matériaux partagés (`sharedMats`) dans `Particles.js` évitant toute instanciation éphémère et chute de framerate.
+- **Ondes de Choc (Shockwave Rings)** : Anneaux d'onde de choc s'étendant au sol lors des heurts et départs en trombe.
+- **Volutes d'Échappement & Fumée de Dérapage** : Nuages volumétriques de fumée avec grossissement et fondu alpha fluide, et crissement de gomme avec fumée blanche (`spawnSkidSmoke`) lors des freinages violents.
+
+### D. Urbanisme & Décors Haussmanniens Enrichis
+- **Façades Vivantes** : Fenêtres alternant pièces illuminées chaleureuses (`0xfff2a3`) et volets fermés, gardes-corps de balcons en fer forgé haussmanniens sur les étages nobles, et stores bannes de bistrots colorés.
+- **Végétation Cartoon Volumétrique** : Arbres touffus étagés multi-sphères avec dégradés de verts printaniers.
+- **Mobilier Urbain Parisien** : Colonnes Morris vert empire avec affiches colorées, réverbères parisiens avec lanternes chaleureuses.
+
+### E. Boutons d'Arcade 3D & UI Polie
+- **Boutons 3D Relief & Brillance Double-Couche** : Design tactile haute finition avec biseau lumineux supérieur, ombre portée colorée profonde et retour haptique visuel élastique au clic.
+- **Jauge d'Objectif avec Shimmer Lumineux** : Effet de brillance scintillante animée traversant la barre de progression en continu.
+
 
 
 

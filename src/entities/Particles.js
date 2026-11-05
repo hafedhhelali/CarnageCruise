@@ -1,7 +1,8 @@
 /**
- * Motormageddon - Système de Particules Hautes Performances Three.js
- * Fumée d'échappement, gerbe comique de pièces et d'étoiles, éclaboussures de sang cartoon,
- * débris de collision, et confettis de victoire.
+ * Motormageddon - Système de Particules Hautes Performances Three.js (Architecture Propre & Optimisée)
+ * Effets Cartoon Explosifs : Volutes de fumée d'échappement volumétriques, ondes de choc (shockwave rings),
+ * étincelles étoilées BD, dérapages au sol, confettis de victoire et micro-détails d'impact.
+ * Zéro fuite mémoire via pooling de géométries et matériaux partagés.
  */
 
 import * as THREE from 'three';
@@ -13,225 +14,273 @@ export class ParticleSystem {
     this.stars = [];
     this.bloodDrops = [];
     this.bloodSplats = [];
+    this.shockwaves = [];
     this.speedLines = [];
+
+    // --- POOLING DE GÉOMÉTRIES PARTAGÉES (Zéro alloc à l'exécution) ---
+    this.sharedGeos = {
+      smokeSphere: new THREE.SphereGeometry(1.0, 7, 6),
+      starCone: new THREE.ConeGeometry(0.12, 0.26, 4),
+      sparkBox: new THREE.BoxGeometry(0.09, 0.09, 0.09),
+      ring: new THREE.RingGeometry(0.4, 0.6, 20),
+      confetti: new THREE.PlaneGeometry(0.18, 0.28),
+      splatCircle: new THREE.CircleGeometry(0.3, 8),
+      speedCylinder: new THREE.CylinderGeometry(0.018, 0.018, 6.5, 4)
+    };
+
+    // --- MATÉRIAUX PARTAGÉS & CACHE ---
+    this.sharedMats = {
+      smoke: new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.65 }),
+      skidSmoke: new THREE.MeshBasicMaterial({ color: 0xecf0f1, transparent: true, opacity: 0.75 }),
+      starOrange: new THREE.MeshBasicMaterial({ color: 0xff6b00 }),
+      starGold: new THREE.MeshBasicMaterial({ color: 0xffd32a }),
+      starRed: new THREE.MeshBasicMaterial({ color: 0xff3838 }),
+      sparkAmber: new THREE.MeshBasicMaterial({ color: 0xffa502 }),
+      bloodDrop: new THREE.MeshBasicMaterial({ color: 0x990000 }),
+      speedLine: new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.4 })
+    };
+
+    this.confettiColors = [0x0984e3, 0xffffff, 0xd63031, 0xf1c40f, 0x2ed573, 0x9b59b6, 0xff6b81];
+    this.confettiMats = this.confettiColors.map(c => 
+      new THREE.MeshBasicMaterial({ color: c, side: THREE.DoubleSide })
+    );
 
     this.initSpeedLines();
   }
 
   initSpeedLines() {
-    // Lignes de vitesse qui fusent autour de la moto
-    const lineGeo = new THREE.CylinderGeometry(0.015, 0.015, 6.0, 4);
-    const lineMat = new THREE.MeshBasicMaterial({
-      color: 0xffffff,
-      transparent: true,
-      opacity: 0.35
-    });
-
-    for (let i = 0; i < 18; i++) {
-      const mesh = new THREE.Mesh(lineGeo, lineMat);
+    for (let i = 0; i < 20; i++) {
+      const mesh = new THREE.Mesh(this.sharedGeos.speedCylinder, this.sharedMats.speedLine);
       mesh.rotation.x = Math.PI / 2;
       mesh.visible = false;
       this.scene.add(mesh);
       this.speedLines.push({
         mesh,
-        offsetX: (Math.random() - 0.5) * 6.0,
-        offsetY: 0.3 + Math.random() * 2.5,
-        offsetZ: Math.random() * 30.0,
-        speed: 40 + Math.random() * 20
+        offsetX: (Math.random() - 0.5) * 6.5,
+        offsetY: 0.4 + Math.random() * 2.8,
+        offsetZ: Math.random() * 32.0,
+        speed: 45 + Math.random() * 25
       });
     }
   }
 
-  spawnExhaustSmoke(pos, speedRatio) {
-    if (Math.random() > 0.45) return;
+  // Volutes de fumée d'échappement cartoon volumétriques
+  spawnExhaustSmoke(pos, speedRatio = 1.0) {
+    if (Math.random() > 0.4) return;
 
-    const size = 0.12 + Math.random() * 0.1;
-    const smokeGeo = new THREE.SphereGeometry(size, 6, 6);
-    const smokeMat = new THREE.MeshBasicMaterial({
-      color: 0xdcdde1,
-      transparent: true,
-      opacity: 0.6
-    });
-
-    const mesh = new THREE.Mesh(smokeGeo, smokeMat);
+    const mesh = new THREE.Mesh(this.sharedGeos.smokeSphere, this.sharedMats.smoke.clone());
+    const initScale = 0.12 + Math.random() * 0.08;
+    mesh.scale.setScalar(initScale);
     mesh.position.copy(pos);
-    mesh.position.x += (Math.random() - 0.5) * 0.15;
-    mesh.position.y += (Math.random() - 0.5) * 0.1;
+    mesh.position.x += (Math.random() - 0.5) * 0.12;
+    mesh.position.y += (Math.random() - 0.5) * 0.08;
 
     this.scene.add(mesh);
     this.particles.push({
       mesh,
-      velX: (Math.random() - 0.5) * 0.4,
-      velY: 0.8 + Math.random() * 0.6,
-      velZ: -1.5 * (speedRatio || 1.0),
-      growRate: 1.2,
-      life: 0.6,
-      maxLife: 0.6,
+      velX: (Math.random() - 0.5) * 0.35,
+      velY: 0.7 + Math.random() * 0.5,
+      velZ: -1.6 * speedRatio,
+      growRate: 1.8,
+      life: 0.65,
+      maxLife: 0.65,
       isCoin: false
     });
   }
 
-  spawnBloodBurst(pos) {
-    const bloodColors = [0x990000, 0xbb1111];
+  // Fumée de dérapage et freinage au sol
+  spawnSkidSmoke(pos) {
+    const mesh = new THREE.Mesh(this.sharedGeos.smokeSphere, this.sharedMats.skidSmoke.clone());
+    mesh.scale.setScalar(0.18 + Math.random() * 0.1);
+    mesh.position.set(pos.x + (Math.random() - 0.5) * 0.3, 0.1, pos.z);
 
-    // Quelques gouttes cartoon légères et discrètes (non exagéré)
-    const numDrops = 6;
-    for (let i = 0; i < numDrops; i++) {
-      const size = 0.06 + Math.random() * 0.05;
-      const bloodGeo = new THREE.SphereGeometry(size, 6, 6);
-      const bloodMat = new THREE.MeshBasicMaterial({
-        color: bloodColors[Math.floor(Math.random() * bloodColors.length)]
-      });
-      const drop = new THREE.Mesh(bloodGeo, bloodMat);
-      drop.position.copy(pos);
-      drop.position.y += 0.6;
+    this.scene.add(mesh);
+    this.particles.push({
+      mesh,
+      velX: (Math.random() - 0.5) * 0.8,
+      velY: 0.4 + Math.random() * 0.4,
+      velZ: (Math.random() - 0.5) * 0.6,
+      growRate: 2.2,
+      life: 0.5,
+      maxLife: 0.5,
+      isCoin: false
+    });
+  }
 
-      const angle = Math.random() * Math.PI * 2;
-      const horizSpeed = 1.2 + Math.random() * 2.0;
-
-      this.scene.add(drop);
-      this.bloodDrops.push({
-        mesh: drop,
-        velX: Math.cos(angle) * horizSpeed,
-        velY: 1.5 + Math.random() * 2.0,
-        velZ: Math.sin(angle) * horizSpeed,
-        life: 0.6,
-        maxLife: 0.6
-      });
-    }
-
-    // Une petite tache discrète au sol
-    const splatGeo = new THREE.CircleGeometry(0.28, 8);
-    const splatMat = new THREE.MeshBasicMaterial({
-      color: 0x8b0000,
+  // Onde de choc circulaire cartoon au sol
+  spawnShockwave(pos, colorHex = 0xffa502) {
+    const mat = new THREE.MeshBasicMaterial({
+      color: colorHex,
       transparent: true,
-      opacity: 0.65,
+      opacity: 0.85,
+      side: THREE.DoubleSide,
       depthWrite: false
     });
-    const splat = new THREE.Mesh(splatGeo, splatMat);
-    splat.rotation.x = -Math.PI / 2;
-    splat.position.set(pos.x, 0.02, pos.z);
-    this.scene.add(splat);
-    this.bloodSplats.push({
-      mesh: splat,
-      life: 2.5,
-      maxLife: 2.5
+    const ring = new THREE.Mesh(this.sharedGeos.ring, mat);
+    ring.rotation.x = -Math.PI / 2;
+    ring.position.set(pos.x, 0.04, pos.z);
+    ring.scale.setScalar(0.4);
+
+    this.scene.add(ring);
+    this.shockwaves.push({
+      mesh: ring,
+      growSpeed: 6.5,
+      life: 0.45,
+      maxLife: 0.45
     });
   }
 
-  spawnCrashBurst(pos) {
-    // Éclat d'accident : nuage d'impact et étoiles de choc
-    for (let i = 0; i < 14; i++) {
-      const starGeo = new THREE.ConeGeometry(0.2, 0.4, 4);
-      const starMat = new THREE.MeshBasicMaterial({ color: 0xff4757 });
-      const star = new THREE.Mesh(starGeo, starMat);
-      star.position.copy(pos);
-      star.position.y += 0.5;
+  // Impact cartoon riche avec étoiles, étincelles et onde de choc
+  spawnComicBurst(pos, score, combo = 1) {
+    // 1. Onde de choc au sol
+    this.spawnShockwave(pos, 0xff9f1a);
 
-      const angle = (i / 14) * Math.PI * 2;
-      this.scene.add(star);
-      this.stars.push({
-        mesh: star,
-        velX: Math.cos(angle) * 7.0,
-        velY: 4.0 + Math.random() * 4.0,
-        velZ: Math.sin(angle) * 7.0,
-        spinX: Math.random() * 20,
-        spinY: Math.random() * 20,
-        life: 1.0,
-        maxLife: 1.0
-      });
-    }
-  }
-
-  spawnComicBurst(pos, score, combo) {
-    // 1. Étoiles cartoon orange vif et compactes (effets réduits et plus percutants)
-    const numStars = 6;
+    // 2. Étoiles cartoon orange et or
+    const numStars = Math.min(8, 5 + combo);
     for (let i = 0; i < numStars; i++) {
-      const starGeo = new THREE.ConeGeometry(0.08, 0.16, 4);
-      const starMat = new THREE.MeshBasicMaterial({ color: 0xff6b00 }); // Orange vif percutant
-      const star = new THREE.Mesh(starGeo, starMat);
+      const mat = (i % 2 === 0) ? this.sharedMats.starOrange : this.sharedMats.starGold;
+      const star = new THREE.Mesh(this.sharedGeos.starCone, mat);
       star.position.copy(pos);
-      star.position.y += 0.8;
+      star.position.y += 0.85;
 
       const angle = (i / numStars) * Math.PI * 2;
-      const speed = 2.5 + Math.random() * 3.0;
+      const speed = 3.0 + Math.random() * 3.5;
 
       this.scene.add(star);
       this.stars.push({
         mesh: star,
         velX: Math.cos(angle) * speed,
-        velY: 2.2 + Math.random() * 3.0,
+        velY: 2.6 + Math.random() * 3.2,
         velZ: Math.sin(angle) * speed,
-        spinX: Math.random() * 12,
-        spinY: Math.random() * 12,
+        spinX: Math.random() * 16,
+        spinY: Math.random() * 16,
         life: 0.55,
         maxLife: 0.55
       });
     }
 
-    // 2. Petites étincelles d'impact orange mandarine fines
-    const numCoins = Math.min(5, 2 + combo);
-    for (let c = 0; c < numCoins; c++) {
-      const sparkGeo = new THREE.CylinderGeometry(0.06, 0.06, 0.02, 6);
-      const sparkMat = new THREE.MeshBasicMaterial({ color: 0xff9f1a }); // Teinte orange mandarine
-      const spark = new THREE.Mesh(sparkGeo, sparkMat);
+    // 3. Étincelles étincelantes fines
+    const numSparks = Math.min(6, 3 + combo);
+    for (let c = 0; c < numSparks; c++) {
+      const spark = new THREE.Mesh(this.sharedGeos.sparkBox, this.sharedMats.sparkAmber);
       spark.position.copy(pos);
       spark.position.y += 0.9;
 
       this.scene.add(spark);
       this.particles.push({
         mesh: spark,
-        velX: (Math.random() - 0.5) * 4.0,
-        velY: 3.2 + Math.random() * 2.5,
-        velZ: (Math.random() - 0.5) * 4.0,
-        life: 0.6,
-        maxLife: 0.6,
+        velX: (Math.random() - 0.5) * 4.5,
+        velY: 3.5 + Math.random() * 3.0,
+        velZ: (Math.random() - 0.5) * 4.5,
+        life: 0.58,
+        maxLife: 0.58,
         isCoin: true
       });
     }
   }
 
-  spawnVictoryConfetti(pos) {
-    const colors = [0x0984e3, 0xffffff, 0xd63031, 0xf1c40f, 0x2ed573, 0x9b59b6];
-    const numConfetti = 45;
-    for (let i = 0; i < numConfetti; i++) {
-      const color = colors[i % colors.length];
-      const confGeo = new THREE.PlaneGeometry(0.18, 0.28);
-      const confMat = new THREE.MeshBasicMaterial({ color, side: THREE.DoubleSide });
-      const conf = new THREE.Mesh(confGeo, confMat);
-
-      conf.position.copy(pos);
-      conf.position.y += 2.0 + Math.random() * 2.0;
-      conf.position.x += (Math.random() - 0.5) * 6.0;
+  // Gouttelettes cartoon légères
+  spawnBloodBurst(pos) {
+    const numDrops = 6;
+    for (let i = 0; i < numDrops; i++) {
+      const drop = new THREE.Mesh(this.sharedGeos.sparkBox, this.sharedMats.bloodDrop);
+      drop.scale.setScalar(0.7);
+      drop.position.copy(pos);
+      drop.position.y += 0.65;
 
       const angle = Math.random() * Math.PI * 2;
-      const speed = 2.0 + Math.random() * 6.0;
+      const horizSpeed = 1.4 + Math.random() * 2.2;
+
+      this.scene.add(drop);
+      this.bloodDrops.push({
+        mesh: drop,
+        velX: Math.cos(angle) * horizSpeed,
+        velY: 1.8 + Math.random() * 2.2,
+        velZ: Math.sin(angle) * horizSpeed,
+        life: 0.6,
+        maxLife: 0.6
+      });
+    }
+
+    // Tache discrète au sol avec fondu
+    const splatMat = new THREE.MeshBasicMaterial({
+      color: 0x8b0000,
+      transparent: true,
+      opacity: 0.65,
+      depthWrite: false
+    });
+    const splat = new THREE.Mesh(this.sharedGeos.splatCircle, splatMat);
+    splat.rotation.x = -Math.PI / 2;
+    splat.position.set(pos.x, 0.025, pos.z);
+    this.scene.add(splat);
+    this.bloodSplats.push({
+      mesh: splat,
+      life: 2.2,
+      maxLife: 2.2
+    });
+  }
+
+  // Éclat d'accident violent (rouge sang & débris)
+  spawnCrashBurst(pos) {
+    this.spawnShockwave(pos, 0xff4757);
+
+    for (let i = 0; i < 16; i++) {
+      const star = new THREE.Mesh(this.sharedGeos.starCone, this.sharedMats.starRed);
+      star.position.copy(pos);
+      star.position.y += 0.6;
+
+      const angle = (i / 16) * Math.PI * 2;
+      this.scene.add(star);
+      this.stars.push({
+        mesh: star,
+        velX: Math.cos(angle) * 7.5,
+        velY: 4.5 + Math.random() * 4.5,
+        velZ: Math.sin(angle) * 7.5,
+        spinX: Math.random() * 22,
+        spinY: Math.random() * 22,
+        life: 0.9,
+        maxLife: 0.9
+      });
+    }
+  }
+
+  // Confettis de victoire tricolores et dorés
+  spawnVictoryConfetti(pos) {
+    const numConfetti = 55;
+    for (let i = 0; i < numConfetti; i++) {
+      const mat = this.confettiMats[i % this.confettiMats.length];
+      const conf = new THREE.Mesh(this.sharedGeos.confetti, mat);
+
+      conf.position.copy(pos);
+      conf.position.y += 2.2 + Math.random() * 2.5;
+      conf.position.x += (Math.random() - 0.5) * 6.5;
+
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 2.5 + Math.random() * 6.5;
 
       this.scene.add(conf);
       this.particles.push({
         mesh: conf,
         velX: Math.cos(angle) * speed,
-        velY: 6.0 + Math.random() * 7.0,
+        velY: 6.5 + Math.random() * 7.5,
         velZ: Math.sin(angle) * speed,
-        spinX: (Math.random() - 0.5) * 12,
-        spinY: (Math.random() - 0.5) * 15,
-        life: 2.2,
-        maxLife: 2.2,
+        spinX: (Math.random() - 0.5) * 14,
+        spinY: (Math.random() - 0.5) * 16,
+        life: 2.4,
+        maxLife: 2.4,
         isConfetti: true
       });
     }
   }
 
   update(delta, playerZ, speed) {
-    // Mettre à jour la fumée, pièces et confettis
+    // 1. Mettre à jour la fumée, étincelles et confettis
     for (let i = this.particles.length - 1; i >= 0; i--) {
       const p = this.particles[i];
       p.life -= delta;
 
       if (p.life <= 0) {
         this.scene.remove(p.mesh);
-        p.mesh.geometry.dispose();
-        p.mesh.material.dispose();
         this.particles.splice(i, 1);
         continue;
       }
@@ -241,29 +290,46 @@ export class ParticleSystem {
       p.mesh.position.z += p.velZ * delta;
 
       if (p.isCoin) {
-        p.velY -= 15.0 * delta;
-        p.mesh.rotation.x += 12 * delta;
-        p.mesh.rotation.y += 15 * delta;
+        p.velY -= 16.0 * delta;
+        p.mesh.rotation.x += 14 * delta;
+        p.mesh.rotation.y += 18 * delta;
       } else if (p.isConfetti) {
-        p.velY -= 6.0 * delta; // Chute douce des confettis
+        p.velY -= 6.5 * delta;
         p.mesh.rotation.x += p.spinX * delta;
         p.mesh.rotation.y += p.spinY * delta;
       } else {
         const progress = 1 - (p.life / p.maxLife);
-        p.mesh.scale.addScalar(delta * (p.growRate || 1.0));
-        p.mesh.material.opacity = (1 - progress) * 0.6;
+        p.mesh.scale.addScalar(delta * (p.growRate || 1.2));
+        if (p.mesh.material && p.mesh.material.opacity !== undefined) {
+          p.mesh.material.opacity = (1 - progress) * 0.7;
+        }
       }
     }
 
-    // Mettre à jour les gouttes de sang
+    // 2. Mettre à jour les ondes de choc au sol
+    for (let w = this.shockwaves.length - 1; w >= 0; w--) {
+      const wave = this.shockwaves[w];
+      wave.life -= delta;
+
+      if (wave.life <= 0) {
+        this.scene.remove(wave.mesh);
+        wave.mesh.material.dispose();
+        this.shockwaves.splice(w, 1);
+        continue;
+      }
+
+      const progress = 1 - (wave.life / wave.maxLife);
+      wave.mesh.scale.addScalar(delta * wave.growSpeed);
+      wave.mesh.material.opacity = (1 - progress) * 0.85;
+    }
+
+    // 3. Mettre à jour les gouttes de sang
     for (let b = this.bloodDrops.length - 1; b >= 0; b--) {
       const drop = this.bloodDrops[b];
       drop.life -= delta;
 
       if (drop.life <= 0) {
         this.scene.remove(drop.mesh);
-        drop.mesh.geometry.dispose();
-        drop.mesh.material.dispose();
         this.bloodDrops.splice(b, 1);
         continue;
       }
@@ -271,24 +337,23 @@ export class ParticleSystem {
       drop.mesh.position.x += drop.velX * delta;
       drop.mesh.position.y += drop.velY * delta;
       drop.mesh.position.z += drop.velZ * delta;
-      drop.velY -= 16.0 * delta;
+      drop.velY -= 17.0 * delta;
 
-      if (drop.mesh.position.y <= 0.05) {
+      if (drop.mesh.position.y <= 0.04) {
         drop.mesh.position.y = 0.03;
         drop.velY = 0;
-        drop.velX *= 0.5;
-        drop.velZ *= 0.5;
+        drop.velX *= 0.4;
+        drop.velZ *= 0.4;
       }
     }
 
-    // Mettre à jour les taches de sang au sol
+    // 4. Mettre à jour les taches de sang au sol
     for (let s = this.bloodSplats.length - 1; s >= 0; s--) {
       const splat = this.bloodSplats[s];
       splat.life -= delta;
 
       if (splat.life <= 0) {
         this.scene.remove(splat.mesh);
-        splat.mesh.geometry.dispose();
         splat.mesh.material.dispose();
         this.bloodSplats.splice(s, 1);
         continue;
@@ -297,15 +362,13 @@ export class ParticleSystem {
       splat.mesh.material.opacity = Math.min(0.85, (splat.life / splat.maxLife) * 0.85);
     }
 
-    // Mettre à jour les étoiles cartoon
+    // 5. Mettre à jour les étoiles cartoon
     for (let s = this.stars.length - 1; s >= 0; s--) {
       const star = this.stars[s];
       star.life -= delta;
 
       if (star.life <= 0) {
         this.scene.remove(star.mesh);
-        star.mesh.geometry.dispose();
-        star.mesh.material.dispose();
         this.stars.splice(s, 1);
         continue;
       }
@@ -313,14 +376,12 @@ export class ParticleSystem {
       star.mesh.position.x += star.velX * delta;
       star.mesh.position.y += star.velY * delta;
       star.mesh.position.z += star.velZ * delta;
-
       star.mesh.rotation.x += star.spinX * delta;
       star.mesh.rotation.y += star.spinY * delta;
-
-      star.velY -= 14.0 * delta;
+      star.velY -= 15.0 * delta;
     }
 
-    // Lignes de vitesse dynamiques
+    // 6. Lignes de vitesse dynamiques
     const showSpeedLines = speed > 22;
     this.speedLines.forEach(sl => {
       if (!showSpeedLines) {
@@ -333,8 +394,8 @@ export class ParticleSystem {
 
       if (sl.offsetZ < -5) {
         sl.offsetZ = 25 + Math.random() * 15;
-        sl.offsetX = (Math.random() - 0.5) * 6.0;
-        sl.offsetY = 0.3 + Math.random() * 2.0;
+        sl.offsetX = (Math.random() - 0.5) * 6.5;
+        sl.offsetY = 0.4 + Math.random() * 2.2;
       }
 
       sl.mesh.position.set(
@@ -346,27 +407,19 @@ export class ParticleSystem {
   }
 
   reset() {
-    this.particles.forEach(p => {
-      this.scene.remove(p.mesh);
-      p.mesh.geometry.dispose();
-      p.mesh.material.dispose();
+    this.particles.forEach(p => this.scene.remove(p.mesh));
+    this.shockwaves.forEach(w => {
+      this.scene.remove(w.mesh);
+      w.mesh.material.dispose();
     });
-    this.stars.forEach(s => {
-      this.scene.remove(s.mesh);
-      s.mesh.geometry.dispose();
-      s.mesh.material.dispose();
-    });
-    this.bloodDrops.forEach(b => {
-      this.scene.remove(b.mesh);
-      b.mesh.geometry.dispose();
-      b.mesh.material.dispose();
-    });
+    this.stars.forEach(s => this.scene.remove(s.mesh));
+    this.bloodDrops.forEach(b => this.scene.remove(b.mesh));
     this.bloodSplats.forEach(s => {
       this.scene.remove(s.mesh);
-      s.mesh.geometry.dispose();
       s.mesh.material.dispose();
     });
     this.particles = [];
+    this.shockwaves = [];
     this.stars = [];
     this.bloodDrops = [];
     this.bloodSplats = [];

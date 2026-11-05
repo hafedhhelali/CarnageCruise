@@ -12,7 +12,7 @@ export class Engine {
     // Scène
     this.scene = new THREE.Scene();
 
-    // Rendu WebGL haute performance mobile
+    // Rendu WebGL haute performance mobile & colorimétrie dynamique
     this.renderer = new THREE.WebGLRenderer({
       canvas: this.canvas,
       antialias: true,
@@ -20,6 +20,9 @@ export class Engine {
     });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2.0));
     this.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    this.renderer.toneMappingExposure = 1.25;
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
@@ -28,29 +31,38 @@ export class Engine {
       60,
       window.innerWidth / window.innerHeight,
       0.1,
-      400
+      450
     );
     this.baseFov = 60;
 
-    // Éclairage de studio cartoon
-    this.ambientLight = new THREE.AmbientLight(0xffffff, 0.75);
-    this.scene.add(this.ambientLight);
+    // Éclairage de studio cartoon multi-sources & rebond lumineux (Hemisphere)
+    this.hemiLight = new THREE.HemisphereLight(0xe8f4f8, 0x7c8a78, 1.05);
+    this.hemiLight.position.set(0, 50, 0);
+    this.scene.add(this.hemiLight);
 
-    this.dirLight = new THREE.DirectionalLight(0xfff5e6, 1.2);
-    this.dirLight.position.set(20, 40, 20);
+    // Lumière solaire principale dorée avec ombres douces filtrées
+    this.dirLight = new THREE.DirectionalLight(0xfffaed, 1.55);
+    this.dirLight.position.set(22, 42, 22);
     this.dirLight.castShadow = true;
     this.dirLight.shadow.mapSize.width = 1024;
     this.dirLight.shadow.mapSize.height = 1024;
     this.dirLight.shadow.camera.near = 0.5;
-    this.dirLight.shadow.camera.far = 120;
-    this.dirLight.shadow.camera.left = -15;
-    this.dirLight.shadow.camera.right = 15;
-    this.dirLight.shadow.camera.top = 20;
-    this.dirLight.shadow.camera.bottom = -15;
+    this.dirLight.shadow.camera.far = 130;
+    this.dirLight.shadow.camera.left = -16;
+    this.dirLight.shadow.camera.right = 16;
+    this.dirLight.shadow.camera.top = 22;
+    this.dirLight.shadow.camera.bottom = -16;
+    this.dirLight.shadow.bias = -0.0004;
+    this.dirLight.shadow.normalBias = 0.025;
     this.scene.add(this.dirLight);
 
-    // Brouillard atmosphérique
-    this.scene.fog = new THREE.Fog(0xd8e8f8, 30, 160);
+    // Lumière de contre-jour (Rim light cartoon bleu pastel) pour détacher la silhouette
+    this.rimLight = new THREE.DirectionalLight(0x81ecec, 0.45);
+    this.rimLight.position.set(-15, 12, -20);
+    this.scene.add(this.rimLight);
+
+    // Brouillard atmosphérique doux et profond
+    this.scene.fog = new THREE.Fog(0xd8e8f8, 35, 180);
 
     // Propriétés de caméra dynamique
     this.cameraTarget = new THREE.Vector3(0, 1.2, 0);
@@ -68,7 +80,13 @@ export class Engine {
   applyCityAtmosphere(cityDef) {
     this.scene.background = new THREE.Color(cityDef.skyColor);
     this.scene.fog.color = new THREE.Color(cityDef.fogColor);
-    this.ambientLight.color = new THREE.Color(cityDef.ambientColor);
+    if (this.hemiLight) {
+      this.hemiLight.color = new THREE.Color(cityDef.skyColor);
+      this.hemiLight.groundColor = new THREE.Color(cityDef.ambientColor);
+    }
+    if (this.dirLight) {
+      this.dirLight.color = new THREE.Color(0xfffaed);
+    }
   }
 
   triggerCameraShake(intensity = 0.3) {
