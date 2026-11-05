@@ -13,7 +13,8 @@ const DEFAULT_SAVE = {
     'paris', 'bruxelles', 'londres', 'saint-malo', 'bordeaux', 'barcelone',
     'madrid', 'lisbonne',
     'millau', 'marseille', 'nice', 'milan', 'geneve', 'chamonix',
-    'annecy', 'lyon', 'strasbourg', 'rome', 'napoli', 'tunis', 'annaba', 'alger'
+    'annecy', 'lyon', 'strasbourg', 'rome', 'napoli', 'tunis', 'annaba', 'alger',
+    'berlin', 'amsterdam', 'seville', 'casablanca', 'venise'
   ],
   cityScores: {
     paris: { bestScore: 0, stars: 0, completed: false },
@@ -49,6 +50,7 @@ const DEFAULT_SAVE = {
   stats: {
     totalScore: 0,
     totalInteractions: 0, // Personnes heurtées
+    totalKills: 0, // Exterminations sadique / carnage
     totalDistance: 0,
     totalRuns: 0,
     maxCombo: 1,
@@ -137,6 +139,18 @@ export class Storage {
     if (redLight) {
       this.data.stats.redLightsRun = (this.data.stats.redLightsRun || 0) + 1;
     }
+    this.save();
+  }
+
+  addCoins(amount = 20) {
+    this.data.coins = (this.data.coins || 0) + amount;
+    this.save();
+    return this.data.coins;
+  }
+
+  incrementTotalKills(amount = 1) {
+    if (!this.data.stats.totalKills) this.data.stats.totalKills = 0;
+    this.data.stats.totalKills += amount;
     this.save();
   }
 

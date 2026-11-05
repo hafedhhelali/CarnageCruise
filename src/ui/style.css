@@ -832,20 +832,21 @@ html, body {
   margin-top: 2px;
 }
 
-/* CONTRÔLES DE ZOOM FLOTTANTS DE LA CARTE */
+/* CONTRÔLES DE ZOOM FLOTTANTS DE LA CARTE (DOCKÉS EN HAUT À DROITE DANS LE VIEWPORT, NE COUVRENT PAS LE TITRE) */
+.europe-map-scroll-viewport .map-zoom-controls,
 .map-zoom-controls {
   position: absolute;
-  top: 70px;
-  left: 14px;
+  top: 14px;
+  right: 14px;
+  left: auto;
   bottom: auto;
-  right: auto;
   display: flex;
   flex-direction: row;
   align-items: center;
   gap: 6px;
-  z-index: 25;
-  background: rgba(15, 23, 42, 0.9);
-  border: 1px solid rgba(0, 206, 201, 0.5);
+  z-index: 35;
+  background: rgba(15, 23, 42, 0.92);
+  border: 1px solid rgba(0, 206, 201, 0.6);
   border-radius: 30px;
   padding: 4px 10px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.75);
@@ -1834,3 +1835,202 @@ html, body {
 .btn-legal-link:active {
   color: var(--primary);
 }
+
+/* =========================================================
+   STYLE EXTENSIONS : CARNAGE HUD, REWARDS AD & GARAGE ADS
+   ========================================================= */
+
+/* BADGE CARNAGE POPULATION DANS LE SPEEDOMÈTRE */
+.hud-carnage-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  background: rgba(231, 76, 60, 0.22);
+  border: 1px solid #ff4757;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 0.72rem;
+  font-weight: 900;
+  color: #ff6b81;
+  text-shadow: 0 0 8px rgba(255, 71, 87, 0.6);
+  letter-spacing: 0.5px;
+}
+
+.carnage-icon {
+  font-size: 0.85rem;
+  filter: drop-shadow(0 0 4px #ff4757);
+}
+
+.carnage-count {
+  color: #fff;
+  font-size: 0.82rem;
+}
+
+.carnage-sep {
+  opacity: 0.6;
+}
+
+.carnage-quota {
+  color: #fffa65;
+}
+
+/* GROUPE DE CONTRÔLES DROIT ERGONOMIQUE */
+.hud-right-cluster {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.hud-nitro-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+/* BOUTON RECHARGE NITRO INSTANTANÉE PAR PUB */
+.btn-nitro-ad-refill {
+  background: linear-gradient(135deg, #f39c12, #e67e22);
+  border: 1px solid #fffa65;
+  color: #111;
+  font-size: 0.62rem;
+  font-weight: 900;
+  padding: 3px 6px;
+  border-radius: 8px;
+  cursor: pointer;
+  pointer-events: auto;
+  box-shadow: 0 2px 8px rgba(243, 156, 18, 0.4);
+  letter-spacing: 0.5px;
+  transition: transform 0.1s ease, filter 0.1s ease;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.btn-nitro-ad-refill:active {
+  transform: scale(0.92);
+  filter: brightness(1.2);
+}
+
+/* GROUPE DE MONNAIE & PUB DANS LE GARAGE */
+.currency-group-garage {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.currency-ad-tag {
+  background: linear-gradient(135deg, #10ac84, #1dd1a1);
+  border: 1px solid #7bed9f;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 900;
+  padding: 4px 10px;
+  border-radius: 14px;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(16, 172, 132, 0.4);
+  letter-spacing: 0.5px;
+  transition: transform 0.1s ease;
+}
+
+.currency-ad-tag:active {
+  transform: scale(0.92);
+}
+
+.btn-ad-coins {
+  background: linear-gradient(135deg, #10ac84, #1dd1a1) !important;
+  border: 2px solid #2ed573 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 15px rgba(46, 213, 115, 0.4) !important;
+}
+
+/* MODALE DE PUBLICITÉ RÉCOMPENSÉE / SPONSOR */
+.ad-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(10, 15, 29, 0.94);
+  backdrop-filter: blur(14px);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.ad-modal-card {
+  width: 100%;
+  max-width: 420px;
+  background: linear-gradient(160deg, #1e272e, #0f172a);
+  border: 2px solid #00f0ff;
+  border-radius: 24px;
+  padding: 24px 20px;
+  box-shadow: 0 12px 40px rgba(0, 240, 255, 0.35);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  box-sizing: border-box;
+  animation: adCardPop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes adCardPop {
+  0% { transform: scale(0.85); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.ad-sponsor-banner {
+  width: 100%;
+  padding: 14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  margin: 12px 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+}
+
+.ad-sponsor-logo {
+  font-size: 2.2rem;
+  line-height: 1;
+}
+
+.ad-progress-bar-bg {
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 14px 0 8px 0;
+}
+
+.ad-progress-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #00f0ff, #2ed573);
+  transition: width 0.2s linear;
+}
+
+.ad-btn-skip {
+  margin-top: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #dfe4ea;
+  font-size: 0.85rem;
+  font-weight: 800;
+  padding: 10px 18px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.ad-btn-skip:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+

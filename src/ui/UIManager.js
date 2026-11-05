@@ -11,6 +11,7 @@ import { soundManager } from '../audio/SoundManager.js';
 import { App } from '@capacitor/app';
 import { FULL_VERSION, APP_VERSION, COPYRIGHT_NOTICE, RELEASE_NAME, IS_BETA } from '../core/Version.js';
 import { REAL_COUNTRY_PATHS, REAL_TOUR_ROUTE_PATH } from './EuropeMapData.js';
+import { adManager } from '../services/AdManager.js';
 
 export class UIManager {
   constructor(rootElement, onActionCallback) {
@@ -214,21 +215,23 @@ export class UIManager {
           <button id="btn-map-garage" class="btn-round-action btn-garage-glow" title="Accéder au Garage">
             <span>🏍️</span>
           </button>
-          <div class="currency-pill">
+          <div class="currency-pill clickable" id="btn-header-ad-coins" title="Regarder une pub (+20 🪙)">
             <span>🪙 ${coins}</span>
+            <span class="currency-ad-tag">+20 📺</span>
           </div>
         </div>
       </div>
 
       <!-- CARTE D'EUROPE ET BASSIN MÉDITERRANÉEN HAUTE-FIDÉLITÉ AVEC ZOOM INTERACTIF -->
-      <div class="map-zoom-controls">
-        <button id="btn-zoom-in" class="btn-zoom" title="Agrandir la carte (Zoom +)">➕</button>
-        <span class="zoom-level-badge" id="zoom-badge">${Math.round(this.mapZoom * 100)}%</span>
-        <button id="btn-zoom-out" class="btn-zoom" title="Réduire la carte (Zoom -)">➖</button>
-        <button id="btn-zoom-reset" class="btn-zoom" title="Recentrer">🎯</button>
-      </div>
-
       <div class="europe-map-scroll-viewport" id="europe-viewport">
+        <!-- Contrôles de zoom intégrés à l'intérieur du cadre de carte (aucun masquage du titre) -->
+        <div class="map-zoom-controls">
+          <button id="btn-zoom-in" class="btn-zoom" title="Agrandir la carte (Zoom +)">➕</button>
+          <span class="zoom-level-badge" id="zoom-badge">${Math.round(this.mapZoom * 100)}%</span>
+          <button id="btn-zoom-out" class="btn-zoom" title="Réduire la carte (Zoom -)">➖</button>
+          <button id="btn-zoom-reset" class="btn-zoom" title="Recentrer">🎯</button>
+        </div>
+
         <div class="europe-map-canvas-container" id="europe-canvas">
           <svg class="europe-svg" viewBox="0 0 960 1100" preserveAspectRatio="none">
             <defs>
@@ -682,6 +685,15 @@ export class UIManager {
       });
     }
 
+    const headerAdBtn = mapScreen.querySelector('#btn-header-ad-coins');
+    if (headerAdBtn) {
+      headerAdBtn.addEventListener('click', () => {
+        adManager.showRewardedAd('COINS', () => {
+          this.render();
+        });
+      });
+    }
+
     this.root.appendChild(mapScreen);
     this.updateCityDetail(mapScreen.querySelector('#city-detail'));
 
@@ -727,21 +739,36 @@ export class UIManager {
 
       <div class="city-target-info">
         <span>🏆 Record : <strong>${cityData.bestScore} pts</strong></span>
-        <span>🎯 Objectif Étape : <strong>${city.targetScore} pts</strong></span>
+        <span>💀 Cible Carnage : <strong>${city.killQuota || 30} Victimes</strong></span>
       </div>
 
       <div class="city-detail-actions">
         ${unlocked ? `
           <button id="btn-launch-city" class="btn-arcade btn-play-pulse btn-action-launch">
-            <span>🚀 DÉPART • ÉTAPE ${stageIndex} : ${city.name.toUpperCase()}</span>
+            <span>🚀 EXTERMINER • ÉTAPE ${stageIndex} : ${city.name.toUpperCase()}</span>
+          </button>
+          <button id="btn-city-ad-coins" class="btn-arcade btn-ad-coins" title="Gagner +20 Pièces instantanément">
+            <span>📺 +20 🪙 (PUB)</span>
           </button>
         ` : `
           <button class="btn-arcade btn-action-locked" disabled>
             <span>🔒 BLOQUÉ (${city.unlockScoreRequired.toLocaleString('fr-FR')} PTS REQUIS)</span>
           </button>
+          <button id="btn-city-ad-coins" class="btn-arcade btn-ad-coins" title="Gagner +20 Pièces instantanément">
+            <span>📺 +20 🪙 (PUB)</span>
+          </button>
         `}
       </div>
     `;
+
+    const cityAdBtn = detailCard.querySelector('#btn-city-ad-coins');
+    if (cityAdBtn) {
+      cityAdBtn.addEventListener('click', () => {
+        adManager.showRewardedAd('COINS', () => {
+          this.render();
+        });
+      });
+    }
 
     if (unlocked) {
       const launchBtn = detailCard.querySelector('#btn-launch-city');
@@ -749,7 +776,10 @@ export class UIManager {
         launchBtn.addEventListener('click', () => {
           soundManager.playClick();
           gameState.selectCity(city.id);
-          this.triggerCityEntryCinematic(city);
+          // Publicité interstitielle lors du passage vers une ville
+          adManager.showCityTransitionAd(city, () => {
+            this.triggerCityEntryCinematic(city);
+          });
         });
       }
     }
@@ -807,8 +837,13 @@ export class UIManager {
             BOLIDE ${currentIdx + 1} / ${BIKES.length} • ${this.selectedGarageBike.category || 'MOTO'}
           </span>
         </div>
-        <div class="currency-badge currency-pill">
-          <span>🪙 ${coins}</span>
+        <div class="currency-group-garage">
+          <div class="currency-badge currency-pill">
+            <span>🪙 ${coins}</span>
+          </div>
+          <button id="btn-garage-ad-coins" class="currency-ad-tag" title="Regarder un spot pour +20 Pièces">
+            <span>📺 +20 🪙</span>
+          </button>
         </div>
       </div>
 
@@ -853,6 +888,16 @@ export class UIManager {
       if (this.onAction) this.onAction('PREVIEW_BIKE', equippedBike);
       this.setScreen(this.previousScreen || 'MAP');
     });
+
+    // Bouton de publicité dans le header du garage pour +20 pièces
+    const garageAdBtn = garage.querySelector('#btn-garage-ad-coins');
+    if (garageAdBtn) {
+      garageAdBtn.addEventListener('click', () => {
+        adManager.showRewardedAd('COINS', () => {
+          this.render();
+        });
+      });
+    }
 
     this.root.appendChild(garage);
     this.updateGarageBikeInfo(garage.querySelector('#garage-bike-info'));
@@ -933,6 +978,9 @@ export class UIManager {
           <button id="btn-buy-bike" class="btn-arcade btn-accent" style="width: 100%; padding: 13px; font-size: 1rem;">
             DÉBLOQUER CE VÉHICULE (🪙 ${bike.cost})
           </button>
+          <button id="btn-garage-ad-quick" class="btn-arcade btn-ad-coins" style="width: 100%; margin-top: 8px; padding: 10px; font-size: 0.92rem;">
+            📺 PIÈCES INSUFFISANTES ? REGARDER PUB (+20 🪙)
+          </button>
         `}
       </div>
     `;
@@ -968,20 +1016,32 @@ export class UIManager {
         this.setScreen('MAP');
       });
     } else if (!isUnlocked) {
-      container.querySelector('#btn-buy-bike').addEventListener('click', () => {
-        const res = storage.unlockBike(bike.id, bike.cost);
-        if (res.success) {
-          storage.equipBike(bike.id);
-          gameState.selectBike(bike.id);
-          soundManager.playVictory();
-          if (this.onAction) this.onAction('BIKE_EQUIPPED', bike);
-          this.showToastUnlock({ name: `${bike.name} Débloqué & Équipé !` });
-          this.setScreen('MAP');
-        } else {
-          soundManager.playBoing();
-          alert(res.reason);
-        }
-      });
+      const buyBtn = container.querySelector('#btn-buy-bike');
+      if (buyBtn) {
+        buyBtn.addEventListener('click', () => {
+          const res = storage.unlockBike(bike.id, bike.cost);
+          if (res.success) {
+            storage.equipBike(bike.id);
+            gameState.selectBike(bike.id);
+            soundManager.playVictory();
+            if (this.onAction) this.onAction('BIKE_EQUIPPED', bike);
+            this.showToastUnlock({ name: `${bike.name} Débloqué & Équipé !` });
+            this.setScreen('MAP');
+          } else {
+            soundManager.playBoing();
+            alert(res.reason);
+          }
+        });
+      }
+
+      const quickAdBtn = container.querySelector('#btn-garage-ad-quick');
+      if (quickAdBtn) {
+        quickAdBtn.addEventListener('click', () => {
+          adManager.showRewardedAd('COINS', () => {
+            this.render();
+          });
+        });
+      }
     }
   }
 
@@ -1062,7 +1122,7 @@ export class UIManager {
           <span class="pedal-label">FREIN</span>
         </button>
 
-        <!-- Compteur de vitesse moderne centré (dégagé et lisible) -->
+        <!-- Compteur de vitesse moderne centré & Carnage Pop exterminée -->
         <div class="speedometer-center">
           <div class="speed-dial">
             <span class="speed-value" id="hud-speed-val">0</span>
@@ -1071,23 +1131,36 @@ export class UIManager {
           <div class="speed-track-gauge">
             <div class="speed-fill-gauge" id="hud-speed-gauge"></div>
           </div>
+          <div class="hud-carnage-badge" id="hud-carnage-badge" title="Victimes exterminées / Objectif de carnage">
+            <span class="carnage-icon">💀</span>
+            <span class="carnage-count" id="hud-kills-val">${gameState.killsCount || 0}</span>
+            <span class="carnage-sep">/</span>
+            <span class="carnage-quota" id="hud-quota-val">${gameState.selectedCity.killQuota || 30}</span>
+          </div>
         </div>
 
-        <!-- Bouton Nitro Boost 5s avec jauge rechargeable (pouce droit / Espace) -->
-        <button class="btn-nitro-pedal" id="btn-hud-nitro" title="Activer le Nitro Boost 5s (Touche Espace / Shift)">
-          <div class="nitro-fill-track">
-            <div class="nitro-fill-bar" id="hud-nitro-fill" style="width: 0%;"></div>
+        <!-- Groupe de commandes droit ergonomique (Nitro + Pub + Arme/Klaxon) -->
+        <div class="hud-right-cluster">
+          <div class="hud-nitro-group">
+            <button class="btn-nitro-pedal" id="btn-hud-nitro" title="Activer le Nitro Boost 5s (Touche Espace / Shift)">
+              <div class="nitro-fill-track">
+                <div class="nitro-fill-bar" id="hud-nitro-fill" style="width: 0%;"></div>
+              </div>
+              <span class="nitro-icon">⚡</span>
+              <span class="nitro-label" id="hud-nitro-label">NITRO</span>
+              <span class="nitro-sub" id="hud-nitro-sub">0%</span>
+            </button>
+            <button class="btn-nitro-ad-refill" id="btn-hud-nitro-ad" title="Recharger immédiatement le Nitro avec un spot publicitaire">
+              <span>📺 RECHARGE</span>
+            </button>
           </div>
-          <span class="nitro-icon">⚡</span>
-          <span class="nitro-label" id="hud-nitro-label">NITRO</span>
-          <span class="nitro-sub" id="hud-nitro-sub">0%</span>
-        </button>
 
-        <!-- Bouton d'Attaque / Frappe / Tir / Klaxon (pouce droit) -->
-        <button class="btn-horn-pedal ${isWeapon ? 'btn-attack-pedal' : ''}" id="btn-hud-horn" title="${actionTitle}">
-          <span class="horn-icon">${actionIcon}</span>
-          <span class="horn-label">${actionLabel}</span>
-        </button>
+          <!-- Bouton d'Attaque / Frappe / Tir / Klaxon (pouce droit) -->
+          <button class="btn-horn-pedal ${isWeapon ? 'btn-attack-pedal' : ''}" id="btn-hud-horn" title="${actionTitle}">
+            <span class="horn-icon">${actionIcon}</span>
+            <span class="horn-label">${actionLabel}</span>
+          </button>
+        </div>
       </div>
 
       <div class="touch-hint">
@@ -1119,6 +1192,19 @@ export class UIManager {
         if (ok) {
           if (this.onAction) this.onAction('NITRO');
         }
+      });
+    }
+
+    // Gestion de la recharge instantanée Nitro par publicité
+    const nitroAdBtn = hud.querySelector('#btn-hud-nitro-ad');
+    if (nitroAdBtn) {
+      nitroAdBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        adManager.showRewardedAd('NITRO', () => {
+          gameState.refillNitro();
+          soundManager.playPowerUp();
+          this.showToastUnlock({ name: '⚡ NITRO RECHARGÉ À 100% !' });
+        });
       });
     }
 
@@ -1291,6 +1377,16 @@ export class UIManager {
       } else {
         targetRemaining.textContent = `Reste : ${diff.toLocaleString('fr-FR')} pts`;
       }
+    }
+
+    // Mise à jour du compteur de carnage / extermination
+    const killsVal = this.root.querySelector('#hud-kills-val');
+    const quotaVal = this.root.querySelector('#hud-quota-val');
+    if (killsVal && data.kills !== undefined) {
+      killsVal.textContent = data.kills;
+    }
+    if (quotaVal && data.killQuota !== undefined) {
+      quotaVal.textContent = data.killQuota;
     }
     // Mise à jour de la jauge et du bouton Nitro 5 secondes
     const nitroFill = this.root.querySelector('#hud-nitro-fill');

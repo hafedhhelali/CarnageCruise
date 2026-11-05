@@ -160,45 +160,120 @@ export class Bike {
   createWheel(radius, width, rubberMat, chromeMat) {
     const wheelGroup = new THREE.Group();
 
-    // Pneu
-    const tireGeo = new THREE.CylinderGeometry(radius, radius, width, 18);
+    // 1. Pneu sculpté avec profil arrondi et flanc épais
+    const tireGeo = new THREE.CylinderGeometry(radius, radius, width, 24);
     const tire = new THREE.Mesh(tireGeo, rubberMat);
     tire.rotation.z = Math.PI / 2;
     tire.castShadow = true;
     wheelGroup.add(tire);
 
-    // Jante
-    const rimGeo = new THREE.CylinderGeometry(radius * 0.65, radius * 0.65, width * 1.05, 12);
+    // Épaulement arrondi du pneu
+    const treadGeo = new THREE.TorusGeometry(radius * 0.94, width * 0.38, 8, 24);
+    const treadL = new THREE.Mesh(treadGeo, rubberMat);
+    treadL.rotation.y = Math.PI / 2;
+    treadL.position.x = -width * 0.22;
+    const treadR = treadL.clone();
+    treadR.position.x = width * 0.22;
+    wheelGroup.add(treadL, treadR);
+
+    // 2. Jante aluminium / chrome à gorge profonde
+    const rimGeo = new THREE.CylinderGeometry(radius * 0.68, radius * 0.68, width * 1.02, 18);
     const rim = new THREE.Mesh(rimGeo, chromeMat);
     rim.rotation.z = Math.PI / 2;
     wheelGroup.add(rim);
 
-    // Rayons / Bâtons
-    const spokeGeo = new THREE.BoxGeometry(radius * 1.2, width * 1.1, 0.05);
-    const spoke1 = new THREE.Mesh(spokeGeo, chromeMat);
-    const spoke2 = new THREE.Mesh(spokeGeo, chromeMat);
-    spoke2.rotation.y = Math.PI / 2;
-    wheelGroup.add(spoke1);
-    wheelGroup.add(spoke2);
+    // Rebord de jante usiné
+    const lipGeo = new THREE.TorusGeometry(radius * 0.68, width * 0.08, 6, 20);
+    const lipL = new THREE.Mesh(lipGeo, chromeMat);
+    lipL.rotation.y = Math.PI / 2;
+    lipL.position.x = -width * 0.51;
+    const lipR = lipL.clone();
+    lipR.position.x = width * 0.51;
+    wheelGroup.add(lipL, lipR);
+
+    // 3. Disque de frein en acier perforé
+    const discMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.9, roughness: 0.2 });
+    const discGeo = new THREE.CylinderGeometry(radius * 0.52, radius * 0.52, width * 0.16, 16);
+    const disc = new THREE.Mesh(discGeo, discMat);
+    disc.rotation.z = Math.PI / 2;
+    disc.position.x = width * 0.32;
+    wheelGroup.add(disc);
+
+    // Étrier de frein rouge Brembo haute performance
+    const caliperMat = new THREE.MeshToonMaterial({ color: 0xe74c3c });
+    const caliper = new THREE.Mesh(new THREE.BoxGeometry(width * 0.38, radius * 0.26, radius * 0.2), caliperMat);
+    caliper.position.set(width * 0.32, radius * 0.35, 0);
+    wheelGroup.add(caliper);
+
+    // 4. Bâtons de jante sport en étoile à 5 branches doubles
+    for (let s = 0; s < 5; s++) {
+      const ang = (s / 5) * Math.PI * 2;
+      const spoke = new THREE.Mesh(new THREE.BoxGeometry(width * 0.95, radius * 0.64, 0.035), chromeMat);
+      spoke.position.set(0, Math.cos(ang) * (radius * 0.32), Math.sin(ang) * (radius * 0.32));
+      spoke.rotation.x = -ang;
+      wheelGroup.add(spoke);
+    }
+
+    // 5. Moyeu central chromé
+    const hubNut = new THREE.Mesh(new THREE.CylinderGeometry(radius * 0.14, radius * 0.14, width * 1.15, 8), chromeMat);
+    hubNut.rotation.z = Math.PI / 2;
+    wheelGroup.add(hubNut);
 
     return wheelGroup;
   }
 
   buildScooter(bodyMat, chromeMat, rubberMat, leatherMat, lampMat) {
-    // Roue arrière
+    // Roue arrière sport
     const rearWheel = this.createWheel(0.32, 0.18, rubberMat, chromeMat);
     rearWheel.position.set(0, 0.32, -0.65);
     this.bikeModelGroup.add(rearWheel);
     this.wheels.push(rearWheel);
 
-    // Carrosserie galbée arrière
+    // Carrosserie galbée arrière avec ailes galbées Vespa
     const rearBodyGeo = new THREE.BoxGeometry(0.55, 0.45, 0.85);
     const rearBody = new THREE.Mesh(rearBodyGeo, bodyMat);
     rearBody.position.set(0, 0.55, -0.45);
     rearBody.castShadow = true;
     this.bikeModelGroup.add(rearBody);
 
-    // Selle en cuir biplace rétro
+    // Ailes arrière galbées arrondies
+    for (let s of [-1, 1]) {
+      const cowlGeo = new THREE.SphereGeometry(0.24, 10, 8);
+      cowlGeo.scale(0.5, 0.9, 1.6);
+      const cowl = new THREE.Mesh(cowlGeo, bodyMat);
+      cowl.position.set(s * 0.28, 0.52, -0.45);
+      this.bikeModelGroup.add(cowl);
+
+      // Baguette chromée latérale sur chaque aile
+      const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.03, 0.7), chromeMat);
+      stripe.position.set(s * 0.34, 0.52, -0.45);
+      this.bikeModelGroup.add(stripe);
+    }
+
+    // Feu arrière rouge rubis rétro
+    const rubyMat = new THREE.MeshBasicMaterial({ color: 0xe74c3c });
+    const tailLamp = new THREE.Mesh(new THREE.SphereGeometry(0.065, 8, 8), rubyMat);
+    tailLamp.position.set(0, 0.65, -0.88);
+    this.bikeModelGroup.add(tailLamp);
+
+    // Porte-bagages chromé arrière avec malle en cuir rétro
+    const rack = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.04, 0.28), chromeMat);
+    rack.position.set(0, 0.82, -0.82);
+    this.bikeModelGroup.add(rack);
+
+    const trunk = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.2, 0.22), leatherMat);
+    trunk.position.set(0, 0.94, -0.82);
+    this.bikeModelGroup.add(trunk);
+
+    // Boucles dorées de la malle
+    const goldMat = new THREE.MeshStandardMaterial({ color: 0xffd700, metalness: 0.9, roughness: 0.2 });
+    for (let s of [-0.1, 0.1]) {
+      const buckle = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.05, 0.02), goldMat);
+      buckle.position.set(s, 0.94, -0.7);
+      this.bikeModelGroup.add(buckle);
+    }
+
+    // Selle en cuir biplace rétro avec surpiqûres
     const seatGeo = new THREE.BoxGeometry(0.42, 0.14, 0.7);
     const seat = new THREE.Mesh(seatGeo, leatherMat);
     seat.position.set(0, 0.84, -0.4);
@@ -213,7 +288,13 @@ export class Bike {
     apron.castShadow = true;
     this.bikeModelGroup.add(apron);
 
-    // Plancher cale-pieds
+    // Baguette et insigne central de tablier
+    const crest = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.45, 0.04), chromeMat);
+    crest.position.set(0, 0.72, 0.42);
+    crest.rotation.x = -0.15;
+    this.bikeModelGroup.add(crest);
+
+    // Plancher cale-pieds avec lattes antidérapantes
     const floorGeo = new THREE.BoxGeometry(0.45, 0.06, 0.6);
     const floor = new THREE.Mesh(floorGeo, rubberMat);
     floor.position.set(0, 0.32, -0.05);
@@ -233,30 +314,33 @@ export class Bike {
     stem.rotation.x = -0.12;
     forkGroup.add(stem);
 
-    // Guidon
+    // Guidon caréné
     const handleGeo = new THREE.BoxGeometry(0.7, 0.05, 0.05);
     const handle = new THREE.Mesh(handleGeo, chromeMat);
     handle.position.set(0, 0.85, -0.05);
     forkGroup.add(handle);
 
-    // Poignées
+    // Poignées ergonomiques
     const gripGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.15, 8);
     const gripL = new THREE.Mesh(gripGeo, rubberMat);
     gripL.rotation.z = Math.PI / 2;
     gripL.position.set(-0.35, 0.85, -0.05);
     const gripR = gripL.clone();
     gripR.position.set(0.35, 0.85, -0.05);
-    forkGroup.add(gripL);
-    forkGroup.add(gripR);
+    forkGroup.add(gripL, gripR);
 
-    // Phare rond avant
-    const lampGeo = new THREE.SphereGeometry(0.12, 12, 8);
+    // Phare rond avant avec bague chromée
+    const lampBezel = new THREE.Mesh(new THREE.TorusGeometry(0.12, 0.025, 8, 16), chromeMat);
+    lampBezel.position.set(0, 0.88, 0.07);
+    forkGroup.add(lampBezel);
+
+    const lampGeo = new THREE.SphereGeometry(0.11, 12, 8);
     const lamp = new THREE.Mesh(lampGeo, lampMat);
     lamp.position.set(0, 0.88, 0.05);
     forkGroup.add(lamp);
 
-    // Rétroviseurs chromés
-    const mirrorGeo = new THREE.CylinderGeometry(0.06, 0.06, 0.02, 10);
+    // Rétroviseurs chromés arrondis
+    const mirrorGeo = new THREE.CylinderGeometry(0.065, 0.065, 0.02, 12);
     const mirrorL = new THREE.Mesh(mirrorGeo, chromeMat);
     mirrorL.rotation.x = Math.PI / 2;
     mirrorL.position.set(-0.32, 1.02, -0.05);
@@ -269,11 +353,11 @@ export class Bike {
     this.frontFork = forkGroup;
     this.bikeModelGroup.add(forkGroup);
 
-    // Échappement discret
-    const exhaustGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.5, 8);
+    // Échappement chromé avec silencieux conique
+    const exhaustGeo = new THREE.CylinderGeometry(0.045, 0.06, 0.55, 8);
     const exhaust = new THREE.Mesh(exhaustGeo, chromeMat);
     exhaust.rotation.x = Math.PI / 2;
-    exhaust.position.set(0.25, 0.28, -0.6);
+    exhaust.position.set(0.26, 0.28, -0.6);
     this.bikeModelGroup.add(exhaust);
   }
 
@@ -989,11 +1073,36 @@ export class Bike {
     dash.position.set(0, 0.75, 0.1);
     carGroup.add(dash);
 
+    // 3 Compteurs ronds chromés sur la planche de bord
+    const gaugeDialMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    for (let g of [-0.25, 0, 0.25]) {
+      const bezel = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.065, 0.02, 10), chromeMat);
+      bezel.rotation.x = Math.PI / 2.8;
+      bezel.position.set(g, 0.85, 0.16);
+      carGroup.add(bezel);
+      const dial = new THREE.Mesh(new THREE.CylinderGeometry(0.052, 0.052, 0.022, 10), gaugeDialMat);
+      dial.rotation.x = Math.PI / 2.8;
+      dial.position.set(g, 0.85, 0.165);
+      carGroup.add(dial);
+    }
+
     const wheelGroup = new THREE.Group();
     wheelGroup.position.set(0, 0.88, 0.02);
     wheelGroup.rotation.x = -Math.PI / 4.2;
     const steerRim = new THREE.Mesh(new THREE.TorusGeometry(0.18, 0.025, 8, 14), chromeMat);
     wheelGroup.add(steerRim);
+
+    // 3 Branches sportives du volant
+    for (let s = 0; s < 3; s++) {
+      const ang = (s / 3) * Math.PI * 2;
+      const spoke = new THREE.Mesh(new THREE.BoxGeometry(0.025, 0.16, 0.015), chromeMat);
+      spoke.position.set(Math.cos(ang) * 0.08, Math.sin(ang) * 0.08, 0);
+      spoke.rotation.z = ang - Math.PI / 2;
+      wheelGroup.add(spoke);
+    }
+    const hornCenter = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 8), leatherMat);
+    wheelGroup.add(hornCenter);
+
     carGroup.add(wheelGroup);
     this.carSteeringWheel = wheelGroup;
 
@@ -1001,6 +1110,19 @@ export class Bike {
     const bumperR = new THREE.Mesh(new THREE.BoxGeometry(1.68, 0.12, 0.1), chromeMat);
     bumperR.position.set(0, 0.4, -1.38);
     carGroup.add(bumperR);
+
+    // Feux arrière ogives chromées avec cabochon rouge rubis
+    const rubyMat = new THREE.MeshBasicMaterial({ color: 0xff3838 });
+    for (let s of [-0.62, 0.62]) {
+      const finLightHousing = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.22, 8), chromeMat);
+      finLightHousing.rotation.x = Math.PI / 2;
+      finLightHousing.position.set(s, 0.65, -1.35);
+      carGroup.add(finLightHousing);
+
+      const finRuby = new THREE.Mesh(new THREE.SphereGeometry(0.065, 8, 8), rubyMat);
+      finRuby.position.set(s, 0.65, -1.45);
+      carGroup.add(finRuby);
+    }
 
     const exL = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.3, 8), chromeMat);
     exL.rotation.x = Math.PI / 2;
@@ -1012,7 +1134,7 @@ export class Bike {
     this.bikeModelGroup.add(carGroup);
   }
 
-  // --- TROTTINETTE AVEC DOUBLE HACHE DE GUERRE ---
+  // --- TROTTINETTE AVEC DOUBLE HACHE DE GUERRE & NÉON UNDERGLOW ---
   buildTrottinetteHache(bodyMat, chromeMat, rubberMat, leatherMat, lampMat) {
     const scootGroup = new THREE.Group();
 
@@ -1022,6 +1144,12 @@ export class Bike {
     deck.position.set(0, 0.24, -0.1);
     deck.castShadow = true;
     scootGroup.add(deck);
+
+    // Néon sous châssis (Underglow cyan électrique futuriste)
+    const underglowMat = new THREE.MeshBasicMaterial({ color: 0x00f5d4, transparent: true, opacity: 0.85 });
+    const underglow = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.03, 1.35), underglowMat);
+    underglow.position.set(0, 0.18, -0.1);
+    scootGroup.add(underglow);
 
     // Grip de skateboard noir antidérapant
     const gripMat = new THREE.MeshBasicMaterial({ color: 0x111111 });

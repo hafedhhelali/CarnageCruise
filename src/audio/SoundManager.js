@@ -158,6 +158,33 @@ export class SoundManager {
       voiceGain.gain.setValueAtTime(0.38, now);
       voiceGain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
       voiceOsc.stop(now + 0.28);
+    } else if (category === 'stroller') {
+      // POUSSETTE : Cri bébé aigu ("Ouin !") + tintement hochet et carambolage de roues métalliques
+      voiceOsc.type = 'sine';
+      voiceOsc.frequency.setValueAtTime(880, now);
+      voiceOsc.frequency.linearRampToValueAtTime(1120, now + 0.09);
+      voiceOsc.frequency.exponentialRampToValueAtTime(620, now + 0.36);
+
+      formantFilter.frequency.setValueAtTime(2200, now);
+      formantFilter.Q.value = 4.2;
+
+      voiceGain.gain.setValueAtTime(0.45, now);
+      voiceGain.gain.exponentialRampToValueAtTime(0.001, now + 0.36);
+      voiceOsc.stop(now + 0.36);
+
+      // Choc métallique vibrant du châssis de poussette qui rouleboule
+      const metalOsc = this.ctx.createOscillator();
+      const metalGain = this.ctx.createGain();
+      metalOsc.type = 'sawtooth';
+      metalOsc.frequency.setValueAtTime(1350, now + 0.02);
+      metalOsc.frequency.exponentialRampToValueAtTime(260, now + 0.14);
+      metalGain.gain.setValueAtTime(0.35, now + 0.02);
+      metalGain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+      metalOsc.connect(metalGain);
+      metalGain.connect(this.ctx.destination);
+      metalOsc.onended = () => this.cleanupNodes(metalOsc, metalGain);
+      metalOsc.start(now + 0.02);
+      metalOsc.stop(now + 0.14);
     } else if (category === 'elderly') {
       // VIEUX (Papy / Mamie) : Voix rauque chevrotante ("Oh là là !" + impact de canne)
       voiceOsc.type = 'triangle';
@@ -888,73 +915,93 @@ export class SoundManager {
 
   // --- MUSIQUE D'ARCADE ÉNERGIQUE PROCÉDURALE ---
 
+  // --- MUSIQUE SADIQUE INDUSTRIELLE & CYBERPUNK (EXTERMINATION MONDIALE) ---
   startMusic() {
     if (this.musicPlaying || this.isMutedMusic || !this.ctx || this.isDestroyed) return;
     this.resumeContext();
     this.musicPlaying = true;
 
-    const tempo = 132;
+    const tempo = 136;
     const beatDuration = 60 / tempo;
     const stepDuration = beatDuration / 2;
     let step = 0;
 
+    // Ligne de basse agressive & sadique en Ré mineur / Tritons ténébreux
     const bassLine = [
-      130.81, 130.81, 196.00, 130.81, 164.81, 130.81, 196.00, 261.63,
-      110.00, 110.00, 164.81, 110.00, 146.83, 110.00, 164.81, 220.00,
-      87.31, 87.31, 130.81, 87.31, 116.54, 87.31, 130.81, 174.61,
-      98.00, 98.00, 146.83, 98.00, 123.47, 98.00, 146.83, 196.00
+      73.42, 73.42, 110.00, 73.42, 103.83, 73.42, 110.00, 146.83, // D1 / A1 / G#1 (triton démoniaque)
+      73.42, 73.42, 87.31, 73.42, 110.00, 98.00, 87.31, 103.83,   // D1 / F1 / G#1
+      65.41, 65.41, 98.00, 65.41, 123.47, 65.41, 98.00, 130.81,   // C1 / G1 / B1
+      69.30, 69.30, 103.83, 69.30, 138.59, 103.83, 92.50, 73.42   // C#1 / F#1 (tension sadique maximale)
     ];
 
+    // Arpèges sombres, stridents et métalliques
     const leadLine = [
-      523.25, 0, 659.25, 783.99, 0, 659.25, 523.25, 0,
-      440.00, 0, 523.25, 659.25, 0, 523.25, 440.00, 0,
-      349.23, 0, 440.00, 523.25, 0, 440.00, 349.23, 0,
-      392.00, 493.88, 587.33, 698.46, 783.99, 698.46, 587.33, 493.88
+      293.66, 0, 349.23, 415.30, 0, 440.00, 293.66, 0,            // D4, F4, G#4, A4
+      349.23, 415.30, 0, 440.00, 587.33, 0, 415.30, 349.23,
+      261.63, 0, 329.63, 392.00, 0, 523.25, 392.00, 0,            // C4, E4, G4, C5
+      277.18, 0, 349.23, 415.30, 554.37, 415.30, 349.23, 293.66   // C#4, F4, G#4, C#5
     ];
 
     const playStep = () => {
       if (!this.musicPlaying || !this.ctx || this.isDestroyed) return;
       const now = this.ctx.currentTime;
 
-      // Note de basse
+      // 1. Grosse Basse Distordue Sawtooth
       const bassFreq = bassLine[step % bassLine.length];
       if (bassFreq > 0) {
         const bassOsc = this.ctx.createOscillator();
         const bassGain = this.ctx.createGain();
-        bassOsc.type = 'triangle';
+        const filter = this.ctx.createBiquadFilter();
+
+        bassOsc.type = 'sawtooth';
         bassOsc.frequency.setValueAtTime(bassFreq, now);
 
-        bassGain.gain.setValueAtTime(0.12, now);
-        bassGain.gain.exponentialRampToValueAtTime(0.001, now + stepDuration * 0.9);
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(650, now);
+        filter.frequency.exponentialRampToValueAtTime(180, now + stepDuration * 0.9);
 
-        bassOsc.connect(bassGain);
+        bassGain.gain.setValueAtTime(0.18, now);
+        bassGain.gain.exponentialRampToValueAtTime(0.001, now + stepDuration * 0.95);
+
+        bassOsc.connect(filter);
+        filter.connect(bassGain);
         bassGain.connect(this.ctx.destination);
 
-        bassOsc.onended = () => this.cleanupNodes(bassOsc, bassGain);
+        bassOsc.onended = () => this.cleanupNodes(bassOsc, filter, bassGain);
         bassOsc.start(now);
-        bassOsc.stop(now + stepDuration * 0.9);
+        bassOsc.stop(now + stepDuration * 0.95);
       }
 
-      // Note de lead
+      // 2. Lead Synthétique Sombre & Aigu
       const leadFreq = leadLine[step % leadLine.length];
       if (leadFreq > 0) {
         const leadOsc = this.ctx.createOscillator();
         const leadGain = this.ctx.createGain();
-        leadOsc.type = 'sine';
+        leadOsc.type = 'square';
         leadOsc.frequency.setValueAtTime(leadFreq, now);
 
-        leadGain.gain.setValueAtTime(0.08, now);
-        leadGain.gain.exponentialRampToValueAtTime(0.001, now + stepDuration * 0.75);
+        leadGain.gain.setValueAtTime(0.065, now);
+        leadGain.gain.exponentialRampToValueAtTime(0.001, now + stepDuration * 0.85);
 
         leadOsc.connect(leadGain);
         leadGain.connect(this.ctx.destination);
 
         leadOsc.onended = () => this.cleanupNodes(leadOsc, leadGain);
         leadOsc.start(now);
-        leadOsc.stop(now + stepDuration * 0.75);
+        leadOsc.stop(now + stepDuration * 0.85);
       }
 
-      // Charleston / Hi-Hat rythmique arcade sur chaque contre-temps
+      // 3. Kick Industriel Lourd (temps 0, 4, 8, 12)
+      if (step % 4 === 0) {
+        this.playIndustrialKick(now);
+      }
+
+      // 4. Snare / Claque Métallique (temps 2, 6, 10, 14)
+      if (step % 4 === 2) {
+        this.playMetalSnare(now);
+      }
+
+      // 5. Hi-Hat frénétique
       if (step % 2 === 1) {
         this.playHiHat(now);
       }
@@ -964,6 +1011,107 @@ export class SoundManager {
     };
 
     playStep();
+  }
+
+  playIndustrialKick(time) {
+    if (!this.ctx || this.isDestroyed) return;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(150, time);
+    osc.frequency.exponentialRampToValueAtTime(32, time + 0.14);
+
+    gain.gain.setValueAtTime(0.35, time);
+    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.16);
+
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+
+    osc.onended = () => this.cleanupNodes(osc, gain);
+    osc.start(time);
+    osc.stop(time + 0.16);
+  }
+
+  playMetalSnare(time) {
+    if (!this.ctx || this.isDestroyed) return;
+    const bufferSize = Math.floor(this.ctx.sampleRate * 0.12);
+    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.3));
+    }
+
+    const noise = this.ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(1400, time);
+
+    const gain = this.ctx.createGain();
+    gain.gain.setValueAtTime(0.18, time);
+    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.12);
+
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.ctx.destination);
+
+    noise.onended = () => this.cleanupNodes(noise, filter, gain);
+    noise.start(time);
+  }
+
+  // Rire démoniaque et sadique lors des massacres
+  playEvilLaugh() {
+    if (!this.ctx || this.isMutedSfx || this.isDestroyed) return;
+    this.resumeContext();
+
+    const now = this.ctx.currentTime;
+    const laughNotes = [260, 220, 290, 210, 270, 180, 150];
+
+    laughNotes.forEach((freq, idx) => {
+      const noteTime = now + idx * 0.085;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(freq, noteTime);
+      osc.frequency.exponentialRampToValueAtTime(freq * 0.75, noteTime + 0.08);
+
+      gain.gain.setValueAtTime(0.22, noteTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, noteTime + 0.08);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.onended = () => this.cleanupNodes(osc, gain);
+      osc.start(noteTime);
+      osc.stop(noteTime + 0.085);
+    });
+  }
+
+  // Bruitage d'écrasement / démembrement sadique
+  playSplatKill() {
+    if (!this.ctx || this.isMutedSfx || this.isDestroyed) return;
+    this.resumeContext();
+
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(180, now);
+    osc.frequency.exponentialRampToValueAtTime(35, now + 0.18);
+
+    gain.gain.setValueAtTime(0.35, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+
+    osc.onended = () => this.cleanupNodes(osc, gain);
+    osc.start(now);
+    osc.stop(now + 0.2);
   }
 
   playHiHat(time) {

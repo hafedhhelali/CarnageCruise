@@ -157,7 +157,7 @@ class GameApp {
   }
 
   executePlayerAttack() {
-    if (gameState.currentMode !== 'RACING') return;
+    if (gameState.currentMode !== 'PLAYING') return;
     const attack = this.bike.triggerAttack();
     if (!attack || attack.type === 'horn') return;
 
@@ -175,11 +175,12 @@ class GameApp {
         this.characters.triggerSlapstickFlight(char, bikeX, 38);
         hitCount++;
 
-        // Effets visuels & sonores d'impact burlesque
-        this.engine.triggerCameraShake(0.35);
+        // Effets visuels & sonores d'impact burlesque et sadique
+        this.engine.triggerCameraShake(0.45);
         const pts = attack.type === 'shoot' ? 500 : 450;
         this.particles.spawnComicBurst(char.group.position, pts, gameState.combo);
-        gameState.addInteraction(pts, 'WEAPON_' + attack.type.toUpperCase(), 'ATTACK');
+        this.particles.spawnBloodBurst(char.group.position);
+        gameState.recordKill(pts, 'WEAPON_' + attack.type.toUpperCase(), char.typeDef.category);
       }
     });
 
@@ -247,7 +248,7 @@ class GameApp {
           this.engine.triggerCameraShake(0.35);
           this.particles.spawnComicBurst(hitChar.group.position, hitChar.typeDef.points, gameState.combo);
           this.particles.spawnBloodBurst(hitChar.group.position);
-          gameState.addInteraction(hitChar.typeDef.points, hitChar.typeDef.type, hitChar.category);
+          gameState.recordKill(hitChar.typeDef.points, hitChar.typeDef.type, hitChar.typeDef.category);
         },
         (z) => this.environment.getRoadCenterX(z),
         (nearChar) => {

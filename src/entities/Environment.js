@@ -16,7 +16,7 @@ export class Environment {
     this.totalChunks = 6;
     this.landmark = null;
     this.finishArch = null;
-    this.finishDistance = 1000; // Arrivée à 1000 mètres
+    this.finishDistance = 3500; // Arrivée prolongée à 3500 mètres pour des courses substantielles de 3 minutes
     this.finishReached = false;
     this.animTime = 0;
     this.animatedFlags = [];
@@ -49,7 +49,7 @@ export class Environment {
     };
   }
 
-  setCity(cityDef, finishDistance = 1000) {
+  setCity(cityDef, finishDistance = 3500) {
     this.cityTheme = cityDef;
     this.finishDistance = finishDistance;
     this.finishReached = false;

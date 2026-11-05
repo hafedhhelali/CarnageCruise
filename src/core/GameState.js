@@ -513,6 +513,121 @@ export const CITIES = [
     accentColor: 0xeb4d4b,
     unlockedByDefault: false,
     mapCoords: { x: 52.0, y: 88.1 }
+  },
+  {
+    id: 'berlin',
+    name: 'Berlin',
+    country: 'Allemagne',
+    countryFlag: '🇩🇪',
+    emblem: '🇩🇪',
+    monument: 'Porte de Brandebourg & Fernsehturm',
+    subtitle: 'Capitale Underground & Porte Monumentale',
+    typeTag: 'Avenues Modernes & Histoire',
+    description: 'Slalomez à travers Unter den Linden face aux colonnes néo-classiques de la Porte de Brandebourg et l’immense flèche de la Fernsehturm !',
+    targetScore: 340000,
+    starThresholds: [340000, 480000, 690000],
+    unlockScoreRequired: 300000,
+    skyColor: 0x70a1ff,
+    fogColor: 0xdcdde1,
+    ambientColor: 0xf5f6fa,
+    roadColor: 0x2f3542,
+    buildingColors: [0x747d8c, 0xa4b0be, 0xced6e0, 0x57606f],
+    roofColor: 0x2f3542,
+    accentColor: 0xffa502,
+    unlockedByDefault: false,
+    mapCoords: { x: 89.1, y: 24.7 }
+  },
+  {
+    id: 'amsterdam',
+    name: 'Amsterdam',
+    country: 'Pays-Bas',
+    countryFlag: '🇳🇱',
+    emblem: '🇳🇱',
+    monument: 'Canaux Historiques & Façades Étroites',
+    subtitle: 'Venise du Nord & Quais Fleuraux',
+    typeTag: 'Canaux, Ponts & Vélos',
+    description: 'Foncez le long des canaux pavés bordés de façades à pignons centenaires sous le regard des cyclistes médusés !',
+    targetScore: 380000,
+    starThresholds: [380000, 540000, 780000],
+    unlockScoreRequired: 340000,
+    skyColor: 0x74b9ff,
+    fogColor: 0xdfe4ea,
+    ambientColor: 0xffffff,
+    roadColor: 0x2f3640,
+    buildingColors: [0xd35400, 0x95a5a6, 0xbdc3c7, 0x7f8c8d],
+    roofColor: 0x2c3e50,
+    accentColor: 0xff7f50,
+    unlockedByDefault: false,
+    mapCoords: { x: 59.3, y: 25.4 }
+  },
+  {
+    id: 'seville',
+    name: 'Séville',
+    country: 'Espagne',
+    countryFlag: '🇪🇸',
+    emblem: '🇪🇸',
+    monument: 'Plaza de España & La Giralda',
+    subtitle: 'Palais Mudéjar & Flamenco Enflammé',
+    typeTag: 'Palais Céramique & Palmiers',
+    description: 'Traversez le demi-cercle grandiose de la Plaza de España entre azulejos étincelants, ponts vénitiens et effluves d’orangers en fleurs !',
+    targetScore: 430000,
+    starThresholds: [430000, 610000, 880000],
+    unlockScoreRequired: 380000,
+    skyColor: 0x48dbfb,
+    fogColor: 0xf6e58d,
+    ambientColor: 0xfff9e6,
+    roadColor: 0x2c3e50,
+    buildingColors: [0xf5cd79, 0xf7d794, 0xe77f67, 0xffbe76],
+    roofColor: 0xc44569,
+    accentColor: 0xe15f41,
+    unlockedByDefault: false,
+    mapCoords: { x: 21.1, y: 80.1 }
+  },
+  {
+    id: 'casablanca',
+    name: 'Casablanca',
+    country: 'Maroc',
+    countryFlag: '🇲🇦',
+    emblem: '🇲🇦',
+    monument: 'Grande Mosquée Hassan II & Corniche',
+    subtitle: 'Minaret de 210m & Flots Océaniques',
+    typeTag: 'Front de Mer & Architecture Mauresque',
+    description: 'Plein gaz sur le boulevard de la Corniche face aux rouleaux de l’Atlantique et le spectaculaire minaret de marbre bleu dominant l’océan !',
+    targetScore: 480000,
+    starThresholds: [480000, 680000, 980000],
+    unlockScoreRequired: 430000,
+    skyColor: 0x54a0ff,
+    fogColor: 0xfffa65,
+    ambientColor: 0xffffff,
+    roadColor: 0x1e272e,
+    buildingColors: [0xffffff, 0xf1f2f6, 0x1dd1a1, 0xee5253],
+    roofColor: 0x10ac84,
+    accentColor: 0xff6b6b,
+    unlockedByDefault: false,
+    mapCoords: { x: 15.5, y: 92.2 }
+  },
+  {
+    id: 'venise',
+    name: 'Venise',
+    country: 'Italie',
+    countryFlag: '🇮🇹',
+    emblem: '🇮🇹',
+    monument: 'Pont du Rialto & Palais des Doges',
+    subtitle: 'Sérénissime, Lagune & Gondoles',
+    typeTag: 'Palais Gothiques & Quais Flottants',
+    description: 'Vrombissez sur les rivages de la Lagune entre palais gothiques en marbre rose, ponts d’arches en pierre blanche et gondoles de légende !',
+    targetScore: 540000,
+    starThresholds: [540000, 770000, 1100000],
+    unlockScoreRequired: 480000,
+    skyColor: 0x48dbfb,
+    fogColor: 0xffcccc,
+    ambientColor: 0xfff0f5,
+    roadColor: 0x2c2c54,
+    buildingColors: [0xffbe76, 0xff7979, 0xf8a5c2, 0xf5cd79],
+    roofColor: 0xb33939,
+    accentColor: 0xcd6133,
+    unlockedByDefault: false,
+    mapCoords: { x: 85.3, y: 52.5 }
   }
 ];
 
@@ -532,8 +647,8 @@ export const BIKES = [
     cost: 0,
     unlocked: true,
     scale: 1.0,
-    maxSpeed: 24,
-    accel: 15,
+    maxSpeed: 17,
+    accel: 11,
     steerSpeed: 16
   },
   {
@@ -551,8 +666,8 @@ export const BIKES = [
     cost: 800,
     unlocked: false,
     scale: 1.15,
-    maxSpeed: 28,
-    accel: 16,
+    maxSpeed: 19,
+    accel: 13,
     steerSpeed: 14
   },
   {
@@ -570,8 +685,8 @@ export const BIKES = [
     cost: 1600,
     unlocked: false,
     scale: 1.22,
-    maxSpeed: 33,
-    accel: 22,
+    maxSpeed: 23,
+    accel: 15,
     steerSpeed: 16
   },
   {
@@ -589,8 +704,8 @@ export const BIKES = [
     cost: 2600,
     unlocked: false,
     scale: 1.05,
-    maxSpeed: 29,
-    accel: 20,
+    maxSpeed: 20,
+    accel: 13,
     steerSpeed: 22
   },
   {
@@ -608,8 +723,8 @@ export const BIKES = [
     cost: 3800,
     unlocked: false,
     scale: 1.12,
-    maxSpeed: 32,
-    accel: 25,
+    maxSpeed: 21,
+    accel: 14,
     steerSpeed: 20
   },
   {
@@ -627,8 +742,8 @@ export const BIKES = [
     cost: 5200,
     unlocked: false,
     scale: 1.08,
-    maxSpeed: 34,
-    accel: 28,
+    maxSpeed: 22,
+    accel: 15,
     steerSpeed: 24
   },
   {
@@ -646,8 +761,8 @@ export const BIKES = [
     cost: 6800,
     unlocked: false,
     scale: 1.08,
-    maxSpeed: 35,
-    accel: 29,
+    maxSpeed: 22,
+    accel: 15,
     steerSpeed: 23
   },
   {
@@ -665,8 +780,8 @@ export const BIKES = [
     cost: 8500,
     unlocked: false,
     scale: 1.25,
-    maxSpeed: 27,
-    accel: 16,
+    maxSpeed: 18,
+    accel: 11,
     steerSpeed: 14
   },
   {
@@ -684,21 +799,23 @@ export const BIKES = [
     cost: 11000,
     unlocked: false,
     scale: 1.28,
-    maxSpeed: 38,
-    accel: 28,
+    maxSpeed: 25,
+    accel: 17,
     steerSpeed: 13
   }
 ];
 
 export const COMBO_TITLES = [
-  "PAS MAL !",
-  "ENCORE !",
-  "OUH LÀ LÀ !",
-  "STRIKE DE BAGUETTE !",
-  "C'EST LA PANURGE !",
-  "CHAMPION !",
-  "LÉGENDES DES PAVÉS !",
-  "MOTORMAGEDDON !"
+  "PREMIER CONTACT !",
+  "DOUBLE CARNAGE !",
+  "TRIPLE STRIKE !",
+  "EXTERMINATION !",
+  "PAPY À CANNE FAUCHÉ !",
+  "POUSSETTE BROYÉE !",
+  "FOUET SANGLANT !",
+  "BOUCHERIE URBAINE !",
+  "HÉCATOMBE TOTALE !",
+  "MOTORMAGEDDON SUPRÊME !"
 ];
 
 export class GameState {
@@ -767,6 +884,9 @@ export class GameState {
     this.comboMax = 1;
     this.coinsEarned = 0;
     this.interactionsCount = 0;
+    this.killsCount = 0;
+    this.killStreak = 0;
+    this.worldPopulationEliminated = (storage.data.stats && storage.data.stats.totalKills) || 0;
     this.distance = 0;
     // La moto est STRICTEMENT À L'ARRÊT au démarrage dans la ville
     this.speed = 0;
@@ -783,6 +903,42 @@ export class GameState {
     soundManager.updateEngine(0.08); // Ronronnement au ralenti à l'arrêt
     soundManager.startMusic();
     this.notify('run_started', { city: this.selectedCity, bike: this.selectedBike });
+  }
+
+  refillNitro() {
+    this.nitroGauge = 100;
+    soundManager.playNearMiss();
+    this.notify('nitro_ready', {});
+    this.notify('nitro_updated', {
+      gauge: 100,
+      isActive: this.isNitroActive,
+      timer: this.nitroTimer
+    });
+  }
+
+  recordKill(points = 500, weapon = 'WEAPON', category = 'man') {
+    if (this.currentMode !== 'PLAYING') return;
+
+    this.killsCount++;
+    this.killStreak++;
+    this.worldPopulationEliminated++;
+    storage.incrementTotalKills(1);
+
+    // Rire sadique démoniaque tous les 5 kills consécutifs
+    if (this.killStreak % 5 === 0) {
+      soundManager.playEvilLaugh();
+    } else {
+      soundManager.playSplatKill();
+    }
+
+    this.addInteraction(points, weapon, category);
+    this.notify('kill_updated', {
+      kills: this.killsCount,
+      quota: this.selectedCity.killQuota || 30,
+      streak: this.killStreak,
+      worldTotal: this.worldPopulationEliminated,
+      category
+    });
   }
 
   chargeNitro(amount) {
@@ -827,27 +983,45 @@ export class GameState {
     if (this.currentMode !== 'PLAYING') return;
 
     this.interactionsCount++;
-    this.comboTimer = 3.5;
+    this.comboTimer = 3.8;
     this.combo = Math.min(this.combo + 1, 10);
     this.comboMax = Math.max(this.comboMax, this.combo);
 
-    const totalAdded = points * this.combo;
+    // Bonus de catégorie spécialisé & popups de score dynamiques
+    let categoryBonus = 0;
+    let specialLabel = '';
+    if (category === 'stroller') {
+      categoryBonus = 180;
+      specialLabel = '👶 POUSSETTE STRIKE !';
+    } else if (category === 'elderly') {
+      categoryBonus = 150;
+      specialLabel = '👴 PAPY & CANNE RENVERSÉ !';
+    } else if (category === 'child') {
+      categoryBonus = 120;
+      specialLabel = '🛴 ENFANT DÉBOULONNÉ !';
+    } else if (itemType.startsWith('WEAPON_')) {
+      categoryBonus = 100;
+      specialLabel = '💥 ARME CARNAGE !';
+    }
+
+    const basePoints = points + categoryBonus;
+    const totalAdded = basePoints * this.combo;
     this.score += totalAdded;
 
-    const coinsFromHit = Math.floor(totalAdded / 50) + 1;
+    const coinsFromHit = Math.floor(totalAdded / 35) + 1;
     this.coinsEarned += coinsFromHit;
 
-    // Chaque interaction réussie booste la jauge de Nitro (+10%)
-    this.chargeNitro(10);
+    // Chaque interaction réussie booste la jauge de Nitro (+12%)
+    this.chargeNitro(12);
 
-    // Réaction sonore réaliste selon la personne heurtée (enfant, vieux, femme, homme)
+    // Réaction sonore réaliste selon la personne heurtée (enfant, vieux, poussette, femme, homme)
     soundManager.playPedestrianReaction(category);
     if (this.combo > 2) {
       soundManager.playComboFanfare(this.combo);
     }
 
     const titleIndex = Math.min(this.combo - 1, COMBO_TITLES.length - 1);
-    const comboTitle = COMBO_TITLES[titleIndex];
+    const comboTitle = specialLabel || COMBO_TITLES[titleIndex];
 
     this.notify('score_updated', {
       score: this.score,
@@ -855,7 +1029,8 @@ export class GameState {
       combo: this.combo,
       comboTitle,
       coinsEarned: this.coinsEarned,
-      itemType
+      itemType,
+      category
     });
 
     this.checkNextCityUnlock();
@@ -947,9 +1122,9 @@ export class GameState {
       }
     }
 
-    // 2. Gestion du frein et de la reprise de circulation avec Nitro Boost
-    const maxSpeedCap = this.isNitroActive ? (this.targetSpeed * 1.65) : this.targetSpeed;
-    const accelRate = this.isNitroActive ? (this.selectedBike.accel * 2.2) : this.selectedBike.accel;
+    // 2. Gestion du frein et de la reprise de circulation avec Nitro Boost (vitesse calibrée & contrôlable)
+    const maxSpeedCap = this.isNitroActive ? (this.targetSpeed * 1.35) : this.targetSpeed;
+    const accelRate = this.isNitroActive ? (this.selectedBike.accel * 1.6) : this.selectedBike.accel;
 
     if (this.isBraking) {
       // Décélération rapide jusqu'à l'arrêt complet
@@ -995,7 +1170,10 @@ export class GameState {
       isBraking: this.isBraking,
       nitroGauge: Math.round(this.nitroGauge),
       isNitroActive: this.isNitroActive,
-      nitroTimer: Math.max(0, this.nitroTimer)
+      nitroTimer: Math.max(0, this.nitroTimer),
+      kills: this.killsCount,
+      killQuota: this.selectedCity.killQuota || 30,
+      worldTotal: this.worldPopulationEliminated
     });
   }
 
@@ -1039,6 +1217,8 @@ export class GameState {
       stars,
       coinsEarned: this.coinsEarned,
       interactions: this.interactionsCount,
+      kills: this.killsCount,
+      worldTotal: this.worldPopulationEliminated,
       distance: Math.floor(this.distance),
       maxCombo: this.comboMax,
       city: this.selectedCity,
