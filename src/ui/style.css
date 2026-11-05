@@ -835,8 +835,10 @@ html, body {
 /* CONTRÔLES DE ZOOM FLOTTANTS DE LA CARTE */
 .map-zoom-controls {
   position: absolute;
-  bottom: 220px;
-  right: 14px;
+  top: 70px;
+  left: 14px;
+  bottom: auto;
+  right: auto;
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -991,7 +993,7 @@ html, body {
   font-size: 0.9rem;
 }
 
-/* --- CARTE D'EUROPE OCCIDENTALE SCROLLABLE EN 2D --- */
+/* --- CARTE D'EUROPE OCCIDENTALE & MÉDITERRANÉE HAUTE-FIDÉLITÉ 60 FPS --- */
 .europe-map-scroll-viewport {
   position: relative;
   width: 100%;
@@ -1002,9 +1004,10 @@ html, body {
   border: 2px solid rgba(0, 206, 201, 0.5);
   box-shadow: 0 12px 36px rgba(0, 0, 0, 0.75), inset 0 0 50px rgba(0, 0, 0, 0.6);
   background: radial-gradient(circle at 50% 40%, #162b44 0%, #08111d 100%);
-  overflow: auto;
-  -webkit-overflow-scrolling: touch;
-  scroll-behavior: smooth;
+  overflow: hidden;
+  touch-action: none; /* ESSENTIEL : Désactive les gestes natifs du navigateur pour un pincement 2 doigts parfait */
+  user-select: none;
+  -webkit-user-select: none;
   box-sizing: border-box;
   cursor: grab;
 }
@@ -1013,27 +1016,16 @@ html, body {
   cursor: grabbing;
 }
 
-/* Scrollbars modernes stylisées pour la carte */
-.europe-map-scroll-viewport::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-.europe-map-scroll-viewport::-webkit-scrollbar-thumb {
-  background: rgba(0, 206, 201, 0.4);
-  border-radius: 4px;
-}
-.europe-map-scroll-viewport::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.2);
-}
-
 .europe-map-canvas-container {
-  position: relative;
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 960px;
   height: 1100px;
   min-width: 960px;
   min-height: 1100px;
-  transform-origin: top left;
-  transition: transform 0.15s ease-out;
+  transform-origin: 0 0;
+  will-change: transform;
 }
 
 .europe-svg {

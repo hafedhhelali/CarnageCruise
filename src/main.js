@@ -103,10 +103,12 @@ class GameApp {
       } else if (e.code === 'ArrowDown' || e.code === 'KeyS') {
         this.keys.brake = true;
         gameState.setBraking(true);
+      } else if (e.code === 'KeyF' || e.code === 'KeyX' || e.code === 'KeyE' || e.code === 'ControlLeft' || e.code === 'ControlRight') {
+        this.executePlayerAttack();
       } else if (e.code === 'Space' || e.code === 'KeyN' || e.code === 'ShiftLeft' || e.code === 'ShiftRight') {
         const activated = gameState.activateNitro();
         if (!activated) {
-          soundManager.playHorn();
+          this.executePlayerAttack();
         }
       }
     });
@@ -149,6 +151,40 @@ class GameApp {
     } else if (action === 'COLOR_CHANGED') {
       const bikeId = (payload && payload.bikeId) ? payload.bikeId : null;
       this.bike.buildCurrentBike(bikeId);
+    } else if (action === 'HORN' || action === 'ATTACK') {
+      this.executePlayerAttack();
+    }
+  }
+
+  executePlayerAttack() {
+    if (gameState.currentMode !== 'RACING') return;
+    const attack = this.bike.triggerAttack();
+    if (!attack || attack.type === 'horn') return;
+
+    // Détection d'impact sur les piétons situés dans l'arc d'attaque
+    const bikeZ = this.bike.z;
+    const bikeX = this.bike.mesh.position.x;
+    let hitCount = 0;
+
+    this.characters.characters.forEach(char => {
+      if (!char.group.visible || char.isFlying) return;
+      const dZ = char.group.position.z - bikeZ;
+      const dX = Math.abs(char.group.position.x - bikeX);
+
+      if (dZ > 0.5 && dZ < attack.range && dX < attack.radius) {
+        this.characters.triggerSlapstickFlight(char, bikeX, 38);
+        hitCount++;
+
+        // Effets visuels & sonores d'impact burlesque
+        this.engine.triggerCameraShake(0.35);
+        const pts = attack.type === 'shoot' ? 500 : 450;
+        this.particles.spawnComicBurst(char.group.position, pts, gameState.combo);
+        gameState.addInteraction(pts, 'WEAPON_' + attack.type.toUpperCase(), 'ATTACK');
+      }
+    });
+
+    if (hitCount > 0) {
+      soundManager.playCoin();
     }
   }
 

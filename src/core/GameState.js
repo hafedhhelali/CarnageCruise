@@ -29,7 +29,7 @@ export const CITIES = [
     roofColor: 0x4a5568,
     accentColor: 0x3498db,
     unlockedByDefault: true,
-    mapCoords: { x: 46, y: 28 }
+    mapCoords: { x: 49.5, y: 25.0 }
   },
   {
     id: 'bruxelles',
@@ -52,7 +52,7 @@ export const CITIES = [
     roofColor: 0x2c3e50,
     accentColor: 0xf9ca24,
     unlockedByDefault: false,
-    mapCoords: { x: 54, y: 18 }
+    mapCoords: { x: 56.6, y: 13.3 }
   },
   {
     id: 'londres',
@@ -75,7 +75,7 @@ export const CITIES = [
     roofColor: 0x1e272e,
     accentColor: 0xff4757,
     unlockedByDefault: false,
-    mapCoords: { x: 34, y: 14 }
+    mapCoords: { x: 40.6, y: 9.3 }
   },
   {
     id: 'saint-malo',
@@ -98,7 +98,7 @@ export const CITIES = [
     roofColor: 0x2f3542,
     accentColor: 0x00a8ff,
     unlockedByDefault: false,
-    mapCoords: { x: 26, y: 32 }
+    mapCoords: { x: 33.8, y: 26.2 }
   },
   {
     id: 'bordeaux',
@@ -121,7 +121,7 @@ export const CITIES = [
     roofColor: 0x37474f,
     accentColor: 0x8e24aa,
     unlockedByDefault: false,
-    mapCoords: { x: 32, y: 48 }
+    mapCoords: { x: 39.0, y: 47.4 }
   },
   {
     id: 'barcelone',
@@ -144,7 +144,7 @@ export const CITIES = [
     roofColor: 0xb71540,
     accentColor: 0xe67e22,
     unlockedByDefault: false,
-    mapCoords: { x: 40, y: 64 }
+    mapCoords: { x: 48.8, y: 65.4 }
   },
   {
     id: 'madrid',
@@ -167,7 +167,7 @@ export const CITIES = [
     roofColor: 0x962d3e,
     accentColor: 0xf1c40f,
     unlockedByDefault: false,
-    mapCoords: { x: 28, y: 71 }
+    mapCoords: { x: 27.8, y: 70.3 }
   },
   {
     id: 'lisbonne',
@@ -190,7 +190,7 @@ export const CITIES = [
     roofColor: 0xd35400,
     accentColor: 0x2ed573,
     unlockedByDefault: false,
-    mapCoords: { x: 14, y: 72 }
+    mapCoords: { x: 8.4, y: 78.6 }
   },
   {
     id: 'millau',
@@ -213,7 +213,7 @@ export const CITIES = [
     roofColor: 0x37474f,
     accentColor: 0xff3838,
     unlockedByDefault: false,
-    mapCoords: { x: 47, y: 52 }
+    mapCoords: { x: 52.1, y: 51.3 }
   },
   {
     id: 'marseille',
@@ -236,7 +236,7 @@ export const CITIES = [
     roofColor: 0xd84315,
     accentColor: 0x00bcd4,
     unlockedByDefault: false,
-    mapCoords: { x: 55, y: 56 }
+    mapCoords: { x: 60.2, y: 55.5 }
   },
   {
     id: 'nice',
@@ -259,7 +259,7 @@ export const CITIES = [
     roofColor: 0xc2185b,
     accentColor: 0xff4081,
     unlockedByDefault: false,
-    mapCoords: { x: 64, y: 55 }
+    mapCoords: { x: 67.0, y: 53.4 }
   },
   {
     id: 'milan',
@@ -282,7 +282,7 @@ export const CITIES = [
     roofColor: 0x747d8c,
     accentColor: 0xff9f43,
     unlockedByDefault: false,
-    mapCoords: { x: 74, y: 48 }
+    mapCoords: { x: 73.9, y: 44.0 }
   },
   {
     id: 'geneve',
@@ -305,7 +305,7 @@ export const CITIES = [
     roofColor: 0x2c3e50,
     accentColor: 0xeb4d4b,
     unlockedByDefault: false,
-    mapCoords: { x: 63, y: 44 }
+    mapCoords: { x: 63.0, y: 40.0 }
   },
   {
     id: 'chamonix',
@@ -328,7 +328,7 @@ export const CITIES = [
     roofColor: 0xecf0f1,
     accentColor: 0x00cec9,
     unlockedByDefault: false,
-    mapCoords: { x: 67, y: 44 }
+    mapCoords: { x: 65.6, y: 41.5 }
   },
   {
     id: 'annecy',
@@ -351,7 +351,7 @@ export const CITIES = [
     roofColor: 0xb71540,
     accentColor: 0x0984e3,
     unlockedByDefault: false,
-    mapCoords: { x: 61, y: 46 }
+    mapCoords: { x: 63.0, y: 41.6 }
   },
   {
     id: 'lyon',
@@ -374,7 +374,7 @@ export const CITIES = [
     roofColor: 0x962d22,
     accentColor: 0xe67e22,
     unlockedByDefault: false,
-    mapCoords: { x: 55, y: 44 }
+    mapCoords: { x: 58.3, y: 42.4 }
   },
   {
     id: 'strasbourg',
@@ -397,7 +397,7 @@ export const CITIES = [
     roofColor: 0xb71c1c,
     accentColor: 0xd32f2f,
     unlockedByDefault: false,
-    mapCoords: { x: 68, y: 26 }
+    mapCoords: { x: 68.8, y: 26.7 }
   },
   {
     id: 'rome',
@@ -420,7 +420,7 @@ export const CITIES = [
     roofColor: 0xb71540,
     accentColor: 0xe67e22,
     unlockedByDefault: false,
-    mapCoords: { x: 75, y: 64 }
+    mapCoords: { x: 85.7, y: 62.7 }
   },
   {
     id: 'napoli',
@@ -443,7 +443,7 @@ export const CITIES = [
     roofColor: 0xc23616,
     accentColor: 0xe84118,
     unlockedByDefault: false,
-    mapCoords: { x: 80, y: 70 }
+    mapCoords: { x: 92.0, y: 68.1 }
   },
   {
     id: 'tunis',
@@ -466,7 +466,7 @@ export const CITIES = [
     roofColor: 0x0abde3,
     accentColor: 0xee5253,
     unlockedByDefault: false,
-    mapCoords: { x: 74, y: 88 }
+    mapCoords: { x: 77.4, y: 87.8 }
   },
   {
     id: 'annaba',
@@ -489,7 +489,7 @@ export const CITIES = [
     roofColor: 0xb33939,
     accentColor: 0x20bf6b,
     unlockedByDefault: false,
-    mapCoords: { x: 60, y: 89 }
+    mapCoords: { x: 68.8, y: 87.4 }
   },
   {
     id: 'alger',
@@ -512,7 +512,7 @@ export const CITIES = [
     roofColor: 0x10ac84,
     accentColor: 0xeb4d4b,
     unlockedByDefault: false,
-    mapCoords: { x: 45, y: 90 }
+    mapCoords: { x: 52.0, y: 88.1 }
   }
 ];
 

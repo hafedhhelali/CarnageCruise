@@ -10,6 +10,7 @@ import { storage } from '../core/Storage.js';
 import { soundManager } from '../audio/SoundManager.js';
 import { App } from '@capacitor/app';
 import { FULL_VERSION, APP_VERSION, COPYRIGHT_NOTICE, RELEASE_NAME, IS_BETA } from '../core/Version.js';
+import { REAL_COUNTRY_PATHS, REAL_TOUR_ROUTE_PATH } from './EuropeMapData.js';
 
 export class UIManager {
   constructor(rootElement, onActionCallback) {
@@ -21,6 +22,7 @@ export class UIManager {
     this.selectedMapCity = gameState.selectedCity;
     this.selectedGarageBike = gameState.selectedBike;
     this.activeModals = []; // Pile des modales actives pour le bouton retour
+    this.mapZoom = 1.0;
 
     this.init();
     this.bindGameState();
@@ -293,185 +295,59 @@ export class UIManager {
               <text x="-5" y="-48" fill="#ffd700" font-size="12" font-weight="900">N</text>
             </g>
 
-            <!-- ================= GÉOGRAPHIE RÉALISTE DE L'EUROPE & BASSIN MÉDITERRANÉEN ================= -->
+            <!-- ================= GÉOGRAPHIE RÉALISTE DE L'EUROPE & BASSIN MÉDITERRANÉEN (100% SIG RÉELLE) ================= -->
 
-            <!-- 1. ROYAUME-UNI (GRANDE-BRETAGNE / ANGLETERRE) AVEC LONDRES 🇬🇧 -->
-            <path class="country-uk" filter="url(#coastalGlow)" d="
-              M 160 30
-              C 220 25, 290 35, 340 50
-              C 380 65, 410 90, 430 130
-              C 435 155, 395 180, 360 185
-              C 320 190, 290 170, 250 180
-              C 210 190, 160 170, 120 180
-              C 90 160, 110 120, 130 90
-              C 145 70, 150 45, 160 30 Z
-            " fill="url(#neighborCountryGrad)" stroke="#38ada9" stroke-width="2.5" />
-            <text x="240" y="90" fill="#74b9ff" font-size="13" font-weight="900" letter-spacing="1.2">ROYAUME-UNI 🇬🇧</text>
-            <!-- Tamise (Thames) -->
-            <path d="M 280 145 Q 330 135 365 138 Q 400 135 425 142" fill="none" stroke="#00cec9" stroke-width="2.2" opacity="0.6" />
+            <!-- 1. ROYAUME-UNI 🇬🇧 & IRLANDE 🇮🇪 -->
+            <path class="country-ireland" filter="url(#coastalGlow)" d="${REAL_COUNTRY_PATHS.IRL.d}" fill="url(#neighborCountryGrad)" stroke="#2ed573" stroke-width="1.8" opacity="0.8" />
+            <path class="country-uk" filter="url(#coastalGlow)" d="${REAL_COUNTRY_PATHS.GBR.d}" fill="url(#neighborCountryGrad)" stroke="#38ada9" stroke-width="2.2" />
+            <text x="330" y="85" fill="#74b9ff" font-size="13" font-weight="900" letter-spacing="1.2">ROYAUME-UNI 🇬🇧</text>
 
-            <!-- 2. BELGIQUE & PAYS-BAS AVEC BRUXELLES 🇧🇪 -->
-            <path class="country-benelux" filter="url(#coastalGlow)" d="
-              M 480 95
-              C 520 85, 570 95, 600 115
-              C 625 135, 630 175, 615 205
-              C 590 230, 545 225, 510 220
-              C 485 200, 470 160, 465 130
-              C 460 110, 470 100, 480 95 Z
-            " fill="url(#neighborCountryGrad)" stroke="#38ada9" stroke-width="2.5" />
-            <text x="500" y="145" fill="#74b9ff" font-size="13" font-weight="900" letter-spacing="1">BELGIQUE 🇧🇪</text>
+            <!-- 2. BENELUX (BELGIQUE 🇧🇪 & PAYS-BAS 🇳🇱) -->
+            <path class="country-netherlands" filter="url(#coastalGlow)" d="${REAL_COUNTRY_PATHS.NLD.d}" fill="url(#neighborCountryGrad)" stroke="#38ada9" stroke-width="1.8" />
+            <path class="country-benelux" filter="url(#coastalGlow)" d="${REAL_COUNTRY_PATHS.BEL.d}" fill="url(#neighborCountryGrad)" stroke="#38ada9" stroke-width="2.2" />
+            <text x="525" y="145" fill="#74b9ff" font-size="12" font-weight="900" letter-spacing="1">BELGIQUE 🇧🇪</text>
 
-            <!-- 3. ALLEMAGNE AU-DELÀ DU RHIN 🇩🇪 -->
-            <path class="country-germany" filter="url(#coastalGlow)" d="
-              M 630 175
-              C 670 165, 750 170, 800 190
-              C 840 215, 870 270, 860 330
-              C 840 370, 780 380, 740 370
-              C 710 350, 690 300, 670 260
-              C 650 220, 640 190, 630 175 Z
-            " fill="url(#neighborCountryGrad)" stroke="#2c3e50" stroke-width="2.2" />
+            <!-- 3. ALLEMAGNE 🇩🇪 -->
+            <path class="country-germany" filter="url(#coastalGlow)" d="${REAL_COUNTRY_PATHS.DEU.d}" fill="url(#neighborCountryGrad)" stroke="#2c3e50" stroke-width="2.0" />
             <text x="730" y="240" fill="#74b9ff" font-size="13" font-weight="900" letter-spacing="1.2">ALLEMAGNE 🇩🇪</text>
 
-            <!-- 4. SUISSE AVEC GENÈVE & ALPES 🇨🇭 -->
-            <path class="country-switzerland" filter="url(#coastalGlow)" d="
-              M 640 370
-              C 680 360, 740 370, 760 395
-              C 775 425, 760 460, 730 475
-              C 690 485, 640 475, 610 455
-              C 595 435, 610 390, 640 370 Z
-            " fill="url(#neighborCountryGrad)" stroke="#38ada9" stroke-width="2.4" />
-            <text x="655" y="420" fill="#74b9ff" font-size="13" font-weight="900" letter-spacing="1">SUISSE 🇨🇭</text>
-            <ellipse cx="612" cy="438" rx="14" ry="7" fill="#00cec9" opacity="0.8" />
+            <!-- 4. SUISSE 🇨🇭 -->
+            <path class="country-switzerland" filter="url(#coastalGlow)" d="${REAL_COUNTRY_PATHS.CHE.d}" fill="url(#neighborCountryGrad)" stroke="#38ada9" stroke-width="2.0" />
+            <text x="620" y="420" fill="#74b9ff" font-size="12" font-weight="900" letter-spacing="1">SUISSE 🇨🇭</text>
 
-            <!-- 5. FRANCE MÉTROPOLITAINE HAUTE FIDÉLITÉ (COEUR DU GRAND TOUR) 🇫🇷 -->
-            <path class="france-mainland" filter="url(#coastalGlow)" d="
-              M 440 215
-              C 460 215, 490 225, 520 235
-              C 560 250, 600 240, 630 270
-              C 665 305, 680 330, 685 365
-              C 690 400, 655 435, 670 475
-              C 685 510, 650 545, 645 580
-              C 635 615, 660 655, 625 700
-              C 595 735, 550 755, 525 780
-              C 485 785, 440 770, 395 790
-              C 350 805, 300 785, 265 770
-              C 225 755, 210 705, 190 685
-              C 170 665, 120 635, 105 600
-              C 90 565, 110 525, 95 485
-              C 80 445, 60 430, 50 400
-              C 45 365, 80 345, 110 340
-              C 145 330, 175 350, 210 335
-              C 240 320, 255 295, 290 280
-              C 325 265, 350 225, 385 218
-              C 400 215, 420 215, 440 215 Z
-            " fill="url(#franceLuxury)" stroke="#00cec9" stroke-width="3.2" />
-            <text x="390" y="460" fill="#00cec9" font-size="18" font-weight="900" letter-spacing="3" opacity="0.45">FRANCE 🇫🇷</text>
+            <!-- 5. FRANCE MÉTROPOLITAINE & CORSE (100% GÉOGRAPHIE SIG RÉELLE) 🇫🇷 -->
+            <path class="france-mainland" filter="url(#coastalGlow)" d="${REAL_COUNTRY_PATHS.FRA.d}" fill="url(#franceLuxury)" stroke="#00cec9" stroke-width="2.8" />
+            <text x="430" y="380" fill="#00cec9" font-size="18" font-weight="900" letter-spacing="3" opacity="0.5">FRANCE 🇫🇷</text>
+            <text x="680" y="650" fill="#00cec9" font-size="10" font-weight="900">CORSE 🇫🇷</text>
 
-            <!-- Île de Corse -->
-            <path d="M 680 680 C 695 670, 710 690, 705 735 C 690 770, 675 765, 665 730 Z"
-                  fill="url(#franceLuxury)" stroke="#00cec9" stroke-width="2.5" filter="url(#coastalGlow)" />
-            <text x="668" y="780" fill="#00cec9" font-size="10" font-weight="900">CORSE 🇫🇷</text>
+            <!-- 6. PÉNINSULE IBÉRIQUE : PORTUGAL 🇵🇹 ET ESPAGNE 🇪🇸 -->
+            <path class="country-portugal" filter="url(#coastalGlow)" d="${REAL_COUNTRY_PATHS.PRT.d}" fill="url(#neighborCountryGrad)" stroke="#2ed573" stroke-width="2.2" />
+            <text x="70" y="790" fill="#2ed573" font-size="12" font-weight="900" letter-spacing="1.5">PORTUGAL 🇵🇹</text>
 
-            <!-- 6. PÉNINSULE IBÉRIQUE : PORTUGAL 🇵🇹 (LISBONNE) & ESPAGNE 🇪🇸 (MADRID & BARCELONE) -->
-            <!-- Portugal (Façade Atlantique Ouest) -->
-            <path class="country-portugal" filter="url(#coastalGlow)" d="
-              M 80 690
-              C 120 685, 150 695, 155 725
-              C 160 760, 150 815, 135 845
-              C 105 850, 75 835, 70 790
-              C 65 750, 70 710, 80 690 Z
-            " fill="url(#neighborCountryGrad)" stroke="#2ed573" stroke-width="2.6" />
-            <text x="82" y="740" fill="#2ed573" font-size="13" font-weight="900" letter-spacing="1.5">PORTUGAL 🇵🇹</text>
-            <text x="75" y="805" fill="#ffd700" font-size="10" font-weight="900">LISBONNE 🏰</text>
-            <!-- Estuaire du Tage -->
-            <path d="M 68 792 Q 105 790 135 792" fill="none" stroke="#00cec9" stroke-width="2.5" opacity="0.8" />
-
-            <!-- Espagne (Castille, Madrid, Catalogne, Barcelone) -->
-            <path class="country-spain" filter="url(#coastalGlow)" d="
-              M 190 685
-              C 260 685, 330 695, 400 700
-              C 440 705, 460 735, 440 770
-              C 420 810, 390 850, 340 860
-              C 270 870, 190 860, 155 845
-              C 155 760, 150 725, 155 700
-              C 165 690, 175 685, 190 685 Z
-            " fill="url(#neighborCountryGrad)" stroke="#e74c3c" stroke-width="2.8" />
-            <text x="210" y="745" fill="#74b9ff" font-size="15" font-weight="900" letter-spacing="2">ESPAGNE 🇪🇸</text>
+            <path class="country-spain" filter="url(#coastalGlow)" d="${REAL_COUNTRY_PATHS.ESP.d}" fill="url(#neighborCountryGrad)" stroke="#e74c3c" stroke-width="2.4" />
+            <text x="240" y="740" fill="#74b9ff" font-size="15" font-weight="900" letter-spacing="2">ESPAGNE 🇪🇸</text>
             <text x="245" y="795" fill="#ffd700" font-size="11" font-weight="900">MADRID 👑</text>
-            <text x="355" y="725" fill="#ff7675" font-size="11" font-weight="900">CATALOGNE • BARCELONE</text>
-            <!-- Îles Baléares (Majorque, Minorque, Ibiza) -->
-            <ellipse cx="460" cy="800" rx="14" ry="8" fill="url(#neighborCountryGrad)" stroke="#38ada9" stroke-width="1.8" />
-            <ellipse cx="485" cy="785" rx="9" ry="5" fill="url(#neighborCountryGrad)" stroke="#38ada9" stroke-width="1.8" />
+            <text x="420" y="715" fill="#ff7675" font-size="11" font-weight="900">BARCELONE</text>
 
-            <!-- 7. ITALIE DU NORD, DU SUD (ROME & NAPLES) ET BOTTE ITALIENNE 🇮🇹 -->
-            <path class="country-italy" filter="url(#coastalGlow)" d="
-              M 730 475
-              C 770 465, 840 480, 890 515
-              C 920 545, 925 590, 895 640
-              C 870 680, 835 710, 810 755
-              C 785 800, 770 845, 750 860
-              C 730 875, 720 860, 730 830
-              C 740 800, 755 765, 745 730
-              C 735 695, 715 670, 710 630
-              C 705 580, 715 520, 730 475 Z
-            " fill="url(#neighborCountryGrad)" stroke="#38ada9" stroke-width="2.8" />
-            <text x="785" y="540" fill="#74b9ff" font-size="14" font-weight="900" letter-spacing="1.5">ITALIE 🇮🇹</text>
-            <text x="715" y="660" fill="#ffd700" font-size="11" font-weight="900">ROME 🏛️</text>
-            <text x="765" y="715" fill="#ff7675" font-size="11" font-weight="900">NAPOLI & VÉSUVE 🌋</text>
+            <!-- 7. ITALIE 🇮🇹 (DU NORD AU SUD, ROME, NAPLES ET SICILE) -->
+            <path class="country-italy" filter="url(#coastalGlow)" d="${REAL_COUNTRY_PATHS.ITA.d}" fill="url(#neighborCountryGrad)" stroke="#38ada9" stroke-width="2.4" />
+            <text x="760" y="550" fill="#74b9ff" font-size="14" font-weight="900" letter-spacing="1.5">ITALIE 🇮🇹</text>
+            <text x="800" y="670" fill="#ffd700" font-size="11" font-weight="900">ROME 🏛️</text>
+            <text x="840" y="740" fill="#ff7675" font-size="11" font-weight="900">NAPOLI 🌋</text>
 
-            <!-- Vésuve (Cône volcanique rougeoyant) -->
-            <polygon points="768,705 763,712 773,712" fill="#d63031" />
-            <circle cx="768" cy="704" r="2.5" fill="#fdcb6e" />
+            <!-- 8. AFRIQUE DU NORD : MAROC 🇲🇦, ALGÉRIE 🇩🇿 ET TUNISIE 🇹🇳 (CÔTE SUD MÉDITERRANÉENNE) -->
+            <path class="country-morocco" filter="url(#coastalGlow)" d="${REAL_COUNTRY_PATHS.MAR.d}" fill="url(#neighborCountryGrad)" stroke="#e67e22" stroke-width="2.0" opacity="0.8" />
+            <path class="country-algeria" filter="url(#coastalGlow)" d="${REAL_COUNTRY_PATHS.DZA.d}" fill="url(#neighborCountryGrad)" stroke="#2ed573" stroke-width="2.5" />
+            <text x="430" y="995" fill="#2ed573" font-size="15" font-weight="900" letter-spacing="2">ALGÉRIE 🇩🇿 (ALGER & ANNABA)</text>
 
-            <!-- Île de Sicile 🇮🇹 -->
-            <path d="
-              M 690 850
-              C 740 835, 790 845, 780 875
-              C 760 900, 720 895, 685 870
-              C 675 860, 680 855, 690 850 Z
-            " fill="url(#neighborCountryGrad)" stroke="#38ada9" stroke-width="2.2" filter="url(#coastalGlow)" />
-            <text x="715" y="872" fill="#74b9ff" font-size="10" font-weight="900">SICILE 🇮🇹</text>
+            <path class="country-tunisia" filter="url(#coastalGlow)" d="${REAL_COUNTRY_PATHS.TUN.d}" fill="url(#neighborCountryGrad)" stroke="#ff4757" stroke-width="2.4" />
+            <text x="720" y="990" fill="#ff4757" font-size="14" font-weight="900" letter-spacing="2">TUNISIE 🇹🇳 (TUNIS)</text>
 
-            <!-- 8. AFRIQUE DU NORD : ALGÉRIE 🇩🇿 ET TUNISIE 🇹🇳 (CÔTE SUD MÉDITERRANÉENNE) -->
-            <path class="country-north-africa" filter="url(#coastalGlow)" d="
-              M 260 1020
-              C 330 960, 420 950, 520 955
-              C 620 960, 700 940, 750 965
-              C 790 985, 810 1030, 800 1100
-              L 260 1100 Z
-            " fill="url(#neighborCountryGrad)" stroke="#2ed573" stroke-width="3.0" />
-            <text x="410" y="1010" fill="#2ed573" font-size="16" font-weight="900" letter-spacing="2.5">ALGÉRIE 🇩🇿 (ALGER & ANNABA)</text>
-            <text x="710" y="995" fill="#ff4757" font-size="15" font-weight="900" letter-spacing="2">TUNISIE 🇹🇳 (TUNIS)</text>
-
-            <!-- Mer Méditerranée (Vagues bleues décoratives) -->
-            <text x="460" y="860" fill="#00cec9" font-size="14" font-weight="900" letter-spacing="4" opacity="0.45">MER MÉDITERRANÉE</text>
+            <!-- Mer Méditerranée -->
+            <text x="480" y="800" fill="#00cec9" font-size="14" font-weight="900" letter-spacing="4" opacity="0.45">MER MÉDITERRANÉE</text>
 
             <!-- Tracé Lumineux Officiel du Grand Tour (Néon Or Éclatant reliant les 22 étapes) -->
-            <path class="tour-route-glow" d="
-              M 460 418
-              L 556 308
-              L 326 154
-              L 250 352
-              L 307 528
-              L 384 704
-              L 268 781
-              L 134 792
-              L 422 583
-              L 518 605
-              L 595 594
-              L 672 506
-              L 576 506
-              L 614 528
-              L 566 550
-              L 499 528
-              L 633 396
-              L 720 704
-              L 768 770
-              L 710 968
-              L 576 979
-              L 432 990
-              Z
-            " fill="none" stroke="#ffd700" stroke-width="4.2" stroke-dasharray="10,6" opacity="0.9" filter="url(#glowTourRoute)" />
+            <path class="tour-route-glow" d="${REAL_TOUR_ROUTE_PATH}" fill="none" stroke="#ffd700" stroke-width="4.2" stroke-dasharray="10,6" opacity="0.9" filter="url(#glowTourRoute)" />
           </svg>
 
           <!-- SVG Overlay pour ligne active animée lors des déplacements -->
@@ -513,127 +389,220 @@ export class UIManager {
       </div>
     `;
 
-    // Gestion du Zoom Interactif (Agrandir / Réduire / Recentrer) & Pincement à 2 doigts
+    // Moteur Pan & Pinch Zoom 60 FPS Hautes Performances (Accélération Matérielle transform3d)
     const canvasContainer = mapScreen.querySelector('#europe-canvas');
     const zoomBadge = mapScreen.querySelector('#zoom-badge');
     const viewportEl = mapScreen.querySelector('#europe-viewport');
 
-    const applyZoom = (newZoom, focalPoint = null) => {
-      const prevZoom = this.mapZoom;
-      this.mapZoom = Math.max(0.65, Math.min(2.5, newZoom));
-      if (canvasContainer) {
-        canvasContainer.style.transform = `scale(${this.mapZoom})`;
-        canvasContainer.style.transformOrigin = 'top left';
+    let panX = 0;
+    let panY = 0;
+    this.mapZoom = Math.max(0.65, Math.min(2.8, this.mapZoom || 1.0));
+
+    const clampPan = (targetX, targetY, zoom) => {
+      if (!viewportEl) return { x: targetX, y: targetY };
+      const vw = viewportEl.clientWidth || 360;
+      const vh = viewportEl.clientHeight || 400;
+      const effectiveW = 960 * zoom;
+      const effectiveH = 1100 * zoom;
+
+      let minX, maxX;
+      if (effectiveW <= vw) {
+        minX = maxX = (vw - effectiveW) / 2;
+      } else {
+        minX = vw - effectiveW - 30;
+        maxX = 30;
       }
+
+      let minY, maxY;
+      if (effectiveH <= vh) {
+        minY = maxY = (vh - effectiveH) / 2;
+      } else {
+        minY = vh - effectiveH - 30;
+        maxY = 30;
+      }
+
+      return {
+        x: Math.min(maxX, Math.max(minX, targetX)),
+        y: Math.min(maxY, Math.max(minY, targetY))
+      };
+    };
+
+    const applyTransform = (animate = false, durationMs = 380) => {
+      if (!canvasContainer) return;
+      if (animate) {
+        canvasContainer.style.transition = `transform ${durationMs}ms cubic-bezier(0.16, 1, 0.3, 1)`;
+      } else {
+        canvasContainer.style.transition = 'none';
+      }
+      canvasContainer.style.transform = `translate3d(${panX.toFixed(1)}px, ${panY.toFixed(1)}px, 0) scale(${this.mapZoom.toFixed(3)})`;
       if (zoomBadge) {
         zoomBadge.textContent = `${Math.round(this.mapZoom * 100)}%`;
       }
-      // Ajustement fluide du scroll pour centrer le zoom sur le point focal
-      if (focalPoint && viewportEl && prevZoom !== this.mapZoom) {
-        const ratio = this.mapZoom / prevZoom;
-        viewportEl.scrollLeft = (viewportEl.scrollLeft + focalPoint.x) * ratio - focalPoint.x;
-        viewportEl.scrollTop = (viewportEl.scrollTop + focalPoint.y) * ratio - focalPoint.y;
-      }
+    };
+
+    const centerOnCity = (city, animate = true) => {
+      if (!city || !viewportEl) return;
+      const vw = viewportEl.clientWidth || 360;
+      const vh = viewportEl.clientHeight || 400;
+      const cityPxX = (city.mapCoords.x / 100) * 960;
+      const cityPxY = (city.mapCoords.y / 100) * 1100;
+      const targetPanX = vw / 2 - cityPxX * this.mapZoom;
+      const targetPanY = vh / 2 - cityPxY * this.mapZoom;
+      const clamped = clampPan(targetPanX, targetPanY, this.mapZoom);
+      panX = clamped.x;
+      panY = clamped.y;
+      applyTransform(animate, animate ? 420 : 0);
+    };
+
+    const zoomAtPoint = (newZoom, focalX, focalY, animate = false) => {
+      const oldZoom = this.mapZoom;
+      const clampedZoom = Math.max(0.65, Math.min(2.8, newZoom));
+      if (Math.abs(clampedZoom - oldZoom) < 0.001) return;
+
+      const ratio = clampedZoom / oldZoom;
+      const targetPanX = focalX - (focalX - panX) * ratio;
+      const targetPanY = focalY - (focalY - panY) * ratio;
+
+      this.mapZoom = clampedZoom;
+      const clamped = clampPan(targetPanX, targetPanY, this.mapZoom);
+      panX = clamped.x;
+      panY = clamped.y;
+      applyTransform(animate, animate ? 300 : 0);
     };
 
     mapScreen.querySelector('#btn-zoom-in')?.addEventListener('click', () => {
       soundManager.playClick();
-      applyZoom(this.mapZoom + 0.25);
+      const rect = viewportEl.getBoundingClientRect();
+      zoomAtPoint(this.mapZoom + 0.3, rect.width / 2, rect.height / 2, true);
     });
     mapScreen.querySelector('#btn-zoom-out')?.addEventListener('click', () => {
       soundManager.playClick();
-      applyZoom(this.mapZoom - 0.25);
+      const rect = viewportEl.getBoundingClientRect();
+      zoomAtPoint(this.mapZoom - 0.3, rect.width / 2, rect.height / 2, true);
     });
     mapScreen.querySelector('#btn-zoom-reset')?.addEventListener('click', () => {
       soundManager.playClick();
-      applyZoom(1.0);
+      this.mapZoom = 1.0;
+      centerOnCity(this.selectedMapCity, true);
     });
 
     if (viewportEl) {
-      // Zoom molette pour desktop
+      // Zoom molette pour ordinateurs
       viewportEl.addEventListener('wheel', (e) => {
         e.preventDefault();
-        const delta = e.deltaY < 0 ? 0.15 : -0.15;
+        const delta = e.deltaY < 0 ? 0.2 : -0.2;
         const rect = viewportEl.getBoundingClientRect();
-        const focal = { x: e.clientX - rect.left, y: e.clientY - rect.top };
-        applyZoom(this.mapZoom + delta, focal);
+        zoomAtPoint(this.mapZoom + delta, e.clientX - rect.left, e.clientY - rect.top, false);
       }, { passive: false });
 
-      // PINCH-TO-ZOOM À 2 DOIGTS NATUREL & DÉPLACEMENT TACTILE FLUIDE
-      let initialPinchDist = 0;
-      let initialZoom = this.mapZoom;
+      // PINCH-TO-ZOOM MULTI-TOUCH 2 DOIGTS ET GLISSER TACTILE 60 FPS
       let isPinching = false;
-      let touchStartPos = { x: 0, y: 0 };
-      let scrollStart = { x: 0, y: 0 };
       let isDragging = false;
+      let startPinchDist = 0;
+      let startZoom = 1.0;
+      let lastTouchX = 0;
+      let lastTouchY = 0;
       let lastTapTime = 0;
 
-      const getTouchDist = (t1, t2) => {
-        return Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
-      };
-
-      const getMidpoint = (t1, t2, rect) => {
-        return {
-          x: (t1.clientX + t2.clientX) / 2 - rect.left,
-          y: (t1.clientY + t2.clientY) / 2 - rect.top
-        };
-      };
+      const getTouchDist = (t1, t2) => Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
 
       viewportEl.addEventListener('touchstart', (e) => {
+        canvasContainer.style.transition = 'none';
+
         if (e.touches.length === 2) {
           isPinching = true;
           isDragging = false;
-          initialPinchDist = getTouchDist(e.touches[0], e.touches[1]);
-          initialZoom = this.mapZoom;
+          startPinchDist = getTouchDist(e.touches[0], e.touches[1]);
+          startZoom = this.mapZoom;
           e.preventDefault();
         } else if (e.touches.length === 1) {
           const now = Date.now();
           if (now - lastTapTime < 320) {
-            // Double-tap : bascule zoom 100% <=> 165%
-            const targetZoom = this.mapZoom > 1.25 ? 1.0 : 1.65;
+            // Double-tap : bascule zoom 100% <=> 175%
+            const targetZoom = this.mapZoom > 1.25 ? 1.0 : 1.75;
             const rect = viewportEl.getBoundingClientRect();
-            applyZoom(targetZoom, { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top });
+            zoomAtPoint(targetZoom, e.touches[0].clientX - rect.left, e.touches[0].clientY - rect.top, true);
             lastTapTime = 0;
+            e.preventDefault();
             return;
           }
           lastTapTime = now;
-
           isPinching = false;
           isDragging = true;
-          touchStartPos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-          scrollStart = { x: viewportEl.scrollLeft, y: viewportEl.scrollTop };
+          lastTouchX = e.touches[0].clientX;
+          lastTouchY = e.touches[0].clientY;
         }
       }, { passive: false });
 
       viewportEl.addEventListener('touchmove', (e) => {
-        if (isPinching && e.touches.length === 2) {
-          const currentDist = getTouchDist(e.touches[0], e.touches[1]);
-          if (initialPinchDist > 0) {
-            const zoomRatio = currentDist / initialPinchDist;
-            const rect = viewportEl.getBoundingClientRect();
-            const midpoint = getMidpoint(e.touches[0], e.touches[1], rect);
-            applyZoom(initialZoom * zoomRatio, midpoint);
-          }
+        if (isPinching && e.touches.length >= 2) {
           e.preventDefault();
+          const currentDist = getTouchDist(e.touches[0], e.touches[1]);
+          if (startPinchDist > 5) {
+            const factor = currentDist / startPinchDist;
+            const rect = viewportEl.getBoundingClientRect();
+            const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left;
+            const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top;
+            zoomAtPoint(startZoom * factor, midX, midY, false);
+          }
         } else if (isDragging && e.touches.length === 1) {
-          const dx = e.touches[0].clientX - touchStartPos.x;
-          const dy = e.touches[0].clientY - touchStartPos.y;
-          viewportEl.scrollLeft = scrollStart.x - dx;
-          viewportEl.scrollTop = scrollStart.y - dy;
+          e.preventDefault();
+          const dx = e.touches[0].clientX - lastTouchX;
+          const dy = e.touches[0].clientY - lastTouchY;
+          lastTouchX = e.touches[0].clientX;
+          lastTouchY = e.touches[0].clientY;
+
+          const clamped = clampPan(panX + dx, panY + dy, this.mapZoom);
+          panX = clamped.x;
+          panY = clamped.y;
+          applyTransform(false);
         }
       }, { passive: false });
 
       const endTouch = (e) => {
         if (e.touches.length < 2) {
           isPinching = false;
-        }
-        if (e.touches.length === 0) {
-          isDragging = false;
+          if (e.touches.length === 1) {
+            isDragging = true;
+            lastTouchX = e.touches[0].clientX;
+            lastTouchY = e.touches[0].clientY;
+          } else {
+            isDragging = false;
+          }
         }
       };
+      viewportEl.addEventListener('touchend', endTouch, { passive: true });
+      viewportEl.addEventListener('touchcancel', endTouch, { passive: true });
 
-      viewportEl.addEventListener('touchend', endTouch);
-      viewportEl.addEventListener('touchcancel', endTouch);
+      // Support glisser à la souris sur ordinateur
+      let isMouseDown = false;
+      let mouseStartX = 0;
+      let mouseStartY = 0;
+
+      viewportEl.addEventListener('mousedown', (e) => {
+        if (e.button !== 0) return;
+        isMouseDown = true;
+        canvasContainer.style.transition = 'none';
+        mouseStartX = e.clientX;
+        mouseStartY = e.clientY;
+      });
+
+      window.addEventListener('mousemove', (e) => {
+        if (!isMouseDown) return;
+        const dx = e.clientX - mouseStartX;
+        const dy = e.clientY - mouseStartY;
+        mouseStartX = e.clientX;
+        mouseStartY = e.clientY;
+
+        const clamped = clampPan(panX + dx, panY + dy, this.mapZoom);
+        panX = clamped.x;
+        panY = clamped.y;
+        applyTransform(false);
+      });
+
+      window.addEventListener('mouseup', () => {
+        isMouseDown = false;
+      });
     }
 
     // Gestion du déplacement et de la sélection de ville
@@ -682,17 +651,8 @@ export class UIManager {
       this.selectedMapCity = city;
       pins.forEach(p => p.classList.toggle('selected', p.getAttribute('data-city-id') === cityId));
 
-      // Centrer automatiquement le viewport scrollable sur la ville sélectionnée
-      const viewport = mapScreen.querySelector('#europe-viewport');
-      if (viewport) {
-        const targetPxX = (city.mapCoords.x / 100) * 960 * this.mapZoom;
-        const targetPxY = (city.mapCoords.y / 100) * 1100 * this.mapZoom;
-        viewport.scrollTo({
-          left: Math.max(0, Math.min(960 * this.mapZoom - viewport.clientWidth, targetPxX - viewport.clientWidth / 2)),
-          top: Math.max(0, Math.min(1100 * this.mapZoom - viewport.clientHeight, targetPxY - viewport.clientHeight / 2)),
-          behavior: 'smooth'
-        });
-      }
+      // Centrer automatiquement et fluidement sur la ville sélectionnée
+      centerOnCity(city, true);
 
       const targetPin = mapScreen.querySelector(`.city-pin[data-city-id="${cityId}"]`);
       if (targetPin) {
@@ -725,19 +685,12 @@ export class UIManager {
     this.root.appendChild(mapScreen);
     this.updateCityDetail(mapScreen.querySelector('#city-detail'));
 
-    // Centrage initial de la vue sur la ville sélectionnée
+    // Centrage initial fluide de la vue sur la ville sélectionnée
     setTimeout(() => {
-      const viewport = mapScreen.querySelector('#europe-viewport');
-      if (viewport && this.selectedMapCity) {
-        const targetPxX = (this.selectedMapCity.mapCoords.x / 100) * 960;
-        const targetPxY = (this.selectedMapCity.mapCoords.y / 100) * 1100;
-        viewport.scrollTo({
-          left: Math.max(0, Math.min(960 - viewport.clientWidth, targetPxX - viewport.clientWidth / 2)),
-          top: Math.max(0, Math.min(1100 - viewport.clientHeight, targetPxY - viewport.clientHeight / 2)),
-          behavior: 'auto'
-        });
+      if (this.selectedMapCity) {
+        centerOnCity(this.selectedMapCity, false);
       }
-    }, 50);
+    }, 60);
   }
 
   triggerCityPinRipple(pinElement) {
@@ -1037,6 +990,34 @@ export class UIManager {
     const hud = document.createElement('div');
     hud.className = 'screen-hud';
 
+    const equippedBikeId = storage.getEquippedBike();
+    let actionIcon = '📢';
+    let actionLabel = 'KLAXON';
+    let actionTitle = 'Klaxonner !';
+    let isWeapon = false;
+
+    if (equippedBikeId === 'cheval') {
+      actionIcon = '💥';
+      actionLabel = 'FOUET';
+      actionTitle = 'Frapper au FOUET !';
+      isWeapon = true;
+    } else if (equippedBikeId === 'trottinette_hache') {
+      actionIcon = '🪓';
+      actionLabel = 'HACHE';
+      actionTitle = 'Frapper à la Hache !';
+      isWeapon = true;
+    } else if (equippedBikeId === 'run_ak47') {
+      actionIcon = '🔥';
+      actionLabel = 'TIRER';
+      actionTitle = 'Rafale Kalachnikov AK-47 !';
+      isWeapon = true;
+    } else if (equippedBikeId === 'run_chainsaw') {
+      actionIcon = '⚡';
+      actionLabel = 'TRONÇON';
+      actionTitle = 'Tronçonner les obstacles !';
+      isWeapon = true;
+    }
+
     hud.innerHTML = `
       <div class="hud-top-bar">
         <!-- Badge Score Lumineux Arcade -->
@@ -1102,15 +1083,15 @@ export class UIManager {
           <span class="nitro-sub" id="hud-nitro-sub">0%</span>
         </button>
 
-        <!-- Bouton Klaxon ergonomique à droite (pouce droit) -->
-        <button class="btn-horn-pedal" id="btn-hud-horn" title="Klaxonner !">
-          <span class="horn-icon">📢</span>
-          <span class="horn-label">KLAXON</span>
+        <!-- Bouton d'Attaque / Frappe / Tir / Klaxon (pouce droit) -->
+        <button class="btn-horn-pedal ${isWeapon ? 'btn-attack-pedal' : ''}" id="btn-hud-horn" title="${actionTitle}">
+          <span class="horn-icon">${actionIcon}</span>
+          <span class="horn-label">${actionLabel}</span>
         </button>
       </div>
 
       <div class="touch-hint">
-        ← Glissez pour braquer | FREIN pour stopper | ⚡ NITRO (5s) →
+        ← Glissez pour braquer | FREIN pour stopper | ${isWeapon ? `${actionIcon} ${actionLabel} pour FRAPPER !` : '📢 KLAXON'} | ⚡ NITRO →
       </div>
     `;
 
@@ -1147,10 +1128,15 @@ export class UIManager {
       this.showPauseModal();
     });
 
-    hud.querySelector('#btn-hud-horn').addEventListener('click', () => {
-      soundManager.playHorn(storage.getEquippedBike());
-      if (this.onAction) this.onAction('HORN');
-    });
+    const hornAttackBtn = hud.querySelector('#btn-hud-horn');
+    if (hornAttackBtn) {
+      const triggerAction = (e) => {
+        if (e && e.type === 'touchstart') e.preventDefault();
+        if (this.onAction) this.onAction('ATTACK');
+      };
+      hornAttackBtn.addEventListener('touchstart', triggerAction, { passive: false });
+      hornAttackBtn.addEventListener('click', triggerAction);
+    }
 
     this.root.appendChild(hud);
 

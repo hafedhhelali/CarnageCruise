@@ -1271,6 +1271,7 @@ export class Bike {
       axeGroup.add(bladeFront, bladeBack);
 
       torsoGroup.add(axeGroup);
+      this.riderAxe = axeGroup;
 
     } else if (this.currentBikeId === 'run_ak47') {
       // Sprinteur tenant une Kalachnikov AK-47 à deux mains
@@ -1307,6 +1308,16 @@ export class Bike {
       barrel.position.set(0, 0.02, 0.52);
       akGroup.add(barrel);
 
+      // Flamme de bouche de tir (Muzzle Flash AK-47)
+      const muzzleFlash = new THREE.Mesh(
+        new THREE.ConeGeometry(0.09, 0.35, 6),
+        new THREE.MeshBasicMaterial({ color: 0xffd32a, transparent: true, opacity: 0 })
+      );
+      muzzleFlash.rotation.x = Math.PI / 2;
+      muzzleFlash.position.set(0, 0.02, 0.85);
+      akGroup.add(muzzleFlash);
+      this.akMuzzleFlash = muzzleFlash;
+
       // Chargeur banane courbé 30 coups
       const mag = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.24, 0.12), steelMat);
       mag.position.set(0, -0.16, 0.1);
@@ -1314,6 +1325,7 @@ export class Bike {
       akGroup.add(mag);
 
       torsoGroup.add(akGroup);
+      this.riderAk = akGroup;
 
     } else if (this.currentBikeId === 'run_chainsaw') {
       // Sprinteur tenant une tronçonneuse d'assaut
@@ -1328,6 +1340,7 @@ export class Bike {
       // --- TRONÇONNEUSE VROMBISSANTE 3D ---
       const csGroup = new THREE.Group();
       csGroup.position.set(0, 0.18, 0.35);
+      this.riderChainsaw = csGroup;
 
       // Bloc moteur orange de tronçonneuse
       const orangeMat = new THREE.MeshToonMaterial({ color: 0xff6b01 });
@@ -1621,6 +1634,82 @@ export class Bike {
       this.flameR.scale.set(jitterX, jitterX, jitterZ);
     } else {
       this.nitroFlames.visible = false;
+    }
+
+    // --- GESTION DES ANIMATIONS D'ATTAQUE (FOUET, HACHE, AK-47, TRONÇONNEUSE) ---
+    if (this.isAttacking) {
+      this.attackTimer -= delta;
+      if (this.attackTimer <= 0) {
+        this.isAttacking = false;
+        if (this.akMuzzleFlash) this.akMuzzleFlash.material.opacity = 0;
+      } else {
+        const attackProgress = 1 - (this.attackTimer / 0.38);
+
+        // 1. Coup de FOUET cinglant
+        if (this.attackType === 'whip' && this.riderWhip) {
+          const lashAngle = Math.sin(attackProgress * Math.PI);
+          this.riderWhip.rotation.x = -Math.PI / 4 - lashAngle * 1.6;
+          this.riderWhip.rotation.z = Math.PI / 5 - lashAngle * 1.2;
+        }
+
+        // 2. Balayage violent à la HACHE
+        if (this.attackType === 'axe' && this.riderAxe) {
+          const slashSweep = Math.sin(attackProgress * Math.PI);
+          this.riderAxe.rotation.z = Math.PI / 6 - slashSweep * 2.2;
+          this.riderAxe.rotation.x = -Math.PI / 4 + slashSweep * 1.1;
+        }
+
+        // 3. Rafale AK-47 avec recul et flamme de tir (Muzzle Flash)
+        if (this.attackType === 'shoot' && this.riderAk) {
+          const recoil = Math.sin(attackProgress * Math.PI * 6) * 0.08;
+          this.riderAk.position.z = 0.32 - Math.max(0, recoil);
+          if (this.akMuzzleFlash) {
+            this.akMuzzleFlash.material.opacity = Math.random() > 0.25 ? 0.95 : 0.1;
+            this.akMuzzleFlash.scale.setScalar(0.8 + Math.random() * 0.6);
+          }
+        }
+
+        // 4. Estoc & vrombissement de la TRONÇONNEUSE
+        if (this.attackType === 'chainsaw' && this.riderChainsaw) {
+          const thrust = Math.sin(attackProgress * Math.PI) * 0.32;
+          this.riderChainsaw.position.z = 0.35 + thrust;
+          this.riderChainsaw.position.x = (Math.random() - 0.5) * 0.04;
+        }
+      }
+    }
+  }
+
+  triggerAttack() {
+    if (this.currentBikeId === 'cheval') {
+      this.isAttacking = true;
+      this.attackTimer = 0.35;
+      this.attackType = 'whip';
+      soundManager.playWhipCrack();
+      return { type: 'whip', range: 8.5, radius: 2.6 };
+    } else if (this.currentBikeId === 'trottinette_hache') {
+      this.isAttacking = true;
+      this.attackTimer = 0.38;
+      this.attackType = 'axe';
+      soundManager.playAxeSlash();
+      return { type: 'axe', range: 7.0, radius: 3.2 };
+    } else if (this.currentBikeId === 'run_ak47') {
+      this.isAttacking = true;
+      this.attackTimer = 0.32;
+      this.attackType = 'shoot';
+      soundManager.playAk47Burst();
+      return { type: 'shoot', range: 30.0, radius: 2.4 };
+    } else if (this.currentBikeId === 'run_chainsaw') {
+      this.isAttacking = true;
+      this.attackTimer = 0.42;
+      this.attackType = 'chainsaw';
+      soundManager.playChainsawRev();
+      return { type: 'chainsaw', range: 6.8, radius: 2.6 };
+    } else if (this.currentBikeId === 'rouleau') {
+      soundManager.playSteamrollerHorn();
+      return { type: 'horn' };
+    } else {
+      soundManager.playHorn();
+      return { type: 'horn' };
     }
   }
 
