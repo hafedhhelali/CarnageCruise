@@ -194,6 +194,77 @@ class GameApp {
       return;
     }
 
+    if (attack.type === 'cannon') {
+      const bikeZ = this.bike.z;
+      const bikeX = this.bike.mesh.position.x;
+      const muzzlePos = new THREE.Vector3(bikeX, this.bike.mesh.position.y + 0.95, bikeZ + 2.8);
+
+      // 1. Déflagration d'obus et onde de choc au frein de bouche du canon 120mm
+      this.particles.spawnShockwave(muzzlePos, 0xff793f);
+      this.particles.spawnCannonBlast(muzzlePos);
+      this.engine.triggerCameraShake(0.72);
+
+      let hits = 0;
+
+      // 2. Pulvérisation des voitures sur la trajectoire du tir
+      if (this.traffic) {
+        this.traffic.vehicles.forEach(v => {
+          if (v.userData.active && !v.userData.isCrashed) {
+            const vZ = v.position.z - bikeZ;
+            const vX = Math.abs(v.position.x - bikeX);
+            if (vZ > 1.2 && vZ < attack.range && vX < attack.radius) {
+              this.traffic.blowUpVehicle(v, this.bike.mesh.position);
+              this.particles.spawnCannonBlast(v.position);
+              const carPts = 1500;
+              gameState.score += carPts;
+              this.particles.spawnComicBurst(v.position, carPts, gameState.combo);
+              soundManager.playCrash();
+              hits++;
+            }
+          }
+        });
+      }
+
+      // 3. Déflagration d'obus sur les piétons
+      this.characters.characters.forEach(char => {
+        if (!char.group.visible || char.isFlying) return;
+        const dZ = char.group.position.z - bikeZ;
+        const dX = Math.abs(char.group.position.x - bikeX);
+        if (dZ > 1.0 && dZ < attack.range && dX < attack.radius) {
+          this.characters.triggerSlapstickFlight(char, bikeX, 48);
+          this.particles.spawnCannonBlast(char.group.position);
+          this.particles.spawnBloodBurst(char.group.position);
+          this.ui.triggerPedestrianCarnageFlash();
+          gameState.recordKill(850, 'WEAPON_CANNON', char.typeDef.category);
+          hits++;
+        }
+      });
+
+      // 4. Dégâts collatéraux sur le mobilier urbain
+      this.environment.chunks.forEach(chunk => {
+        if (chunk.userData && chunk.userData.props) {
+          chunk.userData.props.forEach(prop => {
+            if (prop.userData.isHit) return;
+            const worldZ = chunk.position.z + prop.position.z;
+            const worldX = chunk.position.x + prop.position.x;
+            const pZ = worldZ - bikeZ;
+            const pX = Math.abs(worldX - bikeX);
+            if (pZ > 1.0 && pZ < attack.range && pX < attack.radius) {
+              prop.userData.isHit = true;
+              prop.rotation.z = (prop.position.x > 0 ? 1 : -1) * 1.1;
+              this.particles.spawnCannonBlast(new THREE.Vector3(worldX, 1.0, worldZ));
+              soundManager.playPropSmash();
+            }
+          });
+        }
+      });
+
+      if (hits > 0) {
+        soundManager.playCoin();
+      }
+      return;
+    }
+
     // Détection d'impact sur les piétons situés dans l'arc d'attaque
     const bikeZ = this.bike.z;
     const bikeX = this.bike.mesh.position.x;
@@ -292,7 +363,13 @@ class GameApp {
           this.engine.triggerCameraShake(0.38);
           this.particles.spawnComicBurst(hitChar.group.position, bonusPts, gameState.combo);
           this.particles.spawnBloodBurst(hitChar.group.position);
+          if (this.ui) this.ui.triggerPedestrianCarnageFlash();
           gameState.recordKill(bonusPts, categoryLabel, hitChar.typeDef.category);
+
+          // Si série de carnages ou choc sur piéton, dépêcher l'ambulance d'urgence !
+          if (this.traffic && (gameState.combo >= 2 || Math.random() < 0.4)) {
+            this.traffic.spawnEmergencyAmbulance(this.bike.z, (z) => this.environment.getRoadCenterX(z));
+          }
         },
         (z) => this.environment.getRoadCenterX(z),
         (nearChar) => {
@@ -313,7 +390,7 @@ class GameApp {
           currentSpeed,
           (z) => this.environment.getRoadCenterX(z),
           (car, isPlayerInvuln) => {
-            if (isPlayerInvuln || gameState.isNitroActive || this.bike.currentBikeId === 'rouleau' || this.bike.currentBikeId === 'aero_jet') {
+            if (isPlayerInvuln || gameState.isNitroActive || this.bike.currentBikeId === 'rouleau' || this.bike.currentBikeId === 'tank' || this.bike.currentBikeId === 'aero_jet') {
               // Carambolage royal ! La voiture vole en éclats
               this.engine.triggerCameraShake(0.65);
               soundManager.playCrash();

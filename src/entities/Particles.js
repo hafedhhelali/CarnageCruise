@@ -179,45 +179,103 @@ export class ParticleSystem {
     }
   }
 
-  // Gouttelettes cartoon légères
+  // Effets d'impact et flaques de sang réalistes & burlesques
   spawnBloodBurst(pos) {
-    const numDrops = 6;
+    const numDrops = 14;
     for (let i = 0; i < numDrops; i++) {
       const drop = new THREE.Mesh(this.sharedGeos.sparkBox, this.sharedMats.bloodDrop);
-      drop.scale.setScalar(0.7);
+      drop.scale.setScalar(0.75 + Math.random() * 0.45);
       drop.position.copy(pos);
       drop.position.y += 0.65;
 
       const angle = Math.random() * Math.PI * 2;
-      const horizSpeed = 1.4 + Math.random() * 2.2;
+      const horizSpeed = 1.8 + Math.random() * 3.2;
 
       this.scene.add(drop);
       this.bloodDrops.push({
         mesh: drop,
         velX: Math.cos(angle) * horizSpeed,
-        velY: 1.8 + Math.random() * 2.2,
+        velY: 2.2 + Math.random() * 2.8,
         velZ: Math.sin(angle) * horizSpeed,
-        life: 0.6,
-        maxLife: 0.6
+        life: 0.75,
+        maxLife: 0.75
       });
     }
 
-    // Tache discrète au sol avec fondu
+    // 1. Flaque de sang centrale généreuse qui reste visible sur le bitume
     const splatMat = new THREE.MeshBasicMaterial({
-      color: 0x8b0000,
+      color: 0x850000,
       transparent: true,
-      opacity: 0.65,
+      opacity: 0.88,
       depthWrite: false
     });
     const splat = new THREE.Mesh(this.sharedGeos.splatCircle, splatMat);
     splat.rotation.x = -Math.PI / 2;
+    splat.scale.set(1.4, 1.4, 1.4);
     splat.position.set(pos.x, 0.025, pos.z);
     this.scene.add(splat);
     this.bloodSplats.push({
       mesh: splat,
-      life: 2.2,
-      maxLife: 2.2
+      life: 10.0,
+      maxLife: 10.0
     });
+
+    // 2. Éclaboussures satellites autour de la flaque principale
+    for (let s = 0; s < 3; s++) {
+      const satSplat = new THREE.Mesh(this.sharedGeos.splatCircle, splatMat);
+      satSplat.rotation.x = -Math.PI / 2;
+      const offsetAng = Math.random() * Math.PI * 2;
+      const offsetDist = 0.55 + Math.random() * 0.65;
+      satSplat.scale.setScalar(0.45 + Math.random() * 0.4);
+      satSplat.position.set(pos.x + Math.cos(offsetAng) * offsetDist, 0.024, pos.z + Math.sin(offsetAng) * offsetDist);
+      this.scene.add(satSplat);
+      this.bloodSplats.push({
+        mesh: satSplat,
+        life: 10.0,
+        maxLife: 10.0
+      });
+    }
+  }
+
+  // Déflagration d'obus 120mm de char d'assaut (Onde de choc, gerbe de feu et fumée noire)
+  spawnCannonBlast(pos) {
+    this.spawnShockwave(pos, 0xff793f);
+    this.spawnShockwave(pos, 0xffb142);
+
+    // Gerbe de flammes et étincelles incandescentes
+    for (let i = 0; i < 24; i++) {
+      const spark = new THREE.Mesh(this.sharedGeos.starCone, this.sharedMats.starOrange);
+      spark.position.copy(pos);
+      spark.position.y += 0.8;
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 4.5 + Math.random() * 9.0;
+      this.scene.add(spark);
+      this.debris.push({
+        mesh: spark,
+        velX: Math.cos(angle) * speed,
+        velY: 4.0 + Math.random() * 7.0,
+        velZ: Math.sin(angle) * speed,
+        rotVelX: Math.random() * 20 - 10,
+        rotVelY: Math.random() * 20 - 10,
+        life: 0.85,
+        maxLife: 0.85
+      });
+    }
+
+    // Épaisses volutes de fumée noire de poudre
+    for (let j = 0; j < 8; j++) {
+      const smoke = new THREE.Mesh(this.sharedGeos.smokeSphere, this.sharedMats.smokeDark);
+      smoke.position.set(pos.x + (Math.random() - 0.5) * 1.5, pos.y + 0.4 + Math.random() * 1.2, pos.z + (Math.random() - 0.5) * 1.5);
+      smoke.scale.setScalar(1.2 + Math.random() * 1.4);
+      this.scene.add(smoke);
+      this.smokePuffs.push({
+        mesh: smoke,
+        velY: 1.8 + Math.random() * 1.6,
+        growRate: 2.2,
+        life: 1.1,
+        maxLife: 1.1
+      });
+    }
   }
 
   // Éclat d'accident violent (rouge sang & débris)

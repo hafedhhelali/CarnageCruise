@@ -230,6 +230,7 @@ export class UIManager {
           <span class="zoom-level-badge" id="zoom-badge">${Math.round(this.mapZoom * 100)}%</span>
           <button id="btn-zoom-out" class="btn-zoom" title="Réduire la carte (Zoom -)">➖</button>
           <button id="btn-zoom-reset" class="btn-zoom" title="Recentrer">🎯</button>
+          <button id="btn-filter-nuclear" class="btn-nuclear-shortcut" title="Voir les Centrales Nucléaires">☢️ CENTRALES</button>
         </div>
 
         <div class="europe-map-canvas-container" id="europe-canvas">
@@ -369,15 +370,16 @@ export class UIManager {
           ${CITIES.map((city, idx) => {
             const unlocked = storage.isCityUnlocked(city.id);
             const isSelected = this.selectedMapCity.id === city.id;
+            const isNuclear = !!city.isNuclearMission;
 
             return `
-              <div class="city-pin ${unlocked ? 'unlocked' : 'locked'} ${isSelected ? 'selected' : ''}"
+              <div class="city-pin ${unlocked ? 'unlocked' : 'locked'} ${isSelected ? 'selected' : ''} ${isNuclear ? 'nuclear-pin' : ''}"
                    data-city-id="${city.id}"
                    style="left: ${city.mapCoords.x}%; top: ${city.mapCoords.y}%;">
                 <div class="city-pulse-ring"></div>
                 <div class="city-pin-dot">
-                  <span class="pin-badge-idx">${idx + 1}</span>
-                  <span class="pin-emblem-icon">${unlocked ? (city.countryFlag || city.emblem || '★') : '🔒'}</span>
+                  <span class="pin-badge-idx">${isNuclear ? '☢️' : (idx + 1)}</span>
+                  <span class="pin-emblem-icon">${unlocked ? (isNuclear ? '☣️' : (city.countryFlag || city.emblem || '★')) : '🔒'}</span>
                 </div>
                 <div class="city-pin-label">
                   ${city.name}
@@ -488,6 +490,20 @@ export class UIManager {
       soundManager.playClick();
       this.mapZoom = 1.0;
       centerOnCity(this.selectedMapCity, true);
+    });
+
+    let nucCycleIdx = 0;
+    mapScreen.querySelector('#btn-filter-nuclear')?.addEventListener('click', () => {
+      const nuclearCities = CITIES.filter(c => c.isNuclearMission);
+      if (nuclearCities.length > 0) {
+        const nextNuc = nuclearCities[nucCycleIdx % nuclearCities.length];
+        nucCycleIdx++;
+        this.selectedMapCity = nextNuc;
+        gameState.selectCity(nextNuc.id);
+        this.renderCityDetails(mapScreen.querySelector('#city-detail'));
+        centerOnCity(nextNuc, true);
+        soundManager.playGeigerClick();
+      }
     });
 
     if (viewportEl) {
@@ -1344,6 +1360,15 @@ export class UIManager {
         }
       }, 550);
     }
+  }
+
+  triggerPedestrianCarnageFlash() {
+    const flash = document.createElement('div');
+    flash.className = 'hud-carnage-flash';
+    this.root.appendChild(flash);
+    setTimeout(() => {
+      try { flash.remove(); } catch (e) {}
+    }, 380);
   }
 
   resetHUDCombo() {

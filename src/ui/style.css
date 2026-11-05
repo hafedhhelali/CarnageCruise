@@ -1246,6 +1246,64 @@ html, body {
   white-space: nowrap;
 }
 
+/* Pins radioactifs des Centrales Nucléaires */
+.city-pin.nuclear-pin .city-pin-dot {
+  background: radial-gradient(circle, #2ed573 0%, #009432 70%, #1e272e 100%) !important;
+  border: 2px solid #ffd32a !important;
+  box-shadow: 0 0 16px rgba(46, 213, 115, 0.9), 0 0 30px rgba(255, 211, 42, 0.6) !important;
+}
+
+.city-pin.nuclear-pin .city-pulse-ring {
+  border-color: #2ed573 !important;
+  animation: nuclearPulse 1.4s ease-out infinite !important;
+}
+
+@keyframes nuclearPulse {
+  0% { transform: scale(0.6); opacity: 1; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+
+.city-pin.nuclear-pin .city-pin-label {
+  background: rgba(20, 40, 25, 0.9) !important;
+  border: 1px solid #2ed573 !important;
+  color: #2ed573 !important;
+  text-shadow: 0 0 6px rgba(46, 213, 115, 0.8) !important;
+}
+
+.btn-nuclear-shortcut {
+  background: linear-gradient(135deg, #2ed573, #009432);
+  color: #1e272e;
+  border: 1.5px solid #ffd32a;
+  border-radius: 16px;
+  font-size: 0.78rem;
+  font-weight: 900;
+  padding: 6px 12px;
+  cursor: pointer;
+  box-shadow: 0 0 12px rgba(46, 213, 115, 0.5);
+  transition: transform 0.18s, filter 0.18s;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.btn-nuclear-shortcut:active {
+  transform: scale(0.94);
+  filter: brightness(1.2);
+}
+
+.hud-carnage-flash {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, rgba(235, 47, 6, 0.28) 0%, rgba(192, 57, 43, 0.8) 80%);
+  pointer-events: none;
+  z-index: 998;
+  animation: carnageVignetteFade 0.38s ease-out forwards;
+}
+
+@keyframes carnageVignetteFade {
+  0% { opacity: 1; transform: scale(1.03); }
+  100% { opacity: 0; transform: scale(1.0); }
+}
+
 .city-detail-card {
   background: var(--glass-bg);
   backdrop-filter: blur(14px);

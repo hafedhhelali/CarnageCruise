@@ -17,6 +17,9 @@ export class Traffic {
     this.container = new THREE.Group();
     this.scene.add(this.container);
 
+    this.ambulance = this.createAmbulance();
+    this.container.add(this.ambulance);
+
     // Géométries partagées optimisées
     this.sharedGeos = {
       wheelTire: new THREE.CylinderGeometry(0.36, 0.36, 0.24, 18),
@@ -304,12 +307,119 @@ export class Traffic {
     return group;
   }
 
+  // --- AMBULANCE D'URGENCE RAPIDE AVEC GYROPHARES & SIRENE ---
+  createAmbulance() {
+    const group = new THREE.Group();
+    group.userData = {
+      active: false,
+      speed: 25.0,
+      lane: -2.2,
+      wheelMeshes: [],
+      strobeLights: [],
+      strobeTimer: 0
+    };
+
+    const bodyMat = new THREE.MeshStandardMaterial({ color: 0xf5f6fa, roughness: 0.25, metalness: 0.1 });
+    const glassMat = new THREE.MeshStandardMaterial({ color: 0x1e272e, roughness: 0.1, metalness: 0.9 });
+    const redCrossMat = new THREE.MeshBasicMaterial({ color: 0xff3838 });
+    const strobeBlueMat = new THREE.MeshBasicMaterial({ color: 0x0984e3 });
+    const strobeRedMat = new THREE.MeshBasicMaterial({ color: 0xff4757 });
+
+    // Caisse principale d'ambulance
+    const box = new THREE.Mesh(new THREE.BoxGeometry(2.1, 1.8, 4.6), bodyMat);
+    box.position.y = 1.25;
+    box.castShadow = true;
+    group.add(box);
+
+    // Cabine avant
+    const cabin = new THREE.Mesh(new THREE.BoxGeometry(2.05, 1.35, 1.5), bodyMat);
+    cabin.position.set(0, 0.95, 2.2);
+    group.add(cabin);
+
+    // Pare-brise
+    const windshield = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.75, 0.1), glassMat);
+    windshield.position.set(0, 1.15, 2.92);
+    windshield.rotation.x = 0.28;
+    group.add(windshield);
+
+    // Croix rouge sur les deux côtés
+    for (let side of [-1.06, 1.06]) {
+      const crossH = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.22, 0.75), redCrossMat);
+      crossH.position.set(side, 1.4, 0);
+      const crossV = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.75, 0.22), redCrossMat);
+      crossV.position.set(side, 1.4, 0);
+      group.add(crossH, crossV);
+    }
+
+    // Rampe de gyrophares LED sur le toit
+    const lightbar = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.16, 0.35), new THREE.MeshStandardMaterial({ color: 0x2f3640 }));
+    lightbar.position.set(0, 2.24, 1.2);
+    group.add(lightbar);
+
+    const strobeBlue = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.18, 0.3), strobeBlueMat);
+    strobeBlue.position.set(-0.45, 2.25, 1.2);
+    const strobeRed = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.18, 0.3), strobeRedMat);
+    strobeRed.position.set(0.45, 2.25, 1.2);
+    group.add(strobeBlue, strobeRed);
+    group.userData.strobeLights = [strobeBlue, strobeRed];
+
+    // 4 Roues
+    const wheelPositions = [
+      { x: -1.02, y: 0.38, z: 1.6 },
+      { x: 1.02, y: 0.38, z: 1.6 },
+      { x: -1.02, y: 0.38, z: -1.4 },
+      { x: 1.02, y: 0.38, z: -1.4 }
+    ];
+    wheelPositions.forEach(p => {
+      const wGroup = new THREE.Group();
+      wGroup.position.set(p.x, p.y, p.z);
+      const tire = new THREE.Mesh(this.sharedGeos.wheelTire, this.sharedMats.rubber);
+      tire.rotation.z = Math.PI / 2;
+      wGroup.add(tire);
+      group.add(wGroup);
+      group.userData.wheelMeshes.push(wGroup);
+    });
+
+    group.visible = false;
+    return group;
+  }
+
+  spawnEmergencyAmbulance(playerZ, roadCurveFunc) {
+    if (this.ambulance.userData.active) return;
+    const spawnZ = playerZ + 85 + Math.random() * 35;
+    const curveX = roadCurveFunc ? roadCurveFunc(spawnZ) : 0;
+    const side = Math.random() > 0.5 ? 2.2 : -2.2;
+    this.ambulance.position.set(curveX + side, 0, spawnZ);
+    this.ambulance.rotation.set(0, 0, 0);
+    this.ambulance.visible = true;
+    this.ambulance.userData.active = true;
+    this.ambulance.userData.speed = 25.0;
+    this.ambulance.userData.lane = side;
+  }
+
+  // Pulvérisation d'un véhicule par obus de char
+  blowUpVehicle(v, hitOrigin) {
+    if (!v || v.userData.isCrashed) return;
+    v.userData.isCrashed = true;
+    v.userData.active = false;
+    v.userData.crashVelY = 16.0 + Math.random() * 8.0;
+    v.userData.crashVelX = (v.position.x >= hitOrigin.x ? 1 : -1) * (12.0 + Math.random() * 6.0);
+    v.userData.crashVelZ = 14.0 + Math.random() * 10.0;
+    v.userData.crashSpinX = (Math.random() - 0.5) * 16.0;
+    v.userData.crashSpinY = 8.0 + Math.random() * 8.0;
+    v.userData.crashSpinZ = (Math.random() - 0.5) * 12.0;
+  }
+
   reset() {
     this.vehicles.forEach(v => {
       v.visible = false;
       v.userData.active = false;
       v.userData.isCrashed = false;
     });
+    if (this.ambulance) {
+      this.ambulance.visible = false;
+      this.ambulance.userData.active = false;
+    }
   }
 
   spawnAhead(playerZ, roadCurveFunc) {
@@ -427,5 +537,33 @@ export class Traffic {
         }
       }
     });
+
+    // 3. Animation et déplacement de l'ambulance d'urgence
+    if (this.ambulance && this.ambulance.userData.active) {
+      const amb = this.ambulance;
+      amb.position.z += amb.userData.speed * delta;
+      const curveX = roadCurveFunc ? roadCurveFunc(amb.position.z) : 0;
+      amb.position.x += (curveX + amb.userData.lane - amb.position.x) * delta * 5.0;
+
+      // Clignotement alternatif des gyrophares bleu et rouge
+      amb.userData.strobeTimer = (amb.userData.strobeTimer || 0) + delta;
+      if (amb.userData.strobeLights && amb.userData.strobeLights.length === 2) {
+        const toggle = Math.sin(amb.userData.strobeTimer * 22.0) > 0;
+        amb.userData.strobeLights[0].visible = toggle;
+        amb.userData.strobeLights[1].visible = !toggle;
+      }
+
+      // Roues qui tournent
+      if (amb.userData.wheelMeshes) {
+        amb.userData.wheelMeshes.forEach(w => {
+          w.children.forEach(part => part.rotation.x += delta * 25.0);
+        });
+      }
+
+      if (amb.position.z < playerZ - 45 || amb.position.z > playerZ + 280) {
+        amb.visible = false;
+        amb.userData.active = false;
+      }
+    }
   }
 }

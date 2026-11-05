@@ -184,6 +184,8 @@ export class Bike {
       this.buildRouleau(bodyMaterial, chromeMaterial, rubberMaterial, leatherMaterial, lampMaterial);
     } else if (bikeId === 'dragster') {
       this.buildDragster(bodyMaterial, chromeMaterial, rubberMaterial, leatherMaterial, lampMaterial);
+    } else if (bikeId === 'tank') {
+      this.buildTank(bodyMaterial, chromeMaterial, rubberMaterial, leatherMaterial, lampMaterial);
     } else if (bikeId === 'aero_jet') {
       this.buildAeroJet(bodyMaterial, chromeMaterial, rubberMaterial, leatherMaterial, lampMaterial);
     } else {
@@ -1226,6 +1228,155 @@ export class Bike {
     this.bikeModelGroup.add(scootGroup);
   }
 
+  // --- CHAR D'ASSAUT DE GUERRE AMX-TITAN & CANON 120MM ---
+  buildTank(bodyMat, chromeMat, rubberMat, leatherMat, lampMat) {
+    this.tankWheels = [];
+
+    const camoMat = new THREE.MeshStandardMaterial({
+      color: 0x3d4f36,
+      roughness: 0.75,
+      metalness: 0.35
+    });
+    const armorPlateMat = new THREE.MeshStandardMaterial({
+      color: 0x2d3728,
+      roughness: 0.8,
+      metalness: 0.4
+    });
+    const treadMat = new THREE.MeshStandardMaterial({
+      color: 0x1b1f23,
+      roughness: 0.9,
+      metalness: 0.65
+    });
+    const rimMat = new THREE.MeshStandardMaterial({
+      color: 0x222f3e,
+      roughness: 0.5,
+      metalness: 0.7
+    });
+
+    const tankGroup = new THREE.Group();
+
+    // 1. CHÂSSIS INFÉRIEUR & BLINDAGE CENTRAL
+    const hullGeo = new THREE.BoxGeometry(1.6, 0.48, 2.6);
+    const hull = new THREE.Mesh(hullGeo, camoMat);
+    hull.position.y = 0.42;
+    hull.castShadow = true;
+    hull.receiveShadow = true;
+    tankGroup.add(hull);
+
+    // Glacis avant incliné (blindage frontal)
+    const glacisGeo = new THREE.BoxGeometry(1.58, 0.22, 0.8);
+    const glacis = new THREE.Mesh(glacisGeo, armorPlateMat);
+    glacis.position.set(0, 0.52, 1.35);
+    glacis.rotation.x = 0.45;
+    tankGroup.add(glacis);
+
+    // 2. CHENILLES GAUCHE & DROITE AVEC GALETS ROTATIFS
+    const createTrackSide = (side) => {
+      const trackGroup = new THREE.Group();
+      trackGroup.position.set(side * 0.95, 0.35, 0);
+
+      // Bande de chenille en caoutchouc armé
+      const beltGeo = new THREE.BoxGeometry(0.38, 0.5, 2.8);
+      const belt = new THREE.Mesh(beltGeo, treadMat);
+      trackGroup.add(belt);
+
+      // Galets de roulement rotatifs (5 galets par côté)
+      for (let i = -2; i <= 2; i++) {
+        const wheel = this.createWheel(0.24, 0.28, rubberMat, rimMat);
+        wheel.position.set(0, -0.06, i * 0.62);
+        this.tankWheels.push(wheel);
+        trackGroup.add(wheel);
+      }
+
+      // Barbotin avant et poulie de tension arrière
+      const sprocketF = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.3, 12), rimMat);
+      sprocketF.rotation.z = Math.PI / 2;
+      sprocketF.position.set(0, 0.12, 1.32);
+      const sprocketR = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.3, 12), rimMat);
+      sprocketR.rotation.z = Math.PI / 2;
+      sprocketR.position.set(0, 0.12, -1.32);
+      trackGroup.add(sprocketF, sprocketR);
+
+      // Garde-boue blindé au-dessus de la chenille
+      const fender = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.08, 2.9), armorPlateMat);
+      fender.position.set(0, 0.28, 0);
+      trackGroup.add(fender);
+
+      return trackGroup;
+    };
+
+    tankGroup.add(createTrackSide(-1));
+    tankGroup.add(createTrackSide(1));
+
+    // 3. TOURELLE BLINDÉE DU CHAR
+    this.tankTurret = new THREE.Group();
+    this.tankTurret.position.set(0, 0.72, -0.05);
+
+    // Corps anguleux de la tourelle
+    const turretGeo = new THREE.BoxGeometry(1.3, 0.44, 1.5);
+    const turret = new THREE.Mesh(turretGeo, camoMat);
+    turret.position.y = 0.22;
+    turret.castShadow = true;
+    this.tankTurret.add(turret);
+
+    // Écoutille supérieure circulaire du commandant
+    const hatchRing = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.36, 0.12, 16), armorPlateMat);
+    hatchRing.position.set(0, 0.46, -0.15);
+    this.tankTurret.add(hatchRing);
+
+    // Mitrailleuse coaxiale / de toit cal .50
+    const mgGroup = new THREE.Group();
+    mgGroup.position.set(0.38, 0.52, -0.05);
+    const mgBody = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.12, 0.35), rimMat);
+    const mgBarrel = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.45, 8), chromeMat);
+    mgBarrel.rotation.x = Math.PI / 2;
+    mgBarrel.position.set(0, 0.02, 0.25);
+    mgGroup.add(mgBody, mgBarrel);
+    this.tankTurret.add(mgGroup);
+
+    // 4. CANON 120MM PUISSANT AVEC FREIN DE BOUCHE
+    this.tankBarrel = new THREE.Group();
+    this.tankBarrel.position.set(0, 0.24, 0.75);
+
+    // Masque de canon blindé (mantlet)
+    const mantlet = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.32, 0.3), armorPlateMat);
+    this.tankBarrel.add(mantlet);
+
+    // Tube du canon long 120mm
+    const barrelGeo = new THREE.CylinderGeometry(0.075, 0.09, 1.9, 16);
+    const barrel = new THREE.Mesh(barrelGeo, chromeMat);
+    barrel.rotation.x = Math.PI / 2;
+    barrel.position.set(0, 0, 0.95);
+    barrel.castShadow = true;
+    this.tankBarrel.add(barrel);
+
+    // Frein de bouche percé au bout du canon
+    const muzzleGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.32, 12);
+    const muzzle = new THREE.Mesh(muzzleGeo, armorPlateMat);
+    muzzle.rotation.x = Math.PI / 2;
+    muzzle.position.set(0, 0, 1.95);
+    this.tankBarrel.add(muzzle);
+
+    this.tankTurret.add(this.tankBarrel);
+    tankGroup.add(this.tankTurret);
+
+    // 5. PHARES TACTIQUES AVANT & POTS D'ÉCHAPPEMENT
+    const lightL = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.14, 0.14), lampMat);
+    lightL.position.set(-0.6, 0.56, 1.35);
+    const lightR = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.14, 0.14), lampMat);
+    lightR.position.set(0.6, 0.56, 1.35);
+    tankGroup.add(lightL, lightR);
+
+    // Échappements arrières
+    const exhaustL = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.3, 8), rimMat);
+    exhaustL.position.set(-0.55, 0.55, -1.35);
+    const exhaustR = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.3, 8), rimMat);
+    exhaustR.position.set(0.55, 0.55, -1.35);
+    tankGroup.add(exhaustL, exhaustR);
+
+    this.bikeModelGroup.add(tankGroup);
+  }
+
   // --- ENGIN VOLANT D'ÉVASION : AÉRO-JET NUCLÉAIRE SUB-ORBITAL ---
   buildAeroJet(bodyMat, chromeMat, rubberMat, leatherMat, lampMat) {
     const jetGroup = new THREE.Group();
@@ -1348,6 +1499,7 @@ export class Bike {
     const woodMat = new THREE.MeshLambertMaterial({ color: 0x5a2d0c });
 
     const isCar = this.currentBikeId === 'decapotable';
+    const isTank = this.currentBikeId === 'tank';
     const isScoot = this.currentBikeId === 'trottinette_hache';
     const isRunner = this.currentBikeId === 'run_ak47' || this.currentBikeId === 'run_chainsaw';
     const isHorse = this.currentBikeId === 'cheval';
@@ -1357,6 +1509,8 @@ export class Bike {
     const torsoGroup = new THREE.Group();
     if (isCar) {
       torsoGroup.position.set(-0.35, 0.68, -0.28);
+    } else if (isTank) {
+      torsoGroup.position.set(0, 0.98, -0.2);
     } else if (isScoot) {
       torsoGroup.position.set(0, 0.85, -0.15);
     } else if (isRunner) {
@@ -1437,6 +1591,30 @@ export class Bike {
         canister.position.set(s, -0.06, 0.14);
         headGroup.add(canister);
       }
+    } else if (isTank) {
+      // Casque de combat blindé vert armée avec casque audio et lunettes tactiques
+      const tankHelmetMat = new THREE.MeshStandardMaterial({ color: 0x2d3728, roughness: 0.7, metalness: 0.4 });
+      const helmetGeo = new THREE.SphereGeometry(0.22, 14, 12);
+      const helmet = new THREE.Mesh(helmetGeo, tankHelmetMat);
+      helmet.position.set(0, 0.04, 0);
+      headGroup.add(helmet);
+
+      // Casque audio de communication radio
+      const commMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.5 });
+      const earL = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.05, 8), commMat);
+      earL.rotation.z = Math.PI / 2;
+      earL.position.set(-0.19, 0.02, 0);
+      const earR = earL.clone();
+      earR.position.set(0.19, 0.02, 0);
+      headGroup.add(earL, earR);
+
+      // Lunettes de protection tactiques
+      const goggleMat = new THREE.MeshBasicMaterial({ color: 0x1e272e });
+      const goggleL = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.06, 0.03), goggleMat);
+      goggleL.position.set(-0.07, 0.04, 0.17);
+      const goggleR = goggleL.clone();
+      goggleR.position.set(0.07, 0.04, 0.17);
+      headGroup.add(goggleL, goggleR);
     } else {
       // Lunettes de soleil d'aviateur rétro
       const glassMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
@@ -1478,6 +1656,15 @@ export class Bike {
       armR.position.set(0.24, 0.16, 0.24);
       armR.rotation.x = Math.PI / 2.5;
       armR.rotation.z = -0.15;
+      torsoGroup.add(armL, armR);
+    } else if (isTank) {
+      // Commandant de char tenant le rebord de l'écoutille et la mitrailleuse de toit
+      armL.position.set(-0.24, 0.18, 0.22);
+      armL.rotation.x = Math.PI / 2.6;
+      armL.rotation.z = -0.15;
+      armR.position.set(0.24, 0.18, 0.22);
+      armR.rotation.x = Math.PI / 2.6;
+      armR.rotation.z = 0.15;
       torsoGroup.add(armL, armR);
     } else if (isHorse) {
       // Bras gauche tient les rênes
@@ -1761,6 +1948,8 @@ export class Bike {
       shoeR.position.set(0.1, 0.34, -0.2);
       this.riderGroup.add(shoeL, shoeR);
 
+    } else if (isTank) {
+      // Commandant dans la tourelle : jambes protégées à l'intérieur de la caisse blindée
     } else {
       // Moto classique & cheval : jambes repliées
       const legGeo = new THREE.BoxGeometry(0.12, 0.4, 0.14);
@@ -1955,6 +2144,24 @@ export class Bike {
       this.frontRoller.rotation.x -= (speed / 0.68) * delta;
     }
 
+    // --- ANIMATION DU CHAR D'ASSAUT AMX-TITAN & CANON 120MM ---
+    if (this.currentBikeId === 'tank') {
+      if (this.tankWheels && this.tankWheels.length > 0) {
+        this.tankWheels.forEach(w => {
+          w.rotation.x += (speed / 0.3) * delta;
+        });
+      }
+      if (this.tankRecoil > 0) {
+        this.tankRecoil = Math.max(0, this.tankRecoil - delta * 3.5);
+        if (this.tankBarrel) {
+          this.tankBarrel.position.z = 0.75 - this.tankRecoil * 0.42;
+        }
+      }
+      if (this.tankTurret) {
+        this.tankTurret.rotation.y = -lateralInput * 0.12;
+      }
+    }
+
     // --- GESTION VISUELLE DYNAMIQUE DU NITRO 5 SECONDES ---
     if (gameState && gameState.isNitroActive) {
       this.nitroFlames.visible = true;
@@ -2106,6 +2313,13 @@ export class Bike {
       this.attackType = 'chainsaw';
       soundManager.playChainsawRev();
       return { type: 'chainsaw', range: 8.0, radius: 3.0 };
+    } else if (this.currentBikeId === 'tank') {
+      this.isAttacking = true;
+      this.attackTimer = 0.55;
+      this.attackType = 'cannon';
+      this.tankRecoil = 1.0;
+      soundManager.playTankCannon();
+      return { type: 'cannon', range: 85.0, radius: 5.2, isExplosive: true };
     } else if (this.currentBikeId === 'rouleau') {
       soundManager.playSteamrollerHorn();
       return { type: 'horn', range: 25.0, radius: 5.5 };

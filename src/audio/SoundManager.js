@@ -712,6 +712,107 @@ export class SoundManager {
     noise.onended = () => this.cleanupNodes(noise, filter, gain);
   }
 
+  playTankCannon() {
+    if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
+    this.resumeContext();
+
+    const now = this.ctx.currentTime;
+
+    // 1. Déflagration sub-bass percutante (140Hz -> 28Hz)
+    const boomOsc = this.ctx.createOscillator();
+    const boomGain = this.ctx.createGain();
+    boomOsc.type = 'sine';
+    boomOsc.frequency.setValueAtTime(140, now);
+    boomOsc.frequency.exponentialRampToValueAtTime(28, now + 0.38);
+
+    boomGain.gain.setValueAtTime(0.9, now);
+    boomGain.gain.exponentialRampToValueAtTime(0.001, now + 0.42);
+
+    boomOsc.connect(boomGain);
+    boomGain.connect(this.ctx.destination);
+    boomOsc.onended = () => this.cleanupNodes(boomOsc, boomGain);
+    boomOsc.start(now);
+    boomOsc.stop(now + 0.42);
+
+    // 2. Éclatement de poudre & onde de choc supersonique
+    const noise = this.ctx.createBufferSource();
+    const bufSize = Math.floor(this.ctx.sampleRate * 0.35);
+    const buf = this.ctx.createBuffer(1, bufSize, this.ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < bufSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (this.ctx.sampleRate * 0.08));
+    }
+    noise.buffer = buf;
+
+    const noiseFilter = this.ctx.createBiquadFilter();
+    noiseFilter.type = 'lowpass';
+    noiseFilter.frequency.setValueAtTime(3200, now);
+    noiseFilter.frequency.exponentialRampToValueAtTime(250, now + 0.35);
+
+    const noiseGain = this.ctx.createGain();
+    noiseGain.gain.setValueAtTime(0.85, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+
+    noise.connect(noiseFilter);
+    noiseFilter.connect(noiseGain);
+    noiseGain.connect(this.ctx.destination);
+    noise.start(now);
+    noise.onended = () => this.cleanupNodes(noise, noiseFilter, noiseGain);
+
+    // 3. Cliquetis métallique de recul de culasse
+    const breechOsc = this.ctx.createOscillator();
+    const breechGain = this.ctx.createGain();
+    breechOsc.type = 'triangle';
+    breechOsc.frequency.setValueAtTime(950, now + 0.05);
+    breechOsc.frequency.exponentialRampToValueAtTime(320, now + 0.18);
+    breechGain.gain.setValueAtTime(0.3, now + 0.05);
+    breechGain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+    breechOsc.connect(breechGain);
+    breechGain.connect(this.ctx.destination);
+    breechOsc.onended = () => this.cleanupNodes(breechOsc, breechGain);
+    breechOsc.start(now + 0.05);
+    breechOsc.stop(now + 0.18);
+  }
+
+  playAmbulanceSiren() {
+    if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
+    this.resumeContext();
+
+    const now = this.ctx.currentTime;
+    // Sirène européenne deux-tons "PIN-PON ! PIN-PON !"
+    const notes = [
+      { freq: 580, time: 0.0, dur: 0.26 },
+      { freq: 435, time: 0.28, dur: 0.26 },
+      { freq: 580, time: 0.56, dur: 0.26 },
+      { freq: 435, time: 0.84, dur: 0.26 }
+    ];
+
+    notes.forEach((note, idx) => {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(note.freq, now + note.time);
+
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(note.freq * 1.5, now + note.time);
+      filter.Q.value = 2.0;
+
+      gain.gain.setValueAtTime(0.32, now + note.time);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + note.time + note.dur);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.start(now + note.time);
+      osc.stop(now + note.time + note.dur);
+      if (idx === notes.length - 1) {
+        osc.onended = () => this.cleanupNodes(osc, filter, gain);
+      }
+    });
+  }
+
   playCurbMount() {
     if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
     this.resumeContext();

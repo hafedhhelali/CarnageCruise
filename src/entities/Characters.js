@@ -919,15 +919,16 @@ export class CharacterSystem {
           }
 
           if (char.isCrossing) {
-            // Traverse la chaussée sur le passage piéton
+            // Traverse la chaussée sur le passage piéton : TOUJOURS aligné dans le sens de la marche !
             char.group.position.x += char.crossDirection * char.typeDef.speed * delta * 1.1;
             char.group.position.y = 0.02;
             const curveX = roadCurveFunc ? roadCurveFunc(char.group.position.z) : 0;
             // Quand il atteint l'autre trottoir, demi-tour
             if (Math.abs(char.group.position.x - curveX) > 5.5) {
               char.crossDirection *= -1;
-              char.group.rotation.y = char.crossDirection > 0 ? Math.PI / 2 : -Math.PI / 2;
             }
+            // Strictement orienté dans la direction du pas (+X = PI/2, -X = -PI/2) : ZÉRO marche arrière
+            char.group.rotation.y = char.crossDirection > 0 ? Math.PI / 2 : -Math.PI / 2;
           } else {
             // Marche le long du trottoir à altitude 0.25m
             char.group.position.z += char.walkDirection * char.typeDef.speed * delta * 0.85;
@@ -937,6 +938,7 @@ export class CharacterSystem {
             const side = char.group.position.x > curveX ? 1 : -1;
             const targetX = curveX + side * 5.2;
             char.group.position.x += (targetX - char.group.position.x) * delta * 2.0;
+            // Strictement orienté dans le sens de marche le long du trottoir (+Z = 0, -Z = PI)
             char.group.rotation.y = char.walkDirection > 0 ? 0 : Math.PI;
           }
         }
