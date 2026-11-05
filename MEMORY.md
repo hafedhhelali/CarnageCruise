@@ -59,14 +59,18 @@
 - Compatibilité Java 17 et Android SDK 36 vérifiée et validée.
 - `AndroidManifest.xml` optimisé (accélération matérielle, verrouillage plein écran portrait).
 
-### ✅ 9. CI/CD GITHUB ACTIONS
-- Fichier `.github/workflows/build-apk.yml` prêt à l'emploi pour automatiser la compilation Android et la publication des APKs à chaque push / tag.
+### ✅ 9. CI/CD GITHUB ACTIONS & DÉPÔT EN LIGNE
+- **Dépôt officiel** : https://github.com/hafedhhelali/Motormageddon
+- **Exécution GitHub Actions en cours** : https://github.com/hafedhhelali/Motormageddon/actions/runs/42020236124
+- Fichier `.github/workflows/build-apk.yml` déclenché automatiquement à chaque push pour générer l'APK installable `app-debug.apk`.
 
 ---
 
 ## DERNIÈRE MODIFICATION (05/11/2026)
 - Harmonisation de la version source Java vers `JavaVersion.VERSION_17` pour alignement parfait avec le JDK 17 du système.
-- Compilation réussie du projet Android natif en 1m 04s.
+- Compilation locale réussie du projet Android natif en 1m 04s (`android/app/build/outputs/apk/debug/app-debug.apk` - 4.46 Mo).
 - Rédaction du document de transmission studio `HANDOFF.md`.
 - Création du journal de mémoire `MEMORY.md`.
 - Création du workflow GitHub Actions `.github/workflows/build-apk.yml`.
+- Création du dépôt public `hafedhhelali/Motormageddon` sur GitHub et premier push de la branche `main`.
+- Déclenchement automatique du pipeline de génération de l'APK sur GitHub Actions (ID: 42020236124).

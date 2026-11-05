@@ -178,8 +178,10 @@ L'APK installable se trouve dans :
 `android/app/build/outputs/apk/debug/app-debug.apk`.
 
 ### E. Compilation Automatique via GitHub Actions
+- **Dépôt GitHub** : [https://github.com/hafedhhelali/Motormageddon](https://github.com/hafedhhelali/Motormageddon)
+- **Pipeline CI/CD Actions** : [https://github.com/hafedhhelali/Motormageddon/actions](https://github.com/hafedhhelali/Motormageddon/actions)
 Le dépôt contient le workflow `.github/workflows/build-apk.yml`.
-À chaque `git push` sur `main` ou création d'un tag `v*` (ou lancement manuel dans l'onglet Actions), GitHub compile automatiquement l'APK Android et le publie dans les artefacts et la page Releases.
+À chaque `git push` sur `main` ou création d'un tag `v*` (ou lancement manuel dans l'onglet Actions), GitHub compile automatiquement l'APK Android et le publie dans les artefacts téléchargeables et la page Releases.
 
 ---
 
