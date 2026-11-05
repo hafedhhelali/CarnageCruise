@@ -88,6 +88,34 @@ export class Bike {
     this.nitroFlames.visible = false;
     this.mesh.add(this.nitroFlames);
 
+    // Pool de balles traçantes 3D à grande vitesse (Kalachnikov AK-47 & Tir)
+    this.bulletPool = [];
+    this.bulletGroup = new THREE.Group();
+    this.scene.add(this.bulletGroup);
+    const bulletGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.9, 6);
+    const bulletMat = new THREE.MeshBasicMaterial({ color: 0xfffa65 });
+    for (let b = 0; b < 16; b++) {
+      const bullet = new THREE.Mesh(bulletGeo, bulletMat);
+      bullet.rotation.x = Math.PI / 2;
+      bullet.visible = false;
+      bullet.userData = { active: false, speedZ: 175 };
+      this.bulletPool.push(bullet);
+      this.bulletGroup.add(bullet);
+    }
+
+    // Arc de balayage tranchant de la hache (Swoosh Trail rougeoyant)
+    const slashGeo = new THREE.RingGeometry(1.0, 2.2, 16, 1, 0, Math.PI * 0.7);
+    const slashMat = new THREE.MeshBasicMaterial({
+      color: 0xff3838,
+      transparent: true,
+      opacity: 0,
+      side: THREE.DoubleSide
+    });
+    this.axeSlashTrail = new THREE.Mesh(slashGeo, slashMat);
+    this.axeSlashTrail.rotation.x = -Math.PI / 2;
+    this.axeSlashTrail.position.set(0.2, 0.6, 0.8);
+    this.mesh.add(this.axeSlashTrail);
+
     this.buildCurrentBike();
     this.buildRider();
   }
@@ -149,6 +177,8 @@ export class Bike {
       this.buildRouleau(bodyMaterial, chromeMaterial, rubberMaterial, leatherMaterial, lampMaterial);
     } else if (bikeId === 'dragster') {
       this.buildDragster(bodyMaterial, chromeMaterial, rubberMaterial, leatherMaterial, lampMaterial);
+    } else if (bikeId === 'aero_jet') {
+      this.buildAeroJet(bodyMaterial, chromeMaterial, rubberMaterial, leatherMaterial, lampMaterial);
     } else {
       // Fallback
       this.buildScooter(bodyMaterial, chromeMaterial, rubberMaterial, leatherMaterial, lampMaterial);
@@ -1189,6 +1219,99 @@ export class Bike {
     this.bikeModelGroup.add(scootGroup);
   }
 
+  // --- ENGIN VOLANT D'ÉVASION : AÉRO-JET NUCLÉAIRE SUB-ORBITAL ---
+  buildAeroJet(bodyMat, chromeMat, rubberMat, leatherMat, lampMat) {
+    const jetGroup = new THREE.Group();
+
+    // 1. Fuselage profilé aérodynamique en titane
+    const fuselageGeo = new THREE.CylinderGeometry(0.28, 0.52, 2.8, 12);
+    const fuselage = new THREE.Mesh(fuselageGeo, bodyMat);
+    fuselage.rotation.x = Math.PI / 2;
+    fuselage.position.set(0, 0.55, 0);
+    fuselage.castShadow = true;
+    jetGroup.add(fuselage);
+
+    // Nez pointu supersonique avant
+    const noseGeo = new THREE.ConeGeometry(0.28, 0.85, 12);
+    const nose = new THREE.Mesh(noseGeo, chromeMat);
+    nose.rotation.x = -Math.PI / 2;
+    nose.position.set(0, 0.55, 1.82);
+    jetGroup.add(nose);
+
+    // 2. Ailes Delta en flèche avec winglets verticaux
+    const wingGeo = new THREE.BoxGeometry(2.8, 0.06, 1.4);
+    const wings = new THREE.Mesh(wingGeo, bodyMat);
+    wings.position.set(0, 0.52, -0.2);
+    jetGroup.add(wings);
+
+    // Ailerons verticaux / Winglets avec feux de navigation
+    const navRedMat = new THREE.MeshBasicMaterial({ color: 0xff3838 });
+    const navGreenMat = new THREE.MeshBasicMaterial({ color: 0x2ed573 });
+
+    const wlGeo = new THREE.BoxGeometry(0.06, 0.55, 0.45);
+    const wingletL = new THREE.Mesh(wlGeo, chromeMat);
+    wingletL.position.set(-1.38, 0.75, -0.4);
+    const lightL = new THREE.Mesh(new THREE.SphereGeometry(0.05, 6, 6), navRedMat);
+    lightL.position.set(-1.38, 1.02, -0.4);
+    jetGroup.add(wingletL, lightL);
+
+    const wingletR = new THREE.Mesh(wlGeo, chromeMat);
+    wingletR.position.set(1.38, 0.75, -0.4);
+    const lightR = new THREE.Mesh(new THREE.SphereGeometry(0.05, 6, 6), navGreenMat);
+    lightR.position.set(1.38, 1.02, -0.4);
+    jetGroup.add(wingletR, lightR);
+
+    // 3. Verrière de cockpit panoramique étanche
+    const canopyMat = new THREE.MeshStandardMaterial({
+      color: 0x81ecec,
+      transparent: true,
+      opacity: 0.65,
+      metalness: 0.9,
+      roughness: 0.1
+    });
+    const canopyGeo = new THREE.SphereGeometry(0.35, 14, 10);
+    canopyGeo.scale(0.8, 0.7, 1.8);
+    const canopy = new THREE.Mesh(canopyGeo, canopyMat);
+    canopy.position.set(0, 0.82, 0.35);
+    jetGroup.add(canopy);
+
+    // 4. Double Réacteur à Fusion Nucléaire avec flammes permanentes
+    const nozzleMat = new THREE.MeshStandardMaterial({ color: 0x2d3436, metalness: 0.9, roughness: 0.2 });
+    const thrusterFlameMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff, transparent: true, opacity: 0.9 });
+    const thrusterCoreMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+
+    for (let s of [-0.28, 0.28]) {
+      const nozzle = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.24, 0.55, 12), nozzleMat);
+      nozzle.rotation.x = Math.PI / 2;
+      nozzle.position.set(s, 0.55, -1.45);
+      jetGroup.add(nozzle);
+
+      // Flamme de post-combustion à fusion continue
+      const plume = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.85, 8), thrusterFlameMat);
+      plume.rotation.x = -Math.PI / 2;
+      plume.position.set(s, 0.55, -2.05);
+      const plumeCore = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.5, 6), thrusterCoreMat);
+      plumeCore.rotation.x = -Math.PI / 2;
+      plumeCore.position.set(s, 0.55, -1.9);
+      jetGroup.add(plume, plumeCore);
+    }
+
+    // 5. Patins d'atterrissage aérodynamiques rétractables
+    const skidMat = new THREE.MeshStandardMaterial({ color: 0x57606f, metalness: 0.8 });
+    for (let s of [-0.65, 0.65]) {
+      const skid = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.05, 1.6), skidMat);
+      skid.position.set(s, 0.15, -0.1);
+      const leg1 = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.45, 6), skidMat);
+      leg1.position.set(s, 0.32, 0.35);
+      const leg2 = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.45, 6), skidMat);
+      leg2.position.set(s, 0.32, -0.45);
+      jetGroup.add(skid, leg1, leg2);
+    }
+
+    this.bikeModelGroup.add(jetGroup);
+    this.jetGroup = jetGroup;
+  }
+
   // --- SPRINTEUR À PIED (AVEC AK-47 OU TRONÇONNEUSE) ---
   buildRunner(weaponType, bodyMat, chromeMat) {
     this.runnerWeaponType = weaponType;
@@ -1203,10 +1326,15 @@ export class Bike {
     this.runnerLegL = null;
     this.runnerLegR = null;
 
+    const isNuclear = gameState.selectedCity?.isNuclearMission || this.currentBikeId === 'aero_jet';
+    const hazmatYellowMat = new THREE.MeshToonMaterial({ color: 0xffe600, roughness: 0.3 });
+    const hazmatVisorMat = new THREE.MeshStandardMaterial({ color: 0x81ecec, transparent: true, opacity: 0.8, metalness: 0.9, roughness: 0.1 });
+    const hazmatBlackMat = new THREE.MeshLambertMaterial({ color: 0x111111 });
+
     const skinMat = new THREE.MeshLambertMaterial({ color: 0xffccaa });
-    const jacketMat = new THREE.MeshLambertMaterial({ color: 0x2c3e50 });
-    const pantsMat = new THREE.MeshLambertMaterial({ color: 0x1a252f });
-    const shoesMat = new THREE.MeshLambertMaterial({ color: 0x111111 });
+    const jacketMat = isNuclear ? hazmatYellowMat : new THREE.MeshLambertMaterial({ color: 0x2c3e50 });
+    const pantsMat = isNuclear ? hazmatYellowMat : new THREE.MeshLambertMaterial({ color: 0x1a252f });
+    const shoesMat = isNuclear ? hazmatBlackMat : new THREE.MeshLambertMaterial({ color: 0x111111 });
     const beretMat = new THREE.MeshLambertMaterial({ color: 0x9b111e }); // Rouge béret français
     const goldMat = new THREE.MeshStandardMaterial({ color: 0xffd700, metalness: 0.85, roughness: 0.2 });
     const steelMat = new THREE.MeshStandardMaterial({ color: 0xdcdde1, metalness: 0.85, roughness: 0.25 });
@@ -1216,6 +1344,7 @@ export class Bike {
     const isScoot = this.currentBikeId === 'trottinette_hache';
     const isRunner = this.currentBikeId === 'run_ak47' || this.currentBikeId === 'run_chainsaw';
     const isHorse = this.currentBikeId === 'cheval';
+    const isJet = this.currentBikeId === 'aero_jet';
 
     // Bassin & Torse
     const torsoGroup = new THREE.Group();
@@ -1225,6 +1354,8 @@ export class Bike {
       torsoGroup.position.set(0, 0.85, -0.15);
     } else if (isRunner) {
       torsoGroup.position.set(0, 0.78, 0);
+    } else if (isJet) {
+      torsoGroup.position.set(0, 0.62, 0.12);
     } else {
       torsoGroup.position.set(0, 0.9, -0.25);
     }
@@ -1235,18 +1366,40 @@ export class Bike {
     torso.castShadow = true;
     torsoGroup.add(torso);
 
-    // Écharpe rouge qui flotte avec pan arrière animé au vent
-    const scarfGeo = new THREE.BoxGeometry(0.3, 0.1, 0.28);
-    const scarf = new THREE.Mesh(scarfGeo, beretMat);
-    scarf.position.set(0, 0.44, 0);
-    torsoGroup.add(scarf);
+    if (isNuclear) {
+      // --- ÉQUIPEMENT SPÉCIAL COMBINAISON NBC ANTIRADIATION ---
+      // Double bouteille d'oxygène / décontamination dans le dos
+      const tankL = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.065, 0.44, 8), hazmatYellowMat);
+      tankL.position.set(-0.11, 0.22, -0.18);
+      const tankR = tankL.clone();
+      tankR.position.x = 0.11;
+      torsoGroup.add(tankL, tankR);
 
-    const scarfTailGeo = new THREE.BoxGeometry(0.12, 0.05, 0.38);
-    const scarfTail = new THREE.Mesh(scarfTailGeo, beretMat);
-    scarfTail.position.set(0.08, 0.42, -0.24);
-    scarfTail.rotation.x = -0.35;
-    torsoGroup.add(scarfTail);
-    this.scarfTail = scarfTail;
+      // Manomètre et régulateur de pression
+      const chromeMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, metalness: 0.85, roughness: 0.2 });
+      const gauge = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.02, 8), chromeMat);
+      gauge.rotation.x = Math.PI / 2;
+      gauge.position.set(0.11, 0.42, -0.14);
+      torsoGroup.add(gauge);
+
+      // Harnais de poitrine noir avec insigne de radiation ☢️
+      const harness = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.07, 0.04), hazmatBlackMat);
+      harness.position.set(0, 0.26, 0.13);
+      torsoGroup.add(harness);
+    } else {
+      // Écharpe rouge qui flotte avec pan arrière animé au vent
+      const scarfGeo = new THREE.BoxGeometry(0.3, 0.1, 0.28);
+      const scarf = new THREE.Mesh(scarfGeo, beretMat);
+      scarf.position.set(0, 0.44, 0);
+      torsoGroup.add(scarf);
+
+      const scarfTailGeo = new THREE.BoxGeometry(0.12, 0.05, 0.38);
+      const scarfTail = new THREE.Mesh(scarfTailGeo, beretMat);
+      scarfTail.position.set(0.08, 0.42, -0.24);
+      scarfTail.rotation.x = -0.35;
+      torsoGroup.add(scarfTail);
+      this.scarfTail = scarfTail;
+    }
 
     // Tête cartoon
     const headGroup = new THREE.Group();
@@ -1256,26 +1409,49 @@ export class Bike {
     const head = new THREE.Mesh(headGeo, skinMat);
     headGroup.add(head);
 
-    // Lunettes de soleil d'aviateur rétro
-    const glassMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
-    const glassL = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.06, 0.03), glassMat);
-    glassL.position.set(-0.07, 0.03, 0.16);
-    const glassR = glassL.clone();
-    glassR.position.set(0.07, 0.03, 0.16);
-    headGroup.add(glassL);
-    headGroup.add(glassR);
+    if (isNuclear) {
+      // Casque hermétique intégral NBC jaune vif
+      const helmetGeo = new THREE.SphereGeometry(0.22, 14, 12);
+      const helmet = new THREE.Mesh(helmetGeo, hazmatYellowMat);
+      helmet.position.set(0, 0.02, 0);
+      headGroup.add(helmet);
 
-    // Béret français avec houppette
-    const beretGeo = new THREE.CylinderGeometry(0.24, 0.2, 0.08, 12);
-    const beret = new THREE.Mesh(beretGeo, beretMat);
-    beret.position.set(0, 0.15, -0.02);
-    beret.rotation.z = -0.15;
-    headGroup.add(beret);
+      // Visière panoramique étanche dorée/cyan
+      const visorGeo = new THREE.SphereGeometry(0.19, 12, 10, 0, Math.PI, 0, Math.PI / 2);
+      const visor = new THREE.Mesh(visorGeo, hazmatVisorMat);
+      visor.rotation.x = -Math.PI / 2;
+      visor.position.set(0, 0.02, 0.05);
+      headGroup.add(visor);
 
-    const pompomGeo = new THREE.SphereGeometry(0.03, 6, 6);
-    const pompom = new THREE.Mesh(pompomGeo, beretMat);
-    pompom.position.set(-0.03, 0.2, -0.02);
-    headGroup.add(pompom);
+      // Cartouches de masque à gaz à double filtre respiratoire
+      for (let s of [-0.14, 0.14]) {
+        const canister = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.06, 8), hazmatBlackMat);
+        canister.rotation.z = Math.PI / 2;
+        canister.position.set(s, -0.06, 0.14);
+        headGroup.add(canister);
+      }
+    } else {
+      // Lunettes de soleil d'aviateur rétro
+      const glassMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
+      const glassL = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.06, 0.03), glassMat);
+      glassL.position.set(-0.07, 0.03, 0.16);
+      const glassR = glassL.clone();
+      glassR.position.set(0.07, 0.03, 0.16);
+      headGroup.add(glassL);
+      headGroup.add(glassR);
+
+      // Béret français avec houppette
+      const beretGeo = new THREE.CylinderGeometry(0.24, 0.2, 0.08, 12);
+      const beret = new THREE.Mesh(beretGeo, beretMat);
+      beret.position.set(0, 0.15, -0.02);
+      beret.rotation.z = -0.15;
+      headGroup.add(beret);
+
+      const pompomGeo = new THREE.SphereGeometry(0.03, 6, 6);
+      const pompom = new THREE.Mesh(pompomGeo, beretMat);
+      pompom.position.set(-0.03, 0.2, -0.02);
+      headGroup.add(pompom);
+    }
 
     torsoGroup.add(headGroup);
     this.riderHead = headGroup;
@@ -1287,7 +1463,16 @@ export class Bike {
     const armR = new THREE.Mesh(armGeo, jacketMat);
     this.riderWhip = null;
 
-    if (isHorse) {
+    if (isJet) {
+      // Bras tenant le joystick de vol et les commandes du vaisseau d'évasion
+      armL.position.set(-0.24, 0.16, 0.24);
+      armL.rotation.x = Math.PI / 2.5;
+      armL.rotation.z = 0.15;
+      armR.position.set(0.24, 0.16, 0.24);
+      armR.rotation.x = Math.PI / 2.5;
+      armR.rotation.z = -0.15;
+      torsoGroup.add(armL, armR);
+    } else if (isHorse) {
       // Bras gauche tient les rênes
       armL.position.set(-0.25, 0.2, 0.2);
       armL.rotation.x = Math.PI / 3.2;
@@ -1667,9 +1852,17 @@ export class Bike {
     // --- CONTRÔLE NORMAL DIRECTIONNEL PROGRESSIF & AMORTI ---
     this.smoothedSteer += (steerInput - this.smoothedSteer) * Math.min(1.0, delta * 7.5);
 
-    const ROAD_WIDTH = 4.2;
-    this.x -= this.smoothedSteer * 8.2 * delta;
-    this.x = Math.max(-ROAD_WIDTH, Math.min(ROAD_WIDTH, this.x));
+    // Largeur étendue : Chaussée (-4.2 à +4.2) + Trottoirs (-6.8 à +6.8)
+    const MAX_WIDTH = 6.8;
+    this.x -= this.smoothedSteer * 8.6 * delta;
+    this.x = Math.max(-MAX_WIDTH, Math.min(MAX_WIDTH, this.x));
+
+    // Détection de montée sur le trottoir (|x| > 4.25m)
+    const onSidewalk = Math.abs(this.x) > 4.25;
+    if (onSidewalk && !this.wasOnSidewalk) {
+      soundManager.playCurbMount();
+    }
+    this.wasOnSidewalk = onSidewalk;
 
     this.targetLean = this.smoothedSteer * 0.32;
     this.currentLean += (this.targetLean - this.currentLean) * Math.min(1.0, delta * 6.5);
@@ -1678,10 +1871,11 @@ export class Bike {
     this.mesh.position.x = this.x;
     this.mesh.rotation.z = 0;
 
-    // Suspension / rebond
+    // Suspension / rebond + Dénivellation du trottoir (+0.25m) ou Vol
     this.bouncePhase += delta * (speed * 0.8 + 2.0);
     const suspensionBounce = Math.sin(this.bouncePhase) * 0.02;
-    this.mesh.position.y = suspensionBounce;
+    const baseAltitude = this.isFlyingEscape || this.currentBikeId === 'aero_jet' ? 38.0 : (onSidewalk ? 0.25 : 0.0);
+    this.mesh.position.y = THREE.MathUtils.lerp(this.mesh.position.y, baseAltitude + suspensionBounce, delta * 8.0);
 
     // Inclinaison du châssis (atténuée pour la décapotable 4 roues)
     if (this.currentBikeId === 'decapotable') {
@@ -1764,45 +1958,116 @@ export class Bike {
       this.nitroFlames.visible = false;
     }
 
+    // --- GESTION DES BALLES TRAÇANTES AK-47 ---
+    if (this.bulletPool) {
+      this.bulletPool.forEach(b => {
+        if (b.userData.active) {
+          b.position.z += b.userData.speedZ * delta;
+          if (b.position.z > this.mesh.position.z + 70.0) {
+            b.userData.active = false;
+            b.visible = false;
+          }
+        }
+      });
+    }
+
     // --- GESTION DES ANIMATIONS D'ATTAQUE (FOUET, HACHE, AK-47, TRONÇONNEUSE) ---
     if (this.isAttacking) {
       this.attackTimer -= delta;
       if (this.attackTimer <= 0) {
         this.isAttacking = false;
         if (this.akMuzzleFlash) this.akMuzzleFlash.material.opacity = 0;
+        if (this.axeSlashTrail) this.axeSlashTrail.material.opacity = 0;
+        // Rétablir la posture normale des bras
+        if (this.riderArmR) {
+          this.riderArmR.rotation.set(0, 0, 0);
+        }
+        if (this.riderTorso) {
+          this.riderTorso.rotation.y = 0;
+        }
       } else {
-        const attackProgress = 1 - (this.attackTimer / 0.38);
+        const attackProgress = 1 - (this.attackTimer / 0.42);
 
-        // 1. Coup de FOUET cinglant
-        if (this.attackType === 'whip' && this.riderWhip) {
+        // 1. Coup de FOUET cinglant (Armement ample puis claquement supersonique)
+        if (this.attackType === 'whip') {
           const lashAngle = Math.sin(attackProgress * Math.PI);
-          this.riderWhip.rotation.x = -Math.PI / 4 - lashAngle * 1.6;
-          this.riderWhip.rotation.z = Math.PI / 5 - lashAngle * 1.2;
+          if (this.riderArmR) {
+            this.riderArmR.rotation.x = -Math.PI / 3.2 - (1 - attackProgress) * 1.4 + attackProgress * 2.2;
+            this.riderArmR.rotation.z = Math.PI / 4.5 - lashAngle * 1.1;
+          }
+          if (this.riderWhip) {
+            this.riderWhip.rotation.x = -Math.PI / 4 - lashAngle * 2.4;
+            this.riderWhip.rotation.z = Math.PI / 5 - lashAngle * 1.8;
+          }
         }
 
-        // 2. Balayage violent à la HACHE
-        if (this.attackType === 'axe' && this.riderAxe) {
-          const slashSweep = Math.sin(attackProgress * Math.PI);
-          this.riderAxe.rotation.z = Math.PI / 6 - slashSweep * 2.2;
-          this.riderAxe.rotation.x = -Math.PI / 4 + slashSweep * 1.1;
+        // 2. Balayage violent à la HACHE (Véritable coup de taille avec le bras et le torse)
+        if (this.attackType === 'axe') {
+          const chopSwing = Math.sin(attackProgress * Math.PI);
+          if (this.riderArmR) {
+            // Le bras s'élève haut en arrière puis s'abat en tranchant
+            this.riderArmR.rotation.x = -Math.PI / 3.4 - (1 - attackProgress) * 1.6 + attackProgress * 2.5;
+            this.riderArmR.rotation.y = -chopSwing * 1.3;
+            this.riderArmR.rotation.z = Math.PI / 4.2 - chopSwing * 1.1;
+          }
+          if (this.riderTorso) {
+            this.riderTorso.rotation.y = -chopSwing * 0.55;
+          }
+          if (this.riderAxe) {
+            this.riderAxe.rotation.z = Math.PI / 6 - chopSwing * 2.8;
+            this.riderAxe.rotation.x = -Math.PI / 4 + chopSwing * 1.9;
+          }
+          if (this.axeSlashTrail) {
+            this.axeSlashTrail.material.opacity = Math.sin(attackProgress * Math.PI) * 0.9;
+            this.axeSlashTrail.rotation.z = -attackProgress * 2.2;
+          }
         }
 
-        // 3. Rafale AK-47 avec recul et flamme de tir (Muzzle Flash)
-        if (this.attackType === 'shoot' && this.riderAk) {
-          const recoil = Math.sin(attackProgress * Math.PI * 6) * 0.08;
-          this.riderAk.position.z = 0.32 - Math.max(0, recoil);
+        // 3. Rafale AK-47 avec recul violent du torse et flamme de tir (Muzzle Flash)
+        if (this.attackType === 'shoot') {
+          const recoil = Math.sin(attackProgress * Math.PI * 8) * 0.18;
+          if (this.riderAk) {
+            this.riderAk.position.z = 0.32 - Math.max(0, recoil);
+            this.riderAk.rotation.x = -recoil * 0.9;
+          }
+          if (this.riderArmR) {
+            this.riderArmR.rotation.x = Math.PI / 2.4 - recoil * 1.1;
+          }
+          if (this.riderTorso) {
+            this.riderTorso.rotation.x = 0.25 - recoil * 0.5;
+          }
           if (this.akMuzzleFlash) {
-            this.akMuzzleFlash.material.opacity = Math.random() > 0.25 ? 0.95 : 0.1;
-            this.akMuzzleFlash.scale.setScalar(0.8 + Math.random() * 0.6);
+            this.akMuzzleFlash.material.opacity = Math.random() > 0.15 ? 0.95 : 0.05;
+            this.akMuzzleFlash.scale.setScalar(1.0 + Math.random() * 0.9);
           }
         }
 
         // 4. Estoc & vrombissement de la TRONÇONNEUSE
         if (this.attackType === 'chainsaw' && this.riderChainsaw) {
-          const thrust = Math.sin(attackProgress * Math.PI) * 0.32;
+          const thrust = Math.sin(attackProgress * Math.PI) * 0.45;
           this.riderChainsaw.position.z = 0.35 + thrust;
-          this.riderChainsaw.position.x = (Math.random() - 0.5) * 0.04;
+          this.riderChainsaw.position.x = (Math.random() - 0.5) * 0.08;
+          if (this.riderTorso) {
+            this.riderTorso.rotation.y = (Math.random() - 0.5) * 0.15;
+          }
         }
+      }
+    }
+  }
+
+  spawnTracerBurst() {
+    const muzzleX = this.mesh.position.x + 0.35;
+    const muzzleY = this.mesh.position.y + 1.1;
+    const muzzleZ = this.mesh.position.z + 1.4;
+
+    let spawned = 0;
+    for (let i = 0; i < this.bulletPool.length && spawned < 5; i++) {
+      const b = this.bulletPool[i];
+      if (!b.userData.active) {
+        b.position.set(muzzleX + (Math.random() - 0.5) * 0.25, muzzleY + (Math.random() - 0.5) * 0.15, muzzleZ + spawned * 2.4);
+        b.userData.active = true;
+        b.visible = true;
+        spawned++;
       }
     }
   }
@@ -1810,34 +2075,39 @@ export class Bike {
   triggerAttack() {
     if (this.currentBikeId === 'cheval') {
       this.isAttacking = true;
-      this.attackTimer = 0.35;
+      this.attackTimer = 0.38;
       this.attackType = 'whip';
       soundManager.playWhipCrack();
-      return { type: 'whip', range: 8.5, radius: 2.6 };
+      return { type: 'whip', range: 9.5, radius: 3.0 };
     } else if (this.currentBikeId === 'trottinette_hache') {
       this.isAttacking = true;
-      this.attackTimer = 0.38;
+      this.attackTimer = 0.42;
       this.attackType = 'axe';
       soundManager.playAxeSlash();
-      return { type: 'axe', range: 7.0, radius: 3.2 };
+      return { type: 'axe', range: 8.5, radius: 3.6 };
     } else if (this.currentBikeId === 'run_ak47') {
       this.isAttacking = true;
-      this.attackTimer = 0.32;
+      this.attackTimer = 0.36;
       this.attackType = 'shoot';
       soundManager.playAk47Burst();
-      return { type: 'shoot', range: 30.0, radius: 2.4 };
+      this.spawnTracerBurst();
+      return { type: 'shoot', range: 45.0, radius: 3.2 };
     } else if (this.currentBikeId === 'run_chainsaw') {
       this.isAttacking = true;
-      this.attackTimer = 0.42;
+      this.attackTimer = 0.45;
       this.attackType = 'chainsaw';
       soundManager.playChainsawRev();
-      return { type: 'chainsaw', range: 6.8, radius: 2.6 };
+      return { type: 'chainsaw', range: 8.0, radius: 3.0 };
     } else if (this.currentBikeId === 'rouleau') {
       soundManager.playSteamrollerHorn();
       return { type: 'horn' };
     } else {
-      soundManager.playHorn();
-      return { type: 'horn' };
+      // Toutes les autres motos peuvent aussi donner un coup de massue / tir latéral
+      this.isAttacking = true;
+      this.attackTimer = 0.35;
+      this.attackType = 'whip';
+      soundManager.playAxeSlash();
+      return { type: 'axe', range: 7.5, radius: 3.0 };
     }
   }
 

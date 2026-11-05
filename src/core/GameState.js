@@ -29,7 +29,7 @@ export const CITIES = [
     roofColor: 0x4a5568,
     accentColor: 0x3498db,
     unlockedByDefault: true,
-    mapCoords: { x: 49.5, y: 25.0 }
+    mapCoords: { x: 44.8, y: 40.2 }
   },
   {
     id: 'bruxelles',
@@ -52,7 +52,7 @@ export const CITIES = [
     roofColor: 0x2c3e50,
     accentColor: 0xf9ca24,
     unlockedByDefault: false,
-    mapCoords: { x: 56.6, y: 13.3 }
+    mapCoords: { x: 51.4, y: 31.4 }
   },
   {
     id: 'londres',
@@ -75,7 +75,7 @@ export const CITIES = [
     roofColor: 0x1e272e,
     accentColor: 0xff4757,
     unlockedByDefault: false,
-    mapCoords: { x: 40.6, y: 9.3 }
+    mapCoords: { x: 39.2, y: 27.0 }
   },
   {
     id: 'saint-malo',
@@ -98,7 +98,7 @@ export const CITIES = [
     roofColor: 0x2f3542,
     accentColor: 0x00a8ff,
     unlockedByDefault: false,
-    mapCoords: { x: 33.8, y: 26.2 }
+    mapCoords: { x: 31.1, y: 39.9 }
   },
   {
     id: 'bordeaux',
@@ -121,7 +121,7 @@ export const CITIES = [
     roofColor: 0x37474f,
     accentColor: 0x8e24aa,
     unlockedByDefault: false,
-    mapCoords: { x: 39.0, y: 47.4 }
+    mapCoords: { x: 35.4, y: 54.7 }
   },
   {
     id: 'barcelone',
@@ -144,7 +144,7 @@ export const CITIES = [
     roofColor: 0xb71540,
     accentColor: 0xe67e22,
     unlockedByDefault: false,
-    mapCoords: { x: 48.8, y: 65.4 }
+    mapCoords: { x: 48.1, y: 65.2 }
   },
   {
     id: 'madrid',
@@ -167,7 +167,7 @@ export const CITIES = [
     roofColor: 0x962d3e,
     accentColor: 0xf1c40f,
     unlockedByDefault: false,
-    mapCoords: { x: 27.8, y: 70.3 }
+    mapCoords: { x: 27.8, y: 69.9 }
   },
   {
     id: 'lisbonne',
@@ -190,7 +190,7 @@ export const CITIES = [
     roofColor: 0xd35400,
     accentColor: 0x2ed573,
     unlockedByDefault: false,
-    mapCoords: { x: 8.4, y: 78.6 }
+    mapCoords: { x: 8.5, y: 74.0 }
   },
   {
     id: 'millau',
@@ -213,7 +213,7 @@ export const CITIES = [
     roofColor: 0x37474f,
     accentColor: 0xff3838,
     unlockedByDefault: false,
-    mapCoords: { x: 52.1, y: 51.3 }
+    mapCoords: { x: 49.1, y: 56.4 }
   },
   {
     id: 'marseille',
@@ -236,7 +236,7 @@ export const CITIES = [
     roofColor: 0xd84315,
     accentColor: 0x00bcd4,
     unlockedByDefault: false,
-    mapCoords: { x: 60.2, y: 55.5 }
+    mapCoords: { x: 55.2, y: 61.8 }
   },
   {
     id: 'nice',
@@ -259,7 +259,7 @@ export const CITIES = [
     roofColor: 0xc2185b,
     accentColor: 0xff4081,
     unlockedByDefault: false,
-    mapCoords: { x: 67.0, y: 53.4 }
+    mapCoords: { x: 61.8, y: 60.5 }
   },
   {
     id: 'milan',
@@ -282,7 +282,7 @@ export const CITIES = [
     roofColor: 0x747d8c,
     accentColor: 0xff9f43,
     unlockedByDefault: false,
-    mapCoords: { x: 73.9, y: 44.0 }
+    mapCoords: { x: 64.2, y: 49.3 }
   },
   {
     id: 'geneve',
@@ -305,7 +305,7 @@ export const CITIES = [
     roofColor: 0x2c3e50,
     accentColor: 0xeb4d4b,
     unlockedByDefault: false,
-    mapCoords: { x: 63.0, y: 40.0 }
+    mapCoords: { x: 59.0, y: 49.7 }
   },
   {
     id: 'chamonix',
@@ -328,7 +328,7 @@ export const CITIES = [
     roofColor: 0xecf0f1,
     accentColor: 0x00cec9,
     unlockedByDefault: false,
-    mapCoords: { x: 65.6, y: 41.5 }
+    mapCoords: { x: 59.9, y: 50.7 }
   },
   {
     id: 'annecy',
@@ -351,7 +351,7 @@ export const CITIES = [
     roofColor: 0xb71540,
     accentColor: 0x0984e3,
     unlockedByDefault: false,
-    mapCoords: { x: 63.0, y: 41.6 }
+    mapCoords: { x: 58.5, y: 50.3 }
   },
   {
     id: 'lyon',
@@ -374,7 +374,7 @@ export const CITIES = [
     roofColor: 0x962d22,
     accentColor: 0xe67e22,
     unlockedByDefault: false,
-    mapCoords: { x: 58.3, y: 42.4 }
+    mapCoords: { x: 52.8, y: 51.4 }
   },
   {
     id: 'strasbourg',
@@ -397,7 +397,7 @@ export const CITIES = [
     roofColor: 0xb71c1c,
     accentColor: 0xd32f2f,
     unlockedByDefault: false,
-    mapCoords: { x: 68.8, y: 26.7 }
+    mapCoords: { x: 62.3, y: 40.5 }
   },
   {
     id: 'rome',
@@ -420,7 +420,7 @@ export const CITIES = [
     roofColor: 0xb71540,
     accentColor: 0xe67e22,
     unlockedByDefault: false,
-    mapCoords: { x: 85.7, y: 62.7 }
+    mapCoords: { x: 73.6, y: 62.5 }
   },
   {
     id: 'napoli',
@@ -443,7 +443,7 @@ export const CITIES = [
     roofColor: 0xc23616,
     accentColor: 0xe84118,
     unlockedByDefault: false,
-    mapCoords: { x: 92.0, y: 68.1 }
+    mapCoords: { x: 79.2, y: 67.6 }
   },
   {
     id: 'tunis',
@@ -466,7 +466,7 @@ export const CITIES = [
     roofColor: 0x0abde3,
     accentColor: 0xee5253,
     unlockedByDefault: false,
-    mapCoords: { x: 77.4, y: 87.8 }
+    mapCoords: { x: 69.3, y: 80.4 }
   },
   {
     id: 'annaba',
@@ -489,7 +489,7 @@ export const CITIES = [
     roofColor: 0xb33939,
     accentColor: 0x20bf6b,
     unlockedByDefault: false,
-    mapCoords: { x: 68.8, y: 87.4 }
+    mapCoords: { x: 61.3, y: 80.7 }
   },
   {
     id: 'alger',
@@ -512,7 +512,7 @@ export const CITIES = [
     roofColor: 0x10ac84,
     accentColor: 0xeb4d4b,
     unlockedByDefault: false,
-    mapCoords: { x: 52.0, y: 88.1 }
+    mapCoords: { x: 40.6, y: 82.1 }
   },
   {
     id: 'berlin',
@@ -535,7 +535,7 @@ export const CITIES = [
     roofColor: 0x2f3542,
     accentColor: 0xffa502,
     unlockedByDefault: false,
-    mapCoords: { x: 89.1, y: 24.7 }
+    mapCoords: { x: 70.8, y: 32.4 }
   },
   {
     id: 'amsterdam',
@@ -558,7 +558,7 @@ export const CITIES = [
     roofColor: 0x2c3e50,
     accentColor: 0xff7f50,
     unlockedByDefault: false,
-    mapCoords: { x: 59.3, y: 25.4 }
+    mapCoords: { x: 52.8, y: 25.0 }
   },
   {
     id: 'seville',
@@ -581,7 +581,7 @@ export const CITIES = [
     roofColor: 0xc44569,
     accentColor: 0xe15f41,
     unlockedByDefault: false,
-    mapCoords: { x: 21.1, y: 80.1 }
+    mapCoords: { x: 17.9, y: 80.7 }
   },
   {
     id: 'casablanca',
@@ -604,7 +604,7 @@ export const CITIES = [
     roofColor: 0x10ac84,
     accentColor: 0xff6b6b,
     unlockedByDefault: false,
-    mapCoords: { x: 15.5, y: 92.2 }
+    mapCoords: { x: 15.1, y: 89.2 }
   },
   {
     id: 'venise',
@@ -627,11 +627,56 @@ export const CITIES = [
     roofColor: 0xb33939,
     accentColor: 0xcd6133,
     unlockedByDefault: false,
-    mapCoords: { x: 85.3, y: 52.5 }
+    mapCoords: { x: 69.8, y: 50.0 }
+  },
+  {
+    id: 'tchernobyl',
+    name: 'Tchernobyl ☢️',
+    country: 'Zone d\'Exclusion',
+    countryFlag: '☢️',
+    emblem: '☣️',
+    monument: 'Réacteurs & Tours de Refroidissement',
+    subtitle: 'Tours Nucléaires, Combinaison NBC & Éruption',
+    typeTag: 'Épreuve Ultime : Cataclysme & Évasion Volante',
+    description: 'Enfilez la combinaison NBC antiradiation, bravez la zone des réacteurs radioactifs, déclenchez l\'éruption nucléaire cataclysmique et échappez-vous à bord de l\'aéro-jet volant pour contempler l\'apocalypse de loin !',
+    targetScore: 250000,
+    starThresholds: [250000, 500000, 900000],
+    unlockScoreRequired: 0,
+    skyColor: 0x1e272e,
+    fogColor: 0x11161d,
+    ambientColor: 0x55efc4,
+    roadColor: 0x2d3436,
+    buildingColors: [0x636e72, 0x2d3436, 0x57606f],
+    roofColor: 0x0984e3,
+    accentColor: 0x00cec9,
+    unlockedByDefault: true,
+    killQuota: 35,
+    isNuclearMission: true,
+    mapCoords: { x: 94.3, y: 33.8 }
   }
 ];
 
 export const BIKES = [
+  {
+    id: 'aero_jet',
+    name: 'Aéro-Jet Fusion 🚀',
+    shortName: 'Aéro-Jet',
+    category: 'ENGIN VOLANT',
+    icon: '🚀',
+    tagline: 'Propulseurs à Fusion & Ailes Delta',
+    type: 'Vaisseau d’Évasion Sub-Orbital',
+    description: 'Engin volant d’évasion supersonique à poussée vectorielle et ailes delta en titane ! Conçu spécialement pour s’arracher au sol et contempler les éruptions apocalyptiques depuis la stratosphère.',
+    speedRating: 5,
+    handlingRating: 5,
+    bounceRating: 5,
+    cost: 5000,
+    unlocked: true,
+    scale: 1.15,
+    maxSpeed: 28,
+    accel: 20,
+    steerSpeed: 22,
+    isFlyingCraft: true
+  },
   {
     id: 'scooter',
     name: 'Guêpe 50cc',

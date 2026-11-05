@@ -699,6 +699,30 @@ html, body {
   box-shadow: 0 0 20px #ffa502;
 }
 
+/* BOUTON D'ATTAQUE VISCÉRAL (HACHE, FOUET, AK-47, TRONÇONNEUSE) */
+.btn-attack-pedal {
+  background: linear-gradient(135deg, #ff4757, #ff1744) !important;
+  border: 2px solid #ff6b81 !important;
+  box-shadow: 0 4px 18px rgba(255, 23, 68, 0.55), 0 0 12px rgba(255, 71, 87, 0.4) !important;
+  animation: attackPedalPulse 1.8s infinite ease-in-out !important;
+}
+
+@keyframes attackPedalPulse {
+  0%, 100% {
+    box-shadow: 0 4px 18px rgba(255, 23, 68, 0.55), 0 0 10px rgba(255, 71, 87, 0.3);
+  }
+  50% {
+    box-shadow: 0 6px 24px rgba(255, 23, 68, 0.85), 0 0 18px rgba(255, 107, 129, 0.7);
+    border-color: #ffd700 !important;
+  }
+}
+
+.btn-attack-pedal:active {
+  transform: scale(0.88) !important;
+  filter: brightness(1.3) !important;
+  box-shadow: 0 0 28px #ff4757 !important;
+}
+
 /* 4. BOUTON NITRO BOOST 5 SECONDES */
 .btn-nitro-pedal {
   width: 78px;
@@ -1021,10 +1045,10 @@ html, body {
   position: absolute;
   top: 0;
   left: 0;
-  width: 960px;
-  height: 1100px;
-  min-width: 960px;
-  min-height: 1100px;
+  width: 1060px;
+  height: 1480px;
+  min-width: 1060px;
+  min-height: 1480px;
   transform-origin: 0 0;
   will-change: transform;
 }
@@ -1033,8 +1057,8 @@ html, body {
   position: absolute;
   top: 0;
   left: 0;
-  width: 960px;
-  height: 1100px;
+  width: 1060px;
+  height: 1480px;
   filter: drop-shadow(0 12px 24px rgba(0,0,0,0.6));
   pointer-events: none;
 }
@@ -1043,8 +1067,8 @@ html, body {
   position: absolute;
   top: 0;
   left: 0;
-  width: 960px;
-  height: 1100px;
+  width: 1060px;
+  height: 1480px;
   pointer-events: none;
   z-index: 15;
 }
@@ -1242,31 +1266,77 @@ html, body {
 
 .city-detail-actions {
   width: 100%;
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
   box-sizing: border-box;
-  margin-top: 6px;
+  margin-top: 8px;
 }
 
 .btn-action-launch {
-  width: 100%;
-  padding: 14px 20px;
-  font-size: 1.05rem;
+  flex: 1;
+  padding: 14px 16px;
+  font-size: 1.02rem;
   border-radius: 16px;
   background: linear-gradient(135deg, #ff4757, #ff6b81);
   box-shadow: 0 6px 22px rgba(255, 71, 87, 0.5), inset 0 2px 0 rgba(255, 255, 255, 0.4);
   letter-spacing: 0.5px;
   box-sizing: border-box;
+  margin: 0;
 }
 
 .btn-action-locked {
-  width: 100%;
-  padding: 13px 18px;
-  font-size: 0.92rem;
+  flex: 1;
+  padding: 13px 16px;
+  font-size: 0.88rem;
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.18);
   color: #a4b0be;
   cursor: not-allowed;
   box-sizing: border-box;
+  margin: 0;
+}
+
+.btn-ad-gift {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 6px 14px;
+  background: linear-gradient(135deg, #10ac84, #00d2d3);
+  border: 2px solid #55efc4;
+  border-radius: 16px;
+  color: #ffffff;
+  cursor: pointer;
+  box-shadow: 0 4px 18px rgba(16, 172, 132, 0.45);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  flex-shrink: 0;
+  min-width: 76px;
+  box-sizing: border-box;
+}
+
+.btn-ad-gift:active {
+  transform: scale(0.93);
+}
+
+.ad-gift-top {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.95rem;
+  line-height: 1;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5));
+}
+
+.ad-gift-val {
+  font-size: 0.88rem;
+  font-weight: 950;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+  line-height: 1;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
 }
 
 .city-detail-header {
@@ -1919,13 +1989,14 @@ html, body {
   gap: 6px;
 }
 
-.currency-ad-tag {
+.currency-ad-tag,
+.currency-ad-gift-tag {
   background: linear-gradient(135deg, #10ac84, #1dd1a1);
   border: 1px solid #7bed9f;
   color: #fff;
   font-size: 0.75rem;
   font-weight: 900;
-  padding: 4px 10px;
+  padding: 3px 8px;
   border-radius: 14px;
   cursor: pointer;
   box-shadow: 0 3px 10px rgba(16, 172, 132, 0.4);
@@ -1933,7 +2004,8 @@ html, body {
   transition: transform 0.1s ease;
 }
 
-.currency-ad-tag:active {
+.currency-ad-tag:active,
+.currency-ad-gift-tag:active {
   transform: scale(0.92);
 }
 

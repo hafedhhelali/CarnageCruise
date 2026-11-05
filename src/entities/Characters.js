@@ -693,16 +693,35 @@ export class CharacterSystem {
 
   spawnAhead(playerZ, roadCurveFunc) {
     const minZ = playerZ + 40;
-    const maxZ = playerZ + 160;
+    const maxZ = playerZ + 170;
 
-    this.characters.forEach(char => {
+    this.characters.forEach((char, idx) => {
       if (!char.group.visible || char.group.position.z < playerZ - 20) {
         const newZ = minZ + Math.random() * (maxZ - minZ);
         const curveX = roadCurveFunc ? roadCurveFunc(newZ) : 0;
-        const laneOffset = (Math.random() - 0.5) * 6.4;
 
-        char.group.position.set(curveX + laneOffset, 0, newZ);
-        char.group.rotation.set(0, char.walkDirection > 0 ? 0 : Math.PI, 0);
+        // 70% sur le trottoir, 30% traversent sur les passages piéton
+        const isCrosser = (idx % 3 === 0);
+        char.isCrossing = isCrosser;
+        char.isOnSidewalk = !isCrosser;
+
+        if (isCrosser) {
+          // Piéton traversant sur un passage piéton
+          // Arrondi vers le passage piéton le plus proche
+          const crosswalkZ = Math.round(newZ / 60) * 60;
+          const startSide = Math.random() > 0.5 ? 1 : -1;
+          char.crossDirection = -startSide;
+          char.group.position.set(curveX + startSide * 5.2, 0.02, crosswalkZ);
+          char.group.rotation.set(0, char.crossDirection > 0 ? Math.PI / 2 : -Math.PI / 2, 0);
+        } else {
+          // Piéton marchant le long du trottoir (gauche ou droite)
+          const side = (idx % 2 === 0 ? 1 : -1);
+          const sidewalkOffset = side * (4.8 + Math.random() * 1.6);
+          char.walkDirection = Math.random() > 0.5 ? 1 : -1;
+          char.group.position.set(curveX + sidewalkOffset, 0.25, newZ);
+          char.group.rotation.set(0, char.walkDirection > 0 ? 0 : Math.PI, 0);
+        }
+
         char.active = true;
         char.isFlying = false;
         char.isFleeing = false;
@@ -882,9 +901,25 @@ export class CharacterSystem {
             char.headGroup.rotation.z = 0;
           }
 
-          char.group.position.x += char.walkDirection * char.typeDef.speed * delta * 0.45;
-          if (Math.abs(char.group.position.x) > 4.2) {
-            char.walkDirection *= -1;
+          if (char.isCrossing) {
+            // Traverse la chaussée sur le passage piéton
+            char.group.position.x += char.crossDirection * char.typeDef.speed * delta * 1.1;
+            char.group.position.y = 0.02;
+            const curveX = roadCurveFunc ? roadCurveFunc(char.group.position.z) : 0;
+            // Quand il atteint l'autre trottoir, demi-tour
+            if (Math.abs(char.group.position.x - curveX) > 5.5) {
+              char.crossDirection *= -1;
+              char.group.rotation.y = char.crossDirection > 0 ? Math.PI / 2 : -Math.PI / 2;
+            }
+          } else {
+            // Marche le long du trottoir à altitude 0.25m
+            char.group.position.z += char.walkDirection * char.typeDef.speed * delta * 0.85;
+            char.group.position.y = 0.25;
+            const curveX = roadCurveFunc ? roadCurveFunc(char.group.position.z) : 0;
+            // Garder le piéton sur son trottoir (gauche ou droite)
+            const side = char.group.position.x > curveX ? 1 : -1;
+            const targetX = curveX + side * 5.2;
+            char.group.position.x += (targetX - char.group.position.x) * delta * 2.0;
             char.group.rotation.y = char.walkDirection > 0 ? 0 : Math.PI;
           }
         }
@@ -892,14 +927,14 @@ export class CharacterSystem {
         // 3. Détection de collision physique balayée (SWEPT COLLISION anti-tunneling)
         const frameTravel = Math.max(1.85, (bikeSpeed * delta) + 0.85);
         const inZCollisionZone = (distZ >= -1.0 && distZ <= frameTravel);
-        const inXCollisionZone = (distX <= 1.75);
+        const inXCollisionZone = (distX <= 1.85);
 
         if (!isInvulnerable && inZCollisionZone && inXCollisionZone) {
           this.triggerSlapstickFlight(char, bikeX, bikeSpeed);
           if (onCollision) {
             onCollision(char);
           }
-        } else if (!isInvulnerable && !char.hasNearMissed && inZCollisionZone && distX > 1.75 && distX < 3.0) {
+        } else if (!isInvulnerable && !char.hasNearMissed && inZCollisionZone && distX > 1.85 && distX < 3.2) {
           char.hasNearMissed = true;
           if (onNearMiss) {
             onNearMiss(char);

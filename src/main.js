@@ -14,6 +14,7 @@ import { CharacterSystem } from './entities/Characters.js';
 import { Environment } from './entities/Environment.js';
 import { ParticleSystem } from './entities/Particles.js';
 import { IntersectionManager } from './entities/Intersections.js';
+import { Traffic } from './entities/Traffic.js';
 import { UIManager } from './ui/UIManager.js';
 import * as TWEEN from '@tweenjs/tween.js';
 
@@ -29,6 +30,7 @@ class GameApp {
     this.bike = new Bike(this.engine.scene);
     this.characters = new CharacterSystem(this.engine.scene);
     this.environment = new Environment(this.engine.scene);
+    this.traffic = new Traffic(this.engine.scene);
     this.particles = new ParticleSystem(this.engine.scene);
     this.intersections = new IntersectionManager(this.engine.scene);
 
@@ -59,6 +61,7 @@ class GameApp {
     this.engine.applyCityAtmosphere(cityDef);
     this.environment.setCity(cityDef);
     this.characters.reset();
+    if (this.traffic) this.traffic.reset();
     this.intersections.reset();
   }
 
@@ -234,7 +237,7 @@ class GameApp {
       // 7. Génération et recyclage du monde 3D
       this.environment.update(this.bike.z, delta);
 
-      // 8. Gestion des piétons, poussettes, papys, collisions burlesques et frôlements (near-miss)
+      // 8. Gestion des piétons (Trottoirs & Passages Piétons), collisions burlesques et frôlements (near-miss)
       this.characters.update(
         delta,
         this.bike.z,
@@ -244,11 +247,22 @@ class GameApp {
           // Suite à un accident, quand le bolide clignote (invulnérable), impossible de heurter qui que ce soit !
           if (this.bike.isInvulnerable()) return;
 
+          // Calcul des bonus de position (Trottoir ou Passage piéton)
+          let bonusPts = hitChar.typeDef.points;
+          let categoryLabel = hitChar.typeDef.type;
+          if (hitChar.isOnSidewalk) {
+            bonusPts += 200;
+            categoryLabel = 'TROTTOIR_CARNAGE';
+          } else if (hitChar.isCrossing) {
+            bonusPts += 250;
+            categoryLabel = 'PASSAGE_PIETON';
+          }
+
           // Impact cartoon équilibré !
-          this.engine.triggerCameraShake(0.35);
-          this.particles.spawnComicBurst(hitChar.group.position, hitChar.typeDef.points, gameState.combo);
+          this.engine.triggerCameraShake(0.38);
+          this.particles.spawnComicBurst(hitChar.group.position, bonusPts, gameState.combo);
           this.particles.spawnBloodBurst(hitChar.group.position);
-          gameState.recordKill(hitChar.typeDef.points, hitChar.typeDef.type, hitChar.typeDef.category);
+          gameState.recordKill(bonusPts, categoryLabel, hitChar.typeDef.category);
         },
         (z) => this.environment.getRoadCenterX(z),
         (nearChar) => {
@@ -259,6 +273,120 @@ class GameApp {
         },
         this.bike.isInvulnerable()
       );
+
+      // 8b. Circulation routière (Véhicules, Taxis, Fourgons, Autobus)
+      if (this.traffic) {
+        this.traffic.update(
+          delta,
+          this.bike.z,
+          this.bike.mesh.position.x,
+          currentSpeed,
+          (z) => this.environment.getRoadCenterX(z),
+          (car, isPlayerInvuln) => {
+            if (isPlayerInvuln || gameState.isNitroActive || this.bike.currentBikeId === 'rouleau' || this.bike.currentBikeId === 'aero_jet') {
+              // Carambolage royal ! La voiture vole en éclats
+              this.engine.triggerCameraShake(0.65);
+              soundManager.playCrash();
+              this.particles.spawnCrashBurst(car.position);
+              gameState.score += 500;
+              gameState.recordKill(500, 'CARAMBOLAGE', 'car');
+              this.particles.spawnComicBurst(car.position, 500, gameState.combo);
+            } else {
+              // Collision avec un véhicule de circulation
+              const crashed = this.bike.triggerCrash();
+              if (crashed) {
+                this.engine.triggerCameraShake(0.75);
+                soundManager.playCrash();
+                soundManager.playPenaltyBuzzer();
+                this.particles.spawnCrashBurst(this.bike.mesh.position);
+                gameState.applyVehicleCrashPenalty(300);
+                if (this.ui) this.ui.triggerCrashPenaltyUI(300);
+              }
+            }
+          },
+          this.bike.isInvulnerable()
+        );
+      }
+
+      // 8c. Détection d'impact des balles traçantes (Tir AK-47 & Armes à feu)
+      if (this.bike.bulletPool) {
+        this.bike.bulletPool.forEach(b => {
+          if (!b.userData.active) return;
+
+          // Impact des balles sur les piétons
+          this.characters.characters.forEach(char => {
+            if (!char.group.visible || char.isFlying) return;
+            const dZ = Math.abs(char.group.position.z - b.position.z);
+            const dX = Math.abs(char.group.position.x - b.position.x);
+            if (dZ < 1.4 && dX < 1.25) {
+              b.userData.active = false;
+              b.visible = false;
+              this.characters.triggerSlapstickFlight(char, this.bike.mesh.position.x, 42);
+              this.particles.spawnComicBurst(char.group.position, 500, gameState.combo);
+              this.particles.spawnBloodBurst(char.group.position);
+              gameState.recordKill(500, 'WEAPON_SHOOT', char.typeDef.category);
+            }
+          });
+
+          // Impact des balles sur les véhicules de circulation
+          if (this.traffic) {
+            this.traffic.vehicles.forEach(v => {
+              if (!v.visible || v.userData.isCrashed) return;
+              const dZ = Math.abs(v.position.z - b.position.z);
+              const dX = Math.abs(v.position.x - b.position.x);
+              if (dZ < 2.4 && dX < 1.4) {
+                b.userData.active = false;
+                b.visible = false;
+                this.traffic.triggerCrash(v, 28, (b.position.x > v.position.x ? 1 : -1));
+                this.particles.spawnCrashBurst(v.position);
+                gameState.score += 350;
+                this.particles.spawnComicBurst(v.position, 350, gameState.combo);
+              }
+            });
+          }
+        });
+      }
+
+      // 8d. Collisions avec le mobilier urbain (Poteaux, Arbres, Terrasses) sur trottoir
+      if (this.environment.chunks) {
+        this.environment.chunks.forEach(chunk => {
+          if (chunk.userData && chunk.userData.props) {
+            chunk.userData.props.forEach(prop => {
+              if (prop.userData.isHit) return;
+              const worldZ = chunk.position.z + prop.position.z;
+              const worldX = chunk.position.x + prop.position.x;
+              const dZ = Math.abs(worldZ - this.bike.z);
+              const dX = Math.abs(worldX - this.bike.mesh.position.x);
+
+              if (dZ < 1.8 && dX < 1.35) {
+                prop.userData.isHit = true;
+                this.engine.triggerCameraShake(0.5);
+
+                if (prop.userData.type === 'lamp') {
+                  soundManager.playPropSmash();
+                  prop.rotation.z = (prop.position.x > 0 ? 1 : -1) * 0.9;
+                  this.particles.spawnCrashBurst(new THREE.Vector3(worldX, 2.0, worldZ));
+                  gameState.score += 180;
+                  this.particles.spawnComicBurst(new THREE.Vector3(worldX, 2.0, worldZ), 180, gameState.combo);
+                } else if (prop.userData.type === 'tree') {
+                  soundManager.playPropSmash();
+                  prop.rotation.z = (Math.random() - 0.5) * 0.35;
+                  this.particles.spawnExhaustSmoke(new THREE.Vector3(worldX, 3.0, worldZ), 3.0);
+                  gameState.score += 200;
+                  this.particles.spawnComicBurst(new THREE.Vector3(worldX, 2.5, worldZ), 200, gameState.combo);
+                } else if (prop.userData.type === 'terrace') {
+                  soundManager.playPropSmash();
+                  prop.position.y += 2.2;
+                  prop.rotation.x = Math.PI * 0.8;
+                  this.particles.spawnCrashBurst(new THREE.Vector3(worldX, 1.0, worldZ));
+                  gameState.score += 300;
+                  this.particles.spawnComicBurst(new THREE.Vector3(worldX, 1.5, worldZ), 300, gameState.combo);
+                }
+              }
+            });
+          }
+        });
+      }
 
       // 9. Gestion des carrefours réalistes, feux et trafic transversal
       this.intersections.update(

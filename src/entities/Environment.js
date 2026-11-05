@@ -844,6 +844,7 @@ export class Environment {
 
   createStreetChunk(zPos, index = 0) {
     const chunk = new THREE.Group();
+    chunk.userData = { props: [] };
     const curveX = this.getRoadCenterX(zPos);
     const curveAngle = this.getRoadAngle(zPos);
 
@@ -886,14 +887,53 @@ export class Environment {
       chunk.add(stripe);
     }
 
-    // Passage piéton tous les 2 tronçons
-    if (Math.abs(zPos) % (this.chunkLength * 2) === 0) {
+    // Passage piéton tous les 60m avec FEUX TRICOLORES RÉALISTES
+    if (Math.abs(zPos) % 60 === 0) {
       for (let s = -3.2; s <= 3.2; s += 0.9) {
         const cw = new THREE.Mesh(this.sharedGeos.crosswalkStripe, stripeMat);
         cw.rotation.x = -Math.PI / 2;
         cw.position.set(s, 0.015, 0);
         chunk.add(cw);
       }
+
+      // Feux tricolores (Feu rouge piétons/voitures)
+      const createTrafficLight = (side) => {
+        const tlGroup = new THREE.Group();
+        tlGroup.position.set(side * 4.35, 0, 1.8);
+        tlGroup.userData = { type: 'lamp', isHit: false };
+
+        // Mât gris anthracite
+        const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 4.6, 8), new THREE.MeshStandardMaterial({ color: 0x2d3436 }));
+        mast.position.y = 2.3;
+        tlGroup.add(mast);
+
+        // Boîtier noir à 3 feux
+        const box = new THREE.Mesh(new THREE.BoxGeometry(0.35, 1.1, 0.32), new THREE.MeshToonMaterial({ color: 0x1e272e }));
+        box.position.set(0, 3.8, 0);
+        tlGroup.add(box);
+
+        // Feu ROUGE éclatant au sommet (Interdit aux véhicules quand piétons traversent)
+        const redLight = new THREE.Mesh(new THREE.CircleGeometry(0.12, 10), new THREE.MeshBasicMaterial({ color: 0xff3838 }));
+        redLight.position.set(0, 4.15, -0.17);
+        redLight.rotation.y = Math.PI;
+
+        // Feu ORANGE
+        const amberLight = new THREE.Mesh(new THREE.CircleGeometry(0.1, 8), new THREE.MeshBasicMaterial({ color: 0x57606f }));
+        amberLight.position.set(0, 3.8, -0.17);
+        amberLight.rotation.y = Math.PI;
+
+        // Feu VERT
+        const greenLight = new THREE.Mesh(new THREE.CircleGeometry(0.1, 8), new THREE.MeshBasicMaterial({ color: 0x2f3542 }));
+        greenLight.position.set(0, 3.45, -0.17);
+        greenLight.rotation.y = Math.PI;
+
+        tlGroup.add(redLight, amberLight, greenLight);
+        chunk.userData.props.push(tlGroup);
+        return tlGroup;
+      };
+
+      chunk.add(createTrafficLight(-1));
+      chunk.add(createTrafficLight(1));
     }
 
     // Trottoirs gauche et droite
@@ -1023,6 +1063,7 @@ export class Environment {
       // Réverbère parisien ou lanterne méditerranéenne
       const lamp = new THREE.Group();
       lamp.position.set(side * 4.6, 0, z);
+      lamp.userData = { type: 'lamp', isHit: false };
 
       const pole = new THREE.Mesh(this.sharedGeos.lampPost, lampMat);
       pole.position.y = 2.1;
@@ -1032,12 +1073,14 @@ export class Environment {
       bulb.position.set(-side * 0.4, 4.0, 0);
       lamp.add(bulb);
       chunk.add(lamp);
+      chunk.userData.props.push(lamp);
 
       // Végétation volumétrique riche
       if (idx % 2 === 1) {
         if (isRiviera || isMed) {
           const palm = new THREE.Group();
           palm.position.set(xSidewalk, 0, z + 5);
+          palm.userData = { type: 'tree', isHit: false };
 
           const trunk = new THREE.Mesh(this.sharedGeos.palmTrunk, woodMat);
           trunk.position.y = 2.0;
@@ -1051,10 +1094,12 @@ export class Environment {
             palm.add(leaf);
           }
           chunk.add(palm);
+          chunk.userData.props.push(palm);
         } else {
           // Arbre étagé touffu cartoon (multi-sphères volumétriques)
           const tree = new THREE.Group();
           tree.position.set(xSidewalk, 0, z + 5);
+          tree.userData = { type: 'tree', isHit: false };
 
           const trunk = new THREE.Mesh(this.sharedGeos.treeTrunk, woodMat);
           trunk.position.y = 0.9;
@@ -1068,6 +1113,7 @@ export class Environment {
           tree.add(fol1, fol2);
 
           chunk.add(tree);
+          chunk.userData.props.push(tree);
         }
       }
 
@@ -1077,6 +1123,7 @@ export class Environment {
           // Colonne antique romaine sculptée avec amphore en terre cuite
           const colGroup = new THREE.Group();
           colGroup.position.set(xSidewalk + side * 0.3, 0, z + 2);
+          colGroup.userData = { type: 'lamp', isHit: false };
           const colShaft = new THREE.Mesh(this.sharedGeos.romanColumn, marbleMat);
           colShaft.position.y = 2.1;
           const colCap = new THREE.Mesh(this.sharedGeos.romanCapital, marbleMat);
@@ -1090,10 +1137,12 @@ export class Environment {
           amphora.add(aBody, aNeck);
           colGroup.add(colShaft, colCap, amphora);
           chunk.add(colGroup);
+          chunk.userData.props.push(colGroup);
         } else if (isMaghreb) {
           // Terracotta amphore géante et palmette d'oasis
           const oaseGroup = new THREE.Group();
           oaseGroup.position.set(xSidewalk + side * 0.3, 0, z + 2);
+          oaseGroup.userData = { type: 'lamp', isHit: false };
           const aBody = new THREE.Mesh(this.sharedGeos.amphoraBelly, terracottaMat);
           aBody.scale.set(1.4, 1.4, 1.4);
           aBody.position.y = 0.55;
@@ -1102,10 +1151,12 @@ export class Environment {
           aNeck.position.y = 0.9;
           oaseGroup.add(aBody, aNeck);
           chunk.add(oaseGroup);
+          chunk.userData.props.push(oaseGroup);
         } else {
           // Terrasse de bistrot / tapas bar
           const terrace = new THREE.Group();
           terrace.position.set(xSidewalk + side * 0.4, 0, z + 2);
+          terrace.userData = { type: 'terrace', isHit: false };
 
           const tableLeg = new THREE.Mesh(this.sharedGeos.tableLeg, lampMat);
           tableLeg.position.y = 0.35;
@@ -1124,6 +1175,7 @@ export class Environment {
           parasol.position.set(0.3, 2.1, 0);
           terrace.add(parasol);
           chunk.add(terrace);
+          chunk.userData.props.push(terrace);
         }
       }
 

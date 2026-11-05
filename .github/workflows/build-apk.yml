@@ -99,13 +99,14 @@ jobs:
             
             ---
             
-            ### ✨ Nouveautés de cette version Beta :
-            - 🏎️ **Nouveaux Engins Décoratifs & Déjantés** : Décapotable rouge sport rétro, trottinette avec double hache, coureurs à pied avec AK-47 et tronçonneuse.
-            - 🐎 **Cheval & FOUET** : Le FOUET remplace la cravache avec manche cuir tressé, virole d'or et lanière articulée claquante.
-            - ⚡ **Nitro 5s rechargeable** : Bouton HUD & raccourcis clavier, propulseurs NOS bleu cyan à l'arrière, boost x1.65.
-            - 🗺️ **Carte Méditerranéenne & Zoom Interactif** : Boutons de zoom (+/-), molette, Barcelone en Espagne, Rome, Naples & Vésuve, Tunis, Alger, Annaba.
-            - 🚦 **Croisements Clairs & Portiques Métalliques** : Portiques lumineux monumentaux avec feux suspendus, zébras d'approche 35m et alertes HUD.
-            - 🛡️ **Invulnérabilité Post-Crash Respectée** : Aucun obstacle percutable pendant le clignotement.
+            ### ✨ Nouveautés majeures v0.9.4-beta :
+            - 🚗 **Circulation Routière 3D Vivante** : Berlines, Taxis parisiens lumineux, Camionnettes de livraison, Bus municipaux et Coupés sport avec phares, feux stop et carambolages burlesques (+500 pts).
+            - 🚶 **Piétons sur Trottoirs & Passages Piétons** : 70% marchent sur trottoirs surélevés (y=0.25m), 30% traversent les passages zébrés avec feux tricolores 3D.
+            - 🛹 **Montée sur Trottoir & Carnage Bonus** : Franchissement des bordures avec bruit de suspension, fauchage de piétons sur trottoir (+200 pts) et passages piétons (+250 pts).
+            - 💥 **Attaque Viscérale & Balles Traçantes 3D** : AK-47 avec tirs traçants supersoniques (180 m/s), recul violent et étuis de cuivre ; Hache avec arc de frappe dévastateur et traînée lumineuse ; Fouet supersonique.
+            - 💥 **Objets Urbains Destructibles** : Réverbères pliés avec gerbes d'étincelles, geysers d'eau sous pression, terrasses de café explosives (+300 pts).
+            - 🗺️ **Carte SIG 100% Fidèle** : 23 étapes parfaitement positionnées dans leurs frontières nationales réelles, vue optimisée sans coupure et tracé Grand Tour néon or.
+            - 🎁 **Design Épuré Boutons & Pubs** : Bouton cadeau sponsor luxueux (+20 pièces), bouton d'attaque HUD pulsant et ergonomique.
             
             ---
             ⚠️ *Note : Cette version est officiellement en phase BETA. Vos retours et signalements de bugs sont précieux.*

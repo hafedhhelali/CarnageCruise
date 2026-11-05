@@ -215,9 +215,9 @@ export class UIManager {
           <button id="btn-map-garage" class="btn-round-action btn-garage-glow" title="Accéder au Garage">
             <span>🏍️</span>
           </button>
-          <div class="currency-pill clickable" id="btn-header-ad-coins" title="Regarder une pub (+20 🪙)">
+          <div class="currency-pill clickable" id="btn-header-ad-coins" title="Cadeau Sponsor : +20 Pièces d'or">
             <span>🪙 ${coins}</span>
-            <span class="currency-ad-tag">+20 📺</span>
+            <span class="currency-ad-gift-tag">🎁 +20</span>
           </div>
         </div>
       </div>
@@ -233,7 +233,7 @@ export class UIManager {
         </div>
 
         <div class="europe-map-canvas-container" id="europe-canvas">
-          <svg class="europe-svg" viewBox="0 0 960 1100" preserveAspectRatio="none">
+          <svg class="europe-svg" viewBox="0 -320 1060 1480" preserveAspectRatio="none">
             <defs>
               <!-- Dégradé de relief européen : Verts luxuriants, ocres et sommets -->
               <linearGradient id="franceLuxury" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -303,63 +303,64 @@ export class UIManager {
             <!-- 1. ROYAUME-UNI 🇬🇧 & IRLANDE 🇮🇪 -->
             <path class="country-ireland" filter="url(#coastalGlow)" d="${REAL_COUNTRY_PATHS.IRL.d}" fill="url(#neighborCountryGrad)" stroke="#2ed573" stroke-width="1.8" opacity="0.8" />
             <path class="country-uk" filter="url(#coastalGlow)" d="${REAL_COUNTRY_PATHS.GBR.d}" fill="url(#neighborCountryGrad)" stroke="#38ada9" stroke-width="2.2" />
-            <text x="330" y="85" fill="#74b9ff" font-size="13" font-weight="900" letter-spacing="1.2">ROYAUME-UNI 🇬🇧</text>
+            <text x="90" y="10" fill="#2ed573" font-size="12" font-weight="900" letter-spacing="1">IRLANDE 🇮🇪</text>
+            <text x="290" y="20" fill="#74b9ff" font-size="13" font-weight="900" letter-spacing="1.2">ROYAUME-UNI 🇬🇧</text>
 
             <!-- 2. BENELUX (BELGIQUE 🇧🇪 & PAYS-BAS 🇳🇱) -->
             <path class="country-netherlands" filter="url(#coastalGlow)" d="${REAL_COUNTRY_PATHS.NLD.d}" fill="url(#neighborCountryGrad)" stroke="#38ada9" stroke-width="1.8" />
             <path class="country-benelux" filter="url(#coastalGlow)" d="${REAL_COUNTRY_PATHS.BEL.d}" fill="url(#neighborCountryGrad)" stroke="#38ada9" stroke-width="2.2" />
-            <text x="525" y="145" fill="#74b9ff" font-size="12" font-weight="900" letter-spacing="1">BELGIQUE 🇧🇪</text>
+            <text x="510" y="160" fill="#74b9ff" font-size="12" font-weight="900" letter-spacing="1">BELGIQUE 🇧🇪</text>
 
             <!-- 3. ALLEMAGNE 🇩🇪 -->
             <path class="country-germany" filter="url(#coastalGlow)" d="${REAL_COUNTRY_PATHS.DEU.d}" fill="url(#neighborCountryGrad)" stroke="#2c3e50" stroke-width="2.0" />
-            <text x="730" y="240" fill="#74b9ff" font-size="13" font-weight="900" letter-spacing="1.2">ALLEMAGNE 🇩🇪</text>
+            <text x="720" y="180" fill="#74b9ff" font-size="13" font-weight="900" letter-spacing="1.2">ALLEMAGNE 🇩🇪</text>
 
             <!-- 4. SUISSE 🇨🇭 -->
             <path class="country-switzerland" filter="url(#coastalGlow)" d="${REAL_COUNTRY_PATHS.CHE.d}" fill="url(#neighborCountryGrad)" stroke="#38ada9" stroke-width="2.0" />
-            <text x="620" y="420" fill="#74b9ff" font-size="12" font-weight="900" letter-spacing="1">SUISSE 🇨🇭</text>
+            <text x="610" y="400" fill="#74b9ff" font-size="12" font-weight="900" letter-spacing="1">SUISSE 🇨🇭</text>
 
             <!-- 5. FRANCE MÉTROPOLITAINE & CORSE (100% GÉOGRAPHIE SIG RÉELLE) 🇫🇷 -->
             <path class="france-mainland" filter="url(#coastalGlow)" d="${REAL_COUNTRY_PATHS.FRA.d}" fill="url(#franceLuxury)" stroke="#00cec9" stroke-width="2.8" />
             <text x="430" y="380" fill="#00cec9" font-size="18" font-weight="900" letter-spacing="3" opacity="0.5">FRANCE 🇫🇷</text>
-            <text x="680" y="650" fill="#00cec9" font-size="10" font-weight="900">CORSE 🇫🇷</text>
+            <text x="690" y="620" fill="#00cec9" font-size="10" font-weight="900">CORSE 🇫🇷</text>
 
             <!-- 6. PÉNINSULE IBÉRIQUE : PORTUGAL 🇵🇹 ET ESPAGNE 🇪🇸 -->
             <path class="country-portugal" filter="url(#coastalGlow)" d="${REAL_COUNTRY_PATHS.PRT.d}" fill="url(#neighborCountryGrad)" stroke="#2ed573" stroke-width="2.2" />
-            <text x="70" y="790" fill="#2ed573" font-size="12" font-weight="900" letter-spacing="1.5">PORTUGAL 🇵🇹</text>
+            <text x="80" y="760" fill="#2ed573" font-size="12" font-weight="900" letter-spacing="1.5">PORTUGAL 🇵🇹</text>
 
             <path class="country-spain" filter="url(#coastalGlow)" d="${REAL_COUNTRY_PATHS.ESP.d}" fill="url(#neighborCountryGrad)" stroke="#e74c3c" stroke-width="2.4" />
-            <text x="240" y="740" fill="#74b9ff" font-size="15" font-weight="900" letter-spacing="2">ESPAGNE 🇪🇸</text>
-            <text x="245" y="795" fill="#ffd700" font-size="11" font-weight="900">MADRID 👑</text>
-            <text x="420" y="715" fill="#ff7675" font-size="11" font-weight="900">BARCELONE</text>
+            <text x="260" y="760" fill="#74b9ff" font-size="15" font-weight="900" letter-spacing="2">ESPAGNE 🇪🇸</text>
+            <text x="280" y="725" fill="#ffd700" font-size="11" font-weight="900">MADRID 👑</text>
+            <text x="490" y="660" fill="#ff7675" font-size="11" font-weight="900">BARCELONE</text>
 
             <!-- 7. ITALIE 🇮🇹 (DU NORD AU SUD, ROME, NAPLES ET SICILE) -->
             <path class="country-italy" filter="url(#coastalGlow)" d="${REAL_COUNTRY_PATHS.ITA.d}" fill="url(#neighborCountryGrad)" stroke="#38ada9" stroke-width="2.4" />
-            <text x="760" y="550" fill="#74b9ff" font-size="14" font-weight="900" letter-spacing="1.5">ITALIE 🇮🇹</text>
-            <text x="800" y="670" fill="#ffd700" font-size="11" font-weight="900">ROME 🏛️</text>
-            <text x="840" y="740" fill="#ff7675" font-size="11" font-weight="900">NAPOLI 🌋</text>
+            <text x="770" y="520" fill="#74b9ff" font-size="14" font-weight="900" letter-spacing="1.5">ITALIE 🇮🇹</text>
+            <text x="770" y="625" fill="#ffd700" font-size="11" font-weight="900">ROME 🏛️</text>
+            <text x="830" y="705" fill="#ff7675" font-size="11" font-weight="900">NAPOLI 🌋</text>
 
             <!-- 8. AFRIQUE DU NORD : MAROC 🇲🇦, ALGÉRIE 🇩🇿 ET TUNISIE 🇹🇳 (CÔTE SUD MÉDITERRANÉENNE) -->
             <path class="country-morocco" filter="url(#coastalGlow)" d="${REAL_COUNTRY_PATHS.MAR.d}" fill="url(#neighborCountryGrad)" stroke="#e67e22" stroke-width="2.0" opacity="0.8" />
             <path class="country-algeria" filter="url(#coastalGlow)" d="${REAL_COUNTRY_PATHS.DZA.d}" fill="url(#neighborCountryGrad)" stroke="#2ed573" stroke-width="2.5" />
-            <text x="430" y="995" fill="#2ed573" font-size="15" font-weight="900" letter-spacing="2">ALGÉRIE 🇩🇿 (ALGER & ANNABA)</text>
+            <text x="410" y="990" fill="#2ed573" font-size="15" font-weight="900" letter-spacing="2">ALGÉRIE 🇩🇿 (ALGER & ANNABA)</text>
 
             <path class="country-tunisia" filter="url(#coastalGlow)" d="${REAL_COUNTRY_PATHS.TUN.d}" fill="url(#neighborCountryGrad)" stroke="#ff4757" stroke-width="2.4" />
-            <text x="720" y="990" fill="#ff4757" font-size="14" font-weight="900" letter-spacing="2">TUNISIE 🇹🇳 (TUNIS)</text>
+            <text x="710" y="980" fill="#ff4757" font-size="14" font-weight="900" letter-spacing="2">TUNISIE 🇹🇳 (TUNIS)</text>
 
             <!-- Mer Méditerranée -->
-            <text x="480" y="800" fill="#00cec9" font-size="14" font-weight="900" letter-spacing="4" opacity="0.45">MER MÉDITERRANÉE</text>
+            <text x="470" y="790" fill="#00cec9" font-size="14" font-weight="900" letter-spacing="4" opacity="0.45">MER MÉDITERRANÉE</text>
 
             <!-- Tracé Lumineux Officiel du Grand Tour (Néon Or Éclatant reliant les 22 étapes) -->
             <path class="tour-route-glow" d="${REAL_TOUR_ROUTE_PATH}" fill="none" stroke="#ffd700" stroke-width="4.2" stroke-dasharray="10,6" opacity="0.9" filter="url(#glowTourRoute)" />
           </svg>
 
           <!-- SVG Overlay pour ligne active animée lors des déplacements -->
-          <svg class="travel-line-overlay" viewBox="0 0 960 1100" preserveAspectRatio="none">
+          <svg class="travel-line-overlay" viewBox="0 -320 1060 1480" preserveAspectRatio="none">
             <line id="travel-active-line" x1="0" y1="0" x2="0" y2="0" stroke="#ffd700" stroke-width="5" stroke-dasharray="10,7" opacity="0" filter="url(#glowTourRoute)" />
           </svg>
 
           <!-- Jeton Motard Voyageur Animé se déplaçant d'une ville à une autre -->
-          <div class="moto-traveler" id="moto-traveler" style="left: 46%; top: 28%;">
+          <div class="moto-traveler" id="moto-traveler" style="left: 44.8%; top: 40.2%;">
             <div class="moto-traveler-icon">🏍️</div>
             <div class="moto-traveler-exhaust">💨</div>
           </div>
@@ -405,8 +406,8 @@ export class UIManager {
       if (!viewportEl) return { x: targetX, y: targetY };
       const vw = viewportEl.clientWidth || 360;
       const vh = viewportEl.clientHeight || 400;
-      const effectiveW = 960 * zoom;
-      const effectiveH = 1100 * zoom;
+      const effectiveW = 1060 * zoom;
+      const effectiveH = 1480 * zoom;
 
       let minX, maxX;
       if (effectiveW <= vw) {
@@ -447,8 +448,8 @@ export class UIManager {
       if (!city || !viewportEl) return;
       const vw = viewportEl.clientWidth || 360;
       const vh = viewportEl.clientHeight || 400;
-      const cityPxX = (city.mapCoords.x / 100) * 960;
-      const cityPxY = (city.mapCoords.y / 100) * 1100;
+      const cityPxX = (city.mapCoords.x / 100) * 1060;
+      const cityPxY = (city.mapCoords.y / 100) * 1480;
       const targetPanX = vw / 2 - cityPxX * this.mapZoom;
       const targetPanY = vh / 2 - cityPxY * this.mapZoom;
       const clamped = clampPan(targetPanX, targetPanY, this.mapZoom);
@@ -635,10 +636,10 @@ export class UIManager {
           traveler.style.top = `${toCoords.y}%`;
 
           if (travelLine) {
-            travelLine.setAttribute('x1', (fromCoords.x / 100) * 960);
-            travelLine.setAttribute('y1', (fromCoords.y / 100) * 1100);
-            travelLine.setAttribute('x2', (toCoords.x / 100) * 960);
-            travelLine.setAttribute('y2', (toCoords.y / 100) * 1100);
+            travelLine.setAttribute('x1', (fromCoords.x / 100) * 1060);
+            travelLine.setAttribute('y1', (fromCoords.y / 100) * 1480 - 320);
+            travelLine.setAttribute('x2', (toCoords.x / 100) * 1060);
+            travelLine.setAttribute('y2', (toCoords.y / 100) * 1480 - 320);
             travelLine.setAttribute('opacity', '1');
             setTimeout(() => travelLine.setAttribute('opacity', '0'), 700);
           }
@@ -747,15 +748,17 @@ export class UIManager {
           <button id="btn-launch-city" class="btn-arcade btn-play-pulse btn-action-launch">
             <span>🚀 EXTERMINER • ÉTAPE ${stageIndex} : ${city.name.toUpperCase()}</span>
           </button>
-          <button id="btn-city-ad-coins" class="btn-arcade btn-ad-coins" title="Gagner +20 Pièces instantanément">
-            <span>📺 +20 🪙 (PUB)</span>
+          <button id="btn-city-ad-coins" class="btn-ad-gift" title="Cadeau Sponsor : Obtenir +20 Pièces d'or">
+            <span class="ad-gift-top">🎁 🪙</span>
+            <span class="ad-gift-val">+20</span>
           </button>
         ` : `
           <button class="btn-arcade btn-action-locked" disabled>
             <span>🔒 BLOQUÉ (${city.unlockScoreRequired.toLocaleString('fr-FR')} PTS REQUIS)</span>
           </button>
-          <button id="btn-city-ad-coins" class="btn-arcade btn-ad-coins" title="Gagner +20 Pièces instantanément">
-            <span>📺 +20 🪙 (PUB)</span>
+          <button id="btn-city-ad-coins" class="btn-ad-gift" title="Cadeau Sponsor : Obtenir +20 Pièces d'or">
+            <span class="ad-gift-top">🎁 🪙</span>
+            <span class="ad-gift-val">+20</span>
           </button>
         `}
       </div>
