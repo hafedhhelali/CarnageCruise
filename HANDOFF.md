@@ -8,7 +8,7 @@ Ce document fournit l'ensemble des informations de conception, d'architecture lo
 ## 1. VISION DU PROJET & SPÉCIFICATIONS
 
 - **Genre** : Jeu de course d'arcade urbain / Runner 3D burlesque
-- **Version actuelle** : **1.2.2-beta** (Build / versionCode 5 - Canal BETA)
+- **Version actuelle** : **1.2.3-beta** (Build / versionCode 6 - Canal BETA)
 - **Signature & Clé** : Keystore permanent dédié `android/app/motormageddon.keystore` (validité 10 000 jours, EOMedia Paris)
 - **Plateforme cible** : Android (Smartphones & Tablettes) + WebGL Mobile/Desktop
 - **Direction artistique** : Cartoon 3D éclatant, physique burlesque (slapstick), animations hilarantes et dynamiques, identité française affirmée.
@@ -158,3 +158,25 @@ Ce document fournit l'ensemble des informations de conception, d'architecture lo
 ### F. Animations Enrichies (Environnement, Rues & Piétons)
 - Drapeaux français 🇫🇷 animés flottant au vent sur l'arche d'arrivée et les façades de la ville.
 - IA de fuite ajustée : foulées comiques, bras levés et trajectoire vers les trottoirs laissant la possibilité au bolide de les intercepter s'il braque vers eux.
+
+---
+
+## 4. NOUVEAUTÉS DE LA VERSION 1.2.3-BETA
+
+### A. Correction Débordement Bouton Bas Écran Map
+- Remplacement de l'agencement flex avec bouton garage redondant par un conteneur pleine largeur `.city-detail-actions`.
+- Suppression de `white-space: nowrap` qui causait le débordement hors de l'écran à gauche sur mobile.
+- Bouton unique pleine largeur et responsive : `🚀 DÉPART • ÉTAPE X : NOM_VILLE` avec wrapping propre du texte.
+
+### B. En-tête Map avec Boutons Icônes Modernes
+- Remplacement des anciens boutons avec texte moche (`← ACCUEIL`, `🏍️ GARAGE`) par des boutons circulaires d'arcade épurés (`.btn-round-action`) avec icônes `🏠` et `🏍️` (halo doré néon pour le garage).
+- Badge étoiles du Tour et pilule de monnaie dorée (`.currency-pill`) compacts et élégants.
+
+### C. Aperçu 3D Temps Réel dans le Garage
+- Émission immédiate de l'événement `PREVIEW_BIKE` dès l'ouverture du Garage.
+- Défilement instantané via les flèches ◀ et ▶ mettant à jour en temps réel le modèle 3D Three.js dans la scène.
+- Restitution automatique du bolide équipé lors du retour à la Carte si l'utilisateur n'a pas équipé le modèle prévisualisé.
+
+### D. Refonte Visuelle des Boutons et Textes de l'Application
+- Modernisation de tous les boutons (`.btn-arcade`, `.btn-secondary`, `.btn-accent`, `.btn-ghost`) : biseau intérieur, ombrage lumineux arcade, retour tactile `:active` avec translation douce, typographie punchy sans débordement de texte.
+

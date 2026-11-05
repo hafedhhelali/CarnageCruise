@@ -75,40 +75,82 @@ html, body {
   gap: 10px;
   background: linear-gradient(135deg, #ff4757, #ff6b81);
   color: #fff;
-  border: none;
+  border: 2px solid rgba(255, 255, 255, 0.25);
   border-radius: 50px;
-  padding: 13px 26px;
+  padding: 13px 24px;
   font-size: 1.05rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  box-shadow: 0 6px 20px var(--primary-glow), inset 0 2px 0 rgba(255,255,255,0.4);
+  box-shadow: 0 6px 20px var(--primary-glow), inset 0 2px 0 rgba(255,255,255,0.4), inset 0 -2px 0 rgba(0,0,0,0.25);
   cursor: pointer;
-  transition: transform 0.1s ease, filter 0.15s ease;
+  transition: transform 0.12s ease, filter 0.15s ease, box-shadow 0.15s ease;
   pointer-events: auto;
-  white-space: nowrap;
+  white-space: normal;
+  text-align: center;
+  max-width: 100%;
+  box-sizing: border-box;
+  word-break: break-word;
+  user-select: none;
 }
 
 .btn-arcade:active {
-  transform: scale(0.94);
-  filter: brightness(0.9);
+  transform: scale(0.96) translateY(2px);
+  box-shadow: 0 2px 8px var(--primary-glow), inset 0 1px 0 rgba(255,255,255,0.2);
+  filter: brightness(0.95);
 }
 
 .btn-secondary {
   background: linear-gradient(135deg, #2ed573, #26af5f);
-  box-shadow: 0 6px 20px rgba(46, 213, 115, 0.4);
+  box-shadow: 0 6px 20px rgba(46, 213, 115, 0.4), inset 0 2px 0 rgba(255,255,255,0.35);
 }
 
 .btn-accent {
   background: linear-gradient(135deg, #ffa502, #e67e22);
-  box-shadow: 0 6px 20px rgba(255, 165, 2, 0.4);
+  box-shadow: 0 6px 20px rgba(255, 165, 2, 0.4), inset 0 2px 0 rgba(255,255,255,0.35);
 }
 
 .btn-ghost {
   background: rgba(255, 255, 255, 0.12);
   backdrop-filter: blur(8px);
-  border: 1px solid var(--border-light);
-  box-shadow: none;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+}
+
+.btn-sm {
+  padding: 8px 16px;
+  font-size: 0.88rem;
+}
+
+/* Boutons d'action circulaires modernes pour les en-têtes (Map, Garage, HUD) */
+.btn-round-action {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95));
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  cursor: pointer;
+  pointer-events: auto;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  transition: transform 0.12s ease, filter 0.15s ease, border-color 0.15s ease;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.btn-round-action:active {
+  transform: scale(0.92) translateY(2px);
+  filter: brightness(0.9);
+}
+
+.btn-garage-glow {
+  border-color: rgba(255, 215, 0, 0.75);
+  box-shadow: 0 0 16px rgba(255, 215, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  background: linear-gradient(135deg, rgba(230, 126, 34, 0.9), rgba(211, 84, 0, 0.98));
 }
 
 /* --- SPLASH SCREEN --- */
@@ -648,6 +690,49 @@ html, body {
   box-sizing: border-box;
 }
 
+.map-header-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  flex: 1;
+  min-width: 0;
+  padding: 0 6px;
+}
+
+.map-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.map-stars-badge {
+  font-size: 0.72rem;
+  font-weight: 850;
+  color: #ffd700;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  padding: 2px 8px;
+  border-radius: 12px;
+  margin-top: 2px;
+  letter-spacing: 0.5px;
+}
+
+.currency-pill {
+  display: inline-flex;
+  align-items: center;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.22), rgba(255, 165, 2, 0.28));
+  border: 1.5px solid rgba(255, 215, 0, 0.7);
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-size: 0.88rem;
+  font-weight: 900;
+  color: #fffa65;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  white-space: nowrap;
+}
+
 .map-title {
   font-size: 1.35rem;
   font-weight: 800;
@@ -780,14 +865,49 @@ html, body {
 
 .city-detail-card {
   background: var(--glass-bg);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--border-light);
-  border-radius: 20px;
-  padding: 14px;
+  backdrop-filter: blur(14px);
+  border: 1.5px solid rgba(255, 255, 255, 0.18);
+  border-radius: 22px;
+  padding: 16px;
   margin-top: 12px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
+  width: 100%;
+  max-width: 520px;
+  margin-left: auto;
+  margin-right: auto;
+  box-sizing: border-box;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+}
+
+.city-detail-actions {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 6px;
+}
+
+.btn-action-launch {
+  width: 100%;
+  padding: 14px 20px;
+  font-size: 1.05rem;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #ff4757, #ff6b81);
+  box-shadow: 0 6px 22px rgba(255, 71, 87, 0.5), inset 0 2px 0 rgba(255, 255, 255, 0.4);
+  letter-spacing: 0.5px;
+  box-sizing: border-box;
+}
+
+.btn-action-locked {
+  width: 100%;
+  padding: 13px 18px;
+  font-size: 0.92rem;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #a4b0be;
+  cursor: not-allowed;
+  box-sizing: border-box;
 }
 
 .city-detail-header {

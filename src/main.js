@@ -140,9 +140,11 @@ class GameApp {
       gameState.currentMode = 'PLAYING';
       soundManager.startEngine();
     } else if (action === 'PREVIEW_BIKE' || action === 'BIKE_EQUIPPED') {
-      this.bike.buildCurrentBike();
+      const bikeId = (payload && payload.id) ? payload.id : payload;
+      this.bike.buildCurrentBike(bikeId);
     } else if (action === 'COLOR_CHANGED') {
-      this.bike.buildCurrentBike();
+      const bikeId = (payload && payload.bikeId) ? payload.bikeId : null;
+      this.bike.buildCurrentBike(bikeId);
     }
   }
 

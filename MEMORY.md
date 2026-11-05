@@ -57,12 +57,12 @@
 - Volume moteur adouci en un ronronnement agréable.
 
 ### ✅ 11. VERSIONNAGE COMPLET, CANAL BETA & GITHUB ACTIONS
-- **Canal officiel** : **BETA** (`1.2.2-beta`, Build 5).
+- **Canal officiel** : **BETA** (`1.2.3-beta`, Build 6).
 - **Intégration GitHub Actions consolidée** :
   - **1 seule exécution par push** (déclencheur unique `push: branches: [main]`, concurrency activée).
-  - **1 seul APK officiel** généré et publié : `Motormageddon-v1.2.1-beta-b4-debug.apk` (sans doublon).
+  - **1 seul APK officiel** généré et publié : `Motormageddon-v1.2.3-beta-b6-debug.apk` (sans doublon).
   - Extraction dynamique de la version depuis `version.json` dans GitHub Actions (`APP_VERSION`, `VERSION_CODE`, `CHANNEL`).
-  - Nom d'artefact GitHub dynamique : `Motormageddon-v1.2.1-beta-b4-APK`.
+  - Nom d'artefact GitHub dynamique : `Motormageddon-v1.2.3-beta-b6-APK`.
   - Releases GitHub configurées en Pre-release (`prerelease: true`) marquées **[BETA]**.
   - Badge BETA distinctif rouge/rose sur le Splash Screen et dans les mentions légales de l'application.
 - **Keystore permanent** : `android/app/motormageddon.keystore` (RSA 2048, 10 000 jours, EOMedia) garantissant l'identité de signature SHA-256 sur toutes les versions.
@@ -76,7 +76,7 @@
 - **Carte Haute Fidélité & Zéro Scroll** : Décalage sous la barre d'état du téléphone, suppression totale du défilement horizontal, géographie française exacte, rivières et pays frontaliers réels (Espagne 🇪🇸, Italie 🇮🇹, Suisse 🇨🇭, Allemagne 🇩🇪, Belgique 🇧🇪, Royaume-Uni 🇬🇧).
 
 ### ✅ 13. VALIDATION DU BUILD ANDROID & GITHUB ACTIONS
-- **Compilation locale & cloud APK** : `android/app/build/outputs/apk/debug/Motormageddon-v1.2.2-beta-b5-debug.apk`.
+- **Compilation locale & cloud APK** : `android/app/build/outputs/apk/debug/Motormageddon-v1.2.3-beta-b6-debug.apk`.
 - **Dépôt officiel** : `https://github.com/hafedhhelali/Motormageddon`
 
 ### ✅ 14. NOUVEAUTÉS DE LA VERSION 1.2.2-BETA
@@ -89,3 +89,19 @@
   - Bouton équiper renvoyant automatiquement à la carte.
 - **Compte à Rebours 3-2-1-GO & Moto à l'Arrêt** : Moto strictement arrêtée (speed = 0) au ralenti à l'arrivée en ville, séquence 3... 2... 1... GO ! avec bips sonores et fanfare triomphale avant démarrage en trombe.
 - **Animations Enrichies** : Drapeaux français 🇫🇷 flottant au vent sur les monuments et l'arche, IA de fuite rééquilibrée et vivante.
+
+### ✅ 15. NOUVEAUTÉS DE LA VERSION 1.2.3-BETA
+- **Correction Débordement Bouton Bas Écran Map** :
+  - Le conteneur du bouton d'action `#city-detail` a été refondu avec `.city-detail-actions` en pleine largeur (`width: 100%`, `box-sizing: border-box`).
+  - Suppression de `white-space: nowrap` qui causait le débordement sur la gauche sur les écrans mobiles étroits.
+  - Bouton responsive et centré : `🚀 DÉPART • ÉTAPE X : NOM_VILLE`.
+- **En-tête Map Allégée & Boutons Icônes Prestige** :
+  - Remplacement des boutons texte encombrants par des boutons circulaires d'action `.btn-round-action` (`🏠` pour l'accueil, `🏍️` avec lueur dorée pour le garage).
+  - Badge étoiles compact (`★ X / 30 ÉTOILES`) et pilule de monnaie (`🪙 X`) harmonieuse.
+- **Aperçu 3D en Temps Réel dans le Garage** :
+  - Émission de `PREVIEW_BIKE` dès l'ouverture du garage.
+  - Lorsque le joueur fait défiler les véhicules avec ◀ et ▶, le bolide 3D dans la scène Three.js se reconstruit instantanément avec la peinture et les détails du bolide sélectionné.
+  - Le retour à la carte ou à l'accueil réinitialise proprement la 3D sur le bolide actuellement équipé.
+- **Amélioration Globale des Boutons et Textes** :
+  - Retouche de `.btn-arcade`, `.btn-secondary`, `.btn-accent`, `.btn-ghost` : micro-relief, biseau intérieur, ombres portées douces, état `:active` dynamique (translation `translateY(2px)` + échelle amortie).
+  - Typographie nette et lisible sans texte coupé.

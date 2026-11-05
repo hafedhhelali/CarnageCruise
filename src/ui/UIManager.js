@@ -199,18 +199,18 @@ export class UIManager {
 
     mapScreen.innerHTML = `
       <div class="map-header">
-        <button id="btn-map-back" class="btn-arcade btn-ghost" style="padding: 8px 16px; font-size: 0.9rem;">
-          ← ACCUEIL
+        <button id="btn-map-back" class="btn-round-action" title="Retour Accueil">
+          <span>🏠</span>
         </button>
-        <div style="text-align: center;">
-          <h2 class="map-title" style="margin: 0; font-size: 1.35rem; color: #fffa65; letter-spacing: 1px;">LE TOUR DE FRANCE 3D</h2>
-          <span style="font-size: 0.8rem; color: #7bed9f; font-weight: 800;">${totalStars} / ${CITIES.length * 3} ★ ÉTOILES DU TOUR</span>
+        <div class="map-header-center">
+          <h2 class="map-title" style="margin: 0; font-size: 1.35rem; color: #fffa65; letter-spacing: 1px;">TOUR DE FRANCE</h2>
+          <span class="map-stars-badge">★ ${totalStars} / ${CITIES.length * 3} ÉTOILES</span>
         </div>
-        <div style="display: flex; gap: 8px;">
-          <button id="btn-map-garage" class="btn-arcade btn-secondary" style="padding: 7px 14px; font-size: 0.85rem;" title="Changer de moto">
-            🏍️ GARAGE
+        <div class="map-header-right">
+          <button id="btn-map-garage" class="btn-round-action btn-garage-glow" title="Accéder au Garage">
+            <span>🏍️</span>
           </button>
-          <div class="currency-badge">
+          <div class="currency-pill">
             <span>🪙 ${coins}</span>
           </div>
         </div>
@@ -504,35 +504,29 @@ export class UIManager {
         <span>🎯 Objectif Étape : <strong>${city.targetScore} pts</strong></span>
       </div>
 
-      <div style="display: flex; gap: 10px; margin-top: 8px;">
+      <div class="city-detail-actions">
         ${unlocked ? `
-          <button id="btn-launch-city" class="btn-arcade btn-play-pulse" style="flex: 1;">
-            🏁 DÉPART ÉTAPE ${stageIndex} : ${city.name.toUpperCase()} !
+          <button id="btn-launch-city" class="btn-arcade btn-play-pulse btn-action-launch">
+            <span>🚀 DÉPART • ÉTAPE ${stageIndex} : ${city.name.toUpperCase()}</span>
           </button>
         ` : `
-          <button class="btn-arcade btn-ghost" style="flex: 1; cursor: not-allowed;" disabled>
-            🔒 DÉVERROUILLER À ${city.unlockScoreRequired} PTS
+          <button class="btn-arcade btn-action-locked" disabled>
+            <span>🔒 BLOQUÉ (${city.unlockScoreRequired.toLocaleString('fr-FR')} PTS REQUIS)</span>
           </button>
         `}
-        <button id="btn-quick-garage" class="btn-arcade btn-secondary" style="padding: 12px 18px;" title="Garage">
-          🏍️
-        </button>
       </div>
     `;
 
     if (unlocked) {
-      detailCard.querySelector('#btn-launch-city').addEventListener('click', () => {
-        soundManager.playClick();
-        gameState.selectCity(city.id);
-        this.triggerCityEntryCinematic(city);
-      });
+      const launchBtn = detailCard.querySelector('#btn-launch-city');
+      if (launchBtn) {
+        launchBtn.addEventListener('click', () => {
+          soundManager.playClick();
+          gameState.selectCity(city.id);
+          this.triggerCityEntryCinematic(city);
+        });
+      }
     }
-
-    detailCard.querySelector('#btn-quick-garage').addEventListener('click', () => {
-      soundManager.playClick();
-      this.previousScreen = 'MAP';
-      this.setScreen('GARAGE');
-    });
   }
 
   triggerCityEntryCinematic(city) {
@@ -563,21 +557,30 @@ export class UIManager {
     garage.className = 'screen-garage interactive';
 
     const coins = storage.data.coins;
+    if (!this.selectedGarageBike) {
+      const equippedId = storage.getEquippedBike();
+      this.selectedGarageBike = BIKES.find(b => b.id === equippedId) || BIKES[0];
+    }
     let currentIdx = BIKES.findIndex(b => b.id === this.selectedGarageBike.id);
     if (currentIdx === -1) currentIdx = 0;
 
+    // Déclencher immédiatement l'aperçu 3D en temps réel
+    if (this.onAction) {
+      this.onAction('PREVIEW_BIKE', this.selectedGarageBike);
+    }
+
     garage.innerHTML = `
       <div class="garage-header">
-        <button id="btn-garage-back" class="btn-arcade btn-ghost" style="padding: 8px 16px; font-size: 0.9rem;">
-          ← RETOUR
+        <button id="btn-garage-back" class="btn-arcade btn-ghost btn-sm" title="Retour">
+          <span>← RETOUR</span>
         </button>
         <div style="text-align: center;">
           <h2 style="font-size: 1.45rem; font-weight: 900; margin: 0; color: #fffa65; letter-spacing: 1px;">LE GARAGE 3D</h2>
           <span style="font-size: 0.78rem; color: #7bed9f; font-weight: 800;" id="garage-bike-counter">
-            BOLIDE ${currentIdx + 1} / ${BIKES.length}
+            BOLIDE ${currentIdx + 1} / ${BIKES.length} • ${this.selectedGarageBike.category || 'MOTO'}
           </span>
         </div>
-        <div class="currency-badge">
+        <div class="currency-badge currency-pill">
           <span>🪙 ${coins}</span>
         </div>
       </div>
@@ -614,9 +617,13 @@ export class UIManager {
     garage.querySelector('#btn-prev-bike').addEventListener('click', () => changeBikeByIndex(-1));
     garage.querySelector('#btn-next-bike').addEventListener('click', () => changeBikeByIndex(1));
 
-    // Retour propre vers MAP ou SPLASH
+    // Retour propre vers MAP ou SPLASH en réinitialisant le bolide 3D au bolide équipé
     garage.querySelector('#btn-garage-back').addEventListener('click', () => {
       soundManager.playClick();
+      const equippedId = storage.getEquippedBike();
+      const equippedBike = BIKES.find(b => b.id === equippedId) || BIKES[0];
+      this.selectedGarageBike = equippedBike;
+      if (this.onAction) this.onAction('PREVIEW_BIKE', equippedBike);
       this.setScreen(this.previousScreen || 'MAP');
     });
 
