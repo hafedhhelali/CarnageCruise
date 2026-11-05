@@ -135,12 +135,12 @@ export class UIManager {
 
       <div class="logo-container">
         <h1 class="game-title">MOTORMAGEDDON</h1>
-        <div class="game-subtitle">★ TOUR DE FRANCE ARCADE 3D ★</div>
+        <div class="game-subtitle">★ ARCADE 3D RACER ★</div>
       </div>
 
       <div class="splash-footer">
         <button id="btn-splash-play" class="btn-arcade btn-play-pulse">
-          <span>🚀 JOUER LE TOUR</span>
+          <span>🚀 JOUER</span>
         </button>
         <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
           <button id="btn-splash-profile" class="btn-arcade btn-accent" style="font-size: 0.95rem; padding: 10px 18px;">
@@ -205,8 +205,8 @@ export class UIManager {
           <span>🏠</span>
         </button>
         <div class="map-header-center">
-          <h2 class="map-title" style="margin: 0; font-size: 1.35rem; color: #fffa65; letter-spacing: 1px;">GRAND TOUR D'EUROPE</h2>
-          <span class="map-stars-badge">★ ${totalStars} / ${CITIES.length * 3} ÉTOILES DU TOUR</span>
+          <h2 class="map-title" style="margin: 0; font-size: 1.35rem; color: #fffa65; letter-spacing: 1px;">ÉTAPES D'EUROPE</h2>
+          <span class="map-stars-badge">★ ${totalStars} / ${CITIES.length * 3} ÉTOILES</span>
         </div>
         <div class="map-header-right">
           <button id="btn-map-garage" class="btn-round-action btn-garage-glow" title="Accéder au Garage">
@@ -218,10 +218,17 @@ export class UIManager {
         </div>
       </div>
 
-      <!-- CARTE D'EUROPE OCCIDENTALE HAUTE-FIDÉLITÉ, FLUIDE ET SCROLLABLE EN 2D -->
+      <!-- CARTE D'EUROPE ET BASSIN MÉDITERRANÉEN HAUTE-FIDÉLITÉ AVEC ZOOM INTERACTIF -->
+      <div class="map-zoom-controls">
+        <button id="btn-zoom-in" class="btn-zoom" title="Agrandir la carte (Zoom +)">➕</button>
+        <span class="zoom-level-badge" id="zoom-badge">${Math.round(this.mapZoom * 100)}%</span>
+        <button id="btn-zoom-out" class="btn-zoom" title="Réduire la carte (Zoom -)">➖</button>
+        <button id="btn-zoom-reset" class="btn-zoom" title="Recentrer">🎯</button>
+      </div>
+
       <div class="europe-map-scroll-viewport" id="europe-viewport">
         <div class="europe-map-canvas-container" id="europe-canvas">
-          <svg class="europe-svg" viewBox="0 0 960 820" preserveAspectRatio="none">
+          <svg class="europe-svg" viewBox="0 0 960 1100" preserveAspectRatio="none">
             <defs>
               <!-- Dégradé de relief européen : Verts luxuriants, ocres et sommets -->
               <linearGradient id="franceLuxury" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -239,10 +246,17 @@ export class UIManager {
 
               <!-- Dégradé des océans et mers européennes -->
               <radialGradient id="oceanShading" cx="50%" cy="50%" r="75%">
-                <stop offset="0%" stop-color="#12253a" />
-                <stop offset="65%" stop-color="#0a1522" />
-                <stop offset="100%" stop-color="#04090e" />
+                <stop offset="0%" stop-color="#0e2439" />
+                <stop offset="55%" stop-color="#091827" />
+                <stop offset="100%" stop-color="#03080e" />
               </radialGradient>
+
+              <!-- Dégradé Méditerranée Bleu Saphir Lumineux -->
+              <linearGradient id="mediterraneanGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#006266" />
+                <stop offset="50%" stop-color="#1289a7" />
+                <stop offset="100%" stop-color="#0652dd" />
+              </linearGradient>
 
               <!-- Filtre néon doré éclatant pour le tracé du Tour -->
               <filter id="glowTourRoute" x="-20%" y="-20%" width="140%" height="140%">
@@ -259,16 +273,18 @@ export class UIManager {
               </filter>
             </defs>
 
-            <!-- Fond Océanique / Mers Européennes -->
+            <!-- Fond Océanique / Mers Européennes & Méditerranée -->
             <rect width="100%" height="100%" fill="url(#oceanShading)" />
 
-            <!-- Rides marines de l'Atlantique et Manche -->
+            <!-- Rides marines de l'Atlantique, Manche et Méditerranée -->
             <path d="M 60 480 Q 95 470 130 480 T 200 480" fill="none" stroke="#00cec9" stroke-width="1.4" opacity="0.25" />
             <path d="M 120 220 Q 155 210 190 220 T 260 220" fill="none" stroke="#00cec9" stroke-width="1.4" opacity="0.25" />
             <path d="M 520 740 Q 555 730 590 740 T 660 740" fill="none" stroke="#00cec9" stroke-width="1.4" opacity="0.25" />
+            <path d="M 480 840 Q 520 830 570 840 T 660 840" fill="none" stroke="#00d2d3" stroke-width="1.6" opacity="0.3" />
+            <path d="M 380 890 Q 430 880 480 890 T 580 890" fill="none" stroke="#00d2d3" stroke-width="1.6" opacity="0.3" />
 
             <!-- Rose des sables / Boussole nautique d'époque dans l'Atlantique -->
-            <g transform="translate(130, 430) scale(0.9)" opacity="0.6">
+            <g transform="translate(110, 410) scale(0.9)" opacity="0.6">
               <circle cx="0" cy="0" r="34" fill="none" stroke="#ffd700" stroke-width="1.4" stroke-dasharray="4,4" />
               <polygon points="0,-42 8,-10 0,0 -8,-10" fill="#ffd700" />
               <polygon points="0,42 8,10 0,0 -8,10" fill="#e17055" />
@@ -277,7 +293,7 @@ export class UIManager {
               <text x="-5" y="-48" fill="#ffd700" font-size="12" font-weight="900">N</text>
             </g>
 
-            <!-- ================= GÉOGRAPHIE RÉALISTE DE L'EUROPE OCCIDENTALE ================= -->
+            <!-- ================= GÉOGRAPHIE RÉALISTE DE L'EUROPE & BASSIN MÉDITERRANÉEN ================= -->
 
             <!-- 1. ROYAUME-UNI (GRANDE-BRETAGNE / ANGLETERRE) AVEC LONDRES 🇬🇧 -->
             <path class="country-uk" filter="url(#coastalGlow)" d="
@@ -290,7 +306,7 @@ export class UIManager {
               C 90 160, 110 120, 130 90
               C 145 70, 150 45, 160 30 Z
             " fill="url(#neighborCountryGrad)" stroke="#38ada9" stroke-width="2.5" />
-            <text x="260" y="95" fill="#74b9ff" font-size="13" font-weight="900" letter-spacing="1.2">ROYAUME-UNI 🇬🇧</text>
+            <text x="240" y="90" fill="#74b9ff" font-size="13" font-weight="900" letter-spacing="1.2">ROYAUME-UNI 🇬🇧</text>
             <!-- Tamise (Thames) -->
             <path d="M 280 145 Q 330 135 365 138 Q 400 135 425 142" fill="none" stroke="#00cec9" stroke-width="2.2" opacity="0.6" />
 
@@ -325,34 +341,9 @@ export class UIManager {
               C 595 435, 610 390, 640 370 Z
             " fill="url(#neighborCountryGrad)" stroke="#38ada9" stroke-width="2.4" />
             <text x="655" y="420" fill="#74b9ff" font-size="13" font-weight="900" letter-spacing="1">SUISSE 🇨🇭</text>
-            <!-- Lac Léman -->
             <ellipse cx="612" cy="438" rx="14" ry="7" fill="#00cec9" opacity="0.8" />
 
-            <!-- 5. ITALIE DU NORD AVEC MILAN & PLAINE DU PÔ 🇮🇹 -->
-            <path class="country-italy" filter="url(#coastalGlow)" d="
-              M 730 475
-              C 770 465, 840 480, 890 515
-              C 920 545, 930 600, 910 655
-              C 880 700, 810 710, 760 670
-              C 720 630, 715 570, 710 525
-              C 715 500, 725 485, 730 475 Z
-            " fill="url(#neighborCountryGrad)" stroke="#38ada9" stroke-width="2.5" />
-            <text x="770" y="540" fill="#74b9ff" font-size="13.5" font-weight="900" letter-spacing="1.2">ITALIE 🇮🇹</text>
-            <!-- Fleuve Pô -->
-            <path d="M 725 515 Q 770 510 820 518 Q 870 525 905 530" fill="none" stroke="#00cec9" stroke-width="2.0" opacity="0.6" />
-
-            <!-- 6. ESPAGNE & CATALOGNE AVEC BARCELONE 🇪🇸 -->
-            <path class="country-spain" filter="url(#coastalGlow)" d="
-              M 190 625
-              C 260 625, 340 635, 430 645
-              C 480 655, 520 700, 500 750
-              C 480 790, 420 815, 340 815
-              C 260 815, 180 810, 120 790
-              C 90 740, 130 660, 190 625 Z
-            " fill="url(#neighborCountryGrad)" stroke="#38ada9" stroke-width="2.5" />
-            <text x="270" y="730" fill="#74b9ff" font-size="14" font-weight="900" letter-spacing="1.5">ESPAGNE 🇪🇸</text>
-
-            <!-- 7. FRANCE MÉTROPOLITAINE HAUTE FIDÉLITÉ (COEUR DU GRAND TOUR) 🇫🇷 -->
+            <!-- 5. FRANCE MÉTROPOLITAINE HAUTE FIDÉLITÉ (COEUR DU GRAND TOUR) 🇫🇷 -->
             <path class="france-mainland" filter="url(#coastalGlow)" d="
               M 440 215
               C 460 215, 490 225, 520 235
@@ -374,58 +365,110 @@ export class UIManager {
               C 325 265, 350 225, 385 218
               C 400 215, 420 215, 440 215 Z
             " fill="url(#franceLuxury)" stroke="#00cec9" stroke-width="3.2" />
-            <text x="400" y="470" fill="#00cec9" font-size="17" font-weight="900" letter-spacing="3" opacity="0.45">FRANCE</text>
+            <text x="390" y="460" fill="#00cec9" font-size="18" font-weight="900" letter-spacing="3" opacity="0.45">FRANCE 🇫🇷</text>
 
             <!-- Île de Corse -->
             <path d="M 680 680 C 695 670, 710 690, 705 735 C 690 770, 675 765, 665 730 Z"
                   fill="url(#franceLuxury)" stroke="#00cec9" stroke-width="2.5" filter="url(#coastalGlow)" />
             <text x="668" y="780" fill="#00cec9" font-size="10" font-weight="900">CORSE 🇫🇷</text>
 
-            <!-- Reliefs montagneux ombrés réalistes (Pyrénées, Alpes, Massif Central) -->
-            <path d="M 230 630 Q 320 645 440 655 Q 350 625 240 625 Z" fill="#2d3436" opacity="0.8" /> <!-- Pyrénées -->
-            <path d="M 600 440 Q 660 480 690 550 Q 640 590 610 640 Q 580 570 595 490 Z" fill="#2d3436" opacity="0.8" /> <!-- Alpes -->
-            <path d="M 400 530 Q 470 560 480 630 Q 420 660 380 600 Z" fill="#222f3e" opacity="0.7" /> <!-- Massif Central -->
+            <!-- 6. ESPAGNE & CATALOGNE AVEC BARCELONE 🇪🇸 (RÉALISME GÉOGRAPHIQUE ACCRU) -->
+            <path class="country-spain" filter="url(#coastalGlow)" d="
+              M 190 685
+              C 260 685, 330 695, 400 700
+              C 440 705, 460 735, 440 770
+              C 420 810, 390 850, 340 860
+              C 270 870, 190 860, 140 840
+              C 100 810, 110 740, 140 710
+              C 160 695, 175 685, 190 685 Z
+            " fill="url(#neighborCountryGrad)" stroke="#38ada9" stroke-width="2.8" />
+            <text x="230" y="770" fill="#74b9ff" font-size="15" font-weight="900" letter-spacing="2">ESPAGNE 🇪🇸</text>
+            <text x="365" y="730" fill="#ffd700" font-size="11" font-weight="900">CATALOGNE • BARCELONE</text>
+            <!-- Îles Baléares (Majorque, Minorque, Ibiza) -->
+            <ellipse cx="460" cy="800" rx="14" ry="8" fill="url(#neighborCountryGrad)" stroke="#38ada9" stroke-width="1.8" />
+            <ellipse cx="485" cy="785" rx="9" ry="5" fill="url(#neighborCountryGrad)" stroke="#38ada9" stroke-width="1.8" />
 
-            <!-- Fleuves français majeurs (Seine, Loire, Rhône, Garonne, Rhin) -->
-            <path d="M 360 230 Q 400 310 390 355 Q 360 395 270 340" fill="none" stroke="#00cec9" stroke-width="2.0" opacity="0.5" />
-            <path d="M 530 610 Q 500 530 410 470 Q 290 455 190 440" fill="none" stroke="#00cec9" stroke-width="2.0" opacity="0.5" />
-            <path d="M 650 470 Q 550 500 520 540 Q 530 635 535 720" fill="none" stroke="#00cec9" stroke-width="2.0" opacity="0.5" />
-            <path d="M 420 765 Q 370 670 230 585" fill="none" stroke="#00cec9" stroke-width="2.0" opacity="0.5" />
-            <path d="M 640 370 Q 665 310 660 250" fill="none" stroke="#00cec9" stroke-width="2.0" opacity="0.5" />
+            <!-- 7. ITALIE DU NORD, DU SUD (ROME & NAPLES) ET BOTTE ITALIENNE 🇮🇹 -->
+            <path class="country-italy" filter="url(#coastalGlow)" d="
+              M 730 475
+              C 770 465, 840 480, 890 515
+              C 920 545, 925 590, 895 640
+              C 870 680, 835 710, 810 755
+              C 785 800, 770 845, 750 860
+              C 730 875, 720 860, 730 830
+              C 740 800, 755 765, 745 730
+              C 735 695, 715 670, 710 630
+              C 705 580, 715 520, 730 475 Z
+            " fill="url(#neighborCountryGrad)" stroke="#38ada9" stroke-width="2.8" />
+            <text x="785" y="540" fill="#74b9ff" font-size="14" font-weight="900" letter-spacing="1.5">ITALIE 🇮🇹</text>
+            <text x="715" y="660" fill="#ffd700" font-size="11" font-weight="900">ROME 🏛️</text>
+            <text x="765" y="715" fill="#ff7675" font-size="11" font-weight="900">NAPOLI & VÉSUVE 🌋</text>
 
-            <!-- Tracé Lumineux Officiel du Grand Tour (Néon Or Éclatant) -->
+            <!-- Vésuve (Cône volcanique rougeoyant) -->
+            <polygon points="768,705 763,712 773,712" fill="#d63031" />
+            <circle cx="768" cy="704" r="2.5" fill="#fdcb6e" />
+
+            <!-- Île de Sicile 🇮🇹 -->
+            <path d="
+              M 690 850
+              C 740 835, 790 845, 780 875
+              C 760 900, 720 895, 685 870
+              C 675 860, 680 855, 690 850 Z
+            " fill="url(#neighborCountryGrad)" stroke="#38ada9" stroke-width="2.2" filter="url(#coastalGlow)" />
+            <text x="715" y="872" fill="#74b9ff" font-size="10" font-weight="900">SICILE 🇮🇹</text>
+
+            <!-- 8. AFRIQUE DU NORD : ALGÉRIE 🇩🇿 ET TUNISIE 🇹🇳 (CÔTE SUD MÉDITERRANÉENNE) -->
+            <path class="country-north-africa" filter="url(#coastalGlow)" d="
+              M 260 1020
+              C 330 960, 420 950, 520 955
+              C 620 960, 700 940, 750 965
+              C 790 985, 810 1030, 800 1100
+              L 260 1100 Z
+            " fill="url(#neighborCountryGrad)" stroke="#2ed573" stroke-width="3.0" />
+            <text x="410" y="1010" fill="#2ed573" font-size="16" font-weight="900" letter-spacing="2.5">ALGÉRIE 🇩🇿 (ALGER & ANNABA)</text>
+            <text x="710" y="995" fill="#ff4757" font-size="15" font-weight="900" letter-spacing="2">TUNISIE 🇹🇳 (TUNIS)</text>
+
+            <!-- Mer Méditerranée (Vagues bleues décoratives) -->
+            <text x="460" y="860" fill="#00cec9" font-size="14" font-weight="900" letter-spacing="4" opacity="0.45">MER MÉDITERRANÉE</text>
+
+            <!-- Tracé Lumineux Officiel du Grand Tour (Néon Or Éclatant reliant les 20 villes) -->
             <path class="tour-route-glow" d="
-              M 442 270
-              L 518 156
-              L 336 123
-              L 259 295
-              L 317 492
-              L 432 705
-              L 461 541
-              L 557 607
-              L 653 590
-              L 739 500
-              L 605 426
-              L 653 443
-              L 605 459
-              L 538 443
-              L 662 279
+              M 442 308
+              L 518 198
+              L 326 154
+              L 250 352
+              L 307 528
+              L 384 704
+              L 451 572
+              L 528 616
+              L 614 605
+              L 710 528
+              L 605 484
+              L 643 484
+              L 586 506
+              L 528 484
+              L 653 286
+              L 720 704
+              L 768 770
+              L 710 968
+              L 576 979
+              L 432 990
               Z
             " fill="none" stroke="#ffd700" stroke-width="4.2" stroke-dasharray="10,6" opacity="0.9" filter="url(#glowTourRoute)" />
           </svg>
 
           <!-- SVG Overlay pour ligne active animée lors des déplacements -->
-          <svg class="travel-line-overlay" viewBox="0 0 960 820" preserveAspectRatio="none">
+          <svg class="travel-line-overlay" viewBox="0 0 960 1100" preserveAspectRatio="none">
             <line id="travel-active-line" x1="0" y1="0" x2="0" y2="0" stroke="#ffd700" stroke-width="5" stroke-dasharray="10,7" opacity="0" filter="url(#glowTourRoute)" />
           </svg>
 
           <!-- Jeton Motard Voyageur Animé se déplaçant d'une ville à une autre -->
-          <div class="moto-traveler" id="moto-traveler" style="left: 46%; top: 33%;">
+          <div class="moto-traveler" id="moto-traveler" style="left: 46%; top: 28%;">
             <div class="moto-traveler-icon">🏍️</div>
             <div class="moto-traveler-exhaust">💨</div>
           </div>
 
-          <!-- Pins interactifs des 15 villes d'Europe avec médaillons 3D et drapeaux -->
+          <!-- Pins interactifs des 20 villes d'Europe et Méditerranée avec médaillons 3D et drapeaux -->
           ${CITIES.map((city, idx) => {
             const unlocked = storage.isCityUnlocked(city.id);
             const isSelected = this.selectedMapCity.id === city.id;
@@ -453,6 +496,42 @@ export class UIManager {
       </div>
     `;
 
+    // Gestion du Zoom Interactif (Agrandir / Réduire / Recentrer)
+    const canvasContainer = mapScreen.querySelector('#europe-canvas');
+    const zoomBadge = mapScreen.querySelector('#zoom-badge');
+    const applyZoom = (newZoom) => {
+      this.mapZoom = Math.max(0.65, Math.min(2.4, newZoom));
+      if (canvasContainer) {
+        canvasContainer.style.transform = `scale(${this.mapZoom})`;
+        canvasContainer.style.transformOrigin = 'top left';
+      }
+      if (zoomBadge) {
+        zoomBadge.textContent = `${Math.round(this.mapZoom * 100)}%`;
+      }
+    };
+
+    mapScreen.querySelector('#btn-zoom-in')?.addEventListener('click', () => {
+      soundManager.playClick();
+      applyZoom(this.mapZoom + 0.25);
+    });
+    mapScreen.querySelector('#btn-zoom-out')?.addEventListener('click', () => {
+      soundManager.playClick();
+      applyZoom(this.mapZoom - 0.25);
+    });
+    mapScreen.querySelector('#btn-zoom-reset')?.addEventListener('click', () => {
+      soundManager.playClick();
+      applyZoom(1.0);
+    });
+
+    const viewportEl = mapScreen.querySelector('#europe-viewport');
+    if (viewportEl) {
+      viewportEl.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const delta = e.deltaY < 0 ? 0.15 : -0.15;
+        applyZoom(this.mapZoom + delta);
+      }, { passive: false });
+    }
+
     // Gestion du déplacement et de la sélection de ville
     const pins = mapScreen.querySelectorAll('.city-pin');
     const updateSelection = (cityId) => {
@@ -473,19 +552,17 @@ export class UIManager {
           const fromCoords = previousCity.mapCoords;
           const toCoords = city.mapCoords;
 
-          // Calculer l'angle d'orientation de la moto vers la ville cible
           const angle = Math.atan2(toCoords.y - fromCoords.y, toCoords.x - fromCoords.x) * (180 / Math.PI);
           traveler.classList.add('traveling');
           traveler.style.transform = `translate(-50%, -50%) rotate(${angle > 90 || angle < -90 ? '180deg scaleY(-1)' : `${angle}deg`})`;
           traveler.style.left = `${toCoords.x}%`;
           traveler.style.top = `${toCoords.y}%`;
 
-          // Tracer temporairement un trait lumineux doré actif
           if (travelLine) {
             travelLine.setAttribute('x1', (fromCoords.x / 100) * 960);
-            travelLine.setAttribute('y1', (fromCoords.y / 100) * 820);
+            travelLine.setAttribute('y1', (fromCoords.y / 100) * 1100);
             travelLine.setAttribute('x2', (toCoords.x / 100) * 960);
-            travelLine.setAttribute('y2', (toCoords.y / 100) * 820);
+            travelLine.setAttribute('y2', (toCoords.y / 100) * 1100);
             travelLine.setAttribute('opacity', '1');
             setTimeout(() => travelLine.setAttribute('opacity', '0'), 700);
           }
@@ -504,11 +581,11 @@ export class UIManager {
       // Centrer automatiquement le viewport scrollable sur la ville sélectionnée
       const viewport = mapScreen.querySelector('#europe-viewport');
       if (viewport) {
-        const targetPxX = (city.mapCoords.x / 100) * 960;
-        const targetPxY = (city.mapCoords.y / 100) * 820;
+        const targetPxX = (city.mapCoords.x / 100) * 960 * this.mapZoom;
+        const targetPxY = (city.mapCoords.y / 100) * 1100 * this.mapZoom;
         viewport.scrollTo({
-          left: Math.max(0, Math.min(960 - viewport.clientWidth, targetPxX - viewport.clientWidth / 2)),
-          top: Math.max(0, Math.min(820 - viewport.clientHeight, targetPxY - viewport.clientHeight / 2)),
+          left: Math.max(0, Math.min(960 * this.mapZoom - viewport.clientWidth, targetPxX - viewport.clientWidth / 2)),
+          top: Math.max(0, Math.min(1100 * this.mapZoom - viewport.clientHeight, targetPxY - viewport.clientHeight / 2)),
           behavior: 'smooth'
         });
       }
@@ -549,10 +626,10 @@ export class UIManager {
       const viewport = mapScreen.querySelector('#europe-viewport');
       if (viewport && this.selectedMapCity) {
         const targetPxX = (this.selectedMapCity.mapCoords.x / 100) * 960;
-        const targetPxY = (this.selectedMapCity.mapCoords.y / 100) * 820;
+        const targetPxY = (this.selectedMapCity.mapCoords.y / 100) * 1100;
         viewport.scrollTo({
           left: Math.max(0, Math.min(960 - viewport.clientWidth, targetPxX - viewport.clientWidth / 2)),
-          top: Math.max(0, Math.min(820 - viewport.clientHeight, targetPxY - viewport.clientHeight / 2)),
+          top: Math.max(0, Math.min(1100 - viewport.clientHeight, targetPxY - viewport.clientHeight / 2)),
           behavior: 'auto'
         });
       }
@@ -911,6 +988,16 @@ export class UIManager {
           </div>
         </div>
 
+        <!-- Bouton Nitro Boost 5s avec jauge rechargeable (pouce droit / Espace) -->
+        <button class="btn-nitro-pedal" id="btn-hud-nitro" title="Activer le Nitro Boost 5s (Touche Espace / Shift)">
+          <div class="nitro-fill-track">
+            <div class="nitro-fill-bar" id="hud-nitro-fill" style="width: 0%;"></div>
+          </div>
+          <span class="nitro-icon">⚡</span>
+          <span class="nitro-label" id="hud-nitro-label">NITRO</span>
+          <span class="nitro-sub" id="hud-nitro-sub">0%</span>
+        </button>
+
         <!-- Bouton Klaxon ergonomique à droite (pouce droit) -->
         <button class="btn-horn-pedal" id="btn-hud-horn" title="Klaxonner !">
           <span class="horn-icon">📢</span>
@@ -919,7 +1006,7 @@ export class UIManager {
       </div>
 
       <div class="touch-hint">
-        ← Glissez pour braquer | Maintenez FREIN pour vous arrêter →
+        ← Glissez pour braquer | FREIN pour stopper | ⚡ NITRO (5s) →
       </div>
     `;
 
@@ -938,6 +1025,17 @@ export class UIManager {
     brakeBtn.addEventListener('pointerup', stopBraking);
     brakeBtn.addEventListener('pointerleave', stopBraking);
     brakeBtn.addEventListener('pointercancel', stopBraking);
+
+    // Gestion du bouton Nitro 5 secondes
+    const nitroBtn = hud.querySelector('#btn-hud-nitro');
+    if (nitroBtn) {
+      nitroBtn.addEventListener('click', () => {
+        const ok = gameState.activateNitro();
+        if (ok) {
+          if (this.onAction) this.onAction('NITRO');
+        }
+      });
+    }
 
     hud.querySelector('#btn-hud-pause').addEventListener('click', () => {
       soundManager.playClick();
@@ -1104,9 +1202,58 @@ export class UIManager {
         targetRemaining.textContent = `Reste : ${diff.toLocaleString('fr-FR')} pts`;
       }
     }
+    // Mise à jour de la jauge et du bouton Nitro 5 secondes
+    const nitroFill = this.root.querySelector('#hud-nitro-fill');
+    const nitroSub = this.root.querySelector('#hud-nitro-sub');
+    const nitroBtn = this.root.querySelector('#btn-hud-nitro');
+    const nitroLabel = this.root.querySelector('#hud-nitro-label');
+
+    if (nitroFill && data.nitroGauge !== undefined) {
+      nitroFill.style.width = `${data.nitroGauge}%`;
+      if (data.isNitroActive) {
+        if (nitroBtn) {
+          nitroBtn.classList.add('active');
+          nitroBtn.classList.remove('ready');
+        }
+        if (nitroSub) nitroSub.textContent = `${data.nitroTimer.toFixed(1)}s`;
+        if (nitroLabel) nitroLabel.textContent = 'BOOST !';
+      } else {
+        if (nitroBtn) nitroBtn.classList.remove('active');
+        if (data.nitroGauge >= 100) {
+          if (nitroBtn) nitroBtn.classList.add('ready');
+          if (nitroSub) nitroSub.textContent = 'PRÊT !';
+          if (nitroLabel) nitroLabel.textContent = 'NITRO (5s)';
+        } else {
+          if (nitroBtn) nitroBtn.classList.remove('ready');
+          if (nitroSub) nitroSub.textContent = `${data.nitroGauge}%`;
+          if (nitroLabel) nitroLabel.textContent = 'NITRO';
+        }
+      }
+    }
   }
 
-  // --- 5. MODALE DE PROFIL JOUEUR ---
+  showTrafficLightWarning(streetName) {
+    let toast = this.root.querySelector('.hud-traffic-warning-toast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.className = 'hud-traffic-warning-toast';
+      this.root.appendChild(toast);
+    }
+    toast.innerHTML = `
+      <div class="traffic-toast-inner">
+        <span class="traffic-toast-icon">🚦</span>
+        <div class="traffic-toast-text">
+          <div class="traffic-toast-title">FEU ROUGE EN APPROCHE !</div>
+          <div class="traffic-toast-sub">${streetName} • Arrête-toi au stop pour +250 pts !</div>
+        </div>
+      </div>
+    `;
+    toast.classList.add('visible');
+    clearTimeout(this.trafficToastTimer);
+    this.trafficToastTimer = setTimeout(() => {
+      toast.classList.remove('visible');
+    }, 3000);
+  }
   showProfileModal() {
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay';
@@ -1402,7 +1549,7 @@ export class UIManager {
 
         <div style="margin-top: 15px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.1); text-align: center;">
           <div style="font-size: 0.78rem; color: #a4b0be; margin-bottom: 8px;">
-            Motormageddon Tour de France 3D ${FULL_VERSION}<br>
+            Motormageddon Arcade 3D ${FULL_VERSION}<br>
             ${COPYRIGHT_NOTICE}
           </div>
           <button id="btn-settings-legal" class="btn-legal-link" style="font-size: 0.8rem;">
@@ -1464,7 +1611,7 @@ export class UIManager {
 
           <div style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px;">
             <strong style="color: #38ada9;">Jeu & Fiction Burlesque :</strong><br>
-            <em>Motormageddon : Tour de France Arcade 3D</em> est une œuvre de fiction d'action humoristique et parodique.
+            <em>Motormageddon Arcade 3D</em> est une œuvre de fiction d'action humoristique et parodique.
             Toute ressemblance avec des personnes réelles, des incidents ou des marques existantes est purement fortuite.
             Le jeu encourage la prudence et le respect strict du Code de la Route dans la vie réelle.
           </div>

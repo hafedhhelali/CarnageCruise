@@ -15,7 +15,7 @@
   "keywords": [],
   "author": "EOMedia",
   "license": "ISC",
-  "description": "Motormageddon - Tour de France Arcade 3D",
+  "description": "Motormageddon Arcade 3D",
   "dependencies": {
     "@capacitor/android": "^8.6.0",
     "@capacitor/app": "^8.1.2",

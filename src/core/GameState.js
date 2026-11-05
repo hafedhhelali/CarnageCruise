@@ -29,7 +29,7 @@ export const CITIES = [
     roofColor: 0x4a5568,
     accentColor: 0x3498db,
     unlockedByDefault: true,
-    mapCoords: { x: 46, y: 33 }
+    mapCoords: { x: 46, y: 28 }
   },
   {
     id: 'bruxelles',
@@ -52,7 +52,7 @@ export const CITIES = [
     roofColor: 0x2c3e50,
     accentColor: 0xf9ca24,
     unlockedByDefault: false,
-    mapCoords: { x: 54, y: 19 }
+    mapCoords: { x: 54, y: 18 }
   },
   {
     id: 'londres',
@@ -75,7 +75,7 @@ export const CITIES = [
     roofColor: 0x1e272e,
     accentColor: 0xff4757,
     unlockedByDefault: false,
-    mapCoords: { x: 35, y: 15 }
+    mapCoords: { x: 34, y: 14 }
   },
   {
     id: 'saint-malo',
@@ -98,7 +98,7 @@ export const CITIES = [
     roofColor: 0x2f3542,
     accentColor: 0x00a8ff,
     unlockedByDefault: false,
-    mapCoords: { x: 27, y: 36 }
+    mapCoords: { x: 26, y: 32 }
   },
   {
     id: 'bordeaux',
@@ -121,7 +121,7 @@ export const CITIES = [
     roofColor: 0x37474f,
     accentColor: 0x8e24aa,
     unlockedByDefault: false,
-    mapCoords: { x: 33, y: 60 }
+    mapCoords: { x: 32, y: 48 }
   },
   {
     id: 'barcelone',
@@ -132,7 +132,7 @@ export const CITIES = [
     monument: 'La Sagrada Família & Ramblas',
     subtitle: 'La Sagrada Família & Méditerranée',
     typeTag: 'Gaudí & Palmiers',
-    description: 'Vitesse pure sous les flèches féeriques de Gaudí et les palmiers balayés par la brise marine catalane !',
+    description: 'Vitesse pure sous les flèches féeriques de Gaudí et les palmiers balayés par la brise marine catalane en Espagne !',
     targetScore: 31000,
     starThresholds: [31000, 48000, 70000],
     unlockScoreRequired: 23000,
@@ -144,7 +144,7 @@ export const CITIES = [
     roofColor: 0xb71540,
     accentColor: 0xe67e22,
     unlockedByDefault: false,
-    mapCoords: { x: 45, y: 86 }
+    mapCoords: { x: 40, y: 64 }
   },
   {
     id: 'millau',
@@ -167,7 +167,7 @@ export const CITIES = [
     roofColor: 0x37474f,
     accentColor: 0xff3838,
     unlockedByDefault: false,
-    mapCoords: { x: 48, y: 66 }
+    mapCoords: { x: 47, y: 52 }
   },
   {
     id: 'marseille',
@@ -190,7 +190,7 @@ export const CITIES = [
     roofColor: 0xd84315,
     accentColor: 0x00bcd4,
     unlockedByDefault: false,
-    mapCoords: { x: 58, y: 74 }
+    mapCoords: { x: 55, y: 56 }
   },
   {
     id: 'nice',
@@ -213,7 +213,7 @@ export const CITIES = [
     roofColor: 0xc2185b,
     accentColor: 0xff4081,
     unlockedByDefault: false,
-    mapCoords: { x: 68, y: 72 }
+    mapCoords: { x: 64, y: 55 }
   },
   {
     id: 'milan',
@@ -236,7 +236,7 @@ export const CITIES = [
     roofColor: 0x747d8c,
     accentColor: 0xff9f43,
     unlockedByDefault: false,
-    mapCoords: { x: 77, y: 61 }
+    mapCoords: { x: 74, y: 48 }
   },
   {
     id: 'geneve',
@@ -259,7 +259,7 @@ export const CITIES = [
     roofColor: 0x2c3e50,
     accentColor: 0xeb4d4b,
     unlockedByDefault: false,
-    mapCoords: { x: 63, y: 52 }
+    mapCoords: { x: 63, y: 44 }
   },
   {
     id: 'chamonix',
@@ -282,7 +282,7 @@ export const CITIES = [
     roofColor: 0xecf0f1,
     accentColor: 0x00cec9,
     unlockedByDefault: false,
-    mapCoords: { x: 68, y: 54 }
+    mapCoords: { x: 67, y: 44 }
   },
   {
     id: 'annecy',
@@ -305,7 +305,7 @@ export const CITIES = [
     roofColor: 0xb71540,
     accentColor: 0x0984e3,
     unlockedByDefault: false,
-    mapCoords: { x: 63, y: 56 }
+    mapCoords: { x: 61, y: 46 }
   },
   {
     id: 'lyon',
@@ -328,7 +328,7 @@ export const CITIES = [
     roofColor: 0x962d22,
     accentColor: 0xe67e22,
     unlockedByDefault: false,
-    mapCoords: { x: 56, y: 54 }
+    mapCoords: { x: 55, y: 44 }
   },
   {
     id: 'strasbourg',
@@ -351,7 +351,122 @@ export const CITIES = [
     roofColor: 0xb71c1c,
     accentColor: 0xd32f2f,
     unlockedByDefault: false,
-    mapCoords: { x: 69, y: 34 }
+    mapCoords: { x: 68, y: 26 }
+  },
+  {
+    id: 'rome',
+    name: 'Rome',
+    country: 'Italie',
+    countryFlag: '🇮🇹',
+    emblem: '🏛️',
+    monument: 'Le Colisée Antique & Saint-Pierre',
+    subtitle: 'La Cité Éternelle & Voie Appienne',
+    typeTag: 'Monuments Antiques & Collines',
+    description: 'Slalomez autour des arches millénaires du Colisée et des fontaines baroques sous le soleil romain !',
+    targetScore: 170000,
+    starThresholds: [170000, 240000, 350000],
+    unlockScoreRequired: 150000,
+    skyColor: 0x87ceeb,
+    fogColor: 0xfff5e6,
+    ambientColor: 0xffffff,
+    roadColor: 0x2d3436,
+    buildingColors: [0xf5cd79, 0xf78fb3, 0xf8a5c2, 0xe77f67],
+    roofColor: 0xb71540,
+    accentColor: 0xe67e22,
+    unlockedByDefault: false,
+    mapCoords: { x: 75, y: 64 }
+  },
+  {
+    id: 'napoli',
+    name: 'Napoli',
+    country: 'Italie',
+    countryFlag: '🇮🇹',
+    emblem: '🌋',
+    monument: 'Le Vésuve & Baie de Naples',
+    subtitle: 'Ruelles Vivantes & Golfe Bleu Saphir',
+    typeTag: 'Côte Volcanique & Balcons',
+    description: 'Foncez le long du front de mer napolitain face au Vésuve fumant, entre linge aux balcons et ambiance volcanique !',
+    targetScore: 195000,
+    starThresholds: [195000, 280000, 400000],
+    unlockScoreRequired: 170000,
+    skyColor: 0x74b9ff,
+    fogColor: 0xdff9fb,
+    ambientColor: 0xffffff,
+    roadColor: 0x353b48,
+    buildingColors: [0xfbc531, 0x4cd137, 0xe84118, 0x00a8ff],
+    roofColor: 0xc23616,
+    accentColor: 0xe84118,
+    unlockedByDefault: false,
+    mapCoords: { x: 80, y: 70 }
+  },
+  {
+    id: 'tunis',
+    name: 'Tunis',
+    country: 'Tunisie',
+    countryFlag: '🇹🇳',
+    emblem: '🇹🇳',
+    monument: 'La Médina & Sidi Bou Saïd',
+    subtitle: 'Portes Cloutées & Faïences Bleues',
+    typeTag: 'Médina & Minaret',
+    description: 'Traversez la grande mosquée Zitouna et les ruelles blanchies à la chaux et bleu azur de Sidi Bou Saïd !',
+    targetScore: 225000,
+    starThresholds: [225000, 320000, 460000],
+    unlockScoreRequired: 195000,
+    skyColor: 0x00d2d3,
+    fogColor: 0xf7f1e3,
+    ambientColor: 0xffffff,
+    roadColor: 0x2f3542,
+    buildingColors: [0xffffff, 0xf5f6fa, 0x48dbfb, 0xfeca57],
+    roofColor: 0x0abde3,
+    accentColor: 0xee5253,
+    unlockedByDefault: false,
+    mapCoords: { x: 74, y: 88 }
+  },
+  {
+    id: 'annaba',
+    name: 'Annaba',
+    country: 'Algérie',
+    countryFlag: '🇩🇿',
+    emblem: '🇩🇿',
+    monument: 'Basilique Saint-Augustin & Hippone',
+    subtitle: 'La Coquette & Corniche d’Hippone',
+    typeTag: 'Colline & Front de Mer',
+    description: 'Virevoltez sur la corniche côtière sous le regard de la majestueuse basilique byzantine perchée sur la colline d’Hippone !',
+    targetScore: 260000,
+    starThresholds: [260000, 370000, 530000],
+    unlockScoreRequired: 225000,
+    skyColor: 0x48dbfb,
+    fogColor: 0xf8efba,
+    ambientColor: 0xffffff,
+    roadColor: 0x2c2c54,
+    buildingColors: [0xffffff, 0xf8f9fa, 0x2ed573, 0xffa502],
+    roofColor: 0xb33939,
+    accentColor: 0x20bf6b,
+    unlockedByDefault: false,
+    mapCoords: { x: 60, y: 89 }
+  },
+  {
+    id: 'alger',
+    name: 'Alger',
+    country: 'Algérie',
+    countryFlag: '🇩🇿',
+    emblem: '🇩🇿',
+    monument: 'Mémorial du Martyr & La Casbah Blanche',
+    subtitle: 'Alger la Blanche & Baie Scintillante',
+    typeTag: 'Monument des Martyrs & Baie',
+    description: 'Apothéose du périple méditerranéen : les 3 palmes géantes de Maqam Echahid dominant la splendide baie d’Alger la Blanche !',
+    targetScore: 300000,
+    starThresholds: [300000, 430000, 620000],
+    unlockScoreRequired: 260000,
+    skyColor: 0x54a0ff,
+    fogColor: 0xf1f2f6,
+    ambientColor: 0xffffff,
+    roadColor: 0x1e272e,
+    buildingColors: [0xffffff, 0xf5f6fa, 0x2ed573, 0xdfe4ea],
+    roofColor: 0x10ac84,
+    accentColor: 0xeb4d4b,
+    unlockedByDefault: false,
+    mapCoords: { x: 45, y: 90 }
   }
 ];
 
@@ -360,7 +475,7 @@ export const BIKES = [
     id: 'scooter',
     name: 'Guêpe 50cc',
     shortName: 'Guêpe 50cc',
-    category: 'SCOOTER',
+    category: 'SCOOTER VINTAGE',
     icon: '🛵',
     tagline: 'Léger & Agile en ville',
     type: 'Scooter Rétro',
@@ -376,29 +491,10 @@ export const BIKES = [
     steerSpeed: 16
   },
   {
-    id: 'sport',
-    name: 'Foudre 1000',
-    shortName: 'Foudre 1000',
-    category: 'SUPERBIKE',
-    icon: '⚡',
-    tagline: 'Vitesse pure & Aérodynamisme',
-    type: 'Superbike',
-    description: 'Une bête de course carénée prête à pulvériser le bitume urbain avec des pointes de vitesse fulgurantes.',
-    speedRating: 5,
-    handlingRating: 3,
-    bounceRating: 5,
-    cost: 800,
-    unlocked: false,
-    scale: 1.05,
-    maxSpeed: 34,
-    accel: 22,
-    steerSpeed: 18
-  },
-  {
     id: 'chopper',
     name: 'Paname V-Twin',
     shortName: 'Paname V-Twin',
-    category: 'CHOPPER',
+    category: 'CUSTOM CRUISER',
     icon: '🏍️',
     tagline: 'Son lourd & Chromes étincelants',
     type: 'Custom Cruiser',
@@ -406,107 +502,107 @@ export const BIKES = [
     speedRating: 4,
     handlingRating: 3,
     bounceRating: 5,
-    cost: 1500,
+    cost: 800,
     unlocked: false,
     scale: 1.15,
     maxSpeed: 28,
-    accel: 14,
+    accel: 16,
     steerSpeed: 14
   },
   {
-    id: 'trike',
-    name: 'Turbo Trike 3R',
-    shortName: 'Turbo 3R',
-    category: 'MONSTER TRIKE',
-    icon: '🏎️',
-    tagline: 'Stabilité colossale & Double train arrière',
-    type: 'Monster 3-Roues',
-    description: 'Stabilité maximale et propulseur arrière démesuré pour bousculer la ville sans jamais perdre l’équilibre.',
-    speedRating: 4,
-    handlingRating: 4,
-    bounceRating: 5,
-    cost: 2500,
-    unlocked: false,
-    scale: 1.25,
-    maxSpeed: 30,
-    accel: 18,
-    steerSpeed: 15
-  },
-  {
-    id: 'dragster',
-    name: 'Nitro V8 Dragster',
-    shortName: 'V8 Dragster',
-    category: 'NITRO DRAGSTER',
-    icon: '💀',
-    tagline: 'V8 Blower & Double lance-flammes',
-    type: 'Dragster Pro-Street',
-    description: 'Pneu arrière dragster 300mm, compresseur soufflant géant et bonbonnes de protoxyde d’azote pour pulvériser le bitume.',
-    speedRating: 5,
-    handlingRating: 2,
-    bounceRating: 5,
-    cost: 3400,
-    unlocked: false,
-    scale: 1.28,
-    maxSpeed: 38,
-    accel: 28,
-    steerSpeed: 13
-  },
-  {
-    id: 'diablo',
-    name: 'Diablo Hypersport',
-    shortName: 'Diablo 1200',
-    category: 'HYPERBIKE',
-    icon: '😈',
-    tagline: 'Cadre treillis rouge & Carbone brut',
-    type: 'Streetfighter Brutale',
-    description: 'Fureur mécanique dénudée taillée pour l’attaque avec ailerons déporteurs et double silencieux titane hurlant.',
+    id: 'decapotable',
+    name: 'Cabriolet Riviera 68',
+    shortName: 'Décapotable Sport',
+    category: 'VOITURE DÉCAPOTABLE',
+    icon: '🚗',
+    tagline: 'V8 Rugissant & Pare-brise Rétro',
+    type: 'Cabriolet Sport',
+    description: 'Fini les deux-roues ordinaires ! Installez-vous au volant d’un cabriolet sport décapotable rouge feu avec 4 roues motrices et échappements chromés.',
     speedRating: 5,
     handlingRating: 4,
     bounceRating: 5,
-    cost: 4900,
+    cost: 1600,
     unlocked: false,
-    scale: 1.1,
-    maxSpeed: 36,
-    accel: 26,
-    steerSpeed: 17
+    scale: 1.22,
+    maxSpeed: 33,
+    accel: 22,
+    steerSpeed: 16
   },
   {
-    id: 'ravageur',
-    name: 'Ravageur Apocalypse 750',
-    shortName: 'Ravageur 750',
-    category: 'APOCALYPSE CROSS',
-    icon: '⛓️',
-    tagline: 'Blindage d’assaut & Pneus crampons',
-    type: 'Rallye Raid Blindé',
-    description: 'Garde au sol colossale, pare-buffles d’acier tubulaire et crampons tout-terrain capables de broyer tout obstacle.',
+    id: 'trottinette_hache',
+    name: 'Trottinette Berserker',
+    shortName: 'Trottinette Hache',
+    category: 'TROTTINETTE & HACHE',
+    icon: '🪓',
+    tagline: 'Deck Urbain & Double Hache Viking',
+    type: 'Trottinette d’Assaut',
+    description: 'Le contraste ultime : une trottinette électrique compacte et maniable combinée à une redoutable double hache de guerre viking !',
     speedRating: 4,
     handlingRating: 5,
     bounceRating: 5,
-    cost: 6500,
+    cost: 2600,
     unlocked: false,
-    scale: 1.18,
-    maxSpeed: 33,
-    accel: 24,
-    steerSpeed: 18
+    scale: 1.05,
+    maxSpeed: 29,
+    accel: 20,
+    steerSpeed: 22
   },
   {
     id: 'cheval',
-    name: 'Pur-Sang du Tour',
+    name: 'Étalon Pur-Sang',
     shortName: 'Étalon Sauvage',
-    category: 'MONTURE PUR-SANG',
+    category: 'MONTURE & FOUET',
     icon: '🐎',
-    tagline: 'Galop furieux & Cravache cinglante',
-    type: 'Monture de Course',
-    description: 'Pas de moteur thermique mais 1 cheval-vapeur furieux ! Le cavalier brandit sa cravache (whip) pour fouetter le bitume et écarter tout le monde.',
+    tagline: 'Galop furieux & Grand FOUET cinglant',
+    type: 'Monture Sauvage',
+    description: 'Pas de moteur thermique mais 1 pur-sang furieux au galop ! Le cavalier brandit son grand FOUET en cuir tressé pour cingler le bitume et balayer tout obstacle.',
     speedRating: 4,
     handlingRating: 5,
     bounceRating: 5,
-    cost: 7800,
+    cost: 3800,
     unlocked: false,
     scale: 1.12,
     maxSpeed: 32,
     accel: 25,
     steerSpeed: 20
+  },
+  {
+    id: 'run_ak47',
+    name: 'Sprinteur Kalachnikov',
+    shortName: 'Sprint Kalash',
+    category: 'COURSE À PIED',
+    icon: '🏃',
+    tagline: 'Sprint d’athlète & AK-47 en rafale',
+    type: 'Sprinteur Armé',
+    description: 'Pas besoin de véhicule : courez à pleines jambes à vive allure avec une authentique Kalachnikov AK-47 à chargeur banane pour un délire d’arcade total !',
+    speedRating: 5,
+    handlingRating: 5,
+    bounceRating: 5,
+    cost: 5200,
+    unlocked: false,
+    scale: 1.08,
+    maxSpeed: 34,
+    accel: 28,
+    steerSpeed: 24
+  },
+  {
+    id: 'run_chainsaw',
+    name: 'Sprinteur Tronçonneuse',
+    shortName: 'Sprint Tronçonneuse',
+    category: 'COURSE À PIED',
+    icon: '🪚',
+    tagline: 'Vrombissement 2-temps & Chaîne crantée',
+    type: 'Sprinteur Tronçonneuse',
+    description: 'Sprint effréné à pied armé d’une imposante tronçonneuse vrombissante ! Le rugissement du moteur deux-temps fait voler les quilles et les baguettes.',
+    speedRating: 5,
+    handlingRating: 5,
+    bounceRating: 5,
+    cost: 6800,
+    unlocked: false,
+    scale: 1.08,
+    maxSpeed: 35,
+    accel: 29,
+    steerSpeed: 23
   },
   {
     id: 'rouleau',
@@ -520,12 +616,31 @@ export const BIKES = [
     speedRating: 3,
     handlingRating: 4,
     bounceRating: 5,
-    cost: 9500,
+    cost: 8500,
     unlocked: false,
     scale: 1.25,
     maxSpeed: 27,
     accel: 16,
     steerSpeed: 14
+  },
+  {
+    id: 'dragster',
+    name: 'Nitro V8 Dragster',
+    shortName: 'V8 Dragster',
+    category: 'NITRO DRAGSTER',
+    icon: '💀',
+    tagline: 'V8 Blower & Double lance-flammes',
+    type: 'Dragster Pro-Street',
+    description: 'Pneu arrière dragster 300mm, compresseur soufflant géant et bonbonnes de protoxyde d’azote pour pulvériser le bitume.',
+    speedRating: 5,
+    handlingRating: 2,
+    bounceRating: 5,
+    cost: 11000,
+    unlocked: false,
+    scale: 1.28,
+    maxSpeed: 38,
+    accel: 28,
+    steerSpeed: 13
   }
 ];
 
@@ -558,6 +673,12 @@ export class GameState {
     this.targetSpeed = 0;
     this.isBraking = false;
     this.isGameOver = false;
+
+    // Jauge de Nitro rechargeable (0 à 100%) et boost 5 secondes
+    this.nitroGauge = 0;
+    this.isNitroActive = false;
+    this.nitroTimer = 0;
+    this.nitroDuration = 5.0;
 
     this.listeners = [];
   }
@@ -606,6 +727,9 @@ export class GameState {
     this.targetSpeed = 0;
     this.isBraking = false;
     this.isGameOver = false;
+    this.nitroGauge = 0;
+    this.isNitroActive = false;
+    this.nitroTimer = 0;
     // Compte à rebours 3, 2, 1, GO !
     this.currentMode = 'COUNTDOWN';
 
@@ -613,6 +737,34 @@ export class GameState {
     soundManager.updateEngine(0.08); // Ronronnement au ralenti à l'arrêt
     soundManager.startMusic();
     this.notify('run_started', { city: this.selectedCity, bike: this.selectedBike });
+  }
+
+  chargeNitro(amount) {
+    if (this.currentMode !== 'PLAYING') return;
+    const oldGauge = this.nitroGauge;
+    this.nitroGauge = Math.min(100, this.nitroGauge + amount);
+    if (oldGauge < 100 && this.nitroGauge >= 100) {
+      soundManager.playNearMiss();
+      this.notify('nitro_ready', {});
+    }
+    this.notify('nitro_updated', {
+      gauge: Math.round(this.nitroGauge),
+      isActive: this.isNitroActive,
+      timer: this.nitroTimer
+    });
+  }
+
+  activateNitro() {
+    if (this.currentMode !== 'PLAYING') return false;
+    if (this.isNitroActive) return false;
+    if (this.nitroGauge < 100) return false;
+
+    this.nitroGauge = 0;
+    this.isNitroActive = true;
+    this.nitroTimer = this.nitroDuration;
+    soundManager.playNitroBoost();
+    this.notify('nitro_activated', { duration: this.nitroDuration });
+    return true;
   }
 
   triggerGo() {
@@ -638,6 +790,9 @@ export class GameState {
 
     const coinsFromHit = Math.floor(totalAdded / 50) + 1;
     this.coinsEarned += coinsFromHit;
+
+    // Chaque interaction réussie booste la jauge de Nitro (+10%)
+    this.chargeNitro(10);
 
     // Réaction sonore réaliste selon la personne heurtée (enfant, vieux, femme, homme)
     soundManager.playPedestrianReaction(category);
@@ -666,6 +821,8 @@ export class GameState {
     const nearMissPoints = 75 * this.combo;
     this.score += nearMissPoints;
     this.coinsEarned += 1;
+    // Les frôlements risqués rechargent le Nitro plus rapidement (+15%)
+    this.chargeNitro(15);
     soundManager.playNearMiss();
 
     this.notify('score_updated', {
@@ -688,6 +845,10 @@ export class GameState {
     this.comboTimer = 0;
     this.drivingScoreAccumulator = 0;
     this.speed = 0;
+    if (this.isNitroActive) {
+      this.isNitroActive = false;
+      this.nitroTimer = 0;
+    }
 
     this.notify('crash_penalty', {
       penalty: lostPoints,
@@ -723,19 +884,40 @@ export class GameState {
     }
     if (this.currentMode !== 'PLAYING') return;
 
-    // Gestion du frein et de la reprise de circulation
+    // 1. Gestion du Nitro 5 secondes
+    if (this.isNitroActive) {
+      this.nitroTimer -= delta;
+      if (this.nitroTimer <= 0) {
+        this.isNitroActive = false;
+        this.nitroTimer = 0;
+        this.notify('nitro_ended', {});
+      }
+    } else if (this.speed > 5.0 && !this.isBraking) {
+      // Rechargement passif au fil de la vitesse
+      const oldVal = this.nitroGauge;
+      this.nitroGauge = Math.min(100, this.nitroGauge + delta * 6.0);
+      if (oldVal < 100 && this.nitroGauge >= 100) {
+        this.notify('nitro_ready', {});
+      }
+    }
+
+    // 2. Gestion du frein et de la reprise de circulation avec Nitro Boost
+    const maxSpeedCap = this.isNitroActive ? (this.targetSpeed * 1.65) : this.targetSpeed;
+    const accelRate = this.isNitroActive ? (this.selectedBike.accel * 2.2) : this.selectedBike.accel;
+
     if (this.isBraking) {
       // Décélération rapide jusqu'à l'arrêt complet
       this.speed = Math.max(0, this.speed - delta * 30.0);
     } else {
       // Réaccélération progressive vers la vitesse de croisière
-      this.speed = Math.min(this.targetSpeed, this.speed + delta * 14.0);
+      this.speed = Math.min(maxSpeedCap, this.speed + delta * accelRate);
     }
 
-    // Points de conduite continue arcade : rouler vite fait monter le score !
+    // Points de conduite continue arcade : rouler vite fait monter le score (doublé sous Nitro) !
     // LE SCORE N'AVANCE PAS À L'ARRÊT : Strictement si la vitesse > 3.5 m/s (~13 km/h), sans freinage et hors crash
     if (this.speed > 3.5 && !this.isBraking) {
-      this.drivingScoreAccumulator += this.speed * delta * 1.6;
+      const nitroScoreMult = this.isNitroActive ? 2.0 : 1.0;
+      this.drivingScoreAccumulator += this.speed * delta * 1.6 * nitroScoreMult;
       if (this.drivingScoreAccumulator >= 10) {
         const pts = Math.floor(this.drivingScoreAccumulator);
         this.score += pts;
@@ -764,7 +946,10 @@ export class GameState {
       score: this.score,
       targetScore: this.selectedCity.targetScore,
       progressRatio: Math.min(1.0, this.score / this.selectedCity.targetScore),
-      isBraking: this.isBraking
+      isBraking: this.isBraking,
+      nitroGauge: Math.round(this.nitroGauge),
+      isNitroActive: this.isNitroActive,
+      nitroTimer: Math.max(0, this.nitroTimer)
     });
   }
 

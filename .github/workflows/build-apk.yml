@@ -41,7 +41,7 @@ jobs:
           APP_VER=$(node -p "require('./version.json').version")
           VER_CODE=$(node -p "require('./version.json').versionCode")
           CHANNEL=$(node -p "require('./version.json').channel || 'beta'")
-          RELEASE_TITLE=$(node -p "require('./version.json').releaseName || 'Tour de France Arcade'")
+          RELEASE_TITLE=$(node -p "require('./version.json').releaseName || 'Motormageddon Arcade'")
           echo "APP_VERSION=$APP_VER" >> $GITHUB_ENV
           echo "VERSION_CODE=$VER_CODE" >> $GITHUB_ENV
           echo "CHANNEL=$CHANNEL" >> $GITHUB_ENV
@@ -105,14 +105,12 @@ jobs:
             ---
             
             ### ✨ Nouveautés de cette version Beta :
-            - 🔄 **Vrais Ronds-points français** : Anneau 24m, îlot paysager, obélisque, panneaux B21f et véhicules circulant en continu.
-            - 🏍️ **Pilotage adouci** : Direction progressive avec filtrage d'inertie (suppression des à-coups brutaux).
-            - 💥 **Effets d'impact optimisés** : Étincelles compactes orange mandarine au lieu des gros éléments jaunes.
-            - 🚦 **Carrefours urbains & Trafic transversal** : Feux synchronisés, collision avec taxis/camionnettes et relèvement burlesque en 3 phases.
-            - 🗺️ **Carte du Tour de France** : Tracé néon doré animé, carrousel d'étapes et emblèmes de villes.
-            - 🛵 **Garage nouvelle ergonomie** : Carrousel ◀ / ▶, pilules de catégories claires, sans coupure de texte.
-            - 🔇 **Gestion audio & mémoire** : Nettoyage WebAudio natif `@capacitor/app` sans son résiduel.
-            - 🔑 **Signature permanente** : Keystore fixe garantissant les futures mises à jour directes sans désinstallation.
+            - 🏎️ **Nouveaux Engins Décoratifs & Déjantés** : Décapotable rouge sport rétro, trottinette avec double hache, coureurs à pied avec AK-47 et tronçonneuse.
+            - 🐎 **Cheval & FOUET** : Le FOUET remplace la cravache avec manche cuir tressé, virole d'or et lanière articulée claquante.
+            - ⚡ **Nitro 5s rechargeable** : Bouton HUD & raccourcis clavier, propulseurs NOS bleu cyan à l'arrière, boost x1.65.
+            - 🗺️ **Carte Méditerranéenne & Zoom Interactif** : Boutons de zoom (+/-), molette, Barcelone en Espagne, Rome, Naples & Vésuve, Tunis, Alger, Annaba.
+            - 🚦 **Croisements Clairs & Portiques Métalliques** : Portiques lumineux monumentaux avec feux suspendus, zébras d'approche 35m et alertes HUD.
+            - 🛡️ **Invulnérabilité Post-Crash Respectée** : Aucun obstacle percutable pendant le clignotement.
             
             ---
             ⚠️ *Note : Cette version est officiellement en phase BETA. Vos retours et signalements de bugs sont précieux.*

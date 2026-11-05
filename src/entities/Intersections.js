@@ -129,6 +129,70 @@ export class IntersectionManager {
     };
   }
 
+  // --- PORTIQUE GÉANT LUMINEUX AU-DESSUS DE LA VOIE DU CARREFOUR ---
+  createOverheadGantryMesh() {
+    const gantry = new THREE.Group();
+    const trussMat = new THREE.MeshToonMaterial({ color: 0x2f3640 });
+    const chromeMat = new THREE.MeshStandardMaterial({ color: 0xced6e0, metalness: 0.85, roughness: 0.2 });
+    const boxMat = new THREE.MeshToonMaterial({ color: 0x1e272e });
+
+    // 1. Deux poteaux d'acier verticaux de part et d'autre de la chaussée
+    const postGeo = new THREE.CylinderGeometry(0.12, 0.16, 5.6, 8);
+    const postL = new THREE.Mesh(postGeo, trussMat);
+    postL.position.set(-5.8, 2.8, 0);
+    const postR = new THREE.Mesh(postGeo, trussMat);
+    postR.position.set(5.8, 2.8, 0);
+    gantry.add(postL, postR);
+
+    // 2. Tablier métallique transversal franchissant toute la chaussée (hauteur 5.2m)
+    const beamGeo = new THREE.BoxGeometry(12.0, 0.45, 0.45);
+    const beam = new THREE.Mesh(beamGeo, trussMat);
+    beam.position.set(0, 5.2, 0);
+    gantry.add(beam);
+
+    const subBeam = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 11.8, 6), chromeMat);
+    subBeam.rotation.z = Math.PI / 2;
+    subBeam.position.set(0, 4.8, 0);
+    gantry.add(subBeam);
+
+    // 3. Boîtier central de feux suspendu au-dessus des voies du joueur
+    const centerBox = new THREE.Mesh(new THREE.BoxGeometry(0.68, 1.85, 0.48), boxMat);
+    centerBox.position.set(0, 4.5, 0.1);
+    gantry.add(centerBox);
+
+    // Optiques 3D géantes (Rouge, Orange, Vert)
+    const lampGeo = new THREE.SphereGeometry(0.18, 12, 10);
+    const lampRed = new THREE.Mesh(lampGeo, new THREE.MeshBasicMaterial({ color: 0xff2d55 }));
+    lampRed.position.set(0, 5.08, 0.36);
+    const lampOrange = new THREE.Mesh(lampGeo, new THREE.MeshBasicMaterial({ color: 0x442200 }));
+    lampOrange.position.set(0, 4.5, 0.36);
+    const lampGreen = new THREE.Mesh(lampGeo, new THREE.MeshBasicMaterial({ color: 0x004400 }));
+    lampGreen.position.set(0, 3.92, 0.36);
+    gantry.add(lampRed, lampOrange, lampGreen);
+
+    // Visières pare-soleil incurvées
+    const visorMat = new THREE.MeshToonMaterial({ color: 0x111111 });
+    [5.08, 4.5, 3.92].forEach(y => {
+      const visor = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.24, 0.2, 8, 1, true, 0, Math.PI), visorMat);
+      visor.rotation.x = Math.PI / 2;
+      visor.position.set(0, y + 0.12, 0.36);
+      gantry.add(visor);
+    });
+
+    // Gyrophare orange clignotant au centre supérieur du portique
+    const beacon = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.18, 8), new THREE.MeshBasicMaterial({ color: 0xffa502 }));
+    beacon.position.set(0, 5.54, 0);
+    gantry.add(beacon);
+
+    return {
+      group: gantry,
+      lampRed,
+      lampOrange,
+      lampGreen,
+      beacon
+    };
+  }
+
   // --- CRÉATION DE BARRIÈRE PIÉTONNE PARISIENNE TYPE CROIX DE SAINT-ANDRÉ ---
   createSaintAndreBarrierMesh() {
     const bGroup = new THREE.Group();
@@ -413,6 +477,28 @@ export class IntersectionManager {
     tlRight.group.position.set(5.6, 0, -8.6);
     nodeGroup.add(tlRight.group);
 
+    // 6. Portique monumental en treillis d'acier au-dessus des voies avec feu central
+    const overheadGantry = this.createOverheadGantryMesh();
+    overheadGantry.group.position.set(0, 0, -8.6);
+    nodeGroup.add(overheadGantry.group);
+
+    // 7. Zébras peints rouge et blanc d'avertissement d'approche 35m avant le stop
+    const warnRedMat = new THREE.MeshBasicMaterial({ color: 0xeb4d4b });
+    const warnWhiteMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    for (let az = -34; az <= -14; az += 5.0) {
+      const chevronL = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.45), warnRedMat);
+      chevronL.rotation.x = -Math.PI / 2;
+      chevronL.rotation.z = -0.4;
+      chevronL.position.set(-3.2, 0.024, az);
+
+      const chevronR = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.45), warnWhiteMat);
+      chevronR.rotation.x = -Math.PI / 2;
+      chevronR.rotation.z = 0.4;
+      chevronR.position.set(3.2, 0.024, az);
+
+      nodeGroup.add(chevronL, chevronR);
+    }
+
     const streetName = STREET_NAMES[this.streetNameIndex % STREET_NAMES.length];
     this.streetNameIndex++;
 
@@ -423,6 +509,7 @@ export class IntersectionManager {
       streetName,
       tlLeft,
       tlRight,
+      overheadGantry,
       state: 'GREEN', // Démarre au vert, passe à l'orange/rouge à l'approche
       timeInState: 0,
       stoppedProperly: false,
@@ -450,9 +537,18 @@ export class IntersectionManager {
       tl.repOrange.material.color.setHex(isOrange ? 0xff9f1a : 0x442200);
       tl.repGreen.material.color.setHex(isGreen ? 0x2ed573 : 0x004400);
     });
+
+    if (inter.overheadGantry) {
+      inter.overheadGantry.lampRed.material.color.setHex(isRed ? 0xff2d55 : 0x441111);
+      inter.overheadGantry.lampOrange.material.color.setHex(isOrange ? 0xff9f1a : 0x442200);
+      inter.overheadGantry.lampGreen.material.color.setHex(isGreen ? 0x2ed573 : 0x004400);
+      if (inter.overheadGantry.beacon) {
+        inter.overheadGantry.beacon.visible = isRed || isOrange;
+      }
+    }
   }
 
-  update(delta, playerZ, bikeX, bikeSpeed, onCollisionWithCar, onStopAtRedLightBonus, roadCurveFunc = null, roadAngleFunc = null) {
+  update(delta, playerZ, bikeX, bikeSpeed, onCollisionWithCar, onStopAtRedLightBonus, roadCurveFunc = null, roadAngleFunc = null, onApproachingRedLight = null) {
     // Génération continue des carrefours réalistes
     if (this.nextSpawnZ < playerZ + 260) {
       this.spawnIntersection(this.nextSpawnZ, roadCurveFunc, roadAngleFunc);
@@ -473,6 +569,10 @@ export class IntersectionManager {
         // Le feu passe au ROUGE
         this.setLightState(inter, 'RED');
         inter.timeInState = 0;
+        if (onApproachingRedLight && !inter.warnedToast) {
+          inter.warnedToast = true;
+          onApproachingRedLight(inter.streetName);
+        }
       }
 
       // 2. Déclenchement de la circulation transversale au carrefour

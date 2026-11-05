@@ -495,7 +495,7 @@ export class CharacterSystem {
     char.flySpinZ = dirX * (4.8 + Math.random() * 4.5);
   }
 
-  update(delta, playerZ, bikeX, bikeSpeed, onCollision, roadCurveFunc, onNearMiss) {
+  update(delta, playerZ, bikeX, bikeSpeed, onCollision, roadCurveFunc, onNearMiss, isInvulnerable = false) {
     this.spawnAhead(playerZ, roadCurveFunc);
 
     this.characters.forEach(char => {
@@ -601,12 +601,12 @@ export class CharacterSystem {
         const inZCollisionZone = (distZ >= -1.0 && distZ <= frameTravel);
         const inXCollisionZone = (distX <= 1.75);
 
-        if (inZCollisionZone && inXCollisionZone) {
+        if (!isInvulnerable && inZCollisionZone && inXCollisionZone) {
           this.triggerSlapstickFlight(char, bikeX, bikeSpeed);
           if (onCollision) {
             onCollision(char);
           }
-        } else if (!char.hasNearMissed && inZCollisionZone && distX > 1.75 && distX < 3.0) {
+        } else if (!isInvulnerable && !char.hasNearMissed && inZCollisionZone && distX > 1.75 && distX < 3.0) {
           char.hasNearMissed = true;
           if (onNearMiss) {
             onNearMiss(char);

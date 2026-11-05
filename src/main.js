@@ -103,8 +103,11 @@ class GameApp {
       } else if (e.code === 'ArrowDown' || e.code === 'KeyS') {
         this.keys.brake = true;
         gameState.setBraking(true);
-      } else if (e.code === 'Space') {
-        soundManager.playHorn();
+      } else if (e.code === 'Space' || e.code === 'KeyN' || e.code === 'ShiftLeft' || e.code === 'ShiftRight') {
+        const activated = gameState.activateNitro();
+        if (!activated) {
+          soundManager.playHorn();
+        }
       }
     });
 
@@ -201,6 +204,9 @@ class GameApp {
         this.bike.mesh.position.x,
         currentSpeed,
         (hitChar) => {
+          // Suite à un accident, quand le bolide clignote (invulnérable), impossible de heurter qui que ce soit !
+          if (this.bike.isInvulnerable()) return;
+
           // Impact cartoon équilibré !
           this.engine.triggerCameraShake(0.35);
           this.particles.spawnComicBurst(hitChar.group.position, hitChar.typeDef.points, gameState.combo);
@@ -210,9 +216,11 @@ class GameApp {
         (z) => this.environment.getRoadCenterX(z),
         (nearChar) => {
           // Frôlement / Near-Miss à pleine vitesse !
+          if (this.bike.isInvulnerable()) return;
           gameState.addNearMiss();
           this.particles.spawnComicBurst(nearChar.group.position, 75, gameState.combo);
-        }
+        },
+        this.bike.isInvulnerable()
       );
 
       // 9. Gestion des carrefours réalistes, feux et trafic transversal
@@ -222,7 +230,9 @@ class GameApp {
         this.bike.mesh.position.x,
         currentSpeed,
         (crossingCar) => {
-          // Heurté par un véhicule transversal / carrefour !
+          // Suite à un accident, quand le bolide clignote (invulnérable), impossible d'être heurté !
+          if (this.bike.isInvulnerable()) return;
+
           const crashed = this.bike.triggerCrash();
           if (crashed) {
             this.engine.triggerCameraShake(0.75);
@@ -240,7 +250,10 @@ class GameApp {
           soundManager.playCoin();
         },
         (z) => this.environment.getRoadCenterX(z),
-        (z) => this.environment.getRoadAngle(z)
+        (z) => this.environment.getRoadAngle(z),
+        (streetName) => {
+          if (this.ui) this.ui.showTrafficLightWarning(streetName);
+        }
       );
 
       // 10. Particules, étoiles et lignes de vitesse

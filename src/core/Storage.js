@@ -8,8 +8,12 @@ const STORAGE_KEY = 'motormageddon_save_v1';
 const DEFAULT_SAVE = {
   version: 2,
   playerName: 'Pilote Express',
-  coins: 500, // Pièces de départ
-  unlockedCities: ['paris'],
+  coins: 5000, // Pièces de départ
+  unlockedCities: [
+    'paris', 'bruxelles', 'londres', 'saint-malo', 'bordeaux', 'barcelone',
+    'millau', 'marseille', 'nice', 'milan', 'geneve', 'chamonix',
+    'annecy', 'lyon', 'strasbourg', 'rome', 'napoli', 'tunis', 'annaba', 'alger'
+  ],
   cityScores: {
     paris: { bestScore: 0, stars: 0, completed: false },
     lyon: { bestScore: 0, stars: 0, completed: false },
@@ -18,18 +22,18 @@ const DEFAULT_SAVE = {
     bordeaux: { bestScore: 0, stars: 0, completed: false },
     strasbourg: { bestScore: 0, stars: 0, completed: false }
   },
-  unlockedBikes: ['scooter'],
+  unlockedBikes: ['scooter', 'chopper', 'decapotable', 'trottinette_hache', 'cheval', 'run_ak47', 'run_chainsaw', 'rouleau', 'dragster'],
   equippedBike: 'scooter',
   bikeColors: {
     scooter: '#e74c3c',
-    sport: '#3498db',
     chopper: '#f39c12',
-    trike: '#9b59b6',
-    dragster: '#111111',
-    diablo: '#c0392b',
-    ravageur: '#27ae60',
+    decapotable: '#c0392b',
+    trottinette_hache: '#2ecc71',
     cheval: '#8b4513',
-    rouleau: '#f39c12'
+    run_ak47: '#2c3e50',
+    run_chainsaw: '#e67e22',
+    rouleau: '#f1c40f',
+    dragster: '#111111'
   },
   equippedAccessories: {
     helmet: 'beret',
@@ -65,6 +69,8 @@ export class Storage {
         return {
           ...DEFAULT_SAVE,
           ...parsed,
+          unlockedCities: Array.from(new Set([...DEFAULT_SAVE.unlockedCities, ...(parsed.unlockedCities || [])])),
+          unlockedBikes: Array.from(new Set([...DEFAULT_SAVE.unlockedBikes, ...(parsed.unlockedBikes || [])])),
           cityScores: { ...DEFAULT_SAVE.cityScores, ...(parsed.cityScores || {}) },
           bikeColors: { ...DEFAULT_SAVE.bikeColors, ...(parsed.bikeColors || {}) },
           settings: { ...DEFAULT_SAVE.settings, ...(parsed.settings || {}) },

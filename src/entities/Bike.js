@@ -5,6 +5,8 @@
 
 import * as THREE from 'three';
 import { storage } from '../core/Storage.js';
+import { gameState } from '../core/GameState.js';
+import { soundManager } from '../audio/SoundManager.js';
 import { textureFactory } from '../gfx/TextureFactory.js';
 
 export class Bike {
@@ -25,6 +27,8 @@ export class Bike {
     this.riderTorso = null;
     this.riderArmL = null;
     this.riderArmR = null;
+    this.runnerLegL = null;
+    this.runnerLegR = null;
 
     // Propriétés de pilotage
     this.x = 0;
@@ -35,6 +39,7 @@ export class Bike {
     this.targetLean = 0;
     this.bouncePhase = 0;
     this.currentBikeId = 'scooter';
+    this.lastWhipSnap = 0;
 
     // État de crash et relèvement comique
     this.isCrashed = false;
@@ -55,6 +60,34 @@ export class Bike {
     this.contactShadow.position.y = 0.025;
     this.mesh.add(this.contactShadow);
 
+    // Flammes Nitro (propulseurs NOS bleus éclatants)
+    this.nitroFlames = new THREE.Group();
+    const flameMat = new THREE.MeshBasicMaterial({ color: 0x00d2d3, transparent: true, opacity: 0.9 });
+    const flameCoreMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.95 });
+
+    const createFlameJet = (xOffset) => {
+      const jet = new THREE.Group();
+      jet.position.set(xOffset, 0.45, -1.2);
+
+      const outerCone = new THREE.Mesh(new THREE.ConeGeometry(0.18, 0.9, 8), flameMat);
+      outerCone.rotation.x = -Math.PI / 2;
+      outerCone.position.z = -0.45;
+
+      const innerCone = new THREE.Mesh(new THREE.ConeGeometry(0.09, 0.6, 6), flameCoreMat);
+      innerCone.rotation.x = -Math.PI / 2;
+      innerCone.position.z = -0.3;
+
+      jet.add(outerCone);
+      jet.add(innerCone);
+      return jet;
+    };
+
+    this.flameL = createFlameJet(-0.28);
+    this.flameR = createFlameJet(0.28);
+    this.nitroFlames.add(this.flameL, this.flameR);
+    this.nitroFlames.visible = false;
+    this.mesh.add(this.nitroFlames);
+
     this.buildCurrentBike();
     this.buildRider();
   }
@@ -67,6 +100,9 @@ export class Bike {
     }
     this.wheels = [];
     this.frontFork = null;
+    this.horseGroup = null;
+    this.frontRoller = null;
+    this.carSteeringWheel = null;
 
     const bikeId = previewBikeId || storage.getEquippedBike() || 'scooter';
     this.currentBikeId = bikeId;
@@ -97,22 +133,25 @@ export class Bike {
 
     if (bikeId === 'scooter') {
       this.buildScooter(bodyMaterial, chromeMaterial, rubberMaterial, leatherMaterial, lampMaterial);
-    } else if (bikeId === 'sport') {
-      this.buildSportBike(bodyMaterial, chromeMaterial, rubberMaterial, leatherMaterial, lampMaterial);
     } else if (bikeId === 'chopper') {
       this.buildChopper(bodyMaterial, chromeMaterial, rubberMaterial, leatherMaterial, lampMaterial);
-    } else if (bikeId === 'trike') {
-      this.buildTrike(bodyMaterial, chromeMaterial, rubberMaterial, leatherMaterial, lampMaterial);
-    } else if (bikeId === 'dragster') {
-      this.buildDragster(bodyMaterial, chromeMaterial, rubberMaterial, leatherMaterial, lampMaterial);
-    } else if (bikeId === 'diablo') {
-      this.buildDiablo(bodyMaterial, chromeMaterial, rubberMaterial, leatherMaterial, lampMaterial);
-    } else if (bikeId === 'ravageur') {
-      this.buildRavageur(bodyMaterial, chromeMaterial, rubberMaterial, leatherMaterial, lampMaterial);
+    } else if (bikeId === 'decapotable') {
+      this.buildDecapotable(bodyMaterial, chromeMaterial, rubberMaterial, leatherMaterial, lampMaterial);
+    } else if (bikeId === 'trottinette_hache') {
+      this.buildTrottinetteHache(bodyMaterial, chromeMaterial, rubberMaterial, leatherMaterial, lampMaterial);
     } else if (bikeId === 'cheval') {
       this.buildCheval(bodyMaterial, chromeMaterial, rubberMaterial, leatherMaterial, lampMaterial);
+    } else if (bikeId === 'run_ak47') {
+      this.buildRunner('ak47', bodyMaterial, chromeMaterial);
+    } else if (bikeId === 'run_chainsaw') {
+      this.buildRunner('chainsaw', bodyMaterial, chromeMaterial);
     } else if (bikeId === 'rouleau') {
       this.buildRouleau(bodyMaterial, chromeMaterial, rubberMaterial, leatherMaterial, lampMaterial);
+    } else if (bikeId === 'dragster') {
+      this.buildDragster(bodyMaterial, chromeMaterial, rubberMaterial, leatherMaterial, lampMaterial);
+    } else {
+      // Fallback
+      this.buildScooter(bodyMaterial, chromeMaterial, rubberMaterial, leatherMaterial, lampMaterial);
     }
 
     this.buildRider();
@@ -690,7 +729,7 @@ export class Bike {
     this.bikeModelGroup.add(forkGroup);
   }
 
-  // --- MONTURE PUR-SANG : ÉTALON DU TOUR AVEC CRAVACHE ---
+  // --- MONTURE PUR-SANG : ÉTALON DU GRAND TOUR AVEC FOUET ---
   buildCheval(bodyMat, chromeMat, rubberMat, leatherMat, lampMat) {
     this.horseGroup = new THREE.Group();
     this.horseLegs = [];
@@ -880,21 +919,187 @@ export class Bike {
     this.bikeModelGroup.add(rollerGroup);
   }
 
+  // --- VOITURE DÉCAPOTABLE SPORT ROUGE RÉTRO ---
+  buildDecapotable(bodyMat, chromeMat, rubberMat, leatherMat, lampMat) {
+    const carGroup = new THREE.Group();
+
+    // 1. Quatre roues sport indépendantes
+    const frontL = this.createWheel(0.38, 0.22, rubberMat, chromeMat);
+    frontL.position.set(-0.82, 0.38, 0.95);
+    const frontR = this.createWheel(0.38, 0.22, rubberMat, chromeMat);
+    frontR.position.set(0.82, 0.38, 0.95);
+    const rearL = this.createWheel(0.40, 0.26, rubberMat, chromeMat);
+    rearL.position.set(-0.84, 0.40, -0.95);
+    const rearR = this.createWheel(0.40, 0.26, rubberMat, chromeMat);
+    rearR.position.set(0.84, 0.40, -0.95);
+    carGroup.add(frontL, frontR, rearL, rearR);
+    this.wheels.push(frontL, frontR, rearL, rearR);
+
+    // 2. Châssis / Carrosserie profilée décapotable
+    const bodyBase = new THREE.Mesh(new THREE.BoxGeometry(1.58, 0.42, 2.7), bodyMat);
+    bodyBase.position.set(0, 0.52, 0);
+    bodyBase.castShadow = true;
+    carGroup.add(bodyBase);
+
+    // Capot avant incliné
+    const hood = new THREE.Mesh(new THREE.BoxGeometry(1.52, 0.25, 1.15), bodyMat);
+    hood.position.set(0, 0.68, 0.72);
+    hood.rotation.x = -0.08;
+    carGroup.add(hood);
+
+    // Calandre chromée rétro
+    const grill = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.28, 0.08), chromeMat);
+    grill.position.set(0, 0.52, 1.36);
+    carGroup.add(grill);
+
+    // Pare-chocs avant chromé avec butoirs
+    const bumperF = new THREE.Mesh(new THREE.BoxGeometry(1.68, 0.12, 0.1), chromeMat);
+    bumperF.position.set(0, 0.38, 1.4);
+    carGroup.add(bumperF);
+
+    // Phares ronds vintage
+    const hlL = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.08, 12), lampMat);
+    hlL.rotation.x = Math.PI / 2;
+    hlL.position.set(-0.58, 0.64, 1.35);
+    const hlR = hlL.clone();
+    hlR.position.set(0.58, 0.64, 1.35);
+    carGroup.add(hlL, hlR);
+
+    // Pare-brise panoramique incliné
+    const glassMat = new THREE.MeshBasicMaterial({ color: 0x81ecec, transparent: true, opacity: 0.55 });
+    const windshield = new THREE.Mesh(new THREE.BoxGeometry(1.35, 0.38, 0.04), glassMat);
+    windshield.position.set(0, 0.95, 0.22);
+    windshield.rotation.x = -0.38;
+    carGroup.add(windshield);
+
+    // Cadre chromé du pare-brise
+    const wsFrame = new THREE.Mesh(new THREE.BoxGeometry(1.38, 0.04, 0.04), chromeMat);
+    wsFrame.position.set(0, 1.12, 0.16);
+    carGroup.add(wsFrame);
+
+    // Cockpit & Sièges baquets cuir
+    const seatL = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.5, 0.55), leatherMat);
+    seatL.position.set(-0.35, 0.65, -0.32);
+    const seatR = seatL.clone();
+    seatR.position.set(0.35, 0.65, -0.32);
+    carGroup.add(seatL, seatR);
+
+    // Tableau de bord & Volant chromé sport
+    const dash = new THREE.Mesh(new THREE.BoxGeometry(1.35, 0.22, 0.3), bodyMat);
+    dash.position.set(0, 0.75, 0.1);
+    carGroup.add(dash);
+
+    const wheelGroup = new THREE.Group();
+    wheelGroup.position.set(0, 0.88, 0.02);
+    wheelGroup.rotation.x = -Math.PI / 4.2;
+    const steerRim = new THREE.Mesh(new THREE.TorusGeometry(0.18, 0.025, 8, 14), chromeMat);
+    wheelGroup.add(steerRim);
+    carGroup.add(wheelGroup);
+    this.carSteeringWheel = wheelGroup;
+
+    // Arrière profilé avec double échappement chromé
+    const bumperR = new THREE.Mesh(new THREE.BoxGeometry(1.68, 0.12, 0.1), chromeMat);
+    bumperR.position.set(0, 0.4, -1.38);
+    carGroup.add(bumperR);
+
+    const exL = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.3, 8), chromeMat);
+    exL.rotation.x = Math.PI / 2;
+    exL.position.set(-0.35, 0.38, -1.45);
+    const exR = exL.clone();
+    exR.position.set(0.35, 0.38, -1.45);
+    carGroup.add(exL, exR);
+
+    this.bikeModelGroup.add(carGroup);
+  }
+
+  // --- TROTTINETTE AVEC DOUBLE HACHE DE GUERRE ---
+  buildTrottinetteHache(bodyMat, chromeMat, rubberMat, leatherMat, lampMat) {
+    const scootGroup = new THREE.Group();
+
+    // 1. Deck / Plateau fin en aluminium anodisé
+    const deckMat = new THREE.MeshStandardMaterial({ color: 0x222f3e, metalness: 0.7, roughness: 0.3 });
+    const deck = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.08, 1.45), deckMat);
+    deck.position.set(0, 0.24, -0.1);
+    deck.castShadow = true;
+    scootGroup.add(deck);
+
+    // Grip de skateboard noir antidérapant
+    const gripMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
+    const grip = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.02, 1.2), gripMat);
+    grip.position.set(0, 0.29, -0.1);
+    scootGroup.add(grip);
+
+    // 2. Petites roues vives avant et arrière
+    const frontWheel = this.createWheel(0.18, 0.1, rubberMat, chromeMat);
+    frontWheel.position.set(0, 0.18, 0.68);
+    const rearWheel = this.createWheel(0.18, 0.1, rubberMat, chromeMat);
+    rearWheel.position.set(0, 0.18, -0.78);
+    scootGroup.add(frontWheel, rearWheel);
+    this.wheels.push(frontWheel, rearWheel);
+
+    // Garde-boue arrière avec frein au pied
+    const fender = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.1, 0.28), bodyMat);
+    fender.position.set(0, 0.32, -0.76);
+    scootGroup.add(fender);
+
+    // 3. Colonne de direction télescopique & Guidon en T
+    const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.15, 8), chromeMat);
+    stem.position.set(0, 0.78, 0.62);
+    stem.rotation.x = -0.14;
+    scootGroup.add(stem);
+
+    const bar = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.75, 8), chromeMat);
+    bar.rotation.z = Math.PI / 2;
+    bar.position.set(0, 1.32, 0.54);
+    scootGroup.add(bar);
+
+    // Phare LED urbain
+    const led = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 8), lampMat);
+    led.position.set(0, 1.25, 0.62);
+    scootGroup.add(led);
+
+    this.bikeModelGroup.add(scootGroup);
+  }
+
+  // --- SPRINTEUR À PIED (AVEC AK-47 OU TRONÇONNEUSE) ---
+  buildRunner(weaponType, bodyMat, chromeMat) {
+    this.runnerWeaponType = weaponType;
+    // Aucun véhicule mécanique n'est ajouté au sol : le sprinteur est à pied
+  }
+
   buildRider() {
     // Nettoyer
     while (this.riderGroup.children.length > 0) {
       this.riderGroup.remove(this.riderGroup.children[0]);
     }
+    this.runnerLegL = null;
+    this.runnerLegR = null;
 
     const skinMat = new THREE.MeshLambertMaterial({ color: 0xffccaa });
     const jacketMat = new THREE.MeshLambertMaterial({ color: 0x2c3e50 });
     const pantsMat = new THREE.MeshLambertMaterial({ color: 0x1a252f });
     const shoesMat = new THREE.MeshLambertMaterial({ color: 0x111111 });
     const beretMat = new THREE.MeshLambertMaterial({ color: 0x9b111e }); // Rouge béret français
+    const goldMat = new THREE.MeshStandardMaterial({ color: 0xffd700, metalness: 0.85, roughness: 0.2 });
+    const steelMat = new THREE.MeshStandardMaterial({ color: 0xdcdde1, metalness: 0.85, roughness: 0.25 });
+    const woodMat = new THREE.MeshLambertMaterial({ color: 0x5a2d0c });
+
+    const isCar = this.currentBikeId === 'decapotable';
+    const isScoot = this.currentBikeId === 'trottinette_hache';
+    const isRunner = this.currentBikeId === 'run_ak47' || this.currentBikeId === 'run_chainsaw';
+    const isHorse = this.currentBikeId === 'cheval';
 
     // Bassin & Torse
     const torsoGroup = new THREE.Group();
-    torsoGroup.position.set(0, 0.9, -0.25);
+    if (isCar) {
+      torsoGroup.position.set(-0.35, 0.68, -0.28);
+    } else if (isScoot) {
+      torsoGroup.position.set(0, 0.85, -0.15);
+    } else if (isRunner) {
+      torsoGroup.position.set(0, 0.78, 0);
+    } else {
+      torsoGroup.position.set(0, 0.9, -0.25);
+    }
 
     const torsoGeo = new THREE.BoxGeometry(0.38, 0.45, 0.24);
     const torso = new THREE.Mesh(torsoGeo, jacketMat);
@@ -936,7 +1141,7 @@ export class Bike {
     const beretGeo = new THREE.CylinderGeometry(0.24, 0.2, 0.08, 12);
     const beret = new THREE.Mesh(beretGeo, beretMat);
     beret.position.set(0, 0.15, -0.02);
-    beret.rotation.z = -0.15; // Légèrement penché avec style
+    beret.rotation.z = -0.15;
     headGroup.add(beret);
 
     const pompomGeo = new THREE.SphereGeometry(0.03, 6, 6);
@@ -948,84 +1153,309 @@ export class Bike {
     this.riderHead = headGroup;
     this.riderTorso = torsoGroup;
 
-    // Bras gauche et droit tenant le guidon
+    // Bras gauche et droit
     const armGeo = new THREE.CylinderGeometry(0.06, 0.06, 0.45, 8);
-
     const armL = new THREE.Mesh(armGeo, jacketMat);
-    armL.position.set(-0.25, 0.2, 0.2);
-    armL.rotation.x = Math.PI / 3.2;
-    armL.rotation.z = -0.25;
-    torsoGroup.add(armL);
-    this.riderArmL = armL;
-
     const armR = new THREE.Mesh(armGeo, jacketMat);
     this.riderWhip = null;
 
-    if (this.currentBikeId === 'cheval') {
-      // Bras droit relevé vers le haut brandissant la cravache / fouet
+    if (isHorse) {
+      // Bras gauche tient les rênes
+      armL.position.set(-0.25, 0.2, 0.2);
+      armL.rotation.x = Math.PI / 3.2;
+      armL.rotation.z = -0.25;
+      torsoGroup.add(armL);
+
+      // Bras droit brandit haut le FOUET de maître
       armR.position.set(0.3, 0.32, 0.05);
-      armR.rotation.x = -Math.PI / 3.5;
+      armR.rotation.x = -Math.PI / 3.2;
       armR.rotation.z = Math.PI / 4.5;
       torsoGroup.add(armR);
 
-      // Cravache / Fouet cartoon avec manche noir, lanière recourbée et pointe rouge
+      // --- GRAND FOUET DE MAÎTRE (CUIR TRESSÉ, VIROLE D'OR & MÈCHE ÉCARLATE) ---
       const whipGroup = new THREE.Group();
       whipGroup.position.set(0.42, 0.48, 0.08);
       whipGroup.rotation.x = -Math.PI / 4;
       whipGroup.rotation.z = Math.PI / 5;
 
-      const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.035, 0.52, 6), new THREE.MeshToonMaterial({ color: 0x111111 }));
+      // Manche ergonomique en cuir noir tressé
+      const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.024, 0.032, 0.58, 8), new THREE.MeshToonMaterial({ color: 0x1a1a1a }));
       whipGroup.add(handle);
 
-      const pommel = new THREE.Mesh(new THREE.SphereGeometry(0.045, 6, 6), new THREE.MeshBasicMaterial({ color: 0xffd700 }));
-      pommel.position.y = -0.27;
+      // Pommeau lourd sphérique en or (virole de contrepoids)
+      const pommel = new THREE.Mesh(new THREE.SphereGeometry(0.052, 8, 8), goldMat);
+      pommel.position.y = -0.3;
       whipGroup.add(pommel);
 
-      const lashMat = new THREE.MeshBasicMaterial({ color: 0x5a2d0c });
-      const lash1 = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.012, 0.45, 4), lashMat);
-      lash1.position.set(0.08, 0.42, 0);
-      lash1.rotation.z = -0.45;
-      const lash2 = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.006, 0.45, 4), lashMat);
-      lash2.position.set(0.24, 0.72, 0);
-      lash2.rotation.z = -0.9;
-      whipGroup.add(lash1, lash2);
+      // Bague supérieure dorée
+      const ferrule = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.06, 8), goldMat);
+      ferrule.position.y = 0.29;
+      whipGroup.add(ferrule);
 
-      const tassel = new THREE.Mesh(new THREE.SphereGeometry(0.04, 6, 6), new THREE.MeshBasicMaterial({ color: 0xff4757 }));
-      tassel.position.set(0.4, 0.88, 0);
-      whipGroup.add(tassel);
+      // Lanière souple incurvée du FOUET en 4 segments effilés
+      const lashMat = new THREE.MeshStandardMaterial({ color: 0x3d1c06, roughness: 0.5 });
+      const seg1 = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.016, 0.38, 6), lashMat);
+      seg1.position.set(0.06, 0.46, 0);
+      seg1.rotation.z = -0.35;
+
+      const seg2 = new THREE.Mesh(new THREE.CylinderGeometry(0.016, 0.011, 0.38, 6), lashMat);
+      seg2.position.set(0.18, 0.78, 0);
+      seg2.rotation.z = -0.7;
+
+      const seg3 = new THREE.Mesh(new THREE.CylinderGeometry(0.011, 0.007, 0.35, 6), lashMat);
+      seg3.position.set(0.38, 1.02, 0);
+      seg3.rotation.z = -1.15;
+
+      const seg4 = new THREE.Mesh(new THREE.CylinderGeometry(0.007, 0.003, 0.28, 4), lashMat);
+      seg4.position.set(0.62, 1.15, 0);
+      seg4.rotation.z = -1.55;
+
+      whipGroup.add(seg1, seg2, seg3, seg4);
+
+      // Mèche écarlate (Cracker rouge sang claquant au bout du FOUET)
+      const cracker = new THREE.Mesh(new THREE.SphereGeometry(0.045, 6, 6), new THREE.MeshBasicMaterial({ color: 0xff3838 }));
+      cracker.position.set(0.76, 1.16, 0);
+      whipGroup.add(cracker);
 
       torsoGroup.add(whipGroup);
       this.riderWhip = whipGroup;
+
+    } else if (isCar) {
+      // Pilote de décapotable tenant le volant des deux mains
+      armL.position.set(-0.24, 0.16, 0.28);
+      armL.rotation.x = Math.PI / 2.6;
+      armL.rotation.z = 0.15;
+      armR.position.set(0.24, 0.16, 0.28);
+      armR.rotation.x = Math.PI / 2.6;
+      armR.rotation.z = -0.15;
+      torsoGroup.add(armL, armR);
+
+    } else if (isScoot) {
+      // Main gauche sur le guidon de la trottinette
+      armL.position.set(-0.25, 0.2, 0.24);
+      armL.rotation.x = Math.PI / 2.8;
+      armL.rotation.z = -0.2;
+      torsoGroup.add(armL);
+
+      // Bras droit brandissant la Double Hache de Guerre viking
+      armR.position.set(0.28, 0.28, 0.1);
+      armR.rotation.x = -Math.PI / 3.4;
+      armR.rotation.z = Math.PI / 4.2;
+      torsoGroup.add(armR);
+
+      // --- DOUBLE HACHE DE GUERRE BERSERKER ---
+      const axeGroup = new THREE.Group();
+      axeGroup.position.set(0.38, 0.45, 0.12);
+      axeGroup.rotation.x = -Math.PI / 4;
+      axeGroup.rotation.z = Math.PI / 6;
+
+      // Manche en bois de frêne avec lanières de cuir
+      const axeShaft = new THREE.Mesh(new THREE.CylinderGeometry(0.026, 0.026, 0.95, 8), woodMat);
+      axeGroup.add(axeShaft);
+
+      // Tête d'acier centrale avec pointe d'estoc
+      const headCenter = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.18, 0.12), steelMat);
+      headCenter.position.y = 0.35;
+      const spike = new THREE.Mesh(new THREE.ConeGeometry(0.04, 0.16, 6), steelMat);
+      spike.position.y = 0.48;
+      axeGroup.add(headCenter, spike);
+
+      // Lame avant en croissant tranchant (bord rouge sang)
+      const bladeGeo = new THREE.BoxGeometry(0.42, 0.32, 0.03);
+      const bladeFront = new THREE.Mesh(bladeGeo, steelMat);
+      bladeFront.position.set(0.22, 0.35, 0);
+      bladeFront.rotation.z = 0.1;
+      const bladeBack = new THREE.Mesh(bladeGeo, steelMat);
+      bladeBack.position.set(-0.22, 0.35, 0);
+      bladeBack.rotation.z = -0.1;
+      axeGroup.add(bladeFront, bladeBack);
+
+      torsoGroup.add(axeGroup);
+
+    } else if (this.currentBikeId === 'run_ak47') {
+      // Sprinteur tenant une Kalachnikov AK-47 à deux mains
+      armL.position.set(-0.2, 0.16, 0.22);
+      armL.rotation.x = Math.PI / 2.8;
+      armL.rotation.z = 0.3;
+      armR.position.set(0.22, 0.16, 0.15);
+      armR.rotation.x = Math.PI / 2.4;
+      armR.rotation.z = -0.35;
+      torsoGroup.add(armL, armR);
+
+      // --- KALACHNIKOV AK-47 3D ---
+      const akGroup = new THREE.Group();
+      akGroup.position.set(0.04, 0.18, 0.32);
+      akGroup.rotation.y = -0.25;
+
+      // Boîte de culasse / Corps en acier bruni
+      const receiver = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.12, 0.42), steelMat);
+      akGroup.add(receiver);
+
+      // Crosse en bois d'orme
+      const stock = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.14, 0.32), woodMat);
+      stock.position.set(0, -0.04, -0.32);
+      akGroup.add(stock);
+
+      // Garde-main en bois
+      const handguard = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.09, 0.24), woodMat);
+      handguard.position.set(0, 0.01, 0.28);
+      akGroup.add(handguard);
+
+      // Canon & Guidon d'acier
+      const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.45, 6), steelMat);
+      barrel.rotation.x = Math.PI / 2;
+      barrel.position.set(0, 0.02, 0.52);
+      akGroup.add(barrel);
+
+      // Chargeur banane courbé 30 coups
+      const mag = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.24, 0.12), steelMat);
+      mag.position.set(0, -0.16, 0.1);
+      mag.rotation.x = -0.3;
+      akGroup.add(mag);
+
+      torsoGroup.add(akGroup);
+
+    } else if (this.currentBikeId === 'run_chainsaw') {
+      // Sprinteur tenant une tronçonneuse d'assaut
+      armL.position.set(-0.24, 0.18, 0.2);
+      armL.rotation.x = Math.PI / 2.4;
+      armL.rotation.z = 0.2;
+      armR.position.set(0.24, 0.18, 0.15);
+      armR.rotation.x = Math.PI / 2.2;
+      armR.rotation.z = -0.2;
+      torsoGroup.add(armL, armR);
+
+      // --- TRONÇONNEUSE VROMBISSANTE 3D ---
+      const csGroup = new THREE.Group();
+      csGroup.position.set(0, 0.18, 0.35);
+
+      // Bloc moteur orange de tronçonneuse
+      const orangeMat = new THREE.MeshToonMaterial({ color: 0xff6b01 });
+      const motor = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.22, 0.35), orangeMat);
+      csGroup.add(motor);
+
+      // Poignée supérieure métallique
+      const csHandle = new THREE.Mesh(new THREE.TorusGeometry(0.12, 0.02, 6, 12), steelMat);
+      csHandle.rotation.x = Math.PI / 2;
+      csHandle.position.set(0, 0.14, 0);
+      csGroup.add(csHandle);
+
+      // Guide-chaîne chromé long et fin
+      const bar = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.16, 0.65), steelMat);
+      bar.position.set(0, 0, 0.46);
+      csGroup.add(bar);
+
+      // Dents de coupe métalliques
+      const teethMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
+      const teeth = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.18, 0.62), teethMat);
+      teeth.position.set(0, 0, 0.46);
+      csGroup.add(teeth);
+
+      torsoGroup.add(csGroup);
+
     } else {
+      // Standard guidon de moto (scooter, chopper, etc.)
+      armL.position.set(-0.25, 0.2, 0.2);
+      armL.rotation.x = Math.PI / 3.2;
+      armL.rotation.z = -0.25;
       armR.position.set(0.25, 0.2, 0.2);
       armR.rotation.x = Math.PI / 3.2;
       armR.rotation.z = 0.25;
-      torsoGroup.add(armR);
+      torsoGroup.add(armL, armR);
     }
+
+    this.riderArmL = armL;
     this.riderArmR = armR;
 
-    // Jambes repliées vers les cale-pieds
-    const legGeo = new THREE.BoxGeometry(0.12, 0.4, 0.14);
-    const legL = new THREE.Mesh(legGeo, pantsMat);
-    legL.position.set(-0.18, 0.55, -0.05);
-    legL.rotation.x = -0.5;
-    this.riderGroup.add(legL);
+    // --- JAMBES & CHAUSSURES DU PILOTE / COUREUR ---
+    if (isRunner) {
+      // Pour les coureurs à pied : jambes articulées au bassin pour animation de sprint rapide
+      const legGeo = new THREE.BoxGeometry(0.12, 0.45, 0.14);
+      const shoeGeo = new THREE.BoxGeometry(0.13, 0.11, 0.24);
 
-    const legR = legL.clone();
-    legR.position.set(0.18, 0.55, -0.05);
-    this.riderGroup.add(legR);
+      const createRunnerLeg = (x) => {
+        const pivot = new THREE.Group();
+        pivot.position.set(x, 0.75, 0);
 
-    // Chaussures
-    const shoeGeo = new THREE.BoxGeometry(0.12, 0.1, 0.2);
-    const shoeL = new THREE.Mesh(shoeGeo, shoesMat);
-    shoeL.position.set(-0.18, 0.38, 0.1);
-    this.riderGroup.add(shoeL);
+        const leg = new THREE.Mesh(legGeo, pantsMat);
+        leg.position.y = -0.22;
+        pivot.add(leg);
 
-    const shoeR = shoeL.clone();
-    shoeR.position.set(0.18, 0.38, 0.1);
-    this.riderGroup.add(shoeR);
+        const shoe = new THREE.Mesh(shoeGeo, shoesMat);
+        shoe.position.set(0, -0.46, 0.05);
+        pivot.add(shoe);
+
+        this.riderGroup.add(pivot);
+        return pivot;
+      };
+
+      this.runnerLegL = createRunnerLeg(-0.16);
+      this.runnerLegR = createRunnerLeg(0.16);
+
+    } else if (isCar) {
+      // Dans la décapotable : jambes allongées vers l'avant sous le tableau de bord
+      const legGeo = new THREE.BoxGeometry(0.12, 0.48, 0.14);
+      const shoeGeo = new THREE.BoxGeometry(0.12, 0.1, 0.2);
+
+      const legL = new THREE.Mesh(legGeo, pantsMat);
+      legL.position.set(-0.48, 0.42, 0.02);
+      legL.rotation.x = -1.2;
+      const legR = new THREE.Mesh(legGeo, pantsMat);
+      legR.position.set(-0.22, 0.42, 0.02);
+      legR.rotation.x = -1.2;
+      this.riderGroup.add(legL, legR);
+
+      const shoeL = new THREE.Mesh(shoeGeo, shoesMat);
+      shoeL.position.set(-0.48, 0.32, 0.38);
+      const shoeR = shoeL.clone();
+      shoeR.position.set(-0.22, 0.32, 0.38);
+      this.riderGroup.add(shoeL, shoeR);
+
+    } else if (isScoot) {
+      // Sur la trottinette : debout sur le deck
+      const legGeo = new THREE.BoxGeometry(0.12, 0.52, 0.14);
+      const shoeGeo = new THREE.BoxGeometry(0.12, 0.1, 0.22);
+
+      const legL = new THREE.Mesh(legGeo, pantsMat);
+      legL.position.set(-0.1, 0.56, -0.05);
+      const legR = new THREE.Mesh(legGeo, pantsMat);
+      legR.position.set(0.1, 0.56, -0.25);
+      this.riderGroup.add(legL, legR);
+
+      const shoeL = new THREE.Mesh(shoeGeo, shoesMat);
+      shoeL.position.set(-0.1, 0.34, 0);
+      const shoeR = shoeL.clone();
+      shoeR.position.set(0.1, 0.34, -0.2);
+      this.riderGroup.add(shoeL, shoeR);
+
+    } else {
+      // Moto classique & cheval : jambes repliées
+      const legGeo = new THREE.BoxGeometry(0.12, 0.4, 0.14);
+      const shoeGeo = new THREE.BoxGeometry(0.12, 0.1, 0.2);
+
+      const legL = new THREE.Mesh(legGeo, pantsMat);
+      legL.position.set(-0.18, 0.55, -0.05);
+      legL.rotation.x = -0.5;
+      this.riderGroup.add(legL);
+
+      const legR = legL.clone();
+      legR.position.set(0.18, 0.55, -0.05);
+      this.riderGroup.add(legR);
+
+      const shoeL = new THREE.Mesh(shoeGeo, shoesMat);
+      shoeL.position.set(-0.18, 0.38, 0.1);
+      this.riderGroup.add(shoeL);
+
+      const shoeR = shoeL.clone();
+      shoeR.position.set(0.18, 0.38, 0.1);
+      this.riderGroup.add(shoeR);
+    }
 
     this.riderGroup.add(torsoGroup);
+  }
+
+  isInvulnerable() {
+    return this.isCrashed || this.invulnerableTimer > 0;
   }
 
   triggerCrash() {
@@ -1063,7 +1493,7 @@ export class Bike {
         // Phase 2 : Le pilote s'assied et secoue la tête comiquement ("étourdi")
         this.mesh.rotation.z = THREE.MathUtils.lerp(this.mesh.rotation.z, 1.2, delta * 6);
         if (this.riderHead) {
-          this.riderHead.rotation.y = Math.sin(this.crashTimer * 20) * 0.7; // Secoue la tête de gauche à droite
+          this.riderHead.rotation.y = Math.sin(this.crashTimer * 20) * 0.7;
           this.riderHead.rotation.z = Math.cos(this.crashTimer * 15) * 0.3;
         }
         if (this.riderTorso) {
@@ -1094,36 +1524,40 @@ export class Bike {
     }
 
     // --- CONTRÔLE NORMAL DIRECTIONNEL PROGRESSIF & AMORTI ---
-    // Filtrage doux pour éliminer les à-coups et secousses brutales
     this.smoothedSteer += (steerInput - this.smoothedSteer) * Math.min(1.0, delta * 7.5);
 
-    // Vitesse latérale modérée et agréable (8.2 m/s max avec amorti fluide)
     const ROAD_WIDTH = 4.2;
     this.x -= this.smoothedSteer * 8.2 * delta;
     this.x = Math.max(-ROAD_WIDTH, Math.min(ROAD_WIDTH, this.x));
 
-    // Inclinaison douce du bolide (angle réaliste et progressif d'environ 18°)
     this.targetLean = this.smoothedSteer * 0.32;
     this.currentLean += (this.targetLean - this.currentLean) * Math.min(1.0, delta * 6.5);
 
-    // Positionnement et rotation de la moto
+    // Positionnement et rotation du bolide
     this.mesh.position.x = this.x;
     this.mesh.rotation.z = 0;
 
-    // Légère suspension / rebond vivant sur la route
+    // Suspension / rebond
     this.bouncePhase += delta * (speed * 0.8 + 2.0);
     const suspensionBounce = Math.sin(this.bouncePhase) * 0.02;
     this.mesh.position.y = suspensionBounce;
 
-    // Inclinaison du châssis
-    this.bikeModelGroup.rotation.z = this.currentLean;
+    // Inclinaison du châssis (atténuée pour la décapotable 4 roues)
+    if (this.currentBikeId === 'decapotable') {
+      this.bikeModelGroup.rotation.z = this.currentLean * 0.35;
+      if (this.carSteeringWheel) {
+        this.carSteeringWheel.rotation.z = -this.smoothedSteer * 1.2;
+      }
+    } else {
+      this.bikeModelGroup.rotation.z = this.currentLean;
+    }
 
     // Orientation de la fourche avant
     if (this.frontFork) {
       this.frontFork.rotation.y = this.smoothedSteer * 0.25;
     }
 
-    // Animation du pilote (le pilote compense avec souplesse l'angle de la moto)
+    // Animation du pilote
     if (this.riderTorso) {
       this.riderTorso.rotation.z = this.currentLean * 0.75;
       this.riderTorso.rotation.x = 0.25 + Math.sin(this.bouncePhase * 2) * 0.03;
@@ -1136,9 +1570,6 @@ export class Bike {
       this.scarfTail.rotation.x = -0.35 + Math.sin(this.bouncePhase * 3.5) * 0.22;
       this.scarfTail.rotation.y = Math.cos(this.bouncePhase * 2.8) * 0.18;
     }
-    if (this.riderWhip && this.currentBikeId === 'cheval') {
-      this.riderWhip.rotation.x = -Math.PI / 4 + Math.sin(this.bouncePhase * 3.8) * 0.32;
-    }
 
     // Rotation des roues selon la vitesse
     const wheelAngularSpeed = (speed / 0.35) * delta;
@@ -1146,7 +1577,7 @@ export class Bike {
       w.rotation.x += wheelAngularSpeed;
     });
 
-    // Animation réaliste du Pur-Sang au galop (membres, queue et cravache)
+    // --- ANIMATION DE L'ÉTALON PUR-SANG & DU FOUET CINGLANT ---
     if (this.currentBikeId === 'cheval') {
       const gallopCycle = this.bouncePhase * 3.2;
       if (this.horseLegFL) this.horseLegFL.rotation.x = Math.sin(gallopCycle) * 0.55;
@@ -1155,14 +1586,41 @@ export class Bike {
       if (this.horseLegBR) this.horseLegBR.rotation.x = Math.sin(gallopCycle) * 0.5;
       if (this.horseTail) this.horseTail.rotation.z = Math.sin(gallopCycle * 0.6) * 0.35;
       if (this.horseGroup) this.horseGroup.position.y = Math.abs(Math.sin(gallopCycle)) * 0.08;
+
+      // Claquement périodique réaliste du FOUET avec son
       if (this.riderWhip) {
-        this.riderWhip.rotation.x = -Math.PI / 4 + Math.sin(gallopCycle * 1.4) * 0.32;
+        const whipCycle = Math.sin(this.bouncePhase * 1.8);
+        this.riderWhip.rotation.x = -Math.PI / 4 + whipCycle * 0.45;
+        this.riderWhip.rotation.z = Math.PI / 5 + Math.cos(this.bouncePhase * 1.8) * 0.2;
+        if (whipCycle > 0.94 && (!this.lastWhipSnap || Date.now() - this.lastWhipSnap > 1400)) {
+          this.lastWhipSnap = Date.now();
+          soundManager.playWhipCrack();
+        }
       }
+    }
+
+    // --- ANIMATION DU SPRINTEUR À PIED (AK-47 / TRONÇONNEUSE) ---
+    if (this.currentBikeId === 'run_ak47' || this.currentBikeId === 'run_chainsaw') {
+      const runCycle = this.bouncePhase * 4.2;
+      if (this.runnerLegL) this.runnerLegL.rotation.x = Math.sin(runCycle) * 0.8;
+      if (this.runnerLegR) this.runnerLegR.rotation.x = -Math.sin(runCycle) * 0.8;
+      this.mesh.position.y = Math.abs(Math.sin(runCycle)) * 0.09;
     }
 
     // Animation du rouleau compresseur 50 Tonnes
     if (this.currentBikeId === 'rouleau' && this.frontRoller) {
       this.frontRoller.rotation.x -= (speed / 0.68) * delta;
+    }
+
+    // --- GESTION VISUELLE DYNAMIQUE DU NITRO 5 SECONDES ---
+    if (gameState && gameState.isNitroActive) {
+      this.nitroFlames.visible = true;
+      const jitterZ = 1.0 + Math.random() * 0.45;
+      const jitterX = 1.0 + Math.random() * 0.25;
+      this.flameL.scale.set(jitterX, jitterX, jitterZ);
+      this.flameR.scale.set(jitterX, jitterX, jitterZ);
+    } else {
+      this.nitroFlames.visible = false;
     }
   }
 

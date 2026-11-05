@@ -699,6 +699,189 @@ html, body {
   box-shadow: 0 0 20px #ffa502;
 }
 
+/* 4. BOUTON NITRO BOOST 5 SECONDES */
+.btn-nitro-pedal {
+  width: 78px;
+  height: 68px;
+  border-radius: 18px;
+  background: linear-gradient(145deg, #0f2027, #203a43, #2c5364);
+  border: 2px solid #00d2d3;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 20px rgba(0, 210, 211, 0.4);
+  cursor: pointer;
+  pointer-events: auto;
+  transition: all 0.12s ease;
+  position: relative;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.nitro-fill-track {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 6px;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.nitro-fill-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #00d2d3, #54a0ff, #fff);
+  box-shadow: 0 0 8px #00d2d3;
+  transition: width 0.15s ease-out;
+}
+
+.nitro-icon {
+  font-size: 1.25rem;
+  line-height: 1;
+  filter: drop-shadow(0 0 6px #00d2d3);
+}
+
+.nitro-label {
+  font-size: 0.65rem;
+  font-weight: 900;
+  letter-spacing: 0.8px;
+  color: #fff;
+}
+
+.nitro-sub {
+  font-size: 0.58rem;
+  font-weight: 800;
+  color: #00d2d3;
+}
+
+.btn-nitro-pedal.ready {
+  border-color: #54a0ff;
+  box-shadow: 0 0 25px rgba(84, 160, 255, 0.85), inset 0 0 15px rgba(0, 210, 211, 0.5);
+  animation: nitroPulseReady 0.8s infinite alternate;
+}
+
+@keyframes nitroPulseReady {
+  0% { transform: scale(1); filter: brightness(1); }
+  100% { transform: scale(1.06); filter: brightness(1.25); box-shadow: 0 0 35px #00d2d3; }
+}
+
+.btn-nitro-pedal.active {
+  background: linear-gradient(145deg, #0984e3, #00cec9);
+  border-color: #fff;
+  box-shadow: 0 0 40px #00d2d3, inset 0 0 20px #fff;
+  animation: nitroActiveShake 0.15s infinite alternate;
+}
+
+@keyframes nitroActiveShake {
+  0% { transform: scale(1.04) rotate(-1deg); }
+  100% { transform: scale(1.04) rotate(1deg); }
+}
+
+/* TOAST AVERTISSEMENT FEU ROUGE EN APPROCHE */
+.hud-traffic-warning-toast {
+  position: absolute;
+  top: 105px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-30px);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 100;
+  transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.35s ease;
+}
+
+.hud-traffic-warning-toast.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.traffic-toast-inner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(135deg, rgba(235, 77, 75, 0.95), rgba(192, 57, 43, 0.95));
+  border: 2px solid #ff7675;
+  box-shadow: 0 10px 30px rgba(235, 77, 75, 0.65), 0 0 20px rgba(255, 118, 117, 0.5);
+  border-radius: 18px;
+  padding: 10px 20px;
+  backdrop-filter: blur(8px);
+}
+
+.traffic-toast-icon {
+  font-size: 2rem;
+  animation: toastIconFlash 0.5s infinite alternate;
+}
+
+@keyframes toastIconFlash {
+  0% { transform: scale(0.9); filter: brightness(0.8); }
+  100% { transform: scale(1.15); filter: brightness(1.3); }
+}
+
+.traffic-toast-title {
+  font-size: 0.95rem;
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: 1px;
+}
+
+.traffic-toast-sub {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #ffeaa7;
+  margin-top: 2px;
+}
+
+/* CONTRÔLES DE ZOOM FLOTTANTS DE LA CARTE */
+.map-zoom-controls {
+  position: absolute;
+  top: 75px;
+  right: 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  z-index: 25;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(0, 206, 201, 0.4);
+  border-radius: 20px;
+  padding: 6px 4px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+}
+
+.btn-zoom {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.1s ease, background 0.1s ease;
+}
+
+.btn-zoom:hover {
+  background: rgba(0, 206, 201, 0.3);
+  transform: scale(1.1);
+}
+
+.btn-zoom:active {
+  transform: scale(0.92);
+}
+
+.zoom-level-badge {
+  font-size: 0.65rem;
+  font-weight: 900;
+  color: #fffa65;
+  padding: 2px 4px;
+  letter-spacing: 0.5px;
+}
+
 .btn-horn:active {
   transform: scale(0.9);
 }
@@ -846,9 +1029,11 @@ html, body {
 .europe-map-canvas-container {
   position: relative;
   width: 960px;
-  height: 820px;
+  height: 1100px;
   min-width: 960px;
-  min-height: 820px;
+  min-height: 1100px;
+  transform-origin: top left;
+  transition: transform 0.15s ease-out;
 }
 
 .europe-svg {
@@ -856,7 +1041,7 @@ html, body {
   top: 0;
   left: 0;
   width: 960px;
-  height: 820px;
+  height: 1100px;
   filter: drop-shadow(0 12px 24px rgba(0,0,0,0.6));
   pointer-events: none;
 }
@@ -866,7 +1051,7 @@ html, body {
   top: 0;
   left: 0;
   width: 960px;
-  height: 820px;
+  height: 1100px;
   pointer-events: none;
   z-index: 15;
 }

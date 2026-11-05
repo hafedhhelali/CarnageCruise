@@ -24,7 +24,7 @@ export class Engine {
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.25;
+    this.renderer.toneMappingExposure = 1.05;
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
@@ -37,13 +37,12 @@ export class Engine {
     );
     this.baseFov = 60;
 
-    // Éclairage de studio cartoon multi-sources & rebond lumineux (Hemisphere)
-    this.hemiLight = new THREE.HemisphereLight(0xe8f4f8, 0x7c8a78, 1.05);
-    this.hemiLight.position.set(0, 50, 0);
-    this.scene.add(this.hemiLight);
+    // Éclairage naturel, doux et équilibré (suppression des lumières colorées parasites)
+    this.ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
+    this.scene.add(this.ambientLight);
 
-    // Lumière solaire principale dorée avec ombres douces filtrées
-    this.dirLight = new THREE.DirectionalLight(0xfffaed, 1.55);
+    // Lumière solaire principale naturelle avec ombres douces
+    this.dirLight = new THREE.DirectionalLight(0xfffdf7, 1.25);
     this.dirLight.position.set(22, 42, 22);
     this.dirLight.castShadow = true;
     this.dirLight.shadow.mapSize.width = 1024;
@@ -55,22 +54,14 @@ export class Engine {
     this.dirLight.shadow.camera.top = 22;
     this.dirLight.shadow.camera.bottom = -16;
     this.dirLight.shadow.bias = -0.0004;
-    this.dirLight.shadow.normalBias = 0.025;
+    this.dirLight.shadow.normalBias = 0.02;
     this.scene.add(this.dirLight);
 
-    // Lumière de contre-jour (Rim light cartoon bleu pastel) pour détacher la silhouette
-    this.rimLight = new THREE.DirectionalLight(0x81ecec, 0.45);
-    this.rimLight.position.set(-15, 12, -20);
-    this.scene.add(this.rimLight);
-
-    // Brouillard atmosphérique doux et profond
-    this.scene.fog = new THREE.Fog(0xd8e8f8, 45, 220);
+    // Brouillard atmosphérique doux et naturel
+    this.scene.fog = new THREE.Fog(0xd8e8f8, 50, 240);
 
     // Dôme Céleste & Nuages Cartoon Dérivants
     this.skyDome = new SkyDome(this.scene);
-
-    // Post-Processing Arcade (EffectComposer & Bloom subtil)
-    this.postProcessing = new PostProcessingManager(this.renderer, this.scene, this.camera);
 
     // Propriétés de caméra dynamique
     this.cameraTarget = new THREE.Vector3(0, 1.2, 0);

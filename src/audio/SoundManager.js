@@ -479,7 +479,7 @@ export class SoundManager {
 
     const now = this.ctx.currentTime;
 
-    // 1. Claquement sec de cravache (Whip Crack)
+    // 1. Claquement sec de FOUET (Whip Crack)
     const whipNoise = this.ctx.createBufferSource();
     const bufSize = Math.floor(this.ctx.sampleRate * 0.12);
     const buf = this.ctx.createBuffer(1, bufSize, this.ctx.sampleRate);
@@ -524,6 +524,135 @@ export class SoundManager {
     lfo.stop(now + 0.65);
     osc.stop(now + 0.65);
     osc.onended = () => this.cleanupNodes(osc, lfo, lfoGain, gain, whipNoise, whipGain);
+  }
+
+  playWhipCrack() {
+    if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
+    this.resumeContext();
+
+    const now = this.ctx.currentTime;
+    const whipNoise = this.ctx.createBufferSource();
+    const bufSize = Math.floor(this.ctx.sampleRate * 0.15);
+    const buf = this.ctx.createBuffer(1, bufSize, this.ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < bufSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (this.ctx.sampleRate * 0.015));
+    }
+    whipNoise.buffer = buf;
+
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'highpass';
+    filter.frequency.setValueAtTime(1400, now);
+
+    const whipGain = this.ctx.createGain();
+    whipGain.gain.setValueAtTime(0.65, now);
+    whipGain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+
+    whipNoise.connect(filter);
+    filter.connect(whipGain);
+    whipGain.connect(this.ctx.destination);
+
+    whipNoise.onended = () => this.cleanupNodes(whipNoise, filter, whipGain);
+    whipNoise.start(now);
+  }
+
+  playNitroBoost() {
+    if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
+    this.resumeContext();
+
+    const now = this.ctx.currentTime;
+
+    // Souffle supersonique d'injection Nitro (NOS Whoosh)
+    const noise = this.ctx.createBufferSource();
+    const bufSize = Math.floor(this.ctx.sampleRate * 0.85);
+    const buf = this.ctx.createBuffer(1, bufSize, this.ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < bufSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (this.ctx.sampleRate * 0.4));
+    }
+    noise.buffer = buf;
+
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(600, now);
+    filter.frequency.exponentialRampToValueAtTime(2800, now + 0.35);
+    filter.Q.setValueAtTime(2.5, now);
+
+    const noiseGain = this.ctx.createGain();
+    noiseGain.gain.setValueAtTime(0.55, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.85);
+
+    noise.connect(filter);
+    filter.connect(noiseGain);
+    noiseGain.connect(this.ctx.destination);
+    noise.start(now);
+
+    // Montée en fréquence foudroyante de turbine turbo (Jet Roar)
+    const osc = this.ctx.createOscillator();
+    const oscGain = this.ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(180, now);
+    osc.frequency.exponentialRampToValueAtTime(880, now + 0.5);
+
+    oscGain.gain.setValueAtTime(0.35, now);
+    oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+
+    osc.connect(oscGain);
+    oscGain.connect(this.ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.6);
+
+    osc.onended = () => this.cleanupNodes(noise, filter, noiseGain, osc, oscGain);
+  }
+
+  playChainsawRev() {
+    if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
+    this.resumeContext();
+
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(90, now);
+    osc.frequency.linearRampToValueAtTime(240, now + 0.12);
+    osc.frequency.linearRampToValueAtTime(180, now + 0.35);
+
+    gain.gain.setValueAtTime(0.3, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
+
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.onended = () => this.cleanupNodes(osc, gain);
+    osc.start(now);
+    osc.stop(now + 0.38);
+  }
+
+  playAk47Burst() {
+    if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
+    this.resumeContext();
+
+    const now = this.ctx.currentTime;
+    for (let i = 0; i < 3; i++) {
+      const shotTime = now + i * 0.08;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(220, shotTime);
+      osc.frequency.exponentialRampToValueAtTime(60, shotTime + 0.05);
+
+      gain.gain.setValueAtTime(0.35, shotTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, shotTime + 0.05);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(shotTime);
+      osc.stop(shotTime + 0.05);
+      if (i === 2) {
+        osc.onended = () => this.cleanupNodes(osc, gain);
+      }
+    }
   }
 
   playSteamrollerHorn() {
