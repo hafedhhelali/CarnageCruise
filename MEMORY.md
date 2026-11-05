@@ -73,4 +73,4 @@
 - Création du journal de mémoire `MEMORY.md`.
 - Création du workflow GitHub Actions `.github/workflows/build-apk.yml`.
 - Création du dépôt public `hafedhhelali/Motormageddon` sur GitHub et premier push de la branche `main`.
-- Déclenchement automatique du pipeline de génération de l'APK sur GitHub Actions (ID: 42020236124).
+- Correction du pipeline GitHub Actions en utilisant le SDK Android natif préinstallé sur les runners `ubuntu-latest`.

@@ -27,9 +27,6 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: 📱 Setup Android SDK
-        uses: android-actions/setup-android@v3
-
       - name: 📦 Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -45,16 +42,13 @@ jobs:
       - name: 🔄 Sync Capacitor Android
         run: npx cap sync android
 
-      - name: ⚙️ Setup Gradle Cache
-        uses: gradle/actions/setup-gradle@v3
-
       - name: 🔨 Grant execute permissions for gradlew
         run: chmod +x android/gradlew
 
       - name: 📦 Build Debug APK
         run: |
           cd android
-          ./gradlew assembleDebug --stacktrace
+          ./gradlew assembleDebug --no-daemon --stacktrace
 
       - name: 📦 Build Release APK
         run: |
