@@ -8,7 +8,7 @@ Ce document fournit l'ensemble des informations de conception, d'architecture lo
 ## 1. VISION DU PROJET & SPÉCIFICATIONS
 
 - **Genre** : Jeu de course d'arcade urbain / Runner 3D burlesque
-- **Version actuelle** : **1.2.4-beta** (Build / versionCode 7 - Canal BETA)
+- **Version actuelle** : **1.2.5-beta** (Build / versionCode 8 - Canal BETA)
 - **Signature & Clé** : Keystore permanent dédié `android/app/motormageddon.keystore` (validité 10 000 jours, EOMedia Paris)
 - **Plateforme cible** : Android (Smartphones & Tablettes) + WebGL Mobile/Desktop
 - **Direction artistique** : Cartoon 3D éclatant, physique burlesque (slapstick), animations hilarantes et dynamiques, identité française affirmée.
@@ -216,5 +216,26 @@ Ce document fournit l'ensemble des informations de conception, d'architecture lo
 ### F. Monuments 3D Emblématiques Dédiés dans Chaque Ville
 - Construction 3D personnalisée de chaque monument dans la scène Three.js : Tour Eiffel et Arc de Triomphe (Paris), Big Ben et cabine rouge (Londres), Atomium chromé (Bruxelles), Sagrada Família (Barcelone), Duomo de marbre blanc (Milan), Jet d'Eau de 140m (Genève), Cathédrale de grès rose (Strasbourg), Fourvière (Lyon), Notre-Dame de la Garde et Negresco (Marseille / Nice), Mont-Blanc et Aiguille du Midi (Chamonix), Viaduc suspendu (Millau), etc.
 - Affichage du monument dans la fiche descriptive et lors de la cinématique de bienvenue.
+
+---
+
+## 6. NOUVEAUTÉS DE LA VERSION 1.2.5-BETA
+
+### A. Monture Pur-Sang / Étalon Sauvage (`cheval`)
+- **Modélisation 3D complète** : Corps de cheval puissant, poitrail bombé, encolure courbée, tête expressive avec naseaux et oreilles dressées, crinière et longue queue soyeuse animée.
+- **Selle et étriers d'équitation de luxe** : Tapis de selle tricolore, étriers métalliques, rênes souples.
+- **Cinématique de galop en temps réel** : 4 membres articulés (2 antérieurs et 2 postérieurs) oscillant en opposition de phase au rythme de la vitesse de course.
+- **Cavalier avec cravache / fouet (whip)** : Le motard devient cavalier, équipé d'une cravache d'équitation 3D avec manche tressé, virole dorée, lanière souple incurvée et pompon rouge sang. Animation de fouettement rythmée au galop.
+- **Effet sonore exclusif** : Hennissement d'étalon réaliste et burlesque (`playHorseWhinny()`) précédé d'un claquement sec de fouet via synthèse WebAudio FM.
+
+### B. Titan Compresseur 50T (`rouleau`)
+- **Modélisation 3D industrielle** : Cylindre avant broyeur lourd en acier trempé avec boulons d'axe géants et grattoir de bitume, capot moteur blindé avec stries de ventilation, pare-chocs de chantier rayé noir et jaune sécurité.
+- **Cabine de conduite & gyrophare** : Arceau de sécurité tubulaire, siège baquet surélevé, gyrophare orange rotatif clignotant sur le toit et cheminée d'échappement diesel verticale.
+- **Animation de roulement** : Le cylindre broyeur tourne en continu autour de son axe horizontal à vitesse proportionnelle à la progression de l'engin.
+- **Klaxon industriel lourd** : Avertisseur sonore de chantier ultra-grave 55Hz / 110Hz / 138Hz (`playSteamrollerHorn()`).
+
+### C. Respect des Politiques des Stores Mobiles (Conformité & Éthique)
+- Remplacement du concept d'arme à feu réelle (Kalachnikov sur piétons, prohibé sur le Google Play Store et l'Apple App Store en vertu des règles de lutte contre la violence armée et les fusillades de rue) par des éléments d'arcade slapstick loufoques (cravache équestre, cylindre compresseur de chantier), garantissant l'acceptation sans réserve et la certification PEGI / ESRB du jeu.
+
 
 

@@ -473,8 +473,106 @@ export class SoundManager {
     osc.stop(now + 0.55);
   }
 
-  playHorn() {
+  playHorseWhinny() {
     if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
+    this.resumeContext();
+
+    const now = this.ctx.currentTime;
+
+    // 1. Claquement sec de cravache (Whip Crack)
+    const whipNoise = this.ctx.createBufferSource();
+    const bufSize = Math.floor(this.ctx.sampleRate * 0.12);
+    const buf = this.ctx.createBuffer(1, bufSize, this.ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < bufSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (this.ctx.sampleRate * 0.02));
+    }
+    whipNoise.buffer = buf;
+    const whipGain = this.ctx.createGain();
+    whipGain.gain.setValueAtTime(0.4, now);
+    whipGain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+    whipNoise.connect(whipGain);
+    whipGain.connect(this.ctx.destination);
+    whipNoise.start(now);
+
+    // 2. Hennissement burlesque de l'étalon (Horse Whinny)
+    const osc = this.ctx.createOscillator();
+    const lfo = this.ctx.createOscillator();
+    const lfoGain = this.ctx.createGain();
+    const gain = this.ctx.createGain();
+
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(650, now + 0.05);
+    osc.frequency.linearRampToValueAtTime(1150, now + 0.25);
+    osc.frequency.exponentialRampToValueAtTime(450, now + 0.65);
+
+    // Vibrato rapide
+    lfo.frequency.setValueAtTime(24, now);
+    lfoGain.gain.setValueAtTime(95, now);
+    lfo.connect(lfoGain);
+    lfoGain.connect(osc.frequency);
+
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.linearRampToValueAtTime(0.3, now + 0.1);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.65);
+
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+
+    lfo.start(now + 0.05);
+    osc.start(now + 0.05);
+    lfo.stop(now + 0.65);
+    osc.stop(now + 0.65);
+    osc.onended = () => this.cleanupNodes(osc, lfo, lfoGain, gain, whipNoise, whipGain);
+  }
+
+  playSteamrollerHorn() {
+    if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
+    this.resumeContext();
+
+    const now = this.ctx.currentTime;
+    const osc1 = this.ctx.createOscillator();
+    const osc2 = this.ctx.createOscillator();
+    const oscSub = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    osc1.type = 'sawtooth';
+    osc2.type = 'sawtooth';
+    oscSub.type = 'triangle';
+
+    // Avertisseur industriel lourd 50 Tonnes (accord très grave et puissant)
+    osc1.frequency.setValueAtTime(110, now); // A2
+    osc2.frequency.setValueAtTime(138.59, now); // C#3
+    oscSub.frequency.setValueAtTime(55, now); // A1 sub bass
+
+    gain.gain.setValueAtTime(0.4, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
+
+    osc1.connect(gain);
+    osc2.connect(gain);
+    oscSub.connect(gain);
+    gain.connect(this.ctx.destination);
+
+    osc1.onended = () => this.cleanupNodes(osc1, osc2, oscSub, gain);
+    osc1.start(now);
+    osc2.start(now);
+    oscSub.start(now);
+    osc1.stop(now + 0.55);
+    osc2.stop(now + 0.55);
+    oscSub.stop(now + 0.55);
+  }
+
+  playHorn(bikeId = null) {
+    if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
+
+    if (bikeId === 'cheval') {
+      this.playHorseWhinny();
+      return;
+    } else if (bikeId === 'rouleau') {
+      this.playSteamrollerHorn();
+      return;
+    }
+
     this.resumeContext();
 
     const now = this.ctx.currentTime;

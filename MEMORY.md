@@ -120,3 +120,16 @@
   - Jeton motard voyageur filant sur la carte avec traînée d'échappement, trait néon actif et bruitage d'accélération.
 - **Monuments 3D Réalistes dans Chaque Ville** :
   - Tour Eiffel, Arc de Triomphe, Big Ben, Atomium, Sagrada Família, Duomo de Milan, Jet d'Eau de Genève, etc. modélisés en 3D cartoon dans la scène de course.
+
+### ✅ 17. NOUVEAUTÉS DE LA VERSION 1.2.5-BETA
+- **Monture Pur-Sang / Étalon Sauvage (`cheval`)** :
+  - Modélisation 3D d'étalon noble (robe alezane, crinière et longue queue animée, selle d'équitation et étriers).
+  - Animation de galop à 4 pattes articulées synchronisée avec la vitesse.
+  - Pilote équipé d'un fouet/cravache (whip) 3D avec mouvement de fouettement rythmé.
+  - Effet sonore burlesque : claquement sec de fouet suivi du hennissement réaliste de l'étalon (`playHorseWhinny()`).
+- **Titan Compresseur 50T (`rouleau`)** :
+  - Cylindre avant broyeur lourd en rotation continue sur son axe.
+  - Châssis industriel avec arceau de sécurité, gyrophare rotatif orange et cheminée diesel.
+  - Klaxon industriel de chantier ultra-lourd (`playSteamrollerHorn()`).
+- **Conformité & Éthique Stores Mobiles** :
+  - Remplacement de l'arme à feu par la cravache équestre et le compresseur de chantier pour respecter strictement les directives Google Play / App Store (rejet des armes à feu réelles ciblant des piétons).

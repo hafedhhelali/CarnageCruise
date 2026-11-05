@@ -946,7 +946,7 @@ export class UIManager {
     });
 
     hud.querySelector('#btn-hud-horn').addEventListener('click', () => {
-      soundManager.playHorn();
+      soundManager.playHorn(storage.getEquippedBike());
       if (this.onAction) this.onAction('HORN');
     });
 

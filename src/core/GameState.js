@@ -488,6 +488,44 @@ export const BIKES = [
     maxSpeed: 33,
     accel: 24,
     steerSpeed: 18
+  },
+  {
+    id: 'cheval',
+    name: 'Pur-Sang du Tour',
+    shortName: 'Étalon Sauvage',
+    category: 'MONTURE PUR-SANG',
+    icon: '🐎',
+    tagline: 'Galop furieux & Cravache cinglante',
+    type: 'Monture de Course',
+    description: 'Pas de moteur thermique mais 1 cheval-vapeur furieux ! Le cavalier brandit sa cravache (whip) pour fouetter le bitume et écarter tout le monde.',
+    speedRating: 4,
+    handlingRating: 5,
+    bounceRating: 5,
+    cost: 7800,
+    unlocked: false,
+    scale: 1.12,
+    maxSpeed: 32,
+    accel: 25,
+    steerSpeed: 20
+  },
+  {
+    id: 'rouleau',
+    name: 'Titan Compresseur 50T',
+    shortName: 'Rouleau Titan',
+    category: 'ENGIN LOURD',
+    icon: '🚜',
+    tagline: 'Cylindre broyeur d’acier & Fumée noire',
+    type: 'Rouleau Compresseur Industriel',
+    description: 'Cylindre avant géant de 50 tonnes en acier massif et cheminée diesel ! Rien ne lui résiste, il aplatit impitoyablement tout sur son passage.',
+    speedRating: 3,
+    handlingRating: 4,
+    bounceRating: 5,
+    cost: 9500,
+    unlocked: false,
+    scale: 1.25,
+    maxSpeed: 27,
+    accel: 16,
+    steerSpeed: 14
   }
 ];
 

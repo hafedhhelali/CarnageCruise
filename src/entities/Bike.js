@@ -95,7 +95,13 @@ export class Bike {
       this.buildDiablo(bodyMaterial, chromeMaterial, rubberMaterial, leatherMaterial, lampMaterial);
     } else if (bikeId === 'ravageur') {
       this.buildRavageur(bodyMaterial, chromeMaterial, rubberMaterial, leatherMaterial, lampMaterial);
+    } else if (bikeId === 'cheval') {
+      this.buildCheval(bodyMaterial, chromeMaterial, rubberMaterial, leatherMaterial, lampMaterial);
+    } else if (bikeId === 'rouleau') {
+      this.buildRouleau(bodyMaterial, chromeMaterial, rubberMaterial, leatherMaterial, lampMaterial);
     }
+
+    this.buildRider();
   }
 
   createWheel(radius, width, rubberMat, chromeMat) {
@@ -670,6 +676,196 @@ export class Bike {
     this.bikeModelGroup.add(forkGroup);
   }
 
+  // --- MONTURE PUR-SANG : ÉTALON DU TOUR AVEC CRAVACHE ---
+  buildCheval(bodyMat, chromeMat, rubberMat, leatherMat, lampMat) {
+    this.horseGroup = new THREE.Group();
+    this.horseLegs = [];
+
+    // Matériau de robe du cheval (auburn / alezan / bai ou couleur custom)
+    const coatMat = bodyMat;
+    const darkHorseMat = new THREE.MeshToonMaterial({ color: 0x2d1810 }); // Crinière, queue et sabots
+    const hoofMat = new THREE.MeshToonMaterial({ color: 0x111111 });
+
+    // 1. Corps / Flanc du cheval (tonneau galbé)
+    const bodyGeo = new THREE.CylinderGeometry(0.38, 0.44, 1.45, 12);
+    const body = new THREE.Mesh(bodyGeo, coatMat);
+    body.rotation.x = Math.PI / 2;
+    body.position.set(0, 0.88, 0.05);
+    body.castShadow = true;
+    this.horseGroup.add(body);
+
+    // Croupe arrondie à l'arrière
+    const rump = new THREE.Mesh(new THREE.SphereGeometry(0.42, 10, 10), coatMat);
+    rump.position.set(0, 0.9, -0.65);
+    this.horseGroup.add(rump);
+
+    // Poitrail musclé à l'avant
+    const chest = new THREE.Mesh(new THREE.SphereGeometry(0.43, 10, 10), coatMat);
+    chest.position.set(0, 0.92, 0.7);
+    this.horseGroup.add(chest);
+
+    // 2. Encolure relevée et fière
+    const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.36, 0.75, 10), coatMat);
+    neck.position.set(0, 1.35, 0.85);
+    neck.rotation.x = -Math.PI / 4.5;
+    this.horseGroup.add(neck);
+
+    // Crinière noire flottante
+    const mane = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.75, 0.18), darkHorseMat);
+    mane.position.set(0, 1.42, 0.74);
+    mane.rotation.x = -Math.PI / 4.5;
+    this.horseGroup.add(mane);
+
+    // 3. Tête sculptée avec chanfrein et oreilles dressées
+    const headGroup = new THREE.Group();
+    headGroup.position.set(0, 1.62, 1.15);
+
+    const headUpper = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.32, 0.4), coatMat);
+    headGroup.add(headUpper);
+
+    const muzzle = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.22, 0.3), darkHorseMat);
+    muzzle.position.set(0, -0.06, 0.26);
+    headGroup.add(muzzle);
+
+    // Oreilles dressées
+    const earGeo = new THREE.ConeGeometry(0.06, 0.16, 4);
+    const earL = new THREE.Mesh(earGeo, coatMat);
+    earL.position.set(-0.1, 0.22, -0.08);
+    const earR = earL.clone();
+    earR.position.set(0.1, 0.22, -0.08);
+    headGroup.add(earL, earR);
+
+    // Yeux cartoon
+    const eyeMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
+    const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.045, 6, 6), eyeMat);
+    eyeL.position.set(-0.14, 0.08, 0.06);
+    const eyeR = eyeL.clone();
+    eyeR.position.set(0.14, 0.08, 0.06);
+    headGroup.add(eyeL, eyeR);
+
+    this.horseGroup.add(headGroup);
+
+    // 4. Queue fluide à l'arrière
+    const tailGroup = new THREE.Group();
+    tailGroup.position.set(0, 0.95, -0.95);
+    const tailMesh = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.75, 8), darkHorseMat);
+    tailMesh.position.set(0, -0.32, -0.1);
+    tailMesh.rotation.x = -0.3;
+    tailGroup.add(tailMesh);
+    this.horseGroup.add(tailGroup);
+    this.horseTail = tailGroup;
+
+    // 5. Selle en cuir & Étriers dorés
+    const saddle = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.12, 0.52), leatherMat);
+    saddle.position.set(0, 1.25, -0.05);
+    this.horseGroup.add(saddle);
+
+    const stirrupMat = new THREE.MeshBasicMaterial({ color: 0xffd700 });
+    const stirrupL = new THREE.Mesh(new THREE.TorusGeometry(0.06, 0.015, 6, 10), stirrupMat);
+    stirrupL.position.set(-0.28, 0.78, -0.05);
+    const stirrupR = stirrupL.clone();
+    stirrupR.position.set(0.28, 0.78, -0.05);
+    this.horseGroup.add(stirrupL, stirrupR);
+
+    // 6. Les 4 Membres articulés pour le galop (Avant-G / Avant-D / Arrière-G / Arrière-D)
+    const legGeo = new THREE.CylinderGeometry(0.09, 0.07, 0.85, 8);
+    const hoofGeo = new THREE.CylinderGeometry(0.08, 0.095, 0.14, 8);
+
+    const createHorseLeg = (x, z) => {
+      const legPivot = new THREE.Group();
+      legPivot.position.set(x, 0.82, z);
+
+      const legMesh = new THREE.Mesh(legGeo, coatMat);
+      legMesh.position.y = -0.42;
+      legPivot.add(legMesh);
+
+      const hoof = new THREE.Mesh(hoofGeo, hoofMat);
+      hoof.position.y = -0.8;
+      legPivot.add(hoof);
+
+      this.horseGroup.add(legPivot);
+      this.horseLegs.push(legPivot);
+      return legPivot;
+    };
+
+    this.horseLegFL = createHorseLeg(-0.24, 0.52);
+    this.horseLegFR = createHorseLeg(0.24, 0.52);
+    this.horseLegBL = createHorseLeg(-0.24, -0.52);
+    this.horseLegBR = createHorseLeg(0.24, -0.52);
+
+    this.bikeModelGroup.add(this.horseGroup);
+  }
+
+  // --- ROULEAU COMPRESSEUR INDUSTRIEL 50 TONNES ---
+  buildRouleau(bodyMat, chromeMat, rubberMat, leatherMat, lampMat) {
+    const rollerGroup = new THREE.Group();
+
+    // 1. Rouleau avant broyeur cylindrique d'acier massif (50T)
+    const drumMat = new THREE.MeshStandardMaterial({ color: 0x3d3d3d, metalness: 0.9, roughness: 0.25 });
+    const drumGeo = new THREE.CylinderGeometry(0.68, 0.68, 2.3, 24);
+    const drum = new THREE.Mesh(drumGeo, drumMat);
+    drum.rotation.z = Math.PI / 2;
+    drum.position.set(0, 0.68, 1.25);
+    drum.castShadow = true;
+    rollerGroup.add(drum);
+    this.frontRoller = drum;
+
+    // Bras de fourche lourde du rouleau
+    const frameMat = new THREE.MeshToonMaterial({ color: 0x1e272e });
+    const armL = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.35, 1.4), frameMat);
+    armL.position.set(-1.22, 0.68, 0.6);
+    const armR = armL.clone();
+    armR.position.set(1.22, 0.68, 0.6);
+    rollerGroup.add(armL, armR);
+
+    // 2. Châssis industriel lourd en acier peint
+    const chassis = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.7, 2.2), bodyMat);
+    chassis.position.set(0, 0.85, -0.4);
+    chassis.castShadow = true;
+    rollerGroup.add(chassis);
+
+    // Bandes de sécurité hachurées jaune/noir (Caution)
+    const cautionMat = new THREE.MeshBasicMaterial({ color: 0xf1c40f });
+    const bumper = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.18, 0.12), cautionMat);
+    bumper.position.set(0, 0.45, -1.52);
+    rollerGroup.add(bumper);
+
+    // 3. Deux énormes roues arrière à crampons de chantier
+    const rearWheelL = this.createWheel(0.65, 0.55, rubberMat, chromeMat);
+    rearWheelL.position.set(-1.08, 0.65, -0.85);
+    const rearWheelR = this.createWheel(0.65, 0.55, rubberMat, chromeMat);
+    rearWheelR.position.set(1.08, 0.65, -0.85);
+    rollerGroup.add(rearWheelL, rearWheelR);
+
+    // 4. Cabine de conduite avec arceau de sécurité ROPS & toit
+    const pillarMat = new THREE.MeshToonMaterial({ color: 0x111111 });
+    const p1 = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.2, 6), pillarMat);
+    p1.position.set(-0.7, 1.7, -0.1);
+    const p2 = p1.clone();
+    p2.position.set(0.7, 1.7, -0.1);
+    const p3 = p1.clone();
+    p3.position.set(-0.7, 1.7, -0.9);
+    const p4 = p1.clone();
+    p4.position.set(0.7, 1.7, -0.9);
+    rollerGroup.add(p1, p2, p3, p4);
+
+    const roof = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.1, 1.2), bodyMat);
+    roof.position.set(0, 2.3, -0.5);
+    rollerGroup.add(roof);
+
+    // Gyrophare orange clignotant au sommet
+    const beacon = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.14, 8), new THREE.MeshBasicMaterial({ color: 0xffa502 }));
+    beacon.position.set(0, 2.42, -0.5);
+    rollerGroup.add(beacon);
+
+    // Cheminée d'échappement diesel verticale
+    const exhaust = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.1, 8), chromeMat);
+    exhaust.position.set(-0.75, 1.6, 0.45);
+    rollerGroup.add(exhaust);
+
+    this.bikeModelGroup.add(rollerGroup);
+  }
+
   buildRider() {
     // Nettoyer
     while (this.riderGroup.children.length > 0) {
@@ -742,10 +938,49 @@ export class Bike {
     this.riderArmL = armL;
 
     const armR = new THREE.Mesh(armGeo, jacketMat);
-    armR.position.set(0.25, 0.2, 0.2);
-    armR.rotation.x = Math.PI / 3.2;
-    armR.rotation.z = 0.25;
-    torsoGroup.add(armR);
+    this.riderWhip = null;
+
+    if (this.currentBikeId === 'cheval') {
+      // Bras droit relevé vers le haut brandissant la cravache / fouet
+      armR.position.set(0.3, 0.32, 0.05);
+      armR.rotation.x = -Math.PI / 3.5;
+      armR.rotation.z = Math.PI / 4.5;
+      torsoGroup.add(armR);
+
+      // Cravache / Fouet cartoon avec manche noir, lanière recourbée et pointe rouge
+      const whipGroup = new THREE.Group();
+      whipGroup.position.set(0.42, 0.48, 0.08);
+      whipGroup.rotation.x = -Math.PI / 4;
+      whipGroup.rotation.z = Math.PI / 5;
+
+      const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.035, 0.52, 6), new THREE.MeshToonMaterial({ color: 0x111111 }));
+      whipGroup.add(handle);
+
+      const pommel = new THREE.Mesh(new THREE.SphereGeometry(0.045, 6, 6), new THREE.MeshBasicMaterial({ color: 0xffd700 }));
+      pommel.position.y = -0.27;
+      whipGroup.add(pommel);
+
+      const lashMat = new THREE.MeshBasicMaterial({ color: 0x5a2d0c });
+      const lash1 = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.012, 0.45, 4), lashMat);
+      lash1.position.set(0.08, 0.42, 0);
+      lash1.rotation.z = -0.45;
+      const lash2 = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.006, 0.45, 4), lashMat);
+      lash2.position.set(0.24, 0.72, 0);
+      lash2.rotation.z = -0.9;
+      whipGroup.add(lash1, lash2);
+
+      const tassel = new THREE.Mesh(new THREE.SphereGeometry(0.04, 6, 6), new THREE.MeshBasicMaterial({ color: 0xff4757 }));
+      tassel.position.set(0.4, 0.88, 0);
+      whipGroup.add(tassel);
+
+      torsoGroup.add(whipGroup);
+      this.riderWhip = whipGroup;
+    } else {
+      armR.position.set(0.25, 0.2, 0.2);
+      armR.rotation.x = Math.PI / 3.2;
+      armR.rotation.z = 0.25;
+      torsoGroup.add(armR);
+    }
     this.riderArmR = armR;
 
     // Jambes repliées vers les cale-pieds
@@ -882,6 +1117,25 @@ export class Bike {
     this.wheels.forEach(w => {
       w.rotation.x += wheelAngularSpeed;
     });
+
+    // Animation réaliste du Pur-Sang au galop (membres, queue et cravache)
+    if (this.currentBikeId === 'cheval') {
+      const gallopCycle = this.bouncePhase * 3.2;
+      if (this.horseLegFL) this.horseLegFL.rotation.x = Math.sin(gallopCycle) * 0.55;
+      if (this.horseLegFR) this.horseLegFR.rotation.x = -Math.sin(gallopCycle) * 0.55;
+      if (this.horseLegBL) this.horseLegBL.rotation.x = -Math.sin(gallopCycle) * 0.5;
+      if (this.horseLegBR) this.horseLegBR.rotation.x = Math.sin(gallopCycle) * 0.5;
+      if (this.horseTail) this.horseTail.rotation.z = Math.sin(gallopCycle * 0.6) * 0.35;
+      if (this.horseGroup) this.horseGroup.position.y = Math.abs(Math.sin(gallopCycle)) * 0.08;
+      if (this.riderWhip) {
+        this.riderWhip.rotation.x = -Math.PI / 4 + Math.sin(gallopCycle * 1.4) * 0.32;
+      }
+    }
+
+    // Animation du rouleau compresseur 50 Tonnes
+    if (this.currentBikeId === 'rouleau' && this.frontRoller) {
+      this.frontRoller.rotation.x -= (speed / 0.68) * delta;
+    }
   }
 
   getExhaustPosition() {

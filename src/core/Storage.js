@@ -24,7 +24,12 @@ const DEFAULT_SAVE = {
     scooter: '#e74c3c',
     sport: '#3498db',
     chopper: '#f39c12',
-    trike: '#9b59b6'
+    trike: '#9b59b6',
+    dragster: '#111111',
+    diablo: '#c0392b',
+    ravageur: '#27ae60',
+    cheval: '#8b4513',
+    rouleau: '#f39c12'
   },
   equippedAccessories: {
     helmet: 'beret',
