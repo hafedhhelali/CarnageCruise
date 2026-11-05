@@ -30,14 +30,15 @@ jobs:
       - name: 📦 Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: 'npm'
+          node-version: 22
 
       - name: 📥 Install dependencies
-        run: npm install
+        run: |
+          npm install
+          chmod -R +x node_modules/.bin || true
 
       - name: 🏗️ Build WebGL 3D Bundle
-        run: npm run build
+        run: npx --yes vite build
 
       - name: 🔄 Sync Capacitor Android
         run: npx cap sync android

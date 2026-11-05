@@ -73,4 +73,4 @@
 - Création du journal de mémoire `MEMORY.md`.
 - Création du workflow GitHub Actions `.github/workflows/build-apk.yml`.
 - Création du dépôt public `hafedhhelali/Motormageddon` sur GitHub et premier push de la branche `main`.
-- Correction du pipeline GitHub Actions en utilisant le SDK Android natif préinstallé sur les runners `ubuntu-latest`.
+- Correction du pipeline GitHub Actions : mise à jour vers Node.js 22, ajout de permissions d'exécution sur `node_modules/.bin` et appel direct `npx --yes vite build`.
