@@ -278,6 +278,48 @@ export class ParticleSystem {
     }
   }
 
+  // Cataclysme de détonation nucléaire (Onde de choc titanique, champignon atomique et gerbe radioactive)
+  spawnNuclearBlast(pos) {
+    this.spawnShockwave(pos, 0x2ed573);
+    this.spawnShockwave(pos, 0xfffa65);
+    this.spawnShockwave(pos, 0xff4757);
+
+    // Gerbe de débris incandescents projetés à haute vélocité
+    for (let i = 0; i < 40; i++) {
+      const spark = new THREE.Mesh(this.sharedGeos.starCone, this.sharedMats.starOrange);
+      spark.position.copy(pos);
+      spark.position.y += 2.0;
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 8.0 + Math.random() * 16.0;
+      this.scene.add(spark);
+      this.debris.push({
+        mesh: spark,
+        velX: Math.cos(angle) * speed,
+        velY: 6.0 + Math.random() * 14.0,
+        velZ: Math.sin(angle) * speed,
+        rotVelX: Math.random() * 30 - 15,
+        rotVelY: Math.random() * 30 - 15,
+        life: 1.5,
+        maxLife: 1.5
+      });
+    }
+
+    // Champignon atomique montant dans le ciel
+    for (let j = 0; j < 16; j++) {
+      const smoke = new THREE.Mesh(this.sharedGeos.smokeSphere, this.sharedMats.smokeDark);
+      smoke.position.set(pos.x + (Math.random() - 0.5) * 4.0, pos.y + 1.0 + Math.random() * 3.0, pos.z + (Math.random() - 0.5) * 4.0);
+      smoke.scale.setScalar(2.4 + Math.random() * 2.8);
+      this.scene.add(smoke);
+      this.smokePuffs.push({
+        mesh: smoke,
+        velY: 4.5 + Math.random() * 3.5,
+        growRate: 4.0,
+        life: 2.2,
+        maxLife: 2.2
+      });
+    }
+  }
+
   // Éclat d'accident violent (rouge sang & débris)
   spawnCrashBurst(pos) {
     this.spawnShockwave(pos, 0xff4757);

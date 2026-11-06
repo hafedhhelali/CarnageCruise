@@ -16,7 +16,7 @@ export class Environment {
     this.totalChunks = 6;
     this.landmark = null;
     this.finishArch = null;
-    this.finishDistance = 3500; // Arrivée prolongée à 3500 mètres pour des courses substantielles de 3 minutes
+    this.finishDistance = 1400; // Courses réduites et rythmées à 1400 mètres pour un rythme arcade intense
     this.finishReached = false;
     this.animTime = 0;
     this.animatedFlags = [];
@@ -49,9 +49,15 @@ export class Environment {
     };
   }
 
-  setCity(cityDef, finishDistance = 3500) {
+  setCity(cityDef, finishDistance = null) {
     this.cityTheme = cityDef;
-    this.finishDistance = finishDistance;
+    if (finishDistance) {
+      this.finishDistance = finishDistance;
+    } else if (cityDef.isNuclearMission) {
+      this.finishDistance = 1350;
+    } else {
+      this.finishDistance = 1400; // Trajets raccourcis à 1400m
+    }
     this.finishReached = false;
     this.animatedFlags = [];
 
@@ -100,55 +106,75 @@ export class Environment {
     const cityId = cityDef.id;
 
     if (cityDef.isNuclearMission) {
-      // --- CENTRALE NUCLÉAIRE & TOURS DE REFROIDISSEMENT GÉANTES ---
+      // --- CENTRALE NUCLÉAIRE & TOURS DE REFROIDISSEMENT GÉANTES (AU CENTRE À Z = 600) ---
       const nucGroup = new THREE.Group();
-      nucGroup.position.set(38, 0, 260);
+      nucGroup.position.set(0, 0, 600);
 
       const concreteMat = new THREE.MeshStandardMaterial({ color: 0x7f8c8d, roughness: 0.9, metalness: 0.1 });
       const reactorMat = new THREE.MeshStandardMaterial({ color: 0x95a5a6, roughness: 0.7, metalness: 0.2 });
       const hazardGlowMat = new THREE.MeshBasicMaterial({ color: 0x2ed573 });
       const beaconRedMat = new THREE.MeshBasicMaterial({ color: 0xff4757 });
+      const corePulsingMat = new THREE.MeshBasicMaterial({ color: 0x00ff88 });
 
-      // Tour de refroidissement 1
+      // Tour de refroidissement Gauche (-24m)
       const tower1 = new THREE.Mesh(new THREE.CylinderGeometry(14, 22, 54, 24, 1, true), concreteMat);
-      tower1.position.set(-22, 27, 0);
+      tower1.position.set(-24, 27, 0);
       nucGroup.add(tower1);
 
-      // Tour de refroidissement 2
+      // Tour de refroidissement Droite (+24m)
       const tower2 = new THREE.Mesh(new THREE.CylinderGeometry(14, 22, 54, 24, 1, true), concreteMat);
-      tower2.position.set(22, 27, 18);
+      tower2.position.set(24, 27, 0);
       nucGroup.add(tower2);
 
-      // Panaches de vapeur radioactive au sommet des tours
-      const steamMat = new THREE.MeshBasicMaterial({ color: 0xf1f2f6, transparent: true, opacity: 0.45 });
+      // Panaches de vapeur radioactive verte / blanche
+      const steamMat = new THREE.MeshBasicMaterial({ color: 0x7bed9f, transparent: true, opacity: 0.55 });
       const steam1 = new THREE.Mesh(new THREE.SphereGeometry(16, 12, 12), steamMat);
-      steam1.position.set(-22, 62, 0);
+      steam1.position.set(-24, 62, 0);
       steam1.scale.set(1.1, 1.8, 1.1);
       const steam2 = new THREE.Mesh(new THREE.SphereGeometry(16, 12, 12), steamMat);
-      steam2.position.set(22, 62, 18);
+      steam2.position.set(24, 62, 0);
       steam2.scale.set(1.1, 1.8, 1.1);
       nucGroup.add(steam1, steam2);
 
-      // Dôme du réacteur nucléaire (Bâtiment réacteur EPR)
+      // Barrières de sécurité périmétrique
+      const gateGroup = new THREE.Group();
+      gateGroup.position.set(0, 0, -25);
+      const gatePillarL = new THREE.Mesh(new THREE.BoxGeometry(0.8, 4.5, 0.8), concreteMat);
+      gatePillarL.position.set(-4.5, 2.25, 0);
+      const gatePillarR = gatePillarL.clone();
+      gatePillarR.position.x = 4.5;
+      const barrierBar = new THREE.Mesh(new THREE.BoxGeometry(9.0, 0.4, 0.4), new THREE.MeshStandardMaterial({ color: 0xff3838 }));
+      barrierBar.position.set(0, 1.6, 0);
+      gateGroup.add(gatePillarL, gatePillarR, barrierBar);
+      nucGroup.add(gateGroup);
+
+      // Dôme du réacteur nucléaire (Bâtiment réacteur EPR au centre)
       const domeGroup = new THREE.Group();
-      domeGroup.position.set(0, 0, -14);
+      domeGroup.position.set(0, 0, 20); // z = 620
       const baseBuilding = new THREE.Mesh(new THREE.CylinderGeometry(15, 15, 18, 20), reactorMat);
       baseBuilding.position.y = 9;
       const dome = new THREE.Mesh(new THREE.SphereGeometry(15, 20, 16, 0, Math.PI * 2, 0, Math.PI / 2), reactorMat);
       dome.position.y = 18;
       
       // Balise d'alerte rouge au sommet du dôme
-      const beacon = new THREE.Mesh(new THREE.SphereGeometry(1.2, 8, 8), beaconRedMat);
+      const beacon = new THREE.Mesh(new THREE.SphereGeometry(1.6, 8, 8), beaconRedMat);
       beacon.position.y = 33.5;
       domeGroup.add(baseBuilding, dome, beacon);
-      nucGroup.add(domeGroup);
 
-      // Symbole radioactif géant lumineux ☢️
+      // Cœur radioactif central incandescent
+      const coreMesh = new THREE.Mesh(new THREE.SphereGeometry(5.0, 16, 16), corePulsingMat);
+      coreMesh.position.set(0, 12, 0);
+      domeGroup.add(coreMesh);
+
+      // Symbole radioactif géant ☢️
       const radCore = new THREE.Mesh(new THREE.CylinderGeometry(3.5, 3.5, 0.4, 16), hazardGlowMat);
-      radCore.position.set(0, 14, 3);
+      radCore.position.set(0, 14, 15.2);
       radCore.rotation.x = Math.PI / 2;
       domeGroup.add(radCore);
 
+      nucGroup.add(domeGroup);
+      this.nuclearReactorGroup = domeGroup;
+      this.nuclearCoreMesh = coreMesh;
       lmGroup.add(nucGroup);
     } else if (cityId === 'paris') {
       // 1. TOUR EIFFEL MONUMENTALE

@@ -9,6 +9,7 @@
 import { storage } from '../core/Storage.js';
 import { gameState } from '../core/GameState.js';
 import { soundManager } from '../audio/SoundManager.js';
+import { cookieConsentManager } from './CookieConsentManager.js';
 
 const SPONSORS = [
   {
@@ -54,8 +55,21 @@ export class AdManager {
 
   /**
    * Lance une publicité récompensée (+20 pièces ou Nitro plein)
+   * Intégration Google Ads / Consentement Cookies conforme RGPD & ePrivacy
    */
   showRewardedAd(type = 'COINS', onRewardCallback = null) {
+    if (!cookieConsentManager.hasAnswered()) {
+      cookieConsentManager.showConsentModal(false, () => {
+        this.executeRewardedAd(type, onRewardCallback);
+      });
+      return;
+    }
+
+    this.executeRewardedAd(type, onRewardCallback);
+  }
+
+  executeRewardedAd(type = 'COINS', onRewardCallback = null) {
+    const isGoogleAdsAllowed = cookieConsentManager.isAdsConsentGranted();
     const sponsor = this.getNextSponsor();
     const isCoins = type === 'COINS';
     const rewardTitle = isCoins ? '+20 PIÈCES 🪙' : 'NITRO PLEIN ⚡';
@@ -66,7 +80,7 @@ export class AdManager {
     overlay.className = 'ad-modal-overlay';
     overlay.innerHTML = `
       <div class="ad-modal-card">
-        <div class="ad-modal-badge">📺 PUBLICITÉ RÉCOMPENSÉE • SPONSOR OFFICIEL</div>
+        <div class="ad-modal-badge">${isGoogleAdsAllowed ? '📺 GOOGLE ADS • ANNONCE RÉCOMPENSÉE' : '🛡️ SPONSOR PRIVACY • SANS COOKIE NI TRACKING'}</div>
         
         <div class="ad-sponsor-banner" style="background: ${sponsor.bgGrad};">
           <div class="ad-sponsor-icon">${sponsor.icon}</div>

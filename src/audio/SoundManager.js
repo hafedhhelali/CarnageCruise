@@ -244,6 +244,18 @@ export class SoundManager {
       voiceGain.gain.setValueAtTime(0.4, now);
       voiceGain.gain.exponentialRampToValueAtTime(0.001, now + 0.34);
       voiceOsc.stop(now + 0.34);
+    } else if (category === 'dog') {
+      // CHIEN : Aboiement cartoon dynamique ("Ouaf ouaf !")
+      this.playDogBark();
+      return;
+    } else if (category === 'cat') {
+      // CHAT : Miaulement / feulement félin surpris ("Miaouuu !")
+      this.playCatMeow();
+      return;
+    } else if (category === 'monkey') {
+      // SINGE : Cri malicieux perçant ("Ouh ouh ah ah !")
+      this.playMonkeyScreech();
+      return;
     } else {
       // HOMME : Râle / grognement baryton vigoureux ("Wooooh !" / "Hé !")
       voiceOsc.type = 'sawtooth';
@@ -264,6 +276,158 @@ export class SoundManager {
 
     voiceOsc.onended = () => this.cleanupNodes(voiceOsc, formantFilter, voiceGain);
     voiceOsc.start(now);
+  }
+
+  // --- ANIMAUX DE COMPAGNIE & PIGEONS (CHIEN, CHAT, SINGE, PIGEONS) ---
+  playDogBark() {
+    if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
+    this.resumeContext();
+    const dest = this.getMasterOutput();
+    const now = this.ctx.currentTime;
+
+    // Double aboiement vif et joyeux ("Ouaf ! Ouaf !")
+    for (let i = 0; i < 2; i++) {
+      const t = now + (i * 0.11);
+      const osc = this.ctx.createOscillator();
+      const filter = this.ctx.createBiquadFilter();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(i === 0 ? 460 : 520, t);
+      osc.frequency.exponentialRampToValueAtTime(170, t + 0.08);
+
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(1100, t);
+      filter.Q.value = 3.2;
+
+      gain.gain.setValueAtTime(0.42, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(dest);
+
+      osc.onended = () => this.cleanupNodes(osc, filter, gain);
+      osc.start(t);
+      osc.stop(t + 0.08);
+    }
+  }
+
+  playCatMeow() {
+    if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
+    this.resumeContext();
+    const dest = this.getMasterOutput();
+    const now = this.ctx.currentTime;
+
+    // Miaulement félin expressif à modulation sinusoïdale ("Miiiaaaooou !")
+    const osc = this.ctx.createOscillator();
+    const filter = this.ctx.createBiquadFilter();
+    const gain = this.ctx.createGain();
+
+    osc.type = 'triangle';
+    // Glissando mélodique typique du chat
+    osc.frequency.setValueAtTime(420, now);
+    osc.frequency.linearRampToValueAtTime(740, now + 0.12);
+    osc.frequency.exponentialRampToValueAtTime(340, now + 0.36);
+
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(1350, now);
+    filter.Q.value = 4.0;
+
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.linearRampToValueAtTime(0.38, now + 0.06);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.36);
+
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(dest);
+
+    osc.onended = () => this.cleanupNodes(osc, filter, gain);
+    osc.start(now);
+    osc.stop(now + 0.36);
+  }
+
+  playMonkeyScreech() {
+    if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
+    this.resumeContext();
+    const dest = this.getMasterOutput();
+    const now = this.ctx.currentTime;
+
+    // Cri de singe cartoon malicieux ("Ouh-ouh-ah-ah !")
+    for (let i = 0; i < 3; i++) {
+      const t = now + (i * 0.075);
+      const osc = this.ctx.createOscillator();
+      const filter = this.ctx.createBiquadFilter();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(750 + (i * 90), t);
+      osc.frequency.linearRampToValueAtTime(1450, t + 0.03);
+      osc.frequency.exponentialRampToValueAtTime(580, t + 0.065);
+
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(1800, t);
+      filter.Q.value = 5.0;
+
+      gain.gain.setValueAtTime(0.35, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.065);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(dest);
+
+      osc.onended = () => this.cleanupNodes(osc, filter, gain);
+      osc.start(t);
+      osc.stop(t + 0.065);
+    }
+  }
+
+  playPigeonFlutter() {
+    if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
+    this.resumeContext();
+    const dest = this.getMasterOutput();
+    const now = this.ctx.currentTime;
+
+    // Battement d'ailes précipité et envol d'oiseau (salves de souffle feutré)
+    for (let i = 0; i < 5; i++) {
+      const t = now + (i * 0.038);
+      const buffer = this.ctx.createBuffer(1, Math.floor(this.ctx.sampleRate * 0.04), this.ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let s = 0; s < data.length; s++) {
+        data[s] = (Math.random() * 2 - 1) * Math.sin((s / data.length) * Math.PI);
+      }
+      const noise = this.ctx.createBufferSource();
+      noise.buffer = buffer;
+
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(650 + (i * 70), t);
+      filter.Q.value = 2.2;
+
+      const gain = this.ctx.createGain();
+      gain.gain.setValueAtTime(0.3, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
+
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.connect(dest);
+
+      noise.start(t);
+    }
+
+    // Petit roucoulement cartoon en vol
+    const coo = this.ctx.createOscillator();
+    const cooGain = this.ctx.createGain();
+    coo.type = 'sine';
+    coo.frequency.setValueAtTime(380, now + 0.12);
+    coo.frequency.linearRampToValueAtTime(320, now + 0.28);
+    cooGain.gain.setValueAtTime(0.18, now + 0.12);
+    cooGain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+    coo.connect(cooGain);
+    cooGain.connect(dest);
+    coo.onended = () => this.cleanupNodes(coo, cooGain);
+    coo.start(now + 0.12);
+    coo.stop(now + 0.28);
   }
 
   playBoing() {

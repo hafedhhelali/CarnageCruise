@@ -166,6 +166,39 @@ export const CHARACTER_TYPES = [
     isGroup: true,
     scale: 1.0,
     speed: 0.75
+  },
+  {
+    type: 'dog',
+    name: 'Chien Fidèle 🐕',
+    category: 'dog',
+    points: 210,
+    bodyColor: 0xd35400, // Pelage roux caramel
+    collarColor: 0xe74c3c,
+    scale: 0.62,
+    speed: 1.8,
+    isPet: true
+  },
+  {
+    type: 'cat',
+    name: 'Chat Agile 🐈',
+    category: 'cat',
+    points: 230,
+    bodyColor: 0x2d3436, // Pelage noir soyeux
+    scale: 0.52,
+    speed: 1.9,
+    isPet: true
+  },
+  {
+    type: 'monkey',
+    name: 'Singe Farceur 🐒',
+    category: 'monkey',
+    points: 290,
+    bodyColor: 0x795548, // Brun
+    faceColor: 0xffdbac,
+    fezColor: 0xc0392b,
+    scale: 0.60,
+    speed: 2.2,
+    isPet: true
   }
 ];
 

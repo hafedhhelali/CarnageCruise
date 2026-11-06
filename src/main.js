@@ -15,6 +15,7 @@ import { Environment } from './entities/Environment.js';
 import { ParticleSystem } from './entities/Particles.js';
 import { IntersectionManager } from './entities/Intersections.js';
 import { Traffic } from './entities/Traffic.js';
+import { PigeonSystem } from './entities/Pigeons.js';
 import { UIManager } from './ui/UIManager.js';
 import * as TWEEN from '@tweenjs/tween.js';
 
@@ -31,6 +32,7 @@ class GameApp {
     this.characters = new CharacterSystem(this.engine.scene);
     this.environment = new Environment(this.engine.scene);
     this.traffic = new Traffic(this.engine.scene);
+    this.pigeons = new PigeonSystem(this.engine.scene);
     this.particles = new ParticleSystem(this.engine.scene);
     this.intersections = new IntersectionManager(this.engine.scene);
 
@@ -143,6 +145,7 @@ class GameApp {
       this.bike.crashTimer = 0;
       this.hasCrossedFinish = false;
       this.characters.reset();
+      this.pigeons.reset(0);
       this.intersections.reset();
       this.particles.reset();
       gameState.startRun();
@@ -266,6 +269,11 @@ class GameApp {
       if (hits > 0) {
         soundManager.playCoin();
       }
+
+      // 5. Tir d'obus sur la centrale nucléaire pour déclencher la détonation
+      if (gameState.selectedCity?.isNuclearMission && !gameState.nuclearDetonated && this.bike.z >= 420) {
+        this.triggerNuclearCataclysm();
+      }
       return;
     }
 
@@ -294,6 +302,18 @@ class GameApp {
 
     if (hitCount > 0) {
       soundManager.playCoin();
+    }
+  }
+
+  triggerNuclearCataclysm() {
+    if (gameState.nuclearDetonated) return;
+    gameState.triggerNuclearDetonation();
+    soundManager.playNuclearBlast();
+    soundManager.playNuclearAlarm();
+    soundManager.switchMusicTrack('NUCLEAR');
+    this.particles.spawnNuclearBlast(new THREE.Vector3(0, 10, 615));
+    if (this.ui) {
+      this.ui.showToastUnlock({ name: '⚠️ CŒUR ATOMIQUE EN EXPLOSION ! FUIS IMMÉDIATEMENT !' });
     }
   }
 
@@ -534,6 +554,29 @@ class GameApp {
 
       // 10. Particules, étoiles et lignes de vitesse
       this.particles.update(delta, this.bike.z, currentSpeed);
+
+      // 10b. Pigeons parisiens vivants : Picorent et s'envolent au passage de la moto
+      this.pigeons.update(
+        delta,
+        this.bike.z,
+        this.bike.mesh.position,
+        currentSpeed,
+        (z) => this.environment.getRoadCenterX(z),
+        (pigeon) => {
+          soundManager.playPigeonFlutter();
+          this.particles.spawnComicBurst(pigeon.position, 150, gameState.combo);
+          gameState.score += 150;
+        }
+      );
+
+      // 10c. Détection Épreuve Nucléaire : Aller vers la centrale, exploser, s'enfuir
+      if (gameState.selectedCity?.isNuclearMission) {
+        if (gameState.nuclearPhase === 'APPROACH' && this.bike.z >= 580) {
+          this.triggerNuclearCataclysm();
+        } else if (gameState.nuclearPhase === 'APPROACH' && this.bike.z > 350) {
+          if (Math.random() < 0.08) soundManager.playGeigerClick();
+        }
+      }
 
       // 11. Caméra dynamique en poursuite douce
       this.engine.updateCameraGameplay(delta, this.bike.mesh.position, currentSpeed);

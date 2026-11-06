@@ -106,145 +106,216 @@ export class Traffic {
   createHighFidelityVehicle(type, index) {
     const group = new THREE.Group();
 
-    // Palettes de peintures métallisées nacrées élégantes
-    const metallicColors = [0x0984e3, 0xd63031, 0x2d3436, 0x6c5ce7, 0x00b894, 0xe17055];
+    // Palettes de peintures métallisées nacrées de prestige
+    const metallicColors = [0x0984e3, 0xd63031, 0x2d3436, 0x6c5ce7, 0x00b894, 0xe17055, 0x1e3799];
     const carColor = type === 'taxi_luxe' ? 0xf1c40f : metallicColors[index % metallicColors.length];
 
     const carPaint = new THREE.MeshStandardMaterial({
       color: carColor,
-      metalness: 0.86,
-      roughness: 0.18
+      metalness: 0.88,
+      roughness: 0.16
     });
 
     const roofMat = new THREE.MeshStandardMaterial({
-      color: type === 'taxi_luxe' ? 0x1e272e : carColor,
-      metalness: 0.88,
-      roughness: 0.15
+      color: (type === 'taxi_luxe' || type === 'supercar') ? 0x111620 : carColor,
+      metalness: 0.90,
+      roughness: 0.12
+    });
+
+    const darkTrimMat = new THREE.MeshStandardMaterial({
+      color: 0x1e272e,
+      roughness: 0.6,
+      metalness: 0.4
     });
 
     if (type === 'supercar') {
-      // 1. SUPERCAR ITALIENNE SURBAISSÉE (LIGNES ÉPURÉES & AÉRODYNAMISME)
-      // Châssis profilé en flèche
-      const chassisGeo = new THREE.BoxGeometry(2.05, 0.46, 4.7);
-      const chassis = new THREE.Mesh(chassisGeo, carPaint);
-      chassis.position.y = 0.42;
+      // 1. HYPERCAR CYBER-GT SURBAISSÉE & AÉRODYNAMIQUE
+      // Châssis principal profilé
+      const chassis = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.38, 4.6), carPaint);
+      chassis.position.y = 0.38;
       chassis.castShadow = true;
       group.add(chassis);
 
-      // Nez plongeant aérodynamique
-      const noseGeo = new THREE.ConeGeometry(1.0, 1.2, 4);
-      const nose = new THREE.Mesh(noseGeo, carPaint);
-      nose.rotation.x = -Math.PI / 2;
-      nose.rotation.y = Math.PI / 4;
-      nose.position.set(0, 0.38, 2.6);
-      group.add(nose);
+      // Capot plongeant sculpté
+      const hood = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.16, 1.4), carPaint);
+      hood.position.set(0, 0.46, 1.4);
+      hood.rotation.x = 0.08;
+      group.add(hood);
 
-      // Cockpit profilé avec vitrages teintés
-      const cabinGeo = new THREE.BoxGeometry(1.62, 0.48, 2.2);
-      const cabin = new THREE.Mesh(cabinGeo, roofMat);
-      cabin.position.set(0, 0.82, -0.2);
-      cabin.castShadow = true;
-      group.add(cabin);
+      // Lame avant aérodynamique (Front Splitter Carbone)
+      const splitter = new THREE.Mesh(new THREE.BoxGeometry(2.14, 0.06, 0.5), darkTrimMat);
+      splitter.position.set(0, 0.22, 2.25);
+      group.add(splitter);
 
-      // Pare-brise avant profilé
-      const windshield = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 0.7), this.sharedMats.tintedGlass);
-      windshield.position.set(0, 0.82, 0.95);
-      windshield.rotation.x = -Math.PI / 3.6;
-      group.add(windshield);
+      // Cockpit profilé avec verrière panoramique fumée
+      const canopy = new THREE.Mesh(new THREE.BoxGeometry(1.55, 0.44, 2.1), this.sharedMats.tintedGlass);
+      canopy.position.set(0, 0.76, -0.15);
+      canopy.castShadow = true;
+      group.add(canopy);
 
-      // Aileron arrière en carbone avec mats
-      const wing = new THREE.Mesh(new THREE.BoxGeometry(1.95, 0.06, 0.38), this.sharedMats.rim);
-      wing.position.set(0, 0.96, -2.15);
-      const strutL = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.22, 0.1), this.sharedMats.rim);
-      strutL.position.set(-0.6, 0.84, -2.15);
-      const strutR = strutL.clone();
-      strutR.position.x = 0.6;
-      group.add(wing, strutL, strutR);
+      // Toit profilé en carbone
+      const roof = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.08, 1.3), roofMat);
+      roof.position.set(0, 0.96, -0.2);
+      group.add(roof);
 
-      // Double sortie d'échappement chromée
-      for (let s of [-0.35, 0.35]) {
-        const exhaust = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.065, 0.3, 10), this.sharedMats.chromeTrim);
+      // Prises d'air latérales moteur central
+      for (let s of [-0.98, 0.98]) {
+        const scoop = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.24, 0.7), darkTrimMat);
+        scoop.position.set(s, 0.46, -0.3);
+        group.add(scoop);
+      }
+
+      // Aileron arrière sport en carbone avec deux montants
+      const wing = new THREE.Mesh(new THREE.BoxGeometry(1.95, 0.06, 0.38), darkTrimMat);
+      wing.position.set(0, 0.88, -2.15);
+      for (let s of [-0.55, 0.55]) {
+        const strut = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.24, 0.1), this.sharedMats.rim);
+        strut.position.set(s, 0.76, -2.15);
+        group.add(strut);
+      }
+      group.add(wing);
+
+      // Diffuseur arrière & double sortie d'échappement centrale chromée
+      const diffuser = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.15, 0.3), darkTrimMat);
+      diffuser.position.set(0, 0.25, -2.25);
+      group.add(diffuser);
+
+      for (let s of [-0.18, 0.18]) {
+        const exhaust = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.25, 12), this.sharedMats.chromeTrim);
         exhaust.rotation.x = Math.PI / 2;
-        exhaust.position.set(s, 0.3, -2.36);
+        exhaust.position.set(s, 0.28, -2.36);
         group.add(exhaust);
       }
 
-    } else if (type === 'taxi_luxe') {
-      // 2. TAXI PARISIEN HAUT DE GAMME (STYLE MERCEDES CLASSE E)
-      const bodyGeo = new THREE.BoxGeometry(1.92, 0.68, 4.6);
-      const body = new THREE.Mesh(bodyGeo, carPaint);
-      body.position.y = 0.58;
-      body.castShadow = true;
-      group.add(body);
-
-      const cabinGeo = new THREE.BoxGeometry(1.72, 0.62, 2.5);
-      const cabin = new THREE.Mesh(cabinGeo, roofMat);
-      cabin.position.set(0, 1.15, -0.15);
-      cabin.castShadow = true;
-      group.add(cabin);
-
-      // Pare-brise et lunette arrière
-      const windshield = new THREE.Mesh(new THREE.PlaneGeometry(1.62, 0.72), this.sharedMats.tintedGlass);
-      windshield.position.set(0, 1.15, 1.15);
-      windshield.rotation.x = -Math.PI / 4.2;
-      const rearGlass = new THREE.Mesh(new THREE.PlaneGeometry(1.62, 0.72), this.sharedMats.tintedGlass);
-      rearGlass.position.set(0, 1.15, -1.45);
-      rearGlass.rotation.x = Math.PI / 4.2;
-      group.add(windshield, rearGlass);
-
-      // Calandre chromée avant luxueuse
-      const grille = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.38, 0.08), this.sharedMats.chromeTrim);
-      grille.position.set(0, 0.58, 2.32);
-      group.add(grille);
-
-      // Enseigne lumineuse de toit "TAXI PARISIEN"
-      const signBase = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.05, 0.22), this.sharedMats.rim);
-      signBase.position.set(0, 1.48, -0.2);
-      const signGlow = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.16, 0.18), this.sharedMats.headlightLED);
-      signGlow.position.set(0, 1.58, -0.2);
-      group.add(signBase, signGlow);
-
-    } else if (type === 'suv_urban') {
-      // 3. SUV CITADIN ROBUSTE & ÉLÉGANT
-      const lowerBody = new THREE.Mesh(new THREE.BoxGeometry(2.05, 0.82, 4.5), carPaint);
-      lowerBody.position.y = 0.65;
-      lowerBody.castShadow = true;
-      group.add(lowerBody);
-
-      const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.85, 0.72, 2.7), roofMat);
-      cabin.position.set(0, 1.32, -0.15);
-      cabin.castShadow = true;
-      group.add(cabin);
-
-      // Barres de toit chromées
-      for (let s of [-0.75, 0.75]) {
-        const roofRail = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.05, 2.4), this.sharedMats.chromeTrim);
-        roofRail.position.set(s, 1.72, -0.15);
-        group.add(roofRail);
+      // Rétroviseurs profilés
+      for (let s of [-1.02, 1.02]) {
+        const mirror = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.1, 0.12), carPaint);
+        mirror.position.set(s, 0.68, 0.6);
+        group.add(mirror);
       }
 
-      // Vitrages
-      const windshield = new THREE.Mesh(new THREE.PlaneGeometry(1.75, 0.8), this.sharedMats.tintedGlass);
-      windshield.position.set(0, 1.32, 1.25);
-      windshield.rotation.x = -Math.PI / 4.6;
-      group.add(windshield);
-
-    } else {
-      // 4. BERLINE PRESTIGE ALLEMANDE
-      const body = new THREE.Mesh(new THREE.BoxGeometry(1.95, 0.65, 4.65), carPaint);
-      body.position.y = 0.56;
+    } else if (type === 'taxi_luxe') {
+      // 2. TAXI PARISIEN HAUT DE GAMME (BI-TON JAUNE ÉLÉGANT & TOIT NOIR LAQUÉ)
+      const body = new THREE.Mesh(new THREE.BoxGeometry(1.96, 0.62, 4.65), carPaint);
+      body.position.y = 0.55;
       body.castShadow = true;
       group.add(body);
 
-      const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.75, 0.6, 2.4), roofMat);
+      // Capot avant légèrement fuyant
+      const hood = new THREE.Mesh(new THREE.BoxGeometry(1.85, 0.12, 1.3), carPaint);
+      hood.position.set(0, 0.72, 1.45);
+      hood.rotation.x = 0.06;
+      group.add(hood);
+
+      // Habitacle spacieux avec vitrage teinté et montants laqués
+      const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.72, 0.62, 2.5), roofMat);
       cabin.position.set(0, 1.12, -0.15);
       cabin.castShadow = true;
       group.add(cabin);
 
-      const windshield = new THREE.Mesh(new THREE.PlaneGeometry(1.65, 0.7), this.sharedMats.tintedGlass);
-      windshield.position.set(0, 1.12, 1.1);
+      // Vitrages latéraux et pare-brises avant/arrière
+      const windshield = new THREE.Mesh(new THREE.PlaneGeometry(1.64, 0.72), this.sharedMats.tintedGlass);
+      windshield.position.set(0, 1.12, 1.15);
+      windshield.rotation.x = -Math.PI / 4.4;
+      const rearGlass = new THREE.Mesh(new THREE.PlaneGeometry(1.64, 0.72), this.sharedMats.tintedGlass);
+      rearGlass.position.set(0, 1.12, -1.45);
+      rearGlass.rotation.x = Math.PI / 4.4;
+      group.add(windshield, rearGlass);
+
+      // Calandre chromée prestige avec lamelles
+      const grille = new THREE.Mesh(new THREE.BoxGeometry(1.15, 0.38, 0.08), this.sharedMats.chromeTrim);
+      grille.position.set(0, 0.55, 2.34);
+      group.add(grille);
+
+      // Enseigne lumineuse de toit "TAXI PARISIEN" rétroéclairée
+      const signBase = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.05, 0.2), this.sharedMats.chromeTrim);
+      signBase.position.set(0, 1.45, -0.2);
+      const signGlow = new THREE.Mesh(new THREE.BoxGeometry(0.68, 0.15, 0.16), this.sharedMats.headlightLED);
+      signGlow.position.set(0, 1.54, -0.2);
+      group.add(signBase, signGlow);
+
+      // Rétroviseurs chromés
+      for (let s of [-0.98, 0.98]) {
+        const mirror = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.1, 0.12), this.sharedMats.chromeTrim);
+        mirror.position.set(s, 0.92, 0.75);
+        group.add(mirror);
+      }
+
+    } else if (type === 'suv_urban') {
+      // 3. SUV CITADIN ROBUSTE & SPORTIF
+      const lowerBody = new THREE.Mesh(new THREE.BoxGeometry(2.05, 0.75, 4.6), carPaint);
+      lowerBody.position.y = 0.65;
+      lowerBody.castShadow = true;
+      group.add(lowerBody);
+
+      // Sabot de protection noir et passages de roues robustes
+      const skidPlate = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.18, 4.65), darkTrimMat);
+      skidPlate.position.y = 0.32;
+      group.add(skidPlate);
+
+      // Pavillon & vitrages surélevés
+      const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.85, 0.72, 2.7), roofMat);
+      cabin.position.set(0, 1.34, -0.15);
+      cabin.castShadow = true;
+      group.add(cabin);
+
+      // Barres de toit aérodynamiques chromées
+      for (let s of [-0.78, 0.78]) {
+        const rail = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, 2.4), this.sharedMats.chromeTrim);
+        rail.position.set(s, 1.74, -0.15);
+        group.add(rail);
+      }
+
+      // Vitrages
+      const windshield = new THREE.Mesh(new THREE.PlaneGeometry(1.75, 0.82), this.sharedMats.tintedGlass);
+      windshield.position.set(0, 1.34, 1.25);
+      windshield.rotation.x = -Math.PI / 4.6;
+      group.add(windshield);
+
+      // Double sortie d'échappement sportive
+      for (let s of [-0.65, 0.65]) {
+        const exhaust = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.1, 0.15), this.sharedMats.chromeTrim);
+        exhaust.position.set(s, 0.35, -2.32);
+        group.add(exhaust);
+      }
+
+    } else {
+      // 4. BERLINE ALLEMANDE DE PRESTIGE (GRAN COUPE SPORTIF)
+      const body = new THREE.Mesh(new THREE.BoxGeometry(1.98, 0.62, 4.7), carPaint);
+      body.position.y = 0.55;
+      body.castShadow = true;
+      group.add(body);
+
+      // Capot élégant à nervures
+      const hood = new THREE.Mesh(new THREE.BoxGeometry(1.86, 0.12, 1.4), carPaint);
+      hood.position.set(0, 0.7, 1.45);
+      hood.rotation.x = 0.05;
+      group.add(hood);
+
+      // Ligne de toit fuyante fastback
+      const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.74, 0.6, 2.5), roofMat);
+      cabin.position.set(0, 1.12, -0.15);
+      cabin.castShadow = true;
+      group.add(cabin);
+
+      const windshield = new THREE.Mesh(new THREE.PlaneGeometry(1.68, 0.72), this.sharedMats.tintedGlass);
+      windshield.position.set(0, 1.12, 1.14);
       windshield.rotation.x = -Math.PI / 4.2;
       group.add(windshield);
+
+      // Calandre double sport chromée
+      for (let s of [-0.32, 0.32]) {
+        const kidney = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.32, 0.08), this.sharedMats.chromeTrim);
+        kidney.position.set(s, 0.56, 2.36);
+        group.add(kidney);
+      }
+
+      // Rétroviseurs sport
+      for (let s of [-1.0, 1.0]) {
+        const mirror = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.1, 0.12), carPaint);
+        mirror.position.set(s, 0.88, 0.7);
+        group.add(mirror);
+      }
     }
 
     // 4 Roues sportives avec jantes alliage 3D & étriers de frein

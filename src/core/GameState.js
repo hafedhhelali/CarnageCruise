@@ -983,6 +983,11 @@ export class GameState {
     this.nitroTimer = 0;
     this.nitroDuration = 5.0;
 
+    // Mission Nucléaire : Approche Centrale, Explosion & Fuite Éperdue
+    this.nuclearPhase = null; // 'APPROACH', 'ESCAPE', 'ESCAPED'
+    this.nuclearEscapeTimer = 22.0;
+    this.nuclearDetonated = false;
+
     this.listeners = [];
   }
 
@@ -1036,6 +1041,17 @@ export class GameState {
     this.nitroGauge = 0;
     this.isNitroActive = false;
     this.nitroTimer = 0;
+
+    // Mission Nucléaire : phase d'approche de la centrale
+    if (this.selectedCity?.isNuclearMission) {
+      this.nuclearPhase = 'APPROACH';
+      this.nuclearEscapeTimer = 22.0;
+      this.nuclearDetonated = false;
+    } else {
+      this.nuclearPhase = null;
+      this.nuclearDetonated = false;
+    }
+
     // Compte à rebours 3, 2, 1, GO !
     this.currentMode = 'COUNTDOWN';
 
@@ -1044,6 +1060,22 @@ export class GameState {
     const track = this.selectedCity?.isNuclearMission ? 'NUCLEAR' : 'GAMEPLAY';
     soundManager.switchMusicTrack(track);
     this.notify('run_started', { city: this.selectedCity, bike: this.selectedBike });
+  }
+
+  triggerNuclearDetonation() {
+    if (this.nuclearDetonated) return false;
+    this.nuclearDetonated = true;
+    this.nuclearPhase = 'ESCAPE';
+    this.nuclearEscapeTimer = 22.0;
+    this.score += 15000;
+    this.nitroGauge = 100; // Recharge nitro d'urgence pour s'enfuir
+
+    this.notify('nuclear_detonated', {
+      phase: this.nuclearPhase,
+      escapeTimer: this.nuclearEscapeTimer,
+      bonusScore: 15000
+    });
+    return true;
   }
 
   refillNitro() {
@@ -1315,6 +1347,11 @@ export class GameState {
       }
     }
 
+    // Décompte de la phase d'évasion nucléaire
+    if (this.nuclearPhase === 'ESCAPE') {
+      this.nuclearEscapeTimer = Math.max(0, this.nuclearEscapeTimer - delta);
+    }
+
     // Distance parcourue
     this.distance += this.speed * delta;
     this.notify('stats_tick', {
@@ -1329,7 +1366,9 @@ export class GameState {
       nitroTimer: Math.max(0, this.nitroTimer),
       kills: this.killsCount,
       killQuota: this.selectedCity.killQuota || 30,
-      worldTotal: this.worldPopulationEliminated
+      worldTotal: this.worldPopulationEliminated,
+      nuclearPhase: this.nuclearPhase,
+      nuclearEscapeTimer: this.nuclearEscapeTimer
     });
   }
 

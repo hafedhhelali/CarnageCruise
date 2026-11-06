@@ -12,6 +12,7 @@ import { App } from '@capacitor/app';
 import { FULL_VERSION, APP_VERSION, COPYRIGHT_NOTICE, RELEASE_NAME, IS_BETA } from '../core/Version.js';
 import { REAL_COUNTRY_PATHS, REAL_TOUR_ROUTE_PATH } from './EuropeMapData.js';
 import { adManager } from '../services/AdManager.js';
+import { cookieConsentManager } from '../services/CookieConsentManager.js';
 
 export class UIManager {
   constructor(rootElement, onActionCallback) {
@@ -32,6 +33,11 @@ export class UIManager {
 
   init() {
     this.render();
+    if (!cookieConsentManager.hasAnswered()) {
+      setTimeout(() => {
+        cookieConsentManager.showConsentModal();
+      }, 700);
+    }
   }
 
   bindGameState() {
@@ -1215,19 +1221,16 @@ export class UIManager {
           </div>
         </div>
 
-        <!-- Grande Carte d'Objectif et de Progression de l'Étape -->
-        <div class="progress-objective-card">
+        <!-- Carte d'Objectif et de Progression Compacte (Épurée & Aérée) -->
+        <div class="progress-objective-compact" id="hud-objective-card">
           <div class="objective-header-row">
-            <span class="city-target-title" id="hud-city-name">${gameState.selectedCity.emblem || '📍'} ${gameState.selectedCity.name.toUpperCase()}</span>
+            <span class="city-target-title" id="hud-city-name">${gameState.selectedCity.isNuclearMission ? '☢️ ' + gameState.selectedCity.name.toUpperCase() : (gameState.selectedCity.emblem || '📍') + ' ' + gameState.selectedCity.name.toUpperCase()}</span>
             <span class="objective-target-pts" id="hud-target-pts">🎯 ${gameState.selectedCity.targetScore.toLocaleString('fr-FR')} PTS</span>
           </div>
           <div class="progress-bar-bg">
             <div class="progress-bar-fill" id="hud-progress-fill"></div>
             <span class="progress-pct-text" id="hud-progress-pct">0%</span>
           </div>
-          <span class="objective-status-sub" id="hud-target-remaining">
-            Roulez et percutez pour débloquer la suite !
-          </span>
         </div>
 
         <!-- Bouton Pause Chrome -->
@@ -1285,10 +1288,20 @@ export class UIManager {
         </div>
       </div>
 
-      <div class="touch-hint">
+      <div class="touch-hint auto-fade" id="hud-touch-hint">
         ← Glissez pour braquer | FREIN pour stopper | ${isWeapon ? `${actionIcon} ${actionLabel} pour FRAPPER !` : '📢 KLAXON'} | ⚡ NITRO →
       </div>
     `;
+
+    // Disparition automatique de l'aide tactile après 3.5 secondes pour ne pas encombrer l'écran
+    const touchHint = hud.querySelector('#hud-touch-hint');
+    if (touchHint) {
+      setTimeout(() => {
+        touchHint.style.opacity = '0';
+        touchHint.style.transition = 'opacity 0.6s ease';
+        setTimeout(() => touchHint.remove(), 600);
+      }, 3500);
+    }
 
     // Gestion du bouton de frein
     const brakeBtn = hud.querySelector('#btn-hud-brake');
@@ -1501,6 +1514,20 @@ export class UIManager {
     if (scoreVal) {
       scoreVal.textContent = data.score.toLocaleString('fr-FR');
     }
+
+    // Gestion dynamique de l'alerte d'évasion nucléaire (Approche -> Explosion -> Fuite)
+    const cityName = this.root.querySelector('#hud-city-name');
+    const targetPts = this.root.querySelector('#hud-target-pts');
+    if (data.nuclearPhase === 'ESCAPE') {
+      if (cityName) cityName.innerHTML = `<span style="color: #ff4757; font-weight: 900;">🚨 ÉVACUEZ !</span>`;
+      if (targetPts) targetPts.innerHTML = `<span style="color: #ffd32a; font-weight: 900;">⏱️ ${data.nuclearEscapeTimer.toFixed(1)}s</span>`;
+    } else if (data.nuclearPhase === 'APPROACH') {
+      if (targetPts) {
+        const distToCore = Math.max(0, 600 - data.distance);
+        targetPts.innerHTML = `<span style="color: #2ed573;">☢️ ${distToCore}m</span>`;
+      }
+    }
+
     if (targetRemaining) {
       const diff = Math.max(0, data.targetScore - data.score);
       if (diff === 0) {
@@ -1872,6 +1899,11 @@ export class UIManager {
           <button id="btn-settings-legal" class="btn-legal-link" style="font-size: 0.8rem;">
             📜 Mentions Légales & Version
           </button>
+          <div style="margin-top: 6px;">
+            <button id="btn-settings-cookies" class="btn-legal-link" style="font-size: 0.8rem; color: #00cec9;">
+              🍪 Préférences Cookies & Publicités Google Ads
+            </button>
+          </div>
         </div>
 
         <button id="btn-settings-close" class="btn-arcade" style="margin-top: 14px;">
@@ -1897,6 +1929,11 @@ export class UIManager {
     overlay.querySelector('#btn-settings-legal').addEventListener('click', () => {
       soundManager.playClick();
       this.showLegalModal();
+    });
+
+    overlay.querySelector('#btn-settings-cookies').addEventListener('click', () => {
+      soundManager.playClick();
+      cookieConsentManager.showConsentModal(true);
     });
 
     overlay.querySelector('#btn-settings-close').addEventListener('click', () => {
