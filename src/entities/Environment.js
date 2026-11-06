@@ -45,7 +45,83 @@ export class Environment {
       romanColumn: new THREE.CylinderGeometry(0.28, 0.32, 4.2, 8),
       romanCapital: new THREE.BoxGeometry(0.85, 0.35, 0.85),
       amphora: new THREE.CylinderGeometry(0.22, 0.15, 0.9, 8),
-      amphoraBelly: new THREE.SphereGeometry(0.35, 8, 8)
+      amphoraBelly: new THREE.SphereGeometry(0.35, 8, 8),
+      balconyBase: new THREE.BoxGeometry(0.5, 0.1, 3.2),
+      balconyRailing: new THREE.BoxGeometry(0.08, 0.55, 3.2),
+      storeSign: new THREE.BoxGeometry(2.4, 0.45, 0.12)
+    };
+    this.sharedMats = null;
+  }
+
+  initSharedMaterials(cityDef) {
+    const roadTex = textureFactory.getRoadTexture();
+    roadTex.wrapS = THREE.RepeatWrapping;
+    roadTex.wrapT = THREE.RepeatWrapping;
+    roadTex.repeat.set(1, this.chunkLength / 14);
+
+    const sidewalkTex = textureFactory.getSidewalkTexture();
+    sidewalkTex.wrapS = THREE.RepeatWrapping;
+    sidewalkTex.wrapT = THREE.RepeatWrapping;
+    sidewalkTex.repeat.set(1.5, this.chunkLength / 4);
+
+    const hexColorStr = '#' + (cityDef.buildingColors?.[0] || 0xdfe4ea).toString(16).padStart(6, '0');
+    const roofColorStr = '#' + (cityDef.roofColor || 0x576574).toString(16).padStart(6, '0');
+    const facadeTex = textureFactory.getHaussmannFacadeTexture(hexColorStr, roofColorStr);
+
+    const awningTexRed = textureFactory.getAwningTexture('#e74c3c');
+    const awningTexBlue = textureFactory.getAwningTexture('#2980b9');
+
+    this.sharedMats = {
+      road: new THREE.MeshStandardMaterial({
+        map: roadTex,
+        roughness: 0.85,
+        metalness: 0.05
+      }),
+      sidewalk: new THREE.MeshStandardMaterial({
+        map: sidewalkTex,
+        roughness: 0.7,
+        metalness: 0.05
+      }),
+      curb: new THREE.MeshStandardMaterial({ color: 0x7f8c8d, roughness: 0.6 }),
+      stripe: new THREE.MeshBasicMaterial({ color: 0xffffff }),
+      redLight: new THREE.MeshBasicMaterial({ color: 0xff3838 }),
+      amberLight: new THREE.MeshBasicMaterial({ color: 0x57606f }),
+      greenLight: new THREE.MeshBasicMaterial({ color: 0x2f3542 }),
+      mast: new THREE.MeshStandardMaterial({ color: 0x2d3436, roughness: 0.5, metalness: 0.2 }),
+      trafficBox: new THREE.MeshToonMaterial({ color: 0x1e272e }),
+      roof: new THREE.MeshToonMaterial({ color: cityDef.roofColor || 0x576574, roughness: 0.3 }),
+      buildingPalette: (cityDef.buildingColors || [0xdfe4ea, 0xced6e0]).map(c =>
+        new THREE.MeshToonMaterial({ color: c, roughness: 0.4 })
+      ),
+      facade: new THREE.MeshStandardMaterial({
+        map: facadeTex,
+        roughness: 0.8,
+        metalness: 0.05
+      }),
+      awningRed: new THREE.MeshStandardMaterial({
+        map: awningTexRed,
+        roughness: 0.7
+      }),
+      awningBlue: new THREE.MeshStandardMaterial({
+        map: awningTexBlue,
+        roughness: 0.7
+      }),
+      balcony: new THREE.MeshStandardMaterial({
+        color: 0x2d3436,
+        metalness: 0.8,
+        roughness: 0.25
+      }),
+      storeSign: new THREE.MeshStandardMaterial({
+        color: cityDef.accentColor || 0xff4757,
+        emissive: cityDef.accentColor || 0xff4757,
+        emissiveIntensity: 0.35,
+        roughness: 0.4
+      }),
+      foliage1: new THREE.MeshToonMaterial({ color: 0x27ae60 }),
+      foliage2: new THREE.MeshToonMaterial({ color: 0x1e8449 }),
+      wood: new THREE.MeshToonMaterial({ color: 0x5d4037 }),
+      lamp: new THREE.MeshToonMaterial({ color: 0x263238 }),
+      lampBulb: new THREE.MeshBasicMaterial({ color: 0xfffae6 })
     };
   }
 
@@ -60,6 +136,9 @@ export class Environment {
     }
     this.finishReached = false;
     this.animatedFlags = [];
+
+    // Matériaux partagés et optimisés pour le GPU
+    this.initSharedMaterials(cityDef);
 
     // Nettoyer la scène
     while (this.container.children.length > 0) {
@@ -928,26 +1007,10 @@ export class Environment {
     chunk.position.set(curveX, 0, zPos);
     chunk.rotation.y = curveAngle;
 
-    // Asphalte texturé HD avec vibreurs de course et traces de pneus
-    const roadTex = textureFactory.getRoadTexture().clone();
-    roadTex.repeat.set(1, this.chunkLength / 14);
-    const roadMat = new THREE.MeshStandardMaterial({
-      map: roadTex,
-      roughness: 0.85,
-      metalness: 0.05
-    });
-
-    // Pavés parisiens biseautés HD
-    const sidewalkTex = textureFactory.getSidewalkTexture().clone();
-    sidewalkTex.repeat.set(1.5, this.chunkLength / 4);
-    const sidewalkMat = new THREE.MeshStandardMaterial({
-      map: sidewalkTex,
-      roughness: 0.7,
-      metalness: 0.05
-    });
-
-    const curbMat = new THREE.MeshStandardMaterial({ color: 0x7f8c8d, roughness: 0.6 });
-    const stripeMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    const roadMat = this.sharedMats?.road || new THREE.MeshStandardMaterial({ roughness: 0.85, metalness: 0.05 });
+    const sidewalkMat = this.sharedMats?.sidewalk || new THREE.MeshStandardMaterial({ roughness: 0.7, metalness: 0.05 });
+    const curbMat = this.sharedMats?.curb || new THREE.MeshStandardMaterial({ color: 0x7f8c8d, roughness: 0.6 });
+    const stripeMat = this.sharedMats?.stripe || new THREE.MeshBasicMaterial({ color: 0xffffff });
 
     // Chaussée
     const road = new THREE.Mesh(this.sharedGeos.road, roadMat);
@@ -980,27 +1043,27 @@ export class Environment {
         tlGroup.userData = { type: 'lamp', isHit: false };
 
         // Mât gris anthracite
-        const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 4.6, 8), new THREE.MeshStandardMaterial({ color: 0x2d3436 }));
+        const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 4.6, 8), this.sharedMats?.mast || new THREE.MeshStandardMaterial({ color: 0x2d3436 }));
         mast.position.y = 2.3;
         tlGroup.add(mast);
 
         // Boîtier noir à 3 feux
-        const box = new THREE.Mesh(new THREE.BoxGeometry(0.35, 1.1, 0.32), new THREE.MeshToonMaterial({ color: 0x1e272e }));
+        const box = new THREE.Mesh(new THREE.BoxGeometry(0.35, 1.1, 0.32), this.sharedMats?.trafficBox || new THREE.MeshToonMaterial({ color: 0x1e272e }));
         box.position.set(0, 3.8, 0);
         tlGroup.add(box);
 
         // Feu ROUGE éclatant au sommet (Interdit aux véhicules quand piétons traversent)
-        const redLight = new THREE.Mesh(new THREE.CircleGeometry(0.12, 10), new THREE.MeshBasicMaterial({ color: 0xff3838 }));
+        const redLight = new THREE.Mesh(new THREE.CircleGeometry(0.12, 10), this.sharedMats?.redLight || new THREE.MeshBasicMaterial({ color: 0xff3838 }));
         redLight.position.set(0, 4.15, -0.17);
         redLight.rotation.y = Math.PI;
 
         // Feu ORANGE
-        const amberLight = new THREE.Mesh(new THREE.CircleGeometry(0.1, 8), new THREE.MeshBasicMaterial({ color: 0x57606f }));
+        const amberLight = new THREE.Mesh(new THREE.CircleGeometry(0.1, 8), this.sharedMats?.amberLight || new THREE.MeshBasicMaterial({ color: 0x57606f }));
         amberLight.position.set(0, 3.8, -0.17);
         amberLight.rotation.y = Math.PI;
 
         // Feu VERT
-        const greenLight = new THREE.Mesh(new THREE.CircleGeometry(0.1, 8), new THREE.MeshBasicMaterial({ color: 0x2f3542 }));
+        const greenLight = new THREE.Mesh(new THREE.CircleGeometry(0.1, 8), this.sharedMats?.greenLight || new THREE.MeshBasicMaterial({ color: 0x2f3542 }));
         greenLight.position.set(0, 3.45, -0.17);
         greenLight.rotation.y = Math.PI;
 
@@ -1019,6 +1082,8 @@ export class Environment {
     chunk.add(sidewalkL);
 
     const curbL = new THREE.Mesh(this.sharedGeos.curb, curbMat);
+    curbL.position.set(-4.25, 0.15, 0);
+    chunk.add(curbL);
     curbL.position.set(-4.25, 0.15, 0);
     chunk.add(curbL);
 
@@ -1044,19 +1109,14 @@ export class Environment {
     const xBase = side * 8.5;
     let currentZ = -this.chunkLength / 2;
 
-    const buildingMatPalette = this.cityTheme.buildingColors.map(c =>
+    const buildingMatPalette = this.sharedMats?.buildingPalette || this.cityTheme.buildingColors.map(c =>
       new THREE.MeshToonMaterial({ color: c, roughness: 0.4 })
     );
-    const roofMat = new THREE.MeshToonMaterial({ color: this.cityTheme.roofColor, roughness: 0.3 });
-    const darkWinMat = new THREE.MeshBasicMaterial({ color: 0x1e272e });
-    const litWinMat = new THREE.MeshBasicMaterial({ color: 0xfff2a3 }); // Fenêtres chaleureuses illuminées
-    const balconyMat = new THREE.MeshToonMaterial({ color: 0x2d3436, metalness: 0.5 });
-    const awningMats = [
-      new THREE.MeshToonMaterial({ color: 0xc0392b }),
-      new THREE.MeshToonMaterial({ color: 0x27ae60 }),
-      new THREE.MeshToonMaterial({ color: 0x2980b9 }),
-      new THREE.MeshToonMaterial({ color: 0xf39c12 })
-    ];
+    const roofMat = this.sharedMats?.roof || new THREE.MeshToonMaterial({ color: this.cityTheme.roofColor, roughness: 0.3 });
+    const facadeMat = this.sharedMats?.facade || new THREE.MeshStandardMaterial({ roughness: 0.8, metalness: 0.05 });
+    const awningMat = side > 0 ? (this.sharedMats?.awningRed || new THREE.MeshStandardMaterial({ roughness: 0.7 })) : (this.sharedMats?.awningBlue || new THREE.MeshStandardMaterial({ roughness: 0.7 }));
+    const balconyMat = this.sharedMats?.balcony || new THREE.MeshStandardMaterial({ color: 0x2d3436, metalness: 0.8, roughness: 0.25 });
+    const storeSignMat = this.sharedMats?.storeSign || new THREE.MeshStandardMaterial({ color: 0xff4757, roughness: 0.4 });
 
     while (currentZ < this.chunkLength / 2) {
       const bWidth = 8.5 + Math.random() * 5.0;
@@ -1084,31 +1144,39 @@ export class Environment {
       }
 
       // Façade Haussmannienne HD avec fenêtres détaillées, corniches et commerce
-      const hexColorStr = '#' + (this.cityTheme.buildingColors[0] || 0xdfe4ea).toString(16).padStart(6, '0');
-      const roofColorStr = '#' + (this.cityTheme.roofColor || 0x576574).toString(16).padStart(6, '0');
-      const facadeTex = textureFactory.getHaussmannFacadeTexture(hexColorStr, roofColorStr);
-      const facadeMat = new THREE.MeshStandardMaterial({
-        map: facadeTex,
-        roughness: 0.8,
-        metalness: 0.05
-      });
       const facadeMesh = new THREE.Mesh(new THREE.PlaneGeometry(bWidth, bHeight), facadeMat);
       facadeMesh.position.set(xBase - side * 0.08, bHeight / 2, currentZ + bWidth / 2);
       facadeMesh.rotation.y = side > 0 ? -Math.PI / 2 : Math.PI / 2;
       chunk.add(facadeMesh);
 
+      // Balcons filants 3D en fer forgé haussmannien
+      const balconyY1 = 4.2;
+      const balconyY2 = 7.8;
+      [balconyY1, balconyY2].forEach(by => {
+        if (by < bHeight - 1.5) {
+          const balcBBox = new THREE.Mesh(this.sharedGeos.balconyBase, balconyMat);
+          balcBBox.position.set(xBase - side * 0.45, by, currentZ + bWidth / 2);
+          chunk.add(balcBBox);
+
+          const balcRail = new THREE.Mesh(this.sharedGeos.balconyRailing, balconyMat);
+          balcRail.position.set(xBase - side * 0.75, by + 0.35, currentZ + bWidth / 2);
+          chunk.add(balcRail);
+        }
+      });
+
       // Store banne de bistrot ou boutique avec texture rayée réaliste
       if (Math.random() < 0.75) {
-        const awningTex = textureFactory.getAwningTexture(side > 0 ? '#e74c3c' : '#2980b9');
-        const awningMat = new THREE.MeshStandardMaterial({
-          map: awningTex,
-          roughness: 0.7
-        });
         const awningGeo = new THREE.BoxGeometry(1.8, 0.35, bWidth * 0.75);
         const awning = new THREE.Mesh(awningGeo, awningMat);
         awning.rotation.z = side * 0.35;
         awning.position.set(xBase - side * 0.7, 3.2, currentZ + bWidth / 2);
         chunk.add(awning);
+
+        // Enseigne chic lumineuse au-dessus du store
+        const signMesh = new THREE.Mesh(this.sharedGeos.storeSign, storeSignMat);
+        signMesh.position.set(xBase - side * 0.65, 3.8, currentZ + bWidth / 2);
+        signMesh.rotation.y = side > 0 ? -Math.PI / 2 : Math.PI / 2;
+        chunk.add(signMesh);
       }
 
       currentZ += bWidth;

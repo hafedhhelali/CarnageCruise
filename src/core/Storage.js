@@ -101,7 +101,8 @@ export class Storage {
   }
 
   isCityUnlocked(cityId) {
-    return this.data.unlockedCities.includes(cityId);
+    if (!cityId) return false;
+    return this.data.unlockedCities.includes(cityId) || DEFAULT_SAVE.unlockedCities.includes(cityId);
   }
 
   unlockCity(cityId) {

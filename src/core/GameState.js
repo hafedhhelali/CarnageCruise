@@ -1138,6 +1138,7 @@ export class GameState {
     this.isNitroActive = true;
     this.nitroTimer = this.nitroDuration;
     soundManager.playNitroBoost();
+    soundManager.playTurboWhistle();
     this.notify('nitro_activated', { duration: this.nitroDuration });
     return true;
   }
@@ -1149,6 +1150,11 @@ export class GameState {
   }
 
   setBraking(braking) {
+    if (braking && !this.isBraking && this.speed > 8.0) {
+      soundManager.playTireScreech();
+    } else if (!braking && this.isBraking && this.speed > 12.0) {
+      soundManager.playExhaustBackfire();
+    }
     this.isBraking = braking;
   }
 
@@ -1299,6 +1305,7 @@ export class GameState {
       if (this.nitroTimer <= 0) {
         this.isNitroActive = false;
         this.nitroTimer = 0;
+        soundManager.playExhaustBackfire();
         this.notify('nitro_ended', {});
       }
     } else if (this.speed > 5.0 && !this.isBraking) {

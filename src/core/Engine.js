@@ -60,6 +60,13 @@ export class Engine {
     this.dirLight.shadow.bias = -0.0004;
     this.dirLight.shadow.normalBias = 0.02;
     this.scene.add(this.dirLight);
+    this.scene.add(this.dirLight.target);
+
+    // Lumière rasante de silhouette (Rim Light / Kicker) style studio AAA
+    this.rimLight = new THREE.DirectionalLight(0x00d2d3, 0.45);
+    this.rimLight.position.set(0, 6, 25);
+    this.scene.add(this.rimLight);
+    this.scene.add(this.rimLight.target);
 
     // Brouillard atmosphérique doux et naturel
     this.scene.fog = new THREE.Fog(0xd8e8f8, 50, 240);
@@ -93,6 +100,10 @@ export class Engine {
     if (this.dirLight) {
       this.dirLight.color = new THREE.Color(0xfffaed);
     }
+    if (this.rimLight) {
+      this.rimLight.color = new THREE.Color(cityDef.accentColor || 0x00cec9);
+      this.rimLight.intensity = cityDef.isNuclearMission ? 0.75 : 0.45;
+    }
   }
 
   triggerCameraShake(intensity = 0.3) {
@@ -103,6 +114,16 @@ export class Engine {
     // Mise à jour du dôme céleste
     if (this.skyDome) {
       this.skyDome.update(delta, bikePosition.z);
+    }
+
+    // Suivi de la lumière solaire et de la rim-light le long du tracé (zéro coupure d'ombres)
+    if (this.dirLight) {
+      this.dirLight.position.set(bikePosition.x + 22, 42, bikePosition.z + 22);
+      this.dirLight.target.position.set(bikePosition.x, 0, bikePosition.z);
+    }
+    if (this.rimLight) {
+      this.rimLight.position.set(bikePosition.x, 6, bikePosition.z + 26);
+      this.rimLight.target.position.set(bikePosition.x, 1.2, bikePosition.z);
     }
 
     // Calcul de la secousse d'impact comique

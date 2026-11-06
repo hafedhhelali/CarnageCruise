@@ -1427,38 +1427,58 @@ export class SoundManager {
 
   // --- SON DU MOTEUR (DYNAMIQUE) ---
 
+  // --- MOTEUR AUDIO PROCÉDURAL MULTI-CORPS & SONS DE PILOTAGE EXPERTS ---
   startEngine() {
     if (this.engineOsc || !this.ctx || this.isMutedSfx || this.isDestroyed) return;
     this.resumeContext();
 
+    const dest = this.getMasterOutput();
     const now = this.ctx.currentTime;
-    this.engineOsc = this.ctx.createOscillator();
-    this.engineGain = this.ctx.createGain();
 
-    this.engineOsc.type = 'triangle';
-    this.engineOsc.frequency.setValueAtTime(55, now);
-    this.engineGain.gain.setValueAtTime(0.025, now);
+    // 1. Oscillateur Mid (Caractère mécanique et rugissement des cylindres)
+    this.engineOsc = this.ctx.createOscillator();
+    this.engineOsc.type = 'sawtooth';
+    this.engineOsc.frequency.setValueAtTime(48, now);
+
+    // 2. Oscillateur Sub-bass (Corps et puissance des pistons dans le bas du spectre)
+    this.engineSubOsc = this.ctx.createOscillator();
+    this.engineSubOsc.type = 'sine';
+    this.engineSubOsc.frequency.setValueAtTime(32, now);
 
     this.engineFilter = this.ctx.createBiquadFilter();
     this.engineFilter.type = 'lowpass';
-    this.engineFilter.frequency.setValueAtTime(200, now);
+    this.engineFilter.frequency.setValueAtTime(160, now);
+    this.engineFilter.Q.value = 2.4;
+
+    this.engineGain = this.ctx.createGain();
+    this.engineGain.gain.setValueAtTime(0.045, now);
 
     this.engineOsc.connect(this.engineFilter);
+    this.engineSubOsc.connect(this.engineFilter);
     this.engineFilter.connect(this.engineGain);
-    this.engineGain.connect(this.ctx.destination);
+    this.engineGain.connect(dest);
 
     this.engineOsc.start(now);
+    this.engineSubOsc.start(now);
   }
 
   updateEngine(speedRatio) {
     if (!this.engineOsc || !this.ctx || this.isDestroyed) return;
     const now = this.ctx.currentTime;
-    const clampedRatio = Math.max(0, Math.min(1.5, speedRatio));
-    const targetFreq = 55 + clampedRatio * 55;
-    this.engineOsc.frequency.setTargetAtTime(targetFreq, now, 0.08);
+    const clampedRatio = Math.max(0, Math.min(1.8, speedRatio));
+
+    // Ramping de fréquence dynamique selon l'accélération
+    const targetMidFreq = 48 + clampedRatio * 68;
+    const targetSubFreq = 30 + clampedRatio * 42;
+    this.engineOsc.frequency.setTargetAtTime(targetMidFreq, now, 0.06);
+    if (this.engineSubOsc) {
+      this.engineSubOsc.frequency.setTargetAtTime(targetSubFreq, now, 0.06);
+    }
 
     if (this.engineFilter) {
-      this.engineFilter.frequency.setTargetAtTime(180 + clampedRatio * 160, now, 0.08);
+      // Ouverture du filtre à haut régime pour révéler les harmoniques métalliques
+      const filterCutoff = 160 + clampedRatio * 240;
+      this.engineFilter.frequency.setTargetAtTime(filterCutoff, now, 0.06);
     }
   }
 
@@ -1466,12 +1486,104 @@ export class SoundManager {
     if (this.engineOsc) {
       try {
         this.engineOsc.stop();
-        this.cleanupNodes(this.engineOsc, this.engineFilter, this.engineGain);
+        if (this.engineSubOsc) this.engineSubOsc.stop();
+        this.cleanupNodes(this.engineOsc, this.engineSubOsc, this.engineFilter, this.engineGain);
       } catch (e) {}
       this.engineOsc = null;
+      this.engineSubOsc = null;
       this.engineGain = null;
       this.engineFilter = null;
     }
+  }
+
+  // Crépitement / Retour de flamme d'échappement (Pop & Crackle) à la décélération
+  playExhaustBackfire() {
+    if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
+    this.resumeContext();
+    const dest = this.getMasterOutput();
+    const now = this.ctx.currentTime;
+
+    const count = 1 + Math.floor(Math.random() * 2);
+    for (let i = 0; i < count; i++) {
+      const t = now + (i * 0.07);
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(120 + Math.random() * 40, t);
+      osc.frequency.exponentialRampToValueAtTime(35, t + 0.05);
+
+      gain.gain.setValueAtTime(0.22, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+
+      osc.connect(gain);
+      gain.connect(dest);
+      osc.onended = () => this.cleanupNodes(osc, gain);
+      osc.start(t);
+      osc.stop(t + 0.05);
+    }
+  }
+
+  // Crissement de pneus sur asphalte lors d'un freinage appuyé
+  playTireScreech() {
+    if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
+    this.resumeContext();
+    const dest = this.getMasterOutput();
+    const now = this.ctx.currentTime;
+
+    const buffer = this.ctx.createBuffer(1, Math.floor(this.ctx.sampleRate * 0.28), this.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < data.length; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.sin((i / data.length) * Math.PI);
+    }
+    const noise = this.ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(1250, now);
+    filter.frequency.linearRampToValueAtTime(950, now + 0.28);
+    filter.Q.value = 5.0;
+
+    const gain = this.ctx.createGain();
+    gain.gain.setValueAtTime(0.18, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(dest);
+    noise.start(now);
+  }
+
+  // Sifflement de turbo-compresseur haute pression lors de l'activation du Nitro
+  playTurboWhistle() {
+    if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
+    this.resumeContext();
+    const dest = this.getMasterOutput();
+    const now = this.ctx.currentTime;
+
+    const osc = this.ctx.createOscillator();
+    const filter = this.ctx.createBiquadFilter();
+    const gain = this.ctx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(1400, now);
+    osc.frequency.exponentialRampToValueAtTime(3200, now + 0.45);
+
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(2200, now);
+    filter.Q.value = 6.0;
+
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.linearRampToValueAtTime(0.2, now + 0.15);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(dest);
+
+    osc.onended = () => this.cleanupNodes(osc, filter, gain);
+    osc.start(now);
+    osc.stop(now + 0.45);
   }
 
   // --- MOTEUR AUDIO & COMPOSITEUR MUSICAL PROCÉDURAL (SYNTHWAVE, FUNK & DARKSYNTH) ---

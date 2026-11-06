@@ -604,7 +604,7 @@ export class UIManager {
         nucCycleIdx++;
         this.selectedMapCity = nextNuc;
         gameState.selectCity(nextNuc.id);
-        this.renderCityDetails(mapScreen.querySelector('#city-detail'));
+        this.updateCityDetail(mapScreen.querySelector('#city-detail'));
         centerOnCity(nextNuc, true);
         soundManager.playGeigerClick();
       }
@@ -899,10 +899,7 @@ export class UIManager {
         launchBtn.addEventListener('click', () => {
           soundManager.playClick();
           gameState.selectCity(city.id);
-          // Publicité interstitielle lors du passage vers une ville
-          adManager.showCityTransitionAd(city, () => {
-            this.triggerCityEntryCinematic(city);
-          });
+          this.triggerCityEntryCinematic(city);
         });
       }
     }
@@ -924,11 +921,18 @@ export class UIManager {
 
     soundManager.playVictory();
 
-    setTimeout(() => {
+    let launched = false;
+    const launchNow = () => {
+      if (launched) return;
+      launched = true;
       overlay.classList.add('fade-out');
       if (this.onAction) this.onAction('START_RUN', city);
-      setTimeout(() => overlay.remove(), 400);
-    }, 1100);
+      setTimeout(() => overlay.remove(), 250);
+    };
+
+    overlay.addEventListener('click', launchNow);
+    overlay.addEventListener('pointerdown', launchNow);
+    setTimeout(launchNow, 650);
   }
 
   // --- 3. GARAGE ET PERSONNALISATION (NAVIGATION FLÈCHES ◀ ▶ ET RETOUR CARTE) ---
