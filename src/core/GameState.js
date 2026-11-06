@@ -286,37 +286,66 @@ export const CITIES = [
   },
   {
     id: 'geneve',
-    name: 'Genève',
+    name: 'Genève 🌊',
     country: 'Suisse',
     countryFlag: '🇨🇭',
-    emblem: '🇨🇭',
-    monument: 'Le Jet d’Eau 140m & Lac Léman',
-    subtitle: 'Le Jet d’Eau 140m & Les Alpes',
-    typeTag: 'Lac Léman & Jet d’Eau',
-    description: 'Longez les rivages scintillants du lac Léman sous le panache monumental de 140 mètres du Jet d’Eau !',
+    emblem: '🌊',
+    monument: 'Barrage Hydroélectrique & Jet d’Eau',
+    subtitle: 'Rupture de Barrage, Déferlante & Déluge',
+    typeTag: 'Cataclysme : Rupture de Barrage & Déluge',
+    description: 'Au cœur de la rade, le barrage hydroélectrique retient des millions de m³ d’eau. Faites sauter les vannes en béton au canon ou au missile pour noyer la ville sous une vague géante !',
     targetScore: 86000,
     starThresholds: [86000, 126000, 180000],
     unlockScoreRequired: 73000,
     skyColor: 0x48dbfb,
     fogColor: 0xe0f7fa,
-    ambientColor: 0xf5f6fa,
+    ambientColor: 0x00cec9,
     roadColor: 0x34495e,
     buildingColors: [0xffffff, 0xecf0f1, 0xbdc3c7, 0x74b9ff],
-    roofColor: 0x2c3e50,
-    accentColor: 0xeb4d4b,
+    roofColor: 0x0984e3,
+    accentColor: 0x00d2d3,
     unlockedByDefault: false,
+    disasterType: 'DAM',
+    isDamMission: true,
+    exterminationTarget: 550000,
     mapCoords: { x: 59.0, y: 49.7 }
   },
   {
+    id: 'grande-dixence',
+    name: 'Grande-Dixence 🌊',
+    country: 'Suisse',
+    countryFlag: '🇨🇭',
+    emblem: '🌊',
+    monument: 'Méga-Barrage Poids de 285m',
+    subtitle: 'Plus Haut Barrage d’Europe & Raz-de-Marée',
+    typeTag: 'Cataclysme : Rupture de Barrage Titanesque',
+    description: '400 millions de m³ d’eau suspendus à 2360m d’altitude. Explosez la voûte colossale en béton armé et contemplez le déferlement apocalyptique qui submerge toute la vallée !',
+    targetScore: 95000,
+    starThresholds: [95000, 140000, 205000],
+    unlockScoreRequired: 86000,
+    skyColor: 0x22a6b3,
+    fogColor: 0xc7ecee,
+    ambientColor: 0x7ed6df,
+    roadColor: 0x130f40,
+    buildingColors: [0x535c68, 0x95afc0, 0x7ed6df],
+    roofColor: 0x30336b,
+    accentColor: 0x22a6b3,
+    unlockedByDefault: false,
+    disasterType: 'DAM',
+    isDamMission: true,
+    exterminationTarget: 750000,
+    mapCoords: { x: 56.5, y: 52.8 }
+  },
+  {
     id: 'chamonix',
-    name: 'Chamonix',
+    name: 'Chamonix 🏔️',
     country: 'France',
     countryFlag: '🇫🇷',
     emblem: '🏔️',
-    monument: 'Mont-Blanc & Aiguille du Midi',
-    subtitle: 'Col Alpin & Vue sur le Mont-Blanc',
-    typeTag: 'Montagneuse & Cols',
-    description: 'Lacets serrés de haute montagne entre chalets en bois, sapins enneigés et pics rocheux vertigineux.',
+    monument: 'Mont-Blanc & Pylônes Sismiques',
+    subtitle: 'Dynamitage de Paroi, Éboulement & Avalanche',
+    typeTag: 'Cataclysme : Éboulement de Montagne',
+    description: 'En contrebas du toit de l’Europe, pulvérisez les ancrages sismiques de la muraille rocheuse ! Des millions de tonnes de granit et de séracs s’effondrent sur la ville dans un fracas titanesque.',
     targetScore: 100000,
     starThresholds: [100000, 145000, 210000],
     unlockScoreRequired: 86000,
@@ -328,7 +357,36 @@ export const CITIES = [
     roofColor: 0xecf0f1,
     accentColor: 0x00cec9,
     unlockedByDefault: false,
+    disasterType: 'MOUNTAIN',
+    isMountainMission: true,
+    exterminationTarget: 480000,
     mapCoords: { x: 59.9, y: 50.7 }
+  },
+  {
+    id: 'innsbruck',
+    name: 'Innsbruck 🏔️',
+    country: 'Autriche',
+    countryFlag: '🇦🇹',
+    emblem: '🏔️',
+    monument: 'Paroi Calcaire de la Nordkette & Pic Hafelekar',
+    subtitle: 'Éboulement Rocheux & Avalanche Apocalyptique',
+    typeTag: 'Cataclysme : Éboulement Alpin Autrichien',
+    description: 'Dominée par les à-pics vertigineux des Alpes tyroliennes, la ville est à portée de tir. Déclenchez l’effondrement de la falaise rocheuse pour précipiter des blocs cyclopéens sur la cité !',
+    targetScore: 110000,
+    starThresholds: [110000, 155000, 225000],
+    unlockScoreRequired: 100000,
+    skyColor: 0x686de0,
+    fogColor: 0xdff9fb,
+    ambientColor: 0xffffff,
+    roadColor: 0x30336b,
+    buildingColors: [0xf6e58d, 0xffbe76, 0xff7979, 0xbadc58],
+    roofColor: 0x4834d4,
+    accentColor: 0xe056fd,
+    unlockedByDefault: false,
+    disasterType: 'MOUNTAIN',
+    isMountainMission: true,
+    exterminationTarget: 620000,
+    mapCoords: { x: 67.5, y: 47.8 }
   },
   {
     id: 'annecy',
@@ -652,6 +710,8 @@ export const CITIES = [
     unlockedByDefault: true,
     killQuota: 25,
     isNuclearMission: true,
+    disasterType: 'NUCLEAR',
+    exterminationTarget: 1200000,
     mapCoords: { x: 37.5, y: 36.8 }
   },
   {
@@ -677,6 +737,8 @@ export const CITIES = [
     unlockedByDefault: true,
     killQuota: 30,
     isNuclearMission: true,
+    disasterType: 'NUCLEAR',
+    exterminationTarget: 1600000,
     mapCoords: { x: 50.8, y: 29.5 }
   },
   {
@@ -702,6 +764,8 @@ export const CITIES = [
     unlockedByDefault: true,
     killQuota: 30,
     isNuclearMission: true,
+    disasterType: 'NUCLEAR',
+    exterminationTarget: 1400000,
     mapCoords: { x: 33.5, y: 64.2 }
   },
   {
@@ -727,6 +791,8 @@ export const CITIES = [
     unlockedByDefault: true,
     killQuota: 35,
     isNuclearMission: true,
+    disasterType: 'NUCLEAR',
+    exterminationTarget: 2500000,
     mapCoords: { x: 94.3, y: 33.8 }
   }
 ];
@@ -1042,40 +1108,81 @@ export class GameState {
     this.isNitroActive = false;
     this.nitroTimer = 0;
 
-    // Mission Nucléaire : phase d'approche de la centrale
-    if (this.selectedCity?.isNuclearMission) {
-      this.nuclearPhase = 'APPROACH';
-      this.nuclearEscapeTimer = 22.0;
-      this.nuclearDetonated = false;
-    } else {
-      this.nuclearPhase = null;
-      this.nuclearDetonated = false;
-    }
+    // Gestion des Cataclysmes & Modes d'Extermination Worldmageddon
+    this.disasterType = this.selectedCity?.disasterType || (this.selectedCity?.isNuclearMission ? 'NUCLEAR' : (this.selectedCity?.isDamMission ? 'DAM' : (this.selectedCity?.isMountainMission ? 'MOUNTAIN' : 'STREET')));
+    this.cataclysmDetonated = false;
+    this.cataclysmPhase = (this.disasterType !== 'STREET') ? 'APPROACH' : null;
+    this.cataclysmEscapeTimer = 22.0;
+
+    // Rétrocompatibilité Mission Nucléaire
+    this.nuclearPhase = this.disasterType === 'NUCLEAR' ? 'APPROACH' : null;
+    this.nuclearEscapeTimer = 22.0;
+    this.nuclearDetonated = false;
 
     // Compte à rebours 3, 2, 1, GO !
     this.currentMode = 'COUNTDOWN';
 
     soundManager.startEngine();
     soundManager.updateEngine(0.08); // Ronronnement au ralenti à l'arrêt
-    const track = this.selectedCity?.isNuclearMission ? 'NUCLEAR' : 'GAMEPLAY';
+    const track = (this.disasterType !== 'STREET') ? 'NUCLEAR' : 'GAMEPLAY';
     soundManager.switchMusicTrack(track);
     this.notify('run_started', { city: this.selectedCity, bike: this.selectedBike });
   }
 
-  triggerNuclearDetonation() {
-    if (this.nuclearDetonated) return false;
-    this.nuclearDetonated = true;
-    this.nuclearPhase = 'ESCAPE';
-    this.nuclearEscapeTimer = 22.0;
-    this.score += 15000;
-    this.nitroGauge = 100; // Recharge nitro d'urgence pour s'enfuir
+  triggerCataclysm(forcedType = null) {
+    if (this.cataclysmDetonated) return false;
+    this.cataclysmDetonated = true;
+    this.cataclysmPhase = 'ESCAPE';
+    this.cataclysmEscapeTimer = 22.0;
 
-    this.notify('nuclear_detonated', {
-      phase: this.nuclearPhase,
-      escapeTimer: this.nuclearEscapeTimer,
-      bonusScore: 15000
+    const type = forcedType || this.disasterType;
+    let victims = this.selectedCity.exterminationTarget || 500000;
+    let bonusScore = 15000;
+
+    if (type === 'NUCLEAR') {
+      this.nuclearDetonated = true;
+      this.nuclearPhase = 'ESCAPE';
+      this.nuclearEscapeTimer = 22.0;
+      soundManager.playNuclearBlast();
+      soundManager.playNuclearAlarm();
+      soundManager.switchMusicTrack('NUCLEAR');
+    } else if (type === 'DAM') {
+      soundManager.playDamBurst();
+      soundManager.playWaterRush();
+      soundManager.switchMusicTrack('NUCLEAR');
+    } else if (type === 'MOUNTAIN') {
+      soundManager.playMountainExplosion();
+      soundManager.playRockAvalanche();
+      soundManager.switchMusicTrack('NUCLEAR');
+    }
+
+    this.score += bonusScore;
+    this.nitroGauge = 100; // Recharge nitro d'urgence pour s'enfuir
+    this.worldPopulationEliminated += victims;
+    storage.incrementTotalKills(victims);
+
+    this.notify('cataclysm_triggered', {
+      type,
+      phase: this.cataclysmPhase,
+      escapeTimer: this.cataclysmEscapeTimer,
+      bonusScore,
+      victims,
+      worldTotal: this.worldPopulationEliminated
     });
+
+    if (type === 'NUCLEAR') {
+      this.notify('nuclear_detonated', {
+        phase: this.nuclearPhase,
+        escapeTimer: this.nuclearEscapeTimer,
+        bonusScore
+      });
+    }
+
     return true;
+  }
+
+  triggerNuclearDetonation() {
+    return this.triggerCataclysm('NUCLEAR');
   }
 
   refillNitro() {
@@ -1354,9 +1461,10 @@ export class GameState {
       }
     }
 
-    // Décompte de la phase d'évasion nucléaire
-    if (this.nuclearPhase === 'ESCAPE') {
-      this.nuclearEscapeTimer = Math.max(0, this.nuclearEscapeTimer - delta);
+    // Décompte de la phase d'évasion (Nucléaire, Déluge, Avalanche)
+    if (this.cataclysmPhase === 'ESCAPE') {
+      this.cataclysmEscapeTimer = Math.max(0, this.cataclysmEscapeTimer - delta);
+      this.nuclearEscapeTimer = this.cataclysmEscapeTimer;
     }
 
     // Distance parcourue
@@ -1374,6 +1482,9 @@ export class GameState {
       kills: this.killsCount,
       killQuota: this.selectedCity.killQuota || 30,
       worldTotal: this.worldPopulationEliminated,
+      disasterType: this.disasterType,
+      cataclysmPhase: this.cataclysmPhase,
+      cataclysmEscapeTimer: this.cataclysmEscapeTimer,
       nuclearPhase: this.nuclearPhase,
       nuclearEscapeTimer: this.nuclearEscapeTimer
     });
@@ -1386,6 +1497,17 @@ export class GameState {
     this.isGameOver = true;
     soundManager.stopEngine();
     soundManager.switchMusicTrack('MENU');
+
+    // Extermination bonus de fin d'étape pour Worldmageddon
+    const cityVictims = this.selectedCity.exterminationTarget || 35000;
+    let runVictims = this.killsCount;
+    if (this.disasterType === 'STREET' || !this.cataclysmDetonated) {
+      this.worldPopulationEliminated += cityVictims;
+      storage.incrementTotalKills(cityVictims);
+      runVictims += cityVictims;
+    } else {
+      runVictims += (this.selectedCity.exterminationTarget || 500000);
+    }
 
     // Calcul des étoiles avec les nouveaux seuils
     let stars = 0;
@@ -1421,6 +1543,8 @@ export class GameState {
       coinsEarned: this.coinsEarned,
       interactions: this.interactionsCount,
       kills: this.killsCount,
+      runVictims,
+      disasterType: this.disasterType,
       worldTotal: this.worldPopulationEliminated,
       distance: Math.floor(this.distance),
       maxCombo: this.comboMax,

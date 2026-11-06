@@ -37,6 +37,8 @@ export class ParticleSystem {
       starRed: new THREE.MeshBasicMaterial({ color: 0xff3838 }),
       sparkAmber: new THREE.MeshBasicMaterial({ color: 0xffa502 }),
       bloodDrop: new THREE.MeshBasicMaterial({ color: 0x990000 }),
+      waterBlue: new THREE.MeshBasicMaterial({ color: 0x00d2d3, transparent: true, opacity: 0.85 }),
+      rockGray: new THREE.MeshBasicMaterial({ color: 0x57606f }),
       speedLine: new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.4 })
     };
 
@@ -314,6 +316,90 @@ export class ParticleSystem {
         mesh: smoke,
         velY: 4.5 + Math.random() * 3.5,
         growRate: 4.0,
+        life: 2.2,
+        maxLife: 2.2
+      });
+    }
+  }
+
+  // Rupture cataclysmique de barrage & déluge aquatique
+  spawnDamBlast(pos) {
+    this.spawnShockwave(pos, 0x00d2d3);
+    this.spawnShockwave(pos, 0x0984e3);
+    this.spawnShockwave(pos, 0xffffff);
+
+    // Gerbes d'eau écumantes projetées
+    for (let i = 0; i < 35; i++) {
+      const drop = new THREE.Mesh(this.sharedGeos.bloodSphere, this.sharedMats.waterBlue || this.sharedMats.smoke);
+      drop.position.copy(pos);
+      drop.position.y += 2.0;
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 7.0 + Math.random() * 15.0;
+      this.scene.add(drop);
+      this.debris.push({
+        mesh: drop,
+        velX: Math.cos(angle) * speed,
+        velY: 5.0 + Math.random() * 12.0,
+        velZ: Math.sin(angle) * speed,
+        rotVelX: 0,
+        rotVelY: 0,
+        life: 1.8,
+        maxLife: 1.8
+      });
+    }
+
+    // Vapeur d'eau et embruns
+    for (let j = 0; j < 14; j++) {
+      const spray = new THREE.Mesh(this.sharedGeos.smokeSphere, this.sharedMats.skidSmoke);
+      spray.position.set(pos.x + (Math.random() - 0.5) * 6.0, pos.y + 1.0 + Math.random() * 2.0, pos.z + (Math.random() - 0.5) * 6.0);
+      spray.scale.setScalar(2.0 + Math.random() * 2.5);
+      this.scene.add(spray);
+      this.smokePuffs.push({
+        mesh: spray,
+        velY: 3.5 + Math.random() * 2.5,
+        growRate: 3.0,
+        life: 2.0,
+        maxLife: 2.0
+      });
+    }
+  }
+
+  // Éboulement sismique de montagne & avalanche géante
+  spawnMountainBlast(pos) {
+    this.spawnShockwave(pos, 0x747d8c);
+    this.spawnShockwave(pos, 0xff9f43);
+    this.spawnShockwave(pos, 0xff4757);
+
+    // Éclats de roche et gravats projetés
+    for (let i = 0; i < 35; i++) {
+      const rock = new THREE.Mesh(this.sharedGeos.starCone, this.sharedMats.rockGray || this.sharedMats.sparkAmber);
+      rock.position.copy(pos);
+      rock.position.y += 3.0;
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 9.0 + Math.random() * 16.0;
+      this.scene.add(rock);
+      this.debris.push({
+        mesh: rock,
+        velX: Math.cos(angle) * speed,
+        velY: 6.0 + Math.random() * 14.0,
+        velZ: Math.sin(angle) * speed,
+        rotVelX: Math.random() * 25 - 12,
+        rotVelY: Math.random() * 25 - 12,
+        life: 1.6,
+        maxLife: 1.6
+      });
+    }
+
+    // Nuage géant d'avalanche de poussière
+    for (let j = 0; j < 16; j++) {
+      const dust = new THREE.Mesh(this.sharedGeos.smokeSphere, this.sharedMats.smoke);
+      dust.position.set(pos.x + (Math.random() - 0.5) * 6.0, pos.y + 2.0 + Math.random() * 4.0, pos.z + (Math.random() - 0.5) * 6.0);
+      dust.scale.setScalar(2.5 + Math.random() * 3.0);
+      this.scene.add(dust);
+      this.smokePuffs.push({
+        mesh: dust,
+        velY: 4.0 + Math.random() * 3.0,
+        growRate: 3.5,
         life: 2.2,
         maxLife: 2.2
       });

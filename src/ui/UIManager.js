@@ -343,6 +343,16 @@ export class UIManager {
         </div>
       </div>
 
+      <!-- BANDEAU WORLDMAGEDDON : EXTERMINATION MONDIALE -->
+      <div class="worldmageddon-header-bar" style="background: linear-gradient(90deg, #1e272e, #2d3436, #1e272e); border-bottom: 2px solid #ff4757; padding: 6px 12px; display: flex; align-items: center; justify-content: space-between; font-size: 0.8rem; font-weight: 800; color: #ffffff; z-index: 10;">
+        <span style="color: #ff4757; display: flex; align-items: center; gap: 6px;">
+          💀 <strong>WORLDMAGEDDON</strong> : DÉPOPULATION MONDIALE
+        </span>
+        <span style="color: #fffa65; font-family: monospace;">
+          ${((storage.data.stats && storage.data.stats.totalKills) || 0).toLocaleString('fr-FR')} / 8 000 000 000
+        </span>
+      </div>
+
       <!-- CARTE D'EUROPE ET BASSIN MÉDITERRANÉEN HAUTE-FIDÉLITÉ AVEC ZOOM INTERACTIF -->
       <div class="europe-map-scroll-viewport" id="europe-viewport">
         <!-- Contrôles de zoom intégrés à l'intérieur du cadre de carte (aucun masquage du titre) -->
@@ -351,7 +361,9 @@ export class UIManager {
           <span class="zoom-level-badge" id="zoom-badge">${Math.round(this.mapZoom * 100)}%</span>
           <button id="btn-zoom-out" class="btn-zoom" title="Réduire la carte (Zoom -)">➖</button>
           <button id="btn-zoom-reset" class="btn-zoom" title="Recentrer">🎯</button>
-          <button id="btn-filter-nuclear" class="btn-nuclear-shortcut" title="Voir les Centrales Nucléaires">☢️ CENTRALES</button>
+          <button id="btn-filter-nuclear" class="btn-nuclear-shortcut" title="Voir les Centrales Nucléaires">☢️ NUCLÉAIRE</button>
+          <button id="btn-filter-dam" class="btn-nuclear-shortcut" style="background: rgba(0, 206, 201, 0.25); border-color: #00cec9; color: #00cec9;" title="Voir les Barrages & Déluges">🌊 BARRAGE</button>
+          <button id="btn-filter-mountain" class="btn-nuclear-shortcut" style="background: rgba(254, 202, 87, 0.25); border-color: #feca57; color: #feca57;" title="Voir les Éboulements de Montagne">🏔️ MONTAGNE</button>
         </div>
 
         <div class="europe-map-canvas-container" id="europe-canvas">
@@ -616,7 +628,7 @@ export class UIManager {
 
     let nucCycleIdx = 0;
     mapScreen.querySelector('#btn-filter-nuclear')?.addEventListener('click', () => {
-      const nuclearCities = CITIES.filter(c => c.isNuclearMission);
+      const nuclearCities = CITIES.filter(c => c.isNuclearMission || c.disasterType === 'NUCLEAR');
       if (nuclearCities.length > 0) {
         const nextNuc = nuclearCities[nucCycleIdx % nuclearCities.length];
         nucCycleIdx++;
@@ -625,6 +637,34 @@ export class UIManager {
         this.updateCityDetail(mapScreen.querySelector('#city-detail'));
         centerOnCity(nextNuc, true);
         soundManager.playGeigerClick();
+      }
+    });
+
+    let damCycleIdx = 0;
+    mapScreen.querySelector('#btn-filter-dam')?.addEventListener('click', () => {
+      const damCities = CITIES.filter(c => c.isDamMission || c.disasterType === 'DAM');
+      if (damCities.length > 0) {
+        const nextDam = damCities[damCycleIdx % damCities.length];
+        damCycleIdx++;
+        this.selectedMapCity = nextDam;
+        gameState.selectCity(nextDam.id);
+        this.updateCityDetail(mapScreen.querySelector('#city-detail'));
+        centerOnCity(nextDam, true);
+        soundManager.playWaterRush();
+      }
+    });
+
+    let mtnCycleIdx = 0;
+    mapScreen.querySelector('#btn-filter-mountain')?.addEventListener('click', () => {
+      const mtnCities = CITIES.filter(c => c.isMountainMission || c.disasterType === 'MOUNTAIN');
+      if (mtnCities.length > 0) {
+        const nextMtn = mtnCities[mtnCycleIdx % mtnCities.length];
+        mtnCycleIdx++;
+        this.selectedMapCity = nextMtn;
+        gameState.selectCity(nextMtn.id);
+        this.updateCityDetail(mapScreen.querySelector('#city-detail'));
+        centerOnCity(nextMtn, true);
+        soundManager.playRockAvalanche();
       }
     });
 
@@ -929,10 +969,23 @@ export class UIManager {
 
     const starsHtml = '★'.repeat(cityData.stars) + '☆'.repeat(3 - cityData.stars);
 
+    const dType = city.disasterType || (city.isNuclearMission ? 'NUCLEAR' : (city.isDamMission ? 'DAM' : (city.isMountainMission ? 'MOUNTAIN' : 'STREET')));
+    let disasterBadge = '';
+    if (dType === 'NUCLEAR') {
+      disasterBadge = `<span style="background: rgba(46, 213, 115, 0.2); border: 1px solid #2ed573; color: #2ed573; font-size: 0.75rem; padding: 2px 8px; border-radius: 8px; font-weight: 800;">☢️ CATACLYSME : RÉACTEUR NUCLÉAIRE</span>`;
+    } else if (dType === 'DAM') {
+      disasterBadge = `<span style="background: rgba(0, 206, 201, 0.2); border: 1px solid #00cec9; color: #00cec9; font-size: 0.75rem; padding: 2px 8px; border-radius: 8px; font-weight: 800;">🌊 CATACLYSME : RUPTURE DE BARRAGE & DÉLUGE</span>`;
+    } else if (dType === 'MOUNTAIN') {
+      disasterBadge = `<span style="background: rgba(254, 202, 87, 0.2); border: 1px solid #feca57; color: #feca57; font-size: 0.75rem; padding: 2px 8px; border-radius: 8px; font-weight: 800;">🏔️ CATACLYSME : ÉBOULEMENT DE MONTAGNE</span>`;
+    } else {
+      disasterBadge = `<span style="background: rgba(255, 71, 87, 0.2); border: 1px solid #ff4757; color: #ff4757; font-size: 0.75rem; padding: 2px 8px; border-radius: 8px; font-weight: 800;">🩸 EXTERMINATION : CARNAGE DE RUE</span>`;
+    }
+
     detailCard.innerHTML = `
       <div class="city-detail-header clickable" id="btn-detail-header-launch" style="cursor: pointer;" title="Appuyez pour lancer la course">
         <div>
           <span class="city-detail-name">${city.countryFlag || ''} ${city.name}</span>
+          <div style="margin: 3px 0;">${disasterBadge}</div>
           <span class="city-tag">ÉTAPE ${stageIndex} / ${CITIES.length} • ${city.country || 'Europe'}</span>
           <div style="font-size: 0.82rem; color: #fffa65; font-weight: 800; margin-top: 3px;">
             🏛️ Monument : <strong>${city.monument || 'Monument Historique'}</strong>
@@ -949,7 +1002,7 @@ export class UIManager {
 
       <div class="city-target-info">
         <span>🏆 Record : <strong>${cityData.bestScore} pts</strong></span>
-        <span>💀 Cible Carnage : <strong>${city.killQuota || 30} Victimes</strong></span>
+        <span>💀 Pertes Monde : <strong style="color: #fffa65;">+${(city.exterminationTarget || 35000).toLocaleString('fr-FR')} Humains</strong></span>
       </div>
 
       <div class="city-detail-actions">
@@ -1632,17 +1685,33 @@ export class UIManager {
       scoreVal.textContent = data.score.toLocaleString('fr-FR');
     }
 
-    // Gestion dynamique de l'alerte d'évasion nucléaire (Approche -> Explosion -> Fuite)
+    // Gestion dynamique des objectifs Worldmageddon (Approche Cataclysme -> Explosion -> Fuite)
     const cityName = this.root.querySelector('#hud-city-name');
     const targetPts = this.root.querySelector('#hud-target-pts');
-    if (data.nuclearPhase === 'ESCAPE') {
-      if (cityName) cityName.innerHTML = `<span style="color: #ff4757; font-weight: 900;">🚨 ÉVACUEZ !</span>`;
-      if (targetPts) targetPts.innerHTML = `<span style="color: #ffd32a; font-weight: 900;">⏱️ ${data.nuclearEscapeTimer.toFixed(1)}s</span>`;
-    } else if (data.nuclearPhase === 'APPROACH') {
-      if (cityName) cityName.innerHTML = `<span style="color: #2ed573; font-weight: 900;">🎯 DÉTRUIRE CENTRALE</span>`;
+    const cPhase = data.cataclysmPhase || data.nuclearPhase;
+    const cTimer = (data.cataclysmEscapeTimer !== undefined) ? data.cataclysmEscapeTimer : data.nuclearEscapeTimer;
+    const dType = data.disasterType || (data.nuclearPhase ? 'NUCLEAR' : 'STREET');
+
+    if (cPhase === 'ESCAPE') {
+      if (cityName) {
+        if (dType === 'NUCLEAR') cityName.innerHTML = `<span style="color: #ff4757; font-weight: 900;">🚨 ÉVACUEZ L'ONDE DE CHOC !</span>`;
+        else if (dType === 'DAM') cityName.innerHTML = `<span style="color: #00d2d3; font-weight: 900;">🌊 FUYEZ LE DÉLUGE !</span>`;
+        else if (dType === 'MOUNTAIN') cityName.innerHTML = `<span style="color: #feca57; font-weight: 900;">🏔️ FUYEZ L'AVALANCHE !</span>`;
+        else cityName.innerHTML = `<span style="color: #ff4757; font-weight: 900;">🚨 ÉVACUEZ !</span>`;
+      }
+      if (targetPts && cTimer !== undefined) {
+        targetPts.innerHTML = `<span style="color: #ffd32a; font-weight: 900;">⏱️ ${cTimer.toFixed(1)}s</span>`;
+      }
+    } else if (cPhase === 'APPROACH') {
+      const distToCore = Math.max(0, 600 - data.distance);
+      if (cityName) {
+        if (dType === 'NUCLEAR') cityName.innerHTML = `<span style="color: #2ed573; font-weight: 900;">🎯 DÉTRUIRE RÉACTEUR</span>`;
+        else if (dType === 'DAM') cityName.innerHTML = `<span style="color: #00cec9; font-weight: 900;">🎯 EXPLOSER LE BARRAGE</span>`;
+        else if (dType === 'MOUNTAIN') cityName.innerHTML = `<span style="color: #feca57; font-weight: 900;">🎯 EXPLOSER LA MONTAGNE</span>`;
+      }
       if (targetPts) {
-        const distToCore = Math.max(0, 600 - data.distance);
-        targetPts.innerHTML = `<span style="color: #2ed573;">☢️ ${distToCore}m</span>`;
+        const icon = (dType === 'NUCLEAR') ? '☢️' : (dType === 'DAM' ? '🌊' : '🏔️');
+        targetPts.innerHTML = `<span style="color: #2ed573;">${icon} ${distToCore}m</span>`;
       }
     }
 
@@ -1886,6 +1955,14 @@ export class UIManager {
           <div class="result-row" style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 6px;">
             <span>Pièces Gagnées :</span>
             <span style="color: var(--gold);">🪙 +${data.coinsEarned}</span>
+          </div>
+          <div class="result-row" style="background: rgba(255, 71, 87, 0.15); border: 1px solid rgba(255, 71, 87, 0.35); padding: 6px 10px; border-radius: 8px; margin-top: 6px;">
+            <span style="color: #ff4757; font-weight: 800;">💀 Extermination Étape :</span>
+            <span style="color: #fffa65; font-weight: 800;">+${(data.runVictims || data.kills || 35000).toLocaleString('fr-FR')} Humains</span>
+          </div>
+          <div class="result-row" style="font-size: 0.8rem; color: #a4b0be; padding: 2px 4px;">
+            <span>🌍 Total Worldmageddon :</span>
+            <span style="color: #2ed573; font-weight: 800;">${(data.worldTotal || 0).toLocaleString('fr-FR')} / 8 000 000 000</span>
           </div>
         </div>
 

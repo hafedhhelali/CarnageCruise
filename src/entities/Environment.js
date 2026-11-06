@@ -127,10 +127,19 @@ export class Environment {
 
   setCity(cityDef, finishDistance = null) {
     this.cityTheme = cityDef;
-    this.isNuclearMission = !!cityDef.isNuclearMission;
+    this.disasterType = cityDef.disasterType || (cityDef.isNuclearMission ? 'NUCLEAR' : (cityDef.isDamMission ? 'DAM' : (cityDef.isMountainMission ? 'MOUNTAIN' : 'STREET')));
+    this.isCataclysmMission = this.disasterType !== 'STREET';
+    this.isNuclearMission = this.disasterType === 'NUCLEAR' || !!cityDef.isNuclearMission;
+    this.isDamMission = this.disasterType === 'DAM' || !!cityDef.isDamMission;
+    this.isMountainMission = this.disasterType === 'MOUNTAIN' || !!cityDef.isMountainMission;
+    this.delugeActive = false;
+    this.delugeZ = 600;
+    this.avalancheActive = false;
+    this.mountainBoulders = [];
+
     if (finishDistance) {
       this.finishDistance = finishDistance;
-    } else if (cityDef.isNuclearMission) {
+    } else if (this.isCataclysmMission) {
       this.finishDistance = 1350;
     } else {
       this.finishDistance = 1400; // Trajets raccourcis à 1400m
@@ -259,6 +268,147 @@ export class Environment {
       this.nuclearReactorGroup = domeGroup;
       this.nuclearCoreMesh = coreMesh;
       lmGroup.add(nucGroup);
+    } else if (this.isDamMission || cityDef.disasterType === 'DAM') {
+      // --- MÉGA-BARRAGE HYDROÉLECTRIQUE VOÛTE (AU CENTRE À Z = 600) ---
+      const damGroup = new THREE.Group();
+      damGroup.position.set(0, 0, 600);
+
+      const concreteMat = new THREE.MeshStandardMaterial({ color: 0x8395a7, roughness: 0.85, metalness: 0.15 });
+      const damGateMat = new THREE.MeshStandardMaterial({ color: 0xd63031, roughness: 0.4, metalness: 0.6 });
+      const waterSurfaceMat = new THREE.MeshBasicMaterial({ color: 0x0984e3, transparent: true, opacity: 0.85 });
+      const foamWaterMat = new THREE.MeshBasicMaterial({ color: 0x00d2d3, transparent: true, opacity: 0.9 });
+      const beaconYellowMat = new THREE.MeshBasicMaterial({ color: 0xfeca57 });
+
+      // 1. Mur voûté principal gauche (-17m) et droit (+17m)
+      const wallL = new THREE.Mesh(new THREE.BoxGeometry(28, 42, 12), concreteMat);
+      wallL.position.set(-17, 21, 0);
+      wallL.rotation.y = 0.08;
+      const wallR = new THREE.Mesh(new THREE.BoxGeometry(28, 42, 12), concreteMat);
+      wallR.position.set(17, 21, 0);
+      wallR.rotation.y = -0.08;
+      damGroup.add(wallL, wallR);
+
+      // 2. Section centrale de rupture (vannes hydroélectriques)
+      const centerSection = new THREE.Group();
+      centerSection.position.set(0, 18, 0);
+      const gateL = new THREE.Mesh(new THREE.BoxGeometry(5.5, 24, 6), damGateMat);
+      gateL.position.x = -3.5;
+      const gateR = new THREE.Mesh(new THREE.BoxGeometry(5.5, 24, 6), damGateMat);
+      gateR.position.x = 3.5;
+      const lintel = new THREE.Mesh(new THREE.BoxGeometry(16, 5, 8), concreteMat);
+      lintel.position.y = 14;
+      centerSection.add(gateL, gateR, lintel);
+      damGroup.add(centerSection);
+
+      // 3. Déversoir de crue & écume torrentielle
+      const chute = new THREE.Mesh(new THREE.BoxGeometry(14, 2, 28), foamWaterMat);
+      chute.position.set(0, 4, -12);
+      chute.rotation.x = 0.28;
+      damGroup.add(chute);
+
+      // 4. Balises d'alerte clignotantes sur la crête
+      const beaconL = new THREE.Mesh(new THREE.SphereGeometry(1.2, 8, 8), beaconYellowMat);
+      beaconL.position.set(-18, 43, 0);
+      const beaconR = beaconL.clone();
+      beaconR.position.x = 18;
+      damGroup.add(beaconL, beaconR);
+
+      // 5. Retenue d'eau gigantesque en amont
+      const reservoir = new THREE.Mesh(new THREE.PlaneGeometry(80, 120), waterSurfaceMat);
+      reservoir.position.set(0, 38, 55);
+      reservoir.rotation.x = -Math.PI / 2;
+      damGroup.add(reservoir);
+
+      // 6. Mur du Déluge Déferlant (initialement invisible/au repos)
+      const floodGroup = new THREE.Group();
+      floodGroup.position.set(0, 0, -5);
+      floodGroup.visible = false;
+      const waveMesh = new THREE.Mesh(new THREE.CylinderGeometry(18, 22, 14, 20, 1, false, 0, Math.PI), foamWaterMat);
+      waveMesh.rotation.z = Math.PI / 2;
+      waveMesh.rotation.y = -Math.PI / 2;
+      waveMesh.scale.set(1.4, 1.8, 1.2);
+      floodGroup.add(waveMesh);
+      damGroup.add(floodGroup);
+
+      this.damGroup = damGroup;
+      this.damWallL = wallL;
+      this.damWallR = wallR;
+      this.damCenter = centerSection;
+      this.damChute = chute;
+      this.damFloodGroup = floodGroup;
+      lmGroup.add(damGroup);
+    } else if (this.isMountainMission || cityDef.disasterType === 'MOUNTAIN') {
+      // --- PAROI ROCHEUSE SISMIQUE & AVALANCHE (AU CENTRE À Z = 600) ---
+      const mtnGroup = new THREE.Group();
+      mtnGroup.position.set(0, 0, 600);
+
+      const rockMat = new THREE.MeshStandardMaterial({ color: 0x576574, roughness: 0.95, metalness: 0.1 });
+      const snowMat = new THREE.MeshStandardMaterial({ color: 0xf1f2f6, roughness: 0.3, metalness: 0.05 });
+      const boulderMat = new THREE.MeshStandardMaterial({ color: 0x3d3d3d, roughness: 0.9 });
+      const pylonMat = new THREE.MeshStandardMaterial({ color: 0xff4757, roughness: 0.5 });
+      const redLightMat = new THREE.MeshBasicMaterial({ color: 0xff3838 });
+
+      // 1. Falaise colossale gauche et droite
+      const cliffL = new THREE.Mesh(new THREE.ConeGeometry(32, 75, 5), rockMat);
+      cliffL.position.set(-28, 37.5, 0);
+      cliffL.rotation.y = 0.4;
+      const snowCapL = new THREE.Mesh(new THREE.ConeGeometry(18, 30, 5), snowMat);
+      snowCapL.position.set(-28, 60, 0);
+      mtnGroup.add(cliffL, snowCapL);
+
+      const cliffR = new THREE.Mesh(new THREE.ConeGeometry(32, 75, 5), rockMat);
+      cliffR.position.set(28, 37.5, 0);
+      cliffR.rotation.y = -0.3;
+      const snowCapR = new THREE.Mesh(new THREE.ConeGeometry(18, 30, 5), snowMat);
+      snowCapR.position.set(28, 60, 0);
+      mtnGroup.add(cliffR, snowCapR);
+
+      // 2. Pic central surplombant la route (l'objectif destructible)
+      const centerPeak = new THREE.Group();
+      centerPeak.position.set(0, 48, -4);
+      const peakRock = new THREE.Mesh(new THREE.DodecahedronGeometry(18, 1), rockMat);
+      peakRock.scale.set(1.5, 1.8, 1.2);
+      const peakSnow = new THREE.Mesh(new THREE.ConeGeometry(12, 18, 6), snowMat);
+      peakSnow.position.y = 14;
+      centerPeak.add(peakRock, peakSnow);
+      mtnGroup.add(centerPeak);
+
+      // 3. Pylônes de dynamitage sismique
+      const pylonL = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.9, 14, 6), pylonMat);
+      pylonL.position.set(-9, 16, -6);
+      const beaconPylonL = new THREE.Mesh(new THREE.SphereGeometry(1.2, 8, 8), redLightMat);
+      beaconPylonL.position.set(-9, 23.5, -6);
+      const pylonR = pylonL.clone();
+      pylonR.position.x = 9;
+      const beaconPylonR = beaconPylonL.clone();
+      beaconPylonR.position.x = 9;
+      mtnGroup.add(pylonL, beaconPylonL, pylonR, beaconPylonR);
+
+      // 4. Blocs de roche suspendus prêts à dévaler lors de l'avalanche
+      const boulders = [];
+      const boulderOffsets = [
+        { x: -7, y: 32, z: -2, s: 3.8 },
+        { x: 5, y: 36, z: -3, s: 4.5 },
+        { x: -12, y: 26, z: -4, s: 3.2 },
+        { x: 10, y: 28, z: -5, s: 4.0 },
+        { x: 0, y: 40, z: -2, s: 5.2 }
+      ];
+      boulderOffsets.forEach(bDef => {
+        const bMesh = new THREE.Mesh(new THREE.DodecahedronGeometry(bDef.s, 0), boulderMat);
+        bMesh.position.set(bDef.x, bDef.y, bDef.z);
+        mtnGroup.add(bMesh);
+        boulders.push({
+          mesh: bMesh,
+          initialY: bDef.y,
+          speed: 18.0 + Math.random() * 12.0,
+          rotSpeed: 3.0 + Math.random() * 4.0
+        });
+      });
+
+      this.mountainGroup = mtnGroup;
+      this.mountainCenter = centerPeak;
+      this.mountainBoulders = boulders;
+      lmGroup.add(mtnGroup);
     } else if (cityId === 'paris') {
       // 1. TOUR EIFFEL MONUMENTALE
       const eiffelMat = new THREE.MeshStandardMaterial({ color: 0x5a4d41, metalness: 0.5, roughness: 0.5 });
@@ -1374,7 +1524,26 @@ export class Environment {
       }
     });
 
-    if (this.landmark && !this.isNuclearMission) {
+    // Animation du Déluge Aquatique (Tsunami déferlant vers l'avant)
+    if (this.delugeActive && this.damFloodGroup) {
+      this.delugeZ -= delta * 46.0;
+      this.damFloodGroup.position.z = (this.delugeZ - 600);
+      this.damFloodGroup.rotation.x = Math.sin(this.animTime * 6.0) * 0.15;
+    }
+
+    // Animation de l'Éboulement & Avalanche de Roches
+    if (this.avalancheActive && this.mountainBoulders) {
+      this.mountainBoulders.forEach(b => {
+        if (b.mesh) {
+          b.mesh.position.y = Math.max(1.5, b.mesh.position.y - delta * 22.0);
+          b.mesh.position.z -= delta * b.speed;
+          b.mesh.rotation.x += delta * b.rotSpeed;
+          b.mesh.rotation.y += delta * (b.rotSpeed * 0.7);
+        }
+      });
+    }
+
+    if (this.landmark && !this.isCataclysmMission) {
       this.landmark.position.z = playerZ + 180;
     }
   }
@@ -1414,5 +1583,37 @@ export class Environment {
         this.nuclearCoreMesh.material.color.setHex(0xff3838);
       }
     }
+  }
+
+  destroyDam() {
+    if (this.damCenter) {
+      this.damCenter.position.y = -6; // Effondrement des vannes
+      this.damCenter.rotation.x = 0.5;
+    }
+    if (this.damWallL) {
+      this.damWallL.rotation.z = -0.32;
+      this.damWallL.position.x = -22;
+    }
+    if (this.damWallR) {
+      this.damWallR.rotation.z = 0.32;
+      this.damWallR.position.x = 22;
+    }
+    if (this.damChute) {
+      this.damChute.scale.set(2.8, 3.5, 2.2);
+    }
+    if (this.damFloodGroup) {
+      this.damFloodGroup.visible = true;
+      this.delugeActive = true;
+      this.delugeZ = 600;
+    }
+  }
+
+  destroyMountain() {
+    if (this.mountainCenter) {
+      this.mountainCenter.position.y -= 14;
+      this.mountainCenter.rotation.z = 0.45;
+      this.mountainCenter.rotation.x = 0.3;
+    }
+    this.avalancheActive = true;
   }
 }

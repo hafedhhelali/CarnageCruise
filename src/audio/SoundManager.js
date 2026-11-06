@@ -1443,6 +1443,110 @@ export class SoundManager {
     osc.stop(now + 0.45);
   }
 
+  // --- CATACLYSMES MONDIAL WORLDMAGEDDON (BARRAGE & MONTAGNE) ---
+
+  playDamBurst() {
+    if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
+    this.resumeContext();
+    const now = this.ctx.currentTime;
+
+    // 1. Détonation fracassante de rupture du béton armé
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(130, now);
+    osc.frequency.exponentialRampToValueAtTime(24, now + 1.4);
+    gain.gain.setValueAtTime(0.8, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 1.6);
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.onended = () => this.cleanupNodes(osc, gain);
+    osc.start(now);
+    osc.stop(now + 1.6);
+  }
+
+  playWaterRush() {
+    if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
+    this.resumeContext();
+    const now = this.ctx.currentTime;
+
+    // 2. Rugissement torrentiel du déluge aquatique (Bruit blanc filtré résonant)
+    const bufferSize = this.ctx.sampleRate * 2.8;
+    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (this.ctx.sampleRate * 1.5));
+    }
+    const noise = this.ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(420, now);
+    filter.frequency.linearRampToValueAtTime(780, now + 1.2);
+    filter.Q.value = 2.5;
+
+    const gain = this.ctx.createGain();
+    gain.gain.setValueAtTime(0.65, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 2.8);
+
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.ctx.destination);
+    noise.start(now);
+  }
+
+  playMountainExplosion() {
+    if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
+    this.resumeContext();
+    const now = this.ctx.currentTime;
+
+    // 1. Détonation sismique sourde basse fréquence
+    const subOsc = this.ctx.createOscillator();
+    const subGain = this.ctx.createGain();
+    subOsc.type = 'sine';
+    subOsc.frequency.setValueAtTime(85, now);
+    subOsc.frequency.exponentialRampToValueAtTime(18, now + 1.6);
+    subGain.gain.setValueAtTime(0.85, now);
+    subGain.gain.exponentialRampToValueAtTime(0.001, now + 1.9);
+
+    subOsc.connect(subGain);
+    subGain.connect(this.ctx.destination);
+    subOsc.onended = () => this.cleanupNodes(subOsc, subGain);
+    subOsc.start(now);
+    subOsc.stop(now + 1.9);
+  }
+
+  playRockAvalanche() {
+    if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
+    this.resumeContext();
+    const now = this.ctx.currentTime;
+
+    // 2. Grondement prolongé d'avalanche rocheuse et chocs de blocs de granit
+    const bufferSize = this.ctx.sampleRate * 3.0;
+    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (this.ctx.sampleRate * 1.8));
+    }
+    const noise = this.ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(260, now);
+    filter.frequency.linearRampToValueAtTime(90, now + 2.5);
+
+    const gain = this.ctx.createGain();
+    gain.gain.setValueAtTime(0.7, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 3.0);
+
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.ctx.destination);
+    noise.start(now);
+  }
+
   // --- SON DU MOTEUR (DYNAMIQUE) ---
 
   // --- MOTEUR AUDIO PROCÉDURAL MULTI-CORPS & SONS DE PILOTAGE EXPERTS ---

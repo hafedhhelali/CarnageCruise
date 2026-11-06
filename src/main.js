@@ -290,9 +290,9 @@ class GameApp {
         soundManager.playCoin();
       }
 
-      // 5. Tir d'obus sur la centrale nucléaire pour déclencher la détonation
-      if (gameState.selectedCity?.isNuclearMission && !gameState.nuclearDetonated && this.bike.z >= 420) {
-        this.triggerNuclearCataclysm();
+      // 5. Tir d'obus sur le monument cataclysmique (centrale, barrage ou montagne)
+      if (gameState.disasterType !== 'STREET' && !gameState.cataclysmDetonated && this.bike.z >= 380) {
+        this.triggerCityCataclysm();
       }
       return;
     }
@@ -368,9 +368,9 @@ class GameApp {
         soundManager.playCoin();
       }
 
-      // 4. Frappe longue portée sur la centrale nucléaire pour pulvériser le réacteur
-      if (gameState.selectedCity?.isNuclearMission && !gameState.nuclearDetonated && this.bike.z >= 380) {
-        this.triggerNuclearCataclysm();
+      // 4. Frappe aérienne longue portée sur le monument cataclysmique (centrale, barrage ou montagne)
+      if (gameState.disasterType !== 'STREET' && !gameState.cataclysmDetonated && this.bike.z >= 380) {
+        this.triggerCityCataclysm();
       }
       return;
     }
@@ -403,19 +403,39 @@ class GameApp {
     }
   }
 
+  triggerCityCataclysm() {
+    if (gameState.cataclysmDetonated) return;
+    const type = gameState.disasterType;
+    gameState.triggerCataclysm();
+
+    const landmarkPos = new THREE.Vector3(0, 10, 615);
+
+    if (type === 'NUCLEAR') {
+      this.particles.spawnNuclearBlast(landmarkPos);
+      if (this.environment) this.environment.destroyNuclearPlant();
+      this.engine.triggerCameraShake(0.85);
+      if (this.ui) {
+        this.ui.showToastUnlock({ name: '⚠️ CŒUR ATOMIQUE EN EXPLOSION ! FUIS IMMÉDIATEMENT !' });
+      }
+    } else if (type === 'DAM') {
+      this.particles.spawnDamBlast(landmarkPos);
+      if (this.environment) this.environment.destroyDam();
+      this.engine.triggerCameraShake(0.95);
+      if (this.ui) {
+        this.ui.showToastUnlock({ name: '🌊 BARRAGE PULVÉRISÉ ! LE DÉLUGE ENGLOUTIT LA VILLE !' });
+      }
+    } else if (type === 'MOUNTAIN') {
+      this.particles.spawnMountainBlast(landmarkPos);
+      if (this.environment) this.environment.destroyMountain();
+      this.engine.triggerCameraShake(1.0);
+      if (this.ui) {
+        this.ui.showToastUnlock({ name: '🏔️ MONTAGNE ÉBOULÉE ! AVALANCHE SISMIQUE SUR LA CITÉ !' });
+      }
+    }
+  }
+
   triggerNuclearCataclysm() {
-    if (gameState.nuclearDetonated) return;
-    gameState.triggerNuclearDetonation();
-    soundManager.playNuclearBlast();
-    soundManager.playNuclearAlarm();
-    soundManager.switchMusicTrack('NUCLEAR');
-    this.particles.spawnNuclearBlast(new THREE.Vector3(0, 10, 615));
-    if (this.environment) {
-      this.environment.destroyNuclearPlant();
-    }
-    if (this.ui) {
-      this.ui.showToastUnlock({ name: '⚠️ CŒUR ATOMIQUE EN EXPLOSION ! FUIS IMMÉDIATEMENT !' });
-    }
+    this.triggerCityCataclysm();
   }
 
   loop() {
@@ -677,12 +697,14 @@ class GameApp {
         );
       }
 
-      // 10c. Détection Épreuve Nucléaire : Aller vers la centrale, exploser, s'enfuir
-      if (gameState.selectedCity?.isNuclearMission) {
-        if (gameState.nuclearPhase === 'APPROACH' && this.bike.z >= 580) {
-          this.triggerNuclearCataclysm();
-        } else if (gameState.nuclearPhase === 'APPROACH' && this.bike.z > 350) {
-          if (Math.random() < 0.08) soundManager.playGeigerClick();
+      // 10c. Détection Cataclysme Worldmageddon : Approcher le monument, exploser, s'enfuir
+      if (gameState.disasterType !== 'STREET') {
+        if (gameState.cataclysmPhase === 'APPROACH' && this.bike.z >= 580) {
+          this.triggerCityCataclysm();
+        } else if (gameState.cataclysmPhase === 'APPROACH' && this.bike.z > 350) {
+          if (gameState.disasterType === 'NUCLEAR' && Math.random() < 0.08) soundManager.playGeigerClick();
+          else if (gameState.disasterType === 'DAM' && Math.random() < 0.05) soundManager.playWaterRush();
+          else if (gameState.disasterType === 'MOUNTAIN' && Math.random() < 0.05) soundManager.playRockAvalanche();
         }
       }
 
