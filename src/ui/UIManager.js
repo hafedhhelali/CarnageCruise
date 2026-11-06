@@ -404,6 +404,10 @@ export class UIManager {
           <button id="btn-zoom-reset" class="btn-zoom" title="Recentrer">🎯</button>
         </div>
 
+        <!-- BOUTONS FLOTTANTS DE NAVIGATION RAPIDE ENTRE LES CIBLES DU GRAND TOUR -->
+        <button id="map-float-prev-city" class="map-city-nav-floating left" title="Cité précédente (◀)">◀</button>
+        <button id="map-float-next-city" class="map-city-nav-floating right" title="Cité suivante (▶)">▶</button>
+
         <div class="europe-map-canvas-container" id="europe-canvas">
           <svg class="europe-svg" viewBox="0 -320 1060 1480" preserveAspectRatio="none">
             <defs>
@@ -556,7 +560,7 @@ export class UIManager {
                 <div class="city-pin-label ${isExterminated ? 'label-exterminated' : ''}">
                   ${city.name}${isExterminated ? ' (FERMÉE)' : ''}
                 </div>
-                ${isSelected ? (isExterminated ? '<div class="city-pin-closed-pill">☠️ FERMÉE</div>' : '<div class="city-pin-enter-pill">▶ ENTRER</div>') : ''}
+                ${isSelected ? (isExterminated ? '<div class="city-pin-closed-pill">☠️ FERMÉE</div>' : '<div class="city-pin-selected-pill">🎯 CIBLE ACTIVE</div>') : ''}
               </div>
             `;
           }).join('')}
@@ -874,15 +878,15 @@ export class UIManager {
       pins.forEach(p => {
         const isCurrent = p.getAttribute('data-city-id') === cityId;
         p.classList.toggle('selected', isCurrent);
-        const existingPill = p.querySelector('.city-pin-enter-pill, .city-pin-closed-pill');
+        const existingPill = p.querySelector('.city-pin-selected-pill, .city-pin-closed-pill');
         if (isCurrent && !existingPill) {
           const pill = document.createElement('div');
-          pill.className = isCityClosed ? 'city-pin-closed-pill' : 'city-pin-enter-pill';
-          pill.textContent = isCityClosed ? '☠️ FERMÉE' : '▶ ENTRER';
+          pill.className = isCityClosed ? 'city-pin-closed-pill' : 'city-pin-selected-pill';
+          pill.textContent = isCityClosed ? '☠️ FERMÉE' : '🎯 CIBLE ACTIVE';
           p.appendChild(pill);
         } else if (isCurrent && existingPill) {
-          existingPill.className = isCityClosed ? 'city-pin-closed-pill' : 'city-pin-enter-pill';
-          existingPill.textContent = isCityClosed ? '☠️ FERMÉE' : '▶ ENTRER';
+          existingPill.className = isCityClosed ? 'city-pin-closed-pill' : 'city-pin-selected-pill';
+          existingPill.textContent = isCityClosed ? '☠️ FERMÉE' : '🎯 CIBLE ACTIVE';
         } else if (!isCurrent && existingPill) {
           existingPill.remove();
         }
@@ -899,6 +903,26 @@ export class UIManager {
       this.updateCityDetail(mapScreen.querySelector('#city-detail'));
     };
 
+    // Navigation séquentielle fluide entre les villes (◀ / ▶)
+    const navigateCity = (direction) => {
+      soundManager.playClick();
+      const currentId = this.selectedMapCity ? this.selectedMapCity.id : CITIES[0].id;
+      let idx = CITIES.findIndex(c => c.id === currentId);
+      if (idx === -1) idx = 0;
+      const nextIdx = (idx + direction + CITIES.length) % CITIES.length;
+      updateSelection(CITIES[nextIdx].id);
+    };
+    this.navigateMapCity = navigateCity;
+
+    mapScreen.querySelector('#map-float-prev-city')?.addEventListener('click', (e) => {
+      e?.stopPropagation();
+      navigateCity(-1);
+    });
+    mapScreen.querySelector('#map-float-next-city')?.addEventListener('click', (e) => {
+      e?.stopPropagation();
+      navigateCity(1);
+    });
+
     const handleCityAction = (cityId) => {
       const city = CITIES.find(c => c.id === cityId);
       if (!city) return;
@@ -909,6 +933,11 @@ export class UIManager {
         if (storage.isCityExterminated(city.id)) {
           soundManager.playCrash();
           this.showToastUnlock({ name: '☠️ VILLE FERMÉE : Accès définitivement condamné suite à l\'extermination totale !' });
+          return;
+        }
+        if (!storage.isCityUnlocked(city.id)) {
+          soundManager.playCrash();
+          this.showToastUnlock({ name: `🔒 Ville verrouillée : ${city.unlockScoreRequired.toLocaleString('fr-FR')} points requis sur le Tour !` });
           return;
         }
         // Clic sur ville déjà sélectionnée : ENTRÉE DIRECTE DANS LA COURSE !
@@ -1019,6 +1048,20 @@ export class UIManager {
 
     if (isExterminated) {
       detailCard.innerHTML = `
+        <!-- BARRE DE NAVIGATION FLUIDE ENTRE LES ÉTAPES DU GRAND TOUR -->
+        <div class="city-nav-bar">
+          <button id="btn-card-prev-city" class="btn-city-nav" title="Étape précédente">
+            ◀ <span class="nav-btn-text">PRÉCÉDENTE</span>
+          </button>
+          <div class="city-nav-info">
+            <span class="city-nav-step">CIBLE #${stageIndex} / ${CITIES.length}</span>
+            <span class="city-nav-title">${city.countryFlag || '🌍'} ${city.name.toUpperCase()}</span>
+          </div>
+          <button id="btn-card-next-city" class="btn-city-nav" title="Étape suivante">
+            <span class="nav-btn-text">SUIVANTE</span> ▶
+          </button>
+        </div>
+
         <div class="city-detail-header">
           <div>
             <div style="display: flex; align-items: center; gap: 8px;">
@@ -1050,14 +1093,28 @@ export class UIManager {
             <span>☠️ VILLE FERMÉE (ACCÈS CONDAMNÉ)</span>
           </button>
           <button id="btn-city-ad-coins" class="btn-ad-strip" title="Cadeau Sponsor : Obtenir +20 Pièces d'or">
-            <span class="ad-strip-left">🎁 <strong>BONUS ADMOB : +20 PIÈCES D'OR</strong></span>
+            <span class="ad-strip-left">🎁 <strong>BONUS GOOGLE ADS : +20 PIÈCES D'OR</strong></span>
             <span class="ad-strip-action">RÉCUPÉRER ▶</span>
           </button>
         </div>
       `;
     } else {
       detailCard.innerHTML = `
-        <div class="city-detail-header clickable" id="btn-detail-header-launch" style="cursor: pointer;" title="Lancer l'assaut">
+        <!-- BARRE DE NAVIGATION FLUIDE ENTRE LES ÉTAPES DU GRAND TOUR -->
+        <div class="city-nav-bar">
+          <button id="btn-card-prev-city" class="btn-city-nav" title="Étape précédente">
+            ◀ <span class="nav-btn-text">PRÉCÉDENTE</span>
+          </button>
+          <div class="city-nav-info">
+            <span class="city-nav-step">CIBLE #${stageIndex} / ${CITIES.length}</span>
+            <span class="city-nav-title">${city.countryFlag || '🌍'} ${city.name.toUpperCase()}</span>
+          </div>
+          <button id="btn-card-next-city" class="btn-city-nav" title="Étape suivante">
+            <span class="nav-btn-text">SUIVANTE</span> ▶
+          </button>
+        </div>
+
+        <div class="city-detail-header">
           <div>
             <div style="display: flex; align-items: center; gap: 8px;">
               <span class="city-detail-name">${city.countryFlag || '🌍'} ${city.name.toUpperCase()}</span>
@@ -1095,24 +1152,33 @@ export class UIManager {
             <span class="veh-banner-action">CHANGER ▾</span>
           </button>
 
+          <!-- BOUTON ENTRÉE PRINCIPAL HYPER VISIBLE ET NON AMBIGU -->
           ${unlocked ? `
-            <div class="city-action-grid">
-              <button id="btn-launch-city" class="btn-arcade btn-city-primary" title="Conduire l'assaut au sol">
-                <span class="btn-city-icon">🎮</span>
-                <span class="btn-city-text">CONDUIRE</span>
+            <button id="btn-enter-city-race" class="btn-arcade btn-enter-city-hero" title="Entrer dans ${city.name} et lancer la course">
+              <span class="btn-enter-hero-icon">🏁</span>
+              <div class="btn-enter-hero-texts">
+                <span class="btn-enter-hero-title">▶ ENTRER DANS LA VILLE : ${city.name.toUpperCase()}</span>
+                <span class="btn-enter-hero-desc">DÉMARRER LA COURSE AU SOL • OBJECTIF : ${city.targetScore.toLocaleString('fr-FR')} PTS</span>
+              </div>
+              <span class="btn-enter-hero-badge">JOUER ▶</span>
+            </button>
+
+            <div class="city-secondary-actions-row">
+              <button id="btn-wmd-city" class="btn-arcade btn-wmd-strike-secondary" title="Exterminer avec armes de destruction massive">
+                <span>💀 EXTERMINER (ADM)</span>
               </button>
-              <button id="btn-wmd-city" class="btn-arcade btn-city-wmd" title="Exterminer la métropole avec armes de destruction massive">
-                <span class="btn-city-icon">💀</span>
-                <span class="btn-city-text">EXTERMINER (ADM)</span>
+              <button id="btn-city-ad-coins" class="btn-arcade btn-ad-coins-secondary" title="Bonus Google Ads : +20 Pièces d'or">
+                <span>🎁 GOOGLE ADS (+20 🪙)</span>
               </button>
             </div>
-            <button id="btn-city-ad-coins" class="btn-ad-strip" title="Cadeau Sponsor : Obtenir +20 Pièces d'or">
-              <span class="ad-strip-left">🎁 <strong>BONUS GOOGLE ADS : +20 PIÈCES D'OR</strong></span>
-              <span class="ad-strip-action">RÉCUPÉRER ▶</span>
-            </button>
           ` : `
-            <button class="btn-arcade btn-action-locked" disabled style="width: 100%; padding: 13px; white-space: nowrap;">
-              <span>🔒 BLOQUÉ (${city.unlockScoreRequired.toLocaleString('fr-FR')} PTS REQUIS)</span>
+            <button class="btn-arcade btn-enter-city-locked" disabled>
+              <span class="btn-enter-hero-icon">🔒</span>
+              <div class="btn-enter-hero-texts">
+                <span class="btn-enter-hero-title">🔒 VILLE VERROUILLÉE</span>
+                <span class="btn-enter-hero-desc">${city.unlockScoreRequired.toLocaleString('fr-FR')} POINTS REQUIS POUR DÉBLOQUER CETTE CITÉ</span>
+              </div>
+              <span class="btn-enter-hero-badge">BLOQUÉ</span>
             </button>
             <button id="btn-city-ad-coins" class="btn-ad-strip" title="Cadeau Sponsor : Obtenir +20 Pièces d'or">
               <span class="ad-strip-left">🎁 <strong>BONUS GOOGLE ADS : +20 PIÈCES D'OR</strong></span>
@@ -1122,6 +1188,16 @@ export class UIManager {
         </div>
       `;
     }
+
+    // Gestionnaires de navigation de carrousel de ville
+    detailCard.querySelector('#btn-card-prev-city')?.addEventListener('click', (e) => {
+      e?.stopPropagation();
+      if (this.navigateMapCity) this.navigateMapCity(-1);
+    });
+    detailCard.querySelector('#btn-card-next-city')?.addEventListener('click', (e) => {
+      e?.stopPropagation();
+      if (this.navigateMapCity) this.navigateMapCity(1);
+    });
 
     const cityVehBtn = detailCard.querySelector('#btn-city-vehicle-shortcut');
     if (cityVehBtn) {
@@ -1146,7 +1222,7 @@ export class UIManager {
         this.triggerCityEntryCinematic(city);
       };
 
-      const launchBtn = detailCard.querySelector('#btn-launch-city');
+      const launchBtn = detailCard.querySelector('#btn-enter-city-race') || detailCard.querySelector('#btn-launch-city');
       if (launchBtn) launchBtn.addEventListener('click', launchRun);
 
       const headerBtn = detailCard.querySelector('#btn-detail-header-launch');
