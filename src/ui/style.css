@@ -1502,10 +1502,10 @@ html, body {
   left: 0;
   width: 100%;
   height: 100%;
-  background: radial-gradient(circle at center, rgba(255, 71, 87, 0.45) 0%, rgba(214, 48, 49, 0.8) 100%);
+  background: radial-gradient(circle at center, transparent 55%, rgba(255, 71, 87, 0.35) 85%, rgba(214, 48, 49, 0.6) 100%);
   pointer-events: none;
   z-index: 90;
-  animation: penaltyFlashFade 0.45s ease-out forwards;
+  animation: penaltyFlashFade 0.35s ease-out forwards;
 }
 
 @keyframes penaltyFlashFade {
@@ -1703,15 +1703,17 @@ html, body {
 .hud-carnage-flash {
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse at center, rgba(235, 47, 6, 0.28) 0%, rgba(192, 57, 43, 0.8) 80%);
+  /* Centre 100% transparent : ne JAMAIS occulter l'écran ni aveugler le joueur ! */
+  background: radial-gradient(ellipse at center, transparent 72%, rgba(255, 121, 63, 0.28) 92%, rgba(235, 77, 75, 0.42) 100%);
+  box-shadow: inset 0 0 35px rgba(255, 71, 87, 0.35);
   pointer-events: none;
   z-index: 998;
-  animation: carnageVignetteFade 0.38s ease-out forwards;
+  animation: carnageVignetteFade 0.20s ease-out forwards;
 }
 
 @keyframes carnageVignetteFade {
-  0% { opacity: 1; transform: scale(1.03); }
-  100% { opacity: 0; transform: scale(1.0); }
+  0% { opacity: 1; }
+  100% { opacity: 0; }
 }
 
 .city-detail-card {

@@ -16,10 +16,16 @@ export class ParticleSystem {
     this.bloodSplats = [];
     this.shockwaves = [];
     this.speedLines = [];
+    this.debris = [];
+    this.smokePuffs = [];
+    this.fireballs = [];
+    this.scorchMarks = [];
 
     // --- POOLING DE GÉOMÉTRIES PARTAGÉES (Zéro alloc à l'exécution) ---
     this.sharedGeos = {
       smokeSphere: new THREE.SphereGeometry(1.0, 7, 6),
+      fireballSphere: new THREE.SphereGeometry(1.0, 10, 8),
+      scorchCircle: new THREE.CircleGeometry(1.0, 14),
       starCone: new THREE.ConeGeometry(0.12, 0.26, 4),
       sparkBox: new THREE.BoxGeometry(0.09, 0.09, 0.09),
       ring: new THREE.RingGeometry(0.4, 0.6, 20),
@@ -31,6 +37,10 @@ export class ParticleSystem {
     // --- MATÉRIAUX PARTAGÉS & CACHE ---
     this.sharedMats = {
       smoke: new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.65 }),
+      smokeDark: new THREE.MeshBasicMaterial({ color: 0x2d3436, transparent: true, opacity: 0.78 }),
+      fireballOrange: new THREE.MeshBasicMaterial({ color: 0xff6b00, transparent: true, opacity: 0.92 }),
+      fireballCore: new THREE.MeshBasicMaterial({ color: 0xfffa65, transparent: true, opacity: 0.98 }),
+      scorchMark: new THREE.MeshBasicMaterial({ color: 0x111417, transparent: true, opacity: 0.88, depthWrite: false }),
       skidSmoke: new THREE.MeshBasicMaterial({ color: 0xecf0f1, transparent: true, opacity: 0.75 }),
       starOrange: new THREE.MeshBasicMaterial({ color: 0xff6b00 }),
       starGold: new THREE.MeshBasicMaterial({ color: 0xffd32a }),
@@ -235,6 +245,94 @@ export class ParticleSystem {
         mesh: satSplat,
         life: 10.0,
         maxLife: 10.0
+      });
+    }
+  }
+
+  // Explosion 3D grandiose pour missiles et obus d'artillerie (Boule de feu, débris, ondes de choc et cratère au sol)
+  spawnMissileExplosion(pos, radius = 7.0, themeColorHex = 0xff793f) {
+    const explosionCenter = pos.clone();
+    explosionCenter.y = Math.max(0.4, explosionCenter.y);
+
+    // 1. Double onde de choc lumineuse au sol
+    this.spawnShockwave(explosionCenter, themeColorHex);
+    this.spawnShockwave(explosionCenter, 0xfffa65);
+
+    // 2. Boule de feu 3D volumétrique en expansion explosive rapide
+    const fireballGroup = new THREE.Group();
+    fireballGroup.position.copy(explosionCenter);
+
+    const outerFire = new THREE.Mesh(this.sharedGeos.fireballSphere, this.sharedMats.fireballOrange.clone());
+    outerFire.scale.setScalar(0.5);
+    fireballGroup.add(outerFire);
+
+    const coreFire = new THREE.Mesh(this.sharedGeos.fireballSphere, this.sharedMats.fireballCore.clone());
+    coreFire.scale.setScalar(0.35);
+    fireballGroup.add(coreFire);
+
+    this.scene.add(fireballGroup);
+    this.fireballs.push({
+      group: fireballGroup,
+      outer: outerFire,
+      core: coreFire,
+      targetScale: Math.max(3.5, radius * 0.6),
+      currentScale: 0.5,
+      life: 0.45,
+      maxLife: 0.45
+    });
+
+    // 3. Cratère et marque de brûlure au sol (Scorch Mark Decal)
+    const scorch = new THREE.Mesh(this.sharedGeos.scorchCircle, this.sharedMats.scorchMark.clone());
+    scorch.rotation.x = -Math.PI / 2;
+    scorch.scale.setScalar(Math.min(4.8, radius * 0.45));
+    scorch.position.set(pos.x, 0.026, pos.z);
+    this.scene.add(scorch);
+    this.scorchMarks.push({
+      mesh: scorch,
+      life: 12.0,
+      maxLife: 12.0
+    });
+
+    // 4. Débris et éclats de shrapnel incandescents projetés à haute vélocité
+    const debrisCount = Math.min(36, Math.floor(18 + radius * 2));
+    for (let i = 0; i < debrisCount; i++) {
+      const isRed = (i % 2 === 0);
+      const spark = new THREE.Mesh(this.sharedGeos.starCone, isRed ? this.sharedMats.starOrange : this.sharedMats.starGold);
+      spark.position.copy(explosionCenter);
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 6.0 + Math.random() * 14.0;
+      this.scene.add(spark);
+      this.debris.push({
+        mesh: spark,
+        velX: Math.cos(angle) * speed,
+        velY: 3.5 + Math.random() * 9.5,
+        velZ: Math.sin(angle) * speed,
+        rotVelX: Math.random() * 24 - 12,
+        rotVelY: Math.random() * 24 - 12,
+        life: 0.95,
+        maxLife: 0.95
+      });
+    }
+
+    // 5. Épaisses volutes de fumée noire de détonation montant en champignon
+    const smokeCount = Math.min(14, Math.floor(6 + radius * 0.8));
+    for (let j = 0; j < smokeCount; j++) {
+      const smoke = new THREE.Mesh(this.sharedGeos.smokeSphere, this.sharedMats.smokeDark.clone());
+      smoke.position.set(
+        pos.x + (Math.random() - 0.5) * 2.0,
+        explosionCenter.y + Math.random() * 1.5,
+        pos.z + (Math.random() - 0.5) * 2.0
+      );
+      smoke.scale.setScalar(1.2 + Math.random() * 1.6);
+      this.scene.add(smoke);
+      this.smokePuffs.push({
+        mesh: smoke,
+        velY: 2.5 + Math.random() * 2.8,
+        velX: (Math.random() - 0.5) * 1.4,
+        velZ: (Math.random() - 0.5) * 1.4,
+        growRate: 3.2,
+        life: 1.4,
+        maxLife: 1.4
       });
     }
   }
@@ -593,7 +691,83 @@ export class ParticleSystem {
       star.velY -= 15.0 * delta;
     }
 
-    // 6. Lignes de vitesse dynamiques
+    // 6. Mettre à jour les débris et étincelles incandescents
+    for (let d = this.debris.length - 1; d >= 0; d--) {
+      const deb = this.debris[d];
+      deb.life -= delta;
+      if (deb.life <= 0) {
+        this.scene.remove(deb.mesh);
+        this.debris.splice(d, 1);
+        continue;
+      }
+      deb.mesh.position.x += deb.velX * delta;
+      deb.mesh.position.y += deb.velY * delta;
+      deb.mesh.position.z += deb.velZ * delta;
+      deb.velY -= 18.0 * delta; // Gravité réaliste
+      deb.mesh.rotation.x += (deb.rotVelX || 10) * delta;
+      deb.mesh.rotation.y += (deb.rotVelY || 10) * delta;
+      if (deb.mesh.position.y <= 0.05) {
+        deb.mesh.position.y = 0.05;
+        deb.velY = -deb.velY * 0.25; // Rebond amorti
+        deb.velX *= 0.6;
+        deb.velZ *= 0.6;
+      }
+    }
+
+    // 7. Mettre à jour les volutes de fumée noire
+    for (let p = this.smokePuffs.length - 1; p >= 0; p--) {
+      const smk = this.smokePuffs[p];
+      smk.life -= delta;
+      if (smk.life <= 0) {
+        this.scene.remove(smk.mesh);
+        if (smk.mesh.material) smk.mesh.material.dispose();
+        this.smokePuffs.splice(p, 1);
+        continue;
+      }
+      smk.mesh.position.y += (smk.velY || 2.0) * delta;
+      smk.mesh.position.x += (smk.velX || 0) * delta;
+      smk.mesh.position.z += (smk.velZ || 0) * delta;
+      smk.mesh.scale.addScalar(delta * (smk.growRate || 2.0));
+      const prog = 1 - (smk.life / smk.maxLife);
+      if (smk.mesh.material) {
+        smk.mesh.material.opacity = (1 - prog) * 0.75;
+      }
+    }
+
+    // 8. Mettre à jour les boules de feu explosives 3D
+    for (let f = this.fireballs.length - 1; f >= 0; f--) {
+      const fb = this.fireballs[f];
+      fb.life -= delta;
+      if (fb.life <= 0) {
+        this.scene.remove(fb.group);
+        if (fb.outer?.material) fb.outer.material.dispose();
+        if (fb.core?.material) fb.core.material.dispose();
+        this.fireballs.splice(f, 1);
+        continue;
+      }
+      const prog = 1 - (fb.life / fb.maxLife);
+      fb.currentScale += (fb.targetScale - fb.currentScale) * Math.min(1.0, delta * 18.0);
+      fb.group.scale.setScalar(fb.currentScale);
+      if (fb.outer?.material) fb.outer.material.opacity = (1 - prog) * 0.92;
+      if (fb.core?.material) fb.core.material.opacity = (1 - prog) * 0.98;
+    }
+
+    // 9. Mettre à jour les marques de brûlure / cratères au sol
+    for (let sc = this.scorchMarks.length - 1; sc >= 0; sc--) {
+      const mark = this.scorchMarks[sc];
+      mark.life -= delta;
+      if (mark.life <= 0) {
+        this.scene.remove(mark.mesh);
+        if (mark.mesh.material) mark.mesh.material.dispose();
+        this.scorchMarks.splice(sc, 1);
+        continue;
+      }
+      if (mark.mesh.material) {
+        mark.mesh.material.opacity = Math.min(0.88, (mark.life / mark.maxLife) * 0.88);
+      }
+    }
+
+    // 10. Lignes de vitesse dynamiques
     const showSpeedLines = speed > 22;
     this.speedLines.forEach(sl => {
       if (!showSpeedLines) {
@@ -630,10 +804,29 @@ export class ParticleSystem {
       this.scene.remove(s.mesh);
       s.mesh.material.dispose();
     });
+    this.debris.forEach(d => this.scene.remove(d.mesh));
+    this.smokePuffs.forEach(sm => {
+      this.scene.remove(sm.mesh);
+      if (sm.mesh.material) sm.mesh.material.dispose();
+    });
+    this.fireballs.forEach(f => {
+      this.scene.remove(f.group);
+      if (f.outer?.material) f.outer.material.dispose();
+      if (f.core?.material) f.core.material.dispose();
+    });
+    this.scorchMarks.forEach(sc => {
+      this.scene.remove(sc.mesh);
+      if (sc.mesh.material) sc.mesh.material.dispose();
+    });
+
     this.particles = [];
     this.shockwaves = [];
     this.stars = [];
     this.bloodDrops = [];
     this.bloodSplats = [];
+    this.debris = [];
+    this.smokePuffs = [];
+    this.fireballs = [];
+    this.scorchMarks = [];
   }
 }

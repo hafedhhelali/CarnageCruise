@@ -235,6 +235,92 @@ export class ProjectileManager {
   }
 
   /**
+   * Déclenche une détonation explosive de zone (AoE) hyper-spectaculaire
+   * avec fauchage physique réel et zéro écran rouge aveuglant
+   */
+  detonate(p, hitPos, traffic, characters, environment, gameState) {
+    const blastRadius = p.damageRadius || 8.5;
+    const themeColor = (p.type === 'plasma_emp') ? 0x00cec9 : 0xff793f;
+
+    // 1. Visuel d'explosion 3D grandiose (boule de feu + onde de choc + cratère au sol + débris + fumée)
+    if (this.particles?.spawnMissileExplosion) {
+      this.particles.spawnMissileExplosion(hitPos, blastRadius, themeColor);
+    } else if (this.particles?.spawnCannonBlast) {
+      this.particles.spawnCannonBlast(hitPos);
+    }
+
+    // 2. Rendu sonore & Secousse de caméra percutante mais propre
+    if (this.soundManager?.playExplosion) {
+      this.soundManager.playExplosion();
+    } else if (this.soundManager?.playCrash) {
+      this.soundManager.playCrash();
+    }
+    if (this.engine?.triggerCameraShake) {
+      this.engine.triggerCameraShake(0.68);
+    }
+
+    // 3. Fauchage de zone (AoE) sur TOUS les véhicules de circulation à portée
+    if (traffic && traffic.vehicles) {
+      traffic.vehicles.forEach(v => {
+        if (!v.userData || !v.userData.active || v.userData.isCrashed) return;
+        const dist = Math.hypot(v.position.x - hitPos.x, v.position.z - hitPos.z);
+        if (dist <= blastRadius) {
+          traffic.blowUpVehicle(v, hitPos);
+          if (gameState) gameState.score = (gameState.score || 0) + p.points;
+          if (this.particles?.spawnComicBurst) {
+            this.particles.spawnComicBurst(v.position, p.points, gameState?.combo || 1);
+          }
+        }
+      });
+    }
+
+    // 4. Fauchage de zone (AoE) sur TOUS les piétons au sol à portée
+    const pedList = characters?.characters || characters?.pedestrians;
+    if (pedList && Array.isArray(pedList)) {
+      pedList.forEach(char => {
+        if (!char.group || !char.group.visible || char.isFlying) return;
+        const dist = Math.hypot(char.group.position.x - hitPos.x, char.group.position.z - hitPos.z);
+        if (dist <= blastRadius) {
+          characters.triggerSlapstickFlight(char, hitPos.x, 56);
+          if (this.particles?.spawnBloodBurst) {
+            this.particles.spawnBloodBurst(char.group.position);
+          }
+          if (gameState?.recordKill) {
+            gameState.recordKill(850, 'PROJECTILE_' + p.type.toUpperCase(), char.typeDef?.category || 'default');
+          }
+        }
+      });
+    }
+
+    // 5. Destruction des objets de décor urbain à portée (lampadaires, arbres, terrasses)
+    if (environment?.chunks) {
+      environment.chunks.forEach(chunk => {
+        if (chunk.userData && chunk.userData.props) {
+          chunk.userData.props.forEach(prop => {
+            if (prop.userData.isHit) return;
+            const worldZ = chunk.position.z + prop.position.z;
+            const worldX = chunk.position.x + prop.position.x;
+            const dist = Math.hypot(worldX - hitPos.x, worldZ - hitPos.z);
+            if (dist <= blastRadius) {
+              prop.userData.isHit = true;
+              if (prop.userData.type === 'lamp') {
+                prop.rotation.z = (prop.position.x > 0 ? 1 : -1) * 0.95;
+                if (this.particles?.spawnCrashBurst) this.particles.spawnCrashBurst(new THREE.Vector3(worldX, 2.0, worldZ));
+              } else if (prop.userData.type === 'tree') {
+                prop.rotation.z = (Math.random() - 0.5) * 0.5;
+              } else if (prop.userData.type === 'terrace') {
+                prop.position.y += 2.5;
+                prop.rotation.x = Math.PI * 0.8;
+                if (this.particles?.spawnCrashBurst) this.particles.spawnCrashBurst(new THREE.Vector3(worldX, 1.0, worldZ));
+              }
+            }
+          });
+        }
+      });
+    }
+  }
+
+  /**
    * Met à jour tous les projectiles actifs et résout les impacts
    */
   update(delta, playerZ, traffic, characters, environment, gameState, ui) {
@@ -286,50 +372,34 @@ export class ProjectileManager {
           hitOccurred = true;
         }
 
-        // 3. Test d'impact sur les véhicules de circulation
-        if (traffic && traffic.vehicles) {
+        // 3. Test de collision directe avec un véhicule
+        if (!hitOccurred && traffic && traffic.vehicles) {
           for (let v of traffic.vehicles) {
             if (!v.userData || !v.userData.active || v.userData.isCrashed) continue;
-            const distZ = Math.abs(v.position.z - pPos.z);
-            const distX = Math.abs(v.position.x - pPos.x);
-
-            if (distZ < 3.2 && distX < p.damageRadius) {
-              if (traffic.blowUpVehicle) traffic.blowUpVehicle(v, pPos);
-              if (gameState) gameState.score = (gameState.score || 0) + p.points;
-              if (this.particles?.spawnComicBurst) this.particles.spawnComicBurst(v.position, p.points, gameState?.combo || 1);
-              if (this.soundManager?.playCrash) this.soundManager.playCrash();
+            if (Math.abs(v.position.z - pPos.z) < 2.8 && Math.abs(v.position.x - pPos.x) < 2.2) {
               hitOccurred = true;
+              break;
             }
           }
         }
 
-        // 4. Test d'impact et fauchage de zone sur les piétons au sol
-        const pedList = characters?.characters || characters?.pedestrians;
-        if (pedList && Array.isArray(pedList)) {
-          for (let char of pedList) {
-            if (!char.group || !char.group.visible || char.isFlying) continue;
-            const distZ = Math.abs(char.group.position.z - pPos.z);
-            const distX = Math.abs(char.group.position.x - pPos.x);
-
-            if (distZ < (p.damageRadius || 4.5) && distX < (p.damageRadius || 4.5)) {
-              if (characters.triggerSlapstickFlight) characters.triggerSlapstickFlight(char, pPos.x, 52);
-              if (this.particles?.spawnBloodBurst) this.particles.spawnBloodBurst(char.group.position);
-              if (ui?.triggerPedestrianCarnageFlash) ui.triggerPedestrianCarnageFlash();
-              if (gameState?.recordKill) {
-                gameState.recordKill(850, 'PROJECTILE_' + p.type.toUpperCase(), char.typeDef?.category || 'default');
+        // 4. Test de collision directe avec un piéton
+        if (!hitOccurred) {
+          const pedList = characters?.characters || characters?.pedestrians;
+          if (pedList && Array.isArray(pedList)) {
+            for (let char of pedList) {
+              if (!char.group || !char.group.visible || char.isFlying) continue;
+              if (Math.abs(char.group.position.z - pPos.z) < 2.2 && Math.abs(char.group.position.x - pPos.x) < 1.8) {
+                hitOccurred = true;
+                break;
               }
-              hitOccurred = true;
             }
           }
         }
 
-        // 5. Explosion à l'impact ou au terme de la portée maximale
+        // 5. Détonation explosive de zone (AoE) à l'impact ou au terme de la portée maximale
         if (hitOccurred || traveledDist >= p.maxDistance) {
-          if (this.particles?.spawnCannonBlast) this.particles.spawnCannonBlast(pPos);
-          if (this.particles?.spawnShockwave) this.particles.spawnShockwave(pPos, 0xff793f);
-          if (this.engine?.triggerCameraShake) this.engine.triggerCameraShake(0.7);
-          if (this.soundManager?.playExplosion) this.soundManager.playExplosion();
-          else if (this.soundManager?.playCrash) this.soundManager.playCrash();
+          this.detonate(p, pPos.clone(), traffic, characters, environment, gameState);
 
           // Nettoyage de la scène
           try {

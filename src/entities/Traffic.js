@@ -9,8 +9,9 @@ import * as THREE from 'three';
 import { soundManager } from '../audio/SoundManager.js';
 
 export class Traffic {
-  constructor(scene) {
+  constructor(scene, particles = null) {
     this.scene = scene;
+    this.particles = particles;
     this.vehicles = [];
     this.vehiclePoolSize = 4; // Trafic réduit à 4 véhicules dans le pool
     this.maxActiveVehicles = 2; // Au maximum 2 véhicules simultanément sur la route
@@ -558,10 +559,22 @@ export class Traffic {
         v.rotation.y += v.userData.crashSpinY * delta;
         v.rotation.z += v.userData.crashSpinZ * delta;
 
+        // Traînée de fumée et étincelles pendant le vol balistique
+        if (Math.random() < 0.45 && this.particles) {
+          this.particles.spawnExhaustSmoke(v.position, 2.2);
+          if (Math.random() < 0.3) this.particles.spawnSparks(v.position, 2, 0xff793f);
+        }
+
         if (v.position.y <= 0) {
           v.position.y = 0;
           v.userData.isCrashed = false;
           v.visible = false;
+          // Crash violent et débris au sol
+          if (this.particles) {
+            this.particles.spawnCrashBurst(v.position);
+            this.particles.spawnShockwave(v.position, 0xff793f);
+          }
+          if (soundManager?.playCrash) soundManager.playCrash();
         }
         return;
       }

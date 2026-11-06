@@ -33,9 +33,9 @@ class GameApp {
     this.bike = new Bike(this.engine.scene);
     this.characters = new CharacterSystem(this.engine.scene);
     this.environment = new Environment(this.engine.scene);
-    this.traffic = new Traffic(this.engine.scene);
-    this.pigeons = new PigeonSystem(this.engine.scene);
     this.particles = new ParticleSystem(this.engine.scene);
+    this.traffic = new Traffic(this.engine.scene, this.particles);
+    this.pigeons = new PigeonSystem(this.engine.scene);
     this.intersections = new IntersectionManager(this.engine.scene);
     this.projectiles = new ProjectileManager(this.engine.scene, this.particles, soundManager, this.engine);
 
