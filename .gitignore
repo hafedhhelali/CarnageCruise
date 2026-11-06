@@ -18,3 +18,7 @@ android/app/*.iml
 # OS
 .DS_Store
 Thumbs.db
+
+# Build downloads & scratch
+dist-apk/
+scratch/

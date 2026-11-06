@@ -188,6 +188,12 @@ export class Bike {
       this.buildTank(bodyMaterial, chromeMaterial, rubberMaterial, leatherMaterial, lampMaterial);
     } else if (bikeId === 'aero_jet') {
       this.buildAeroJet(bodyMaterial, chromeMaterial, rubberMaterial, leatherMaterial, lampMaterial);
+    } else if (bikeId === 'hovercraft') {
+      this.buildHovercraft(bodyMaterial, chromeMaterial, rubberMaterial, leatherMaterial, lampMaterial);
+    } else if (bikeId === 'rad_rover') {
+      this.buildRadRover(bodyMaterial, chromeMaterial, rubberMaterial, leatherMaterial, lampMaterial);
+    } else if (bikeId === 'snowmobile') {
+      this.buildSnowmobile(bodyMaterial, chromeMaterial, rubberMaterial, leatherMaterial, lampMaterial);
     } else {
       // Fallback
       this.buildScooter(bodyMaterial, chromeMaterial, rubberMaterial, leatherMaterial, lampMaterial);
@@ -1470,6 +1476,242 @@ export class Bike {
     this.jetGroup = jetGroup;
   }
 
+  // --- AÉROGLISSEUR FLUVIAL D'ASSAUT : HYDRO-GLISSEUR VORTEX-TORPILLE ---
+  buildHovercraft(bodyMat, chromeMat, rubberMat, leatherMat, lampMat) {
+    this.hoverProps = [];
+    const hoverGroup = new THREE.Group();
+
+    const cyanHullMat = new THREE.MeshStandardMaterial({ color: 0x00cec9, roughness: 0.35, metalness: 0.7 });
+    const darkSkirtMat = new THREE.MeshStandardMaterial({ color: 0x1e272e, roughness: 0.95 });
+    const turbineMat = new THREE.MeshStandardMaterial({ color: 0x2d3436, metalness: 0.85, roughness: 0.2 });
+    const bladeMat = new THREE.MeshStandardMaterial({ color: 0xffd32a, metalness: 0.9, roughness: 0.1 });
+    const torpedoMat = new THREE.MeshStandardMaterial({ color: 0xd63031, metalness: 0.6, roughness: 0.4 });
+    const marineGlassMat = new THREE.MeshStandardMaterial({ color: 0x74b9ff, transparent: true, opacity: 0.7, roughness: 0.1 });
+
+    // 1. Jupe pneumatique gonflable en caoutchouc noir
+    const skirtGeo = new THREE.BoxGeometry(1.85, 0.32, 2.85);
+    const skirt = new THREE.Mesh(skirtGeo, darkSkirtMat);
+    skirt.position.y = 0.24;
+    hoverGroup.add(skirt);
+
+    // Bords arrondis de la jupe
+    const skirtBevel = new THREE.Mesh(new THREE.CylinderGeometry(0.92, 0.92, 0.28, 16), darkSkirtMat);
+    skirtBevel.position.set(0, 0.24, 1.4);
+    hoverGroup.add(skirtBevel);
+
+    // 2. Coque hydrodynamique profilée cyan
+    const hullGeo = new THREE.BoxGeometry(1.65, 0.35, 2.5);
+    const hull = new THREE.Mesh(hullGeo, cyanHullMat);
+    hull.position.y = 0.46;
+    hull.castShadow = true;
+    hoverGroup.add(hull);
+
+    // Cockpit & Pare-brise marin teinté
+    const glass = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.38, 0.12), marineGlassMat);
+    glass.position.set(0, 0.78, 0.45);
+    glass.rotation.x = -0.3;
+    hoverGroup.add(glass);
+
+    // 3. Deux Tuyères carénées avec hélices de propulsion arrières
+    for (let s of [-0.58, 0.58]) {
+      const duct = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.38, 16, 1, true), turbineMat);
+      duct.rotation.x = Math.PI / 2;
+      duct.position.set(s, 0.78, -1.05);
+      hoverGroup.add(duct);
+
+      const propGroup = new THREE.Group();
+      propGroup.position.set(s, 0.78, -1.05);
+      const blade1 = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.08, 0.02), bladeMat);
+      const blade2 = blade1.clone();
+      blade2.rotation.z = Math.PI / 2;
+      propGroup.add(blade1, blade2);
+      hoverGroup.add(propGroup);
+      this.hoverProps.push(propGroup);
+
+      const rudder = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.65, 0.35), cyanHullMat);
+      rudder.position.set(s, 0.85, -1.35);
+      hoverGroup.add(rudder);
+    }
+
+    // 4. Double rampe de torpilles aquatiques sous-marines
+    for (let s of [-0.88, 0.88]) {
+      const torp = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 1.1, 10), torpedoMat);
+      torp.rotation.x = Math.PI / 2;
+      torp.position.set(s, 0.45, 0.2);
+      const head = new THREE.Mesh(new THREE.ConeGeometry(0.09, 0.22, 10), chromeMat);
+      head.rotation.x = -Math.PI / 2;
+      head.position.set(s, 0.45, 0.8);
+      hoverGroup.add(torp, head);
+    }
+
+    // 5. Phares marins LED étanches
+    const lampL = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.12, 0.1), lampMat);
+    lampL.position.set(-0.62, 0.48, 1.4);
+    const lampR = lampL.clone();
+    lampR.position.x = 0.62;
+    hoverGroup.add(lampL, lampR);
+
+    this.bikeModelGroup.add(hoverGroup);
+    this.hovercraftGroup = hoverGroup;
+  }
+
+  // --- BLINDÉ NRBC RAD-BUSTER 8x8 D'INTERVENTION NUCLÉAIRE ---
+  buildRadRover(bodyMat, chromeMat, rubberMat, leatherMat, lampMat) {
+    this.roverWheels = [];
+    const roverGroup = new THREE.Group();
+
+    const hazmatYellowMat = new THREE.MeshStandardMaterial({ color: 0xf1c40f, roughness: 0.45, metalness: 0.3 });
+    const hazmatStripeMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.8 });
+    const heavyArmorMat = new THREE.MeshStandardMaterial({ color: 0x2d3436, roughness: 0.65, metalness: 0.6 });
+    const beaconOrangeMat = new THREE.MeshBasicMaterial({ color: 0xff9f43 });
+    const ionCoreMat = new THREE.MeshBasicMaterial({ color: 0x00ff88 });
+
+    // 1. Châssis blindé monocoque lourd
+    const hullGeo = new THREE.BoxGeometry(1.68, 0.58, 2.9);
+    const hull = new THREE.Mesh(hullGeo, hazmatYellowMat);
+    hull.position.y = 0.56;
+    hull.castShadow = true;
+    roverGroup.add(hull);
+
+    const stripeL = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.14, 2.6), hazmatStripeMat);
+    stripeL.position.set(-0.86, 0.65, 0);
+    const stripeR = stripeL.clone();
+    stripeR.position.x = 0.86;
+    roverGroup.add(stripeL, stripeR);
+
+    // 2. Huit (8) Roues Motrices Crantées à Suspension Lourde
+    const zOffsets = [1.15, 0.4, -0.4, -1.15];
+    zOffsets.forEach(z => {
+      for (let s of [-0.98, 0.98]) {
+        const wheel = this.createWheel(0.26, 0.25, rubberMat, heavyArmorMat);
+        wheel.position.set(s, 0.3, z);
+        this.roverWheels.push(wheel);
+        roverGroup.add(wheel);
+      }
+    });
+
+    // 3. Pare-buffle bélier biseauté en titane avant
+    const ramGeo = new THREE.BoxGeometry(1.8, 0.4, 0.35);
+    const ram = new THREE.Mesh(ramGeo, heavyArmorMat);
+    ram.position.set(0, 0.45, 1.55);
+    roverGroup.add(ram);
+
+    // 4. Tourelle supérieure hermétique avec Canon Ionique
+    this.radTurret = new THREE.Group();
+    this.radTurret.position.set(0, 0.92, -0.1);
+
+    const cupola = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.62, 0.35, 12), heavyArmorMat);
+    this.radTurret.add(cupola);
+
+    const beaconL = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.14, 8), beaconOrangeMat);
+    beaconL.position.set(-0.35, 0.25, 0.1);
+    const beaconR = beaconL.clone();
+    beaconR.position.x = 0.35;
+    this.radTurret.add(beaconL, beaconR);
+    this.radBeacons = [beaconL, beaconR];
+
+    this.radBarrel = new THREE.Group();
+    this.radBarrel.position.set(0, 0.1, 0.45);
+    const barrelMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.11, 1.4, 10), heavyArmorMat);
+    barrelMesh.rotation.x = Math.PI / 2;
+    barrelMesh.position.z = 0.65;
+    const coreGlow = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 8), ionCoreMat);
+    coreGlow.position.z = 1.38;
+    this.radBarrel.add(barrelMesh, coreGlow);
+    this.radTurret.add(this.radBarrel);
+
+    roverGroup.add(this.radTurret);
+
+    for (let s of [-0.45, 0.45]) {
+      const tank = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.8, 8), hazmatYellowMat);
+      tank.position.set(s, 0.75, -1.25);
+      roverGroup.add(tank);
+    }
+
+    this.bikeModelGroup.add(roverGroup);
+    this.radRoverGroup = roverGroup;
+  }
+
+  // --- MOTONEIGE FURIEUSE ALPINE YETI D'AVALANCHE ---
+  buildSnowmobile(bodyMat, chromeMat, rubberMat, leatherMat, lampMat) {
+    this.snowSkis = [];
+    const snowGroup = new THREE.Group();
+
+    const arcticRedMat = new THREE.MeshStandardMaterial({ color: 0xd63031, roughness: 0.35, metalness: 0.4 });
+    const snowWhiteMat = new THREE.MeshStandardMaterial({ color: 0xf5f6fa, roughness: 0.25 });
+    const skiSteelMat = new THREE.MeshStandardMaterial({ color: 0xdcdde1, metalness: 0.95, roughness: 0.15 });
+    const trackMat = new THREE.MeshStandardMaterial({ color: 0x1e272e, roughness: 0.95 });
+    const tintedVisorMat = new THREE.MeshStandardMaterial({ color: 0x222f3e, transparent: true, opacity: 0.75 });
+
+    // 1. Châssis central profilé motoneige
+    const chassisGeo = new THREE.BoxGeometry(0.85, 0.45, 2.4);
+    const chassis = new THREE.Mesh(chassisGeo, arcticRedMat);
+    chassis.position.y = 0.48;
+    chassis.castShadow = true;
+    snowGroup.add(chassis);
+
+    const hoodGeo = new THREE.BoxGeometry(0.88, 0.38, 1.1);
+    const hood = new THREE.Mesh(hoodGeo, snowWhiteMat);
+    hood.position.set(0, 0.62, 0.7);
+    hood.rotation.x = -0.22;
+    snowGroup.add(hood);
+
+    const windshield = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.42, 0.08), tintedVisorMat);
+    windshield.position.set(0, 0.95, 0.45);
+    windshield.rotation.x = -0.38;
+    snowGroup.add(windshield);
+
+    // 2. Skis directeurs avant articulés (gauche et droite)
+    for (let s of [-0.62, 0.62]) {
+      const skiGroup = new THREE.Group();
+      skiGroup.position.set(s, 0.1, 0.95);
+
+      const skiBlade = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.04, 1.4), skiSteelMat);
+      const skiTip = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.04, 0.35), skiSteelMat);
+      skiTip.position.set(0, 0.08, 0.72);
+      skiTip.rotation.x = 0.52;
+      skiGroup.add(skiBlade, skiTip);
+
+      const strut = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.45, 8), chromeMat);
+      strut.position.set(0, 0.24, 0);
+      skiGroup.add(strut);
+
+      snowGroup.add(skiGroup);
+      this.snowSkis.push(skiGroup);
+    }
+
+    // 3. Chenille motrice arrière à crampons pour neige et glace
+    const trackGroup = new THREE.Group();
+    trackGroup.position.set(0, 0.26, -0.55);
+    const belt = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.38, 1.7), trackMat);
+    trackGroup.add(belt);
+
+    for (let z of [-0.55, 0, 0.55]) {
+      const roller = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.58, 10), chromeMat);
+      roller.rotation.z = Math.PI / 2;
+      roller.position.set(0, -0.06, z);
+      trackGroup.add(roller);
+    }
+    snowGroup.add(trackGroup);
+    this.snowTrack = trackGroup;
+
+    // 4. Double lance-roquettes sismiques haute altitude arrières
+    for (let s of [-0.32, 0.32]) {
+      const pod = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.75, 8), chromeMat);
+      pod.rotation.x = -0.45;
+      pod.position.set(s, 0.78, -0.85);
+      snowGroup.add(pod);
+    }
+
+    // 5. Phare cyclope central halogène
+    const mainHeadlight = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.16, 0.12), lampMat);
+    mainHeadlight.position.set(0, 0.72, 1.25);
+    snowGroup.add(mainHeadlight);
+
+    this.bikeModelGroup.add(snowGroup);
+    this.snowmobileGroup = snowGroup;
+  }
+
   // --- SPRINTEUR À PIED (AVEC AK-47 OU TRONÇONNEUSE) ---
   buildRunner(weaponType, bodyMat, chromeMat) {
     this.runnerWeaponType = weaponType;
@@ -1504,13 +1746,20 @@ export class Bike {
     const isRunner = this.currentBikeId === 'run_ak47' || this.currentBikeId === 'run_chainsaw';
     const isHorse = this.currentBikeId === 'cheval';
     const isJet = this.currentBikeId === 'aero_jet';
+    const isHovercraft = this.currentBikeId === 'hovercraft';
+    const isRadRover = this.currentBikeId === 'rad_rover';
+    const isSnowmobile = this.currentBikeId === 'snowmobile';
 
     // Bassin & Torse
     const torsoGroup = new THREE.Group();
     if (isCar) {
       torsoGroup.position.set(-0.35, 0.68, -0.28);
-    } else if (isTank) {
+    } else if (isTank || isRadRover) {
       torsoGroup.position.set(0, 0.98, -0.2);
+    } else if (isHovercraft) {
+      torsoGroup.position.set(0, 0.72, -0.15);
+    } else if (isSnowmobile) {
+      torsoGroup.position.set(0, 0.82, -0.2);
     } else if (isScoot) {
       torsoGroup.position.set(0, 0.85, -0.15);
     } else if (isRunner) {
@@ -1948,7 +2197,7 @@ export class Bike {
       shoeR.position.set(0.1, 0.34, -0.2);
       this.riderGroup.add(shoeL, shoeR);
 
-    } else if (isTank) {
+    } else if (isTank || isRadRover) {
       // Commandant dans la tourelle : jambes protégées à l'intérieur de la caisse blindée
     } else {
       // Moto classique & cheval : jambes repliées
@@ -2159,6 +2408,51 @@ export class Bike {
       }
       if (this.tankTurret) {
         this.tankTurret.rotation.y = -this.smoothedSteer * 0.12;
+      }
+    }
+
+    // --- ANIMATION DE L'HYDRO-GLISSEUR VORTEX-TORPILLE ---
+    if (this.currentBikeId === 'hovercraft') {
+      if (this.hoverProps && this.hoverProps.length > 0) {
+        const propRot = (speed + 14) * delta * 6.0;
+        this.hoverProps.forEach(p => {
+          p.rotation.z += propRot;
+        });
+      }
+      // Léger roulis aquatique dynamique
+      if (this.hovercraftGroup) {
+        this.hovercraftGroup.rotation.z = -this.smoothedSteer * 0.18;
+        this.hovercraftGroup.position.y = Math.sin(Date.now() * 0.006) * 0.04;
+      }
+    }
+
+    // --- ANIMATION DU BLINDÉ NRBC RAD-BUSTER 8x8 ---
+    if (this.currentBikeId === 'rad_rover') {
+      if (this.roverWheels && this.roverWheels.length > 0) {
+        this.roverWheels.forEach(w => {
+          w.rotation.x += (speed / 0.26) * delta;
+        });
+      }
+      if (this.radTurret) {
+        this.radTurret.rotation.y = -this.smoothedSteer * 0.16;
+      }
+      if (this.radBeacons && this.radBeacons.length > 0) {
+        const beaconFlash = (Math.floor(Date.now() * 0.008) % 2 === 0);
+        this.radBeacons.forEach(b => {
+          b.visible = beaconFlash;
+        });
+      }
+    }
+
+    // --- ANIMATION DE LA MOTONEIGE ALPINE YETI ---
+    if (this.currentBikeId === 'snowmobile') {
+      if (this.snowSkis && this.snowSkis.length > 0) {
+        this.snowSkis.forEach(s => {
+          s.rotation.y = -this.smoothedSteer * 0.38;
+        });
+      }
+      if (this.snowTrack) {
+        this.snowTrack.position.y = 0.26 + Math.sin(Date.now() * 0.015) * 0.02;
       }
     }
 

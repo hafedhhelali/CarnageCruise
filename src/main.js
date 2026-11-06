@@ -17,6 +17,7 @@ import { IntersectionManager } from './entities/Intersections.js';
 import { Traffic } from './entities/Traffic.js';
 import { PigeonSystem } from './entities/Pigeons.js';
 import { UIManager } from './ui/UIManager.js';
+import { tycoonManager } from './core/TycoonManager.js';
 import * as TWEEN from '@tweenjs/tween.js';
 
 class GameApp {
@@ -54,6 +55,14 @@ class GameApp {
 
     // 7. Horloge d'animation Three.js
     this.clock = new THREE.Clock();
+
+    // 8. Rapport de Crise Hors-Ligne Tycoon (si absence > 60s)
+    const offlineEarnings = tycoonManager.checkOfflineEarnings();
+    if (offlineEarnings) {
+      setTimeout(() => {
+        this.ui.showOfflineReportModal(offlineEarnings);
+      }, 1200);
+    }
 
     // Démarrer la boucle principale à 60 FPS
     requestAnimationFrame((t) => this.loop(t));
@@ -141,6 +150,25 @@ class GameApp {
         if (city && city.id) {
           gameState.selectCity(city.id);
         }
+
+        // --- ADAPTATION DYNAMIQUE DU VÉHICULE AU TERRAIN DU CATACLYSME ---
+        const disaster = gameState.selectedCity?.disasterType || (gameState.selectedCity?.isNuclearMission ? 'NUCLEAR' : (gameState.selectedCity?.isDamMission ? 'DAM' : (gameState.selectedCity?.isMountainMission ? 'MOUNTAIN' : 'STREET')));
+        const currentBikeId = gameState.selectedBike?.id || storage.getEquippedBike();
+
+        if (disaster === 'DAM' && currentBikeId !== 'hovercraft' && currentBikeId !== 'aero_jet') {
+          gameState.selectBike('hovercraft');
+          this.bike.buildCurrentBike('hovercraft');
+          this.ui.showToastUnlock({ name: '🌊 MISSION BARRAGE : Hydro-Glisseur déployé !' });
+        } else if (disaster === 'NUCLEAR' && currentBikeId !== 'rad_rover' && currentBikeId !== 'tank' && currentBikeId !== 'aero_jet') {
+          gameState.selectBike('rad_rover');
+          this.bike.buildCurrentBike('rad_rover');
+          this.ui.showToastUnlock({ name: '☢️ MISSION CENTRALE : Blindé NRBC 8x8 déployé !' });
+        } else if (disaster === 'MOUNTAIN' && currentBikeId !== 'snowmobile' && currentBikeId !== 'aero_jet') {
+          gameState.selectBike('snowmobile');
+          this.bike.buildCurrentBike('snowmobile');
+          this.ui.showToastUnlock({ name: '🏔️ MISSION MONTAGNE : Motoneige Alpine déployée !' });
+        }
+
         this.setupCity(gameState.selectedCity);
 
         if (this.bike && this.bike.mesh) {
@@ -443,6 +471,9 @@ class GameApp {
 
     const delta = Math.min(this.clock.getDelta(), 0.1); // Sécurité contre les sauts de frame
     TWEEN.update();
+
+    // Simulation passive continue de l'Empire Tycoon
+    tycoonManager.tick(delta);
 
     // Calcul du braquage final (tactile ou clavier)
     let currentSteer = this.steerInput;

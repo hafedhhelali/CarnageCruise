@@ -54,15 +54,73 @@ export class Environment {
   }
 
   initSharedMaterials(cityDef) {
-    const roadTex = textureFactory.getRoadTexture();
-    roadTex.wrapS = THREE.RepeatWrapping;
-    roadTex.wrapT = THREE.RepeatWrapping;
-    roadTex.repeat.set(1, this.chunkLength / 14);
+    let roadMat, sidewalkMat, curbMat, stripeMat;
 
-    const sidewalkTex = textureFactory.getSidewalkTexture();
-    sidewalkTex.wrapS = THREE.RepeatWrapping;
-    sidewalkTex.wrapT = THREE.RepeatWrapping;
-    sidewalkTex.repeat.set(1.5, this.chunkLength / 4);
+    if (this.isDamMission) {
+      // --- CANAL FLUVIAL AQUATIQUE (BARRAGE HYDROÉLECTRIQUE) ---
+      roadMat = new THREE.MeshStandardMaterial({
+        color: 0x0984e3,
+        roughness: 0.15,
+        metalness: 0.75
+      });
+      sidewalkMat = new THREE.MeshStandardMaterial({
+        color: 0x636e72,
+        roughness: 0.88,
+        metalness: 0.12
+      });
+      curbMat = new THREE.MeshStandardMaterial({ color: 0x00cec9, roughness: 0.4 });
+      stripeMat = new THREE.MeshBasicMaterial({ color: 0x81ecec, transparent: true, opacity: 0.5 });
+    } else if (this.isNuclearMission) {
+      // --- ZONE D'EXCLUSION RADIOLOGIQUE INDUSTRIELLE ---
+      roadMat = new THREE.MeshStandardMaterial({
+        color: 0x2d3436,
+        roughness: 0.9,
+        metalness: 0.25
+      });
+      sidewalkMat = new THREE.MeshStandardMaterial({
+        color: 0x3d4239,
+        roughness: 0.95
+      });
+      curbMat = new THREE.MeshStandardMaterial({ color: 0xf1c40f, roughness: 0.5 });
+      stripeMat = new THREE.MeshBasicMaterial({ color: 0x00ff88 }); // Rayures vert radioactif
+    } else if (this.isMountainMission) {
+      // --- COL ALPIN VERGLACÉ & NEIGE BLANCHE ---
+      roadMat = new THREE.MeshStandardMaterial({
+        color: 0xdfe6e9,
+        roughness: 0.22,
+        metalness: 0.2
+      });
+      sidewalkMat = new THREE.MeshStandardMaterial({
+        color: 0xf5f6fa,
+        roughness: 0.6
+      });
+      curbMat = new THREE.MeshStandardMaterial({ color: 0x74b9ff, roughness: 0.3 });
+      stripeMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    } else {
+      // --- URBAIN STANDARD BITUME & TROTTOIR ---
+      const roadTex = textureFactory.getRoadTexture();
+      roadTex.wrapS = THREE.RepeatWrapping;
+      roadTex.wrapT = THREE.RepeatWrapping;
+      roadTex.repeat.set(1, this.chunkLength / 14);
+
+      const sidewalkTex = textureFactory.getSidewalkTexture();
+      sidewalkTex.wrapS = THREE.RepeatWrapping;
+      sidewalkTex.wrapT = THREE.RepeatWrapping;
+      sidewalkTex.repeat.set(1.5, this.chunkLength / 4);
+
+      roadMat = new THREE.MeshStandardMaterial({
+        map: roadTex,
+        roughness: 0.85,
+        metalness: 0.05
+      });
+      sidewalkMat = new THREE.MeshStandardMaterial({
+        map: sidewalkTex,
+        roughness: 0.7,
+        metalness: 0.05
+      });
+      curbMat = new THREE.MeshStandardMaterial({ color: 0x7f8c8d, roughness: 0.6 });
+      stripeMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    }
 
     const hexColorStr = '#' + (cityDef.buildingColors?.[0] || 0xdfe4ea).toString(16).padStart(6, '0');
     const roofColorStr = '#' + (cityDef.roofColor || 0x576574).toString(16).padStart(6, '0');
@@ -72,18 +130,10 @@ export class Environment {
     const awningTexBlue = textureFactory.getAwningTexture('#2980b9');
 
     this.sharedMats = {
-      road: new THREE.MeshStandardMaterial({
-        map: roadTex,
-        roughness: 0.85,
-        metalness: 0.05
-      }),
-      sidewalk: new THREE.MeshStandardMaterial({
-        map: sidewalkTex,
-        roughness: 0.7,
-        metalness: 0.05
-      }),
-      curb: new THREE.MeshStandardMaterial({ color: 0x7f8c8d, roughness: 0.6 }),
-      stripe: new THREE.MeshBasicMaterial({ color: 0xffffff }),
+      road: roadMat,
+      sidewalk: sidewalkMat,
+      curb: curbMat,
+      stripe: stripeMat,
       redLight: new THREE.MeshBasicMaterial({ color: 0xff3838 }),
       amberLight: new THREE.MeshBasicMaterial({ color: 0x57606f }),
       greenLight: new THREE.MeshBasicMaterial({ color: 0x2f3542 }),
@@ -1181,8 +1231,8 @@ export class Environment {
       chunk.add(stripe);
     }
 
-    // Passage piéton tous les 60m avec FEUX TRICOLORES RÉALISTES
-    if (Math.abs(zPos) % 60 === 0) {
+    // Passage piéton tous les 60m avec FEUX TRICOLORES RÉALISTES (Uniquement en mission urbaine classique)
+    if (!this.isCataclysmMission && Math.abs(zPos) % 60 === 0) {
       for (let s = -3.2; s <= 3.2; s += 0.9) {
         const cw = new THREE.Mesh(this.sharedGeos.crosswalkStripe, stripeMat);
         cw.rotation.x = -Math.PI / 2;
@@ -1263,6 +1313,96 @@ export class Environment {
     const xBase = side * 8.5;
     let currentZ = -this.chunkLength / 2;
 
+    if (this.isDamMission) {
+      // --- DIGUES & MURS DE RETENUE EN BÉTON HYDROÉLECTRIQUE ---
+      const concreteMat = new THREE.MeshStandardMaterial({ color: 0x718093, roughness: 0.85, metalness: 0.15 });
+      const damGateMat = new THREE.MeshStandardMaterial({ color: 0x2c3e50, roughness: 0.5, metalness: 0.6 });
+      const warningCyanMat = new THREE.MeshBasicMaterial({ color: 0x00cec9 });
+
+      while (currentZ < this.chunkLength / 2) {
+        const segWidth = 10.0 + Math.random() * 4.0;
+        const segHeight = 9.0 + Math.random() * 8.0;
+
+        const wall = new THREE.Mesh(new THREE.BoxGeometry(6.0, segHeight, segWidth), concreteMat);
+        wall.position.set(xBase + side * 3.0, segHeight / 2, currentZ + segWidth / 2);
+        chunk.add(wall);
+
+        const gate = new THREE.Mesh(new THREE.BoxGeometry(0.4, 4.0, segWidth * 0.6), damGateMat);
+        gate.position.set(xBase - side * 0.1, 2.5, currentZ + segWidth / 2);
+        chunk.add(gate);
+
+        const beacon = new THREE.Mesh(new THREE.SphereGeometry(0.4, 6, 6), warningCyanMat);
+        beacon.position.set(xBase - side * 0.2, segHeight + 0.5, currentZ + segWidth / 2);
+        chunk.add(beacon);
+
+        currentZ += segWidth;
+      }
+      return;
+    }
+
+    if (this.isNuclearMission) {
+      // --- ENCEINTE DE SÉCURITÉ INDUSTRIELLE & ZONE DE DÉCONTAMINATION ---
+      const reactorConcreteMat = new THREE.MeshStandardMaterial({ color: 0x3d4239, roughness: 0.95 });
+      const hazardYellowMat = new THREE.MeshStandardMaterial({ color: 0xf1c40f, roughness: 0.5 });
+      const radGlowMat = new THREE.MeshBasicMaterial({ color: 0x00ff88 });
+
+      while (currentZ < this.chunkLength / 2) {
+        const segWidth = 9.0 + Math.random() * 4.0;
+        const segHeight = 8.0 + Math.random() * 7.0;
+
+        const wall = new THREE.Mesh(new THREE.BoxGeometry(7.0, segHeight, segWidth), reactorConcreteMat);
+        wall.position.set(xBase + side * 3.5, segHeight / 2, currentZ + segWidth / 2);
+        chunk.add(wall);
+
+        const hazardBand = new THREE.Mesh(new THREE.BoxGeometry(0.2, 1.2, segWidth * 0.8), hazardYellowMat);
+        hazardBand.position.set(xBase - side * 0.15, segHeight * 0.6, currentZ + segWidth / 2);
+        chunk.add(hazardBand);
+
+        if (Math.random() < 0.5) {
+          const vat = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.2, 2.4, 8), reactorConcreteMat);
+          vat.position.set(xBase + side * 1.5, 1.2, currentZ + segWidth / 2);
+          const fluid = new THREE.Mesh(new THREE.SphereGeometry(0.8, 6, 6), radGlowMat);
+          fluid.position.set(xBase + side * 1.5, 2.2, currentZ + segWidth / 2);
+          chunk.add(vat, fluid);
+        }
+
+        currentZ += segWidth;
+      }
+      return;
+    }
+
+    if (this.isMountainMission) {
+      // --- PAROIS SISMIQUES ROCHEUSES & FORÊTS ALPINES ---
+      const rockMat = new THREE.MeshStandardMaterial({ color: 0x485460, roughness: 0.95 });
+      const snowMat = new THREE.MeshStandardMaterial({ color: 0xf5f6fa, roughness: 0.3 });
+      const chaletWoodMat = new THREE.MeshStandardMaterial({ color: 0x5a2d0c, roughness: 0.8 });
+
+      while (currentZ < this.chunkLength / 2) {
+        const segWidth = 12.0 + Math.random() * 6.0;
+        const peakHeight = 16.0 + Math.random() * 18.0;
+
+        const rock = new THREE.Mesh(new THREE.ConeGeometry(8.0, peakHeight, 5), rockMat);
+        rock.position.set(xBase + side * 5.0, peakHeight / 2, currentZ + segWidth / 2);
+        rock.rotation.y = Math.random() * Math.PI;
+
+        const snowCap = new THREE.Mesh(new THREE.ConeGeometry(4.2, peakHeight * 0.35, 5), snowMat);
+        snowCap.position.set(xBase + side * 5.0, peakHeight * 0.82, currentZ + segWidth / 2);
+        chunk.add(rock, snowCap);
+
+        if (Math.random() < 0.35) {
+          const chalet = new THREE.Mesh(new THREE.BoxGeometry(4.5, 3.2, 5.0), chaletWoodMat);
+          chalet.position.set(xBase + side * 1.2, 1.6, currentZ + segWidth / 2);
+          const chaletRoof = new THREE.Mesh(new THREE.ConeGeometry(3.6, 2.0, 4), snowMat);
+          chaletRoof.position.set(xBase + side * 1.2, 4.0, currentZ + segWidth / 2);
+          chaletRoof.rotation.y = Math.PI / 4;
+          chunk.add(chalet, chaletRoof);
+        }
+
+        currentZ += segWidth;
+      }
+      return;
+    }
+
     const buildingMatPalette = this.sharedMats?.buildingPalette || this.cityTheme.buildingColors.map(c =>
       new THREE.MeshToonMaterial({ color: c })
     );
@@ -1338,6 +1478,70 @@ export class Environment {
   }
 
   populateStreetProps(chunk) {
+    if (this.isDamMission) {
+      // --- ACCESSOIRES FLUVIAUX : BOUÉES DE NAVIGATION JAUNES & BALISES ---
+      const buoyMat = new THREE.MeshStandardMaterial({ color: 0xf39c12, roughness: 0.4 });
+      const buoyLightMat = new THREE.MeshBasicMaterial({ color: 0xffa502 });
+      [-18, 6].forEach((z, idx) => {
+        const side = idx % 2 === 0 ? 1 : -1;
+        const buoyGroup = new THREE.Group();
+        buoyGroup.position.set(side * 4.6, 0.4, z);
+        const floatMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.35, 0.6, 10), buoyMat);
+        const lightMesh = new THREE.Mesh(new THREE.SphereGeometry(0.18, 8, 8), buoyLightMat);
+        lightMesh.position.y = 0.55;
+        buoyGroup.add(floatMesh, lightMesh);
+        buoyGroup.userData = { type: 'lamp', isHit: false };
+        chunk.add(buoyGroup);
+        chunk.userData.props.push(buoyGroup);
+      });
+      return;
+    }
+
+    if (this.isNuclearMission) {
+      // --- ACCESSOIRES NUCLÉAIRES : FÛTS DE DÉCHETS RADIOACTIFS 200L & FLUIDE VERT ---
+      const barrelMat = new THREE.MeshStandardMaterial({ color: 0x1e272e, roughness: 0.6 });
+      const toxicGreenMat = new THREE.MeshBasicMaterial({ color: 0x00ff88 });
+      [-16, 8].forEach((z, idx) => {
+        const side = idx % 2 === 0 ? 1 : -1;
+        const barrelGroup = new THREE.Group();
+        barrelGroup.position.set(side * 4.6, 0, z);
+        const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 0.95, 10), barrelMat);
+        barrel.position.y = 0.48;
+        const drip = new THREE.Mesh(new THREE.SphereGeometry(0.12, 6, 6), toxicGreenMat);
+        drip.position.set(0.15, 0.96, 0);
+        barrelGroup.add(barrel, drip);
+        barrelGroup.userData = { type: 'tree', isHit: false };
+        chunk.add(barrelGroup);
+        chunk.userData.props.push(barrelGroup);
+      });
+      return;
+    }
+
+    if (this.isMountainMission) {
+      // --- ACCESSOIRES MONTAGNE : SAPINS ENNEIGÉS & BALISES DE PISTE DE SKI ---
+      const pineWoodMat = new THREE.MeshStandardMaterial({ color: 0x4a2e1b });
+      const pineNeedleMat = new THREE.MeshStandardMaterial({ color: 0x1e3728 });
+      const snowMat = new THREE.MeshStandardMaterial({ color: 0xf5f6fa });
+      [-20, -5, 12].forEach((z, idx) => {
+        const side = idx % 2 === 0 ? 1 : -1;
+        const pine = new THREE.Group();
+        pine.position.set(side * 4.8, 0, z);
+        pine.userData = { type: 'tree', isHit: false };
+        const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.18, 1.4, 6), pineWoodMat);
+        trunk.position.y = 0.7;
+        const cone1 = new THREE.Mesh(new THREE.ConeGeometry(1.6, 2.2, 6), pineNeedleMat);
+        cone1.position.y = 2.0;
+        const cone2 = new THREE.Mesh(new THREE.ConeGeometry(1.2, 1.8, 6), pineNeedleMat);
+        cone2.position.y = 3.2;
+        const snowTop = new THREE.Mesh(new THREE.ConeGeometry(0.7, 1.0, 6), snowMat);
+        snowTop.position.y = 3.9;
+        pine.add(trunk, cone1, cone2, snowTop);
+        chunk.add(pine);
+        chunk.userData.props.push(pine);
+      });
+      return;
+    }
+
     const isRiviera = (this.cityTheme.id === 'nice' || this.cityTheme.id === 'marseille');
     const isMed = ['nice', 'marseille', 'barcelone', 'madrid', 'lisbonne', 'rome', 'napoli', 'tunis', 'annaba', 'alger'].includes(this.cityTheme.id);
     const isItaly = (this.cityTheme.id === 'rome' || this.cityTheme.id === 'napoli' || this.cityTheme.id === 'milan');

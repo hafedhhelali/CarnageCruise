@@ -13,6 +13,7 @@ import { FULL_VERSION, APP_VERSION, COPYRIGHT_NOTICE, RELEASE_NAME, IS_BETA } fr
 import { REAL_COUNTRY_PATHS, REAL_TOUR_ROUTE_PATH } from './EuropeMapData.js';
 import { adManager } from '../services/AdManager.js';
 import { cookieConsentManager } from '../services/CookieConsentManager.js';
+import { tycoonManager, TYCOON_BUILDINGS, RESEARCH_NODES } from '../core/TycoonManager.js';
 
 export class UIManager {
   constructor(rootElement, onActionCallback) {
@@ -379,6 +380,7 @@ export class UIManager {
           <button id="btn-filter-nuclear" class="btn-nuclear-shortcut" title="Voir les Centrales Nucléaires">☢️ NUCLÉAIRE</button>
           <button id="btn-filter-dam" class="btn-nuclear-shortcut" style="background: rgba(0, 206, 201, 0.25); border-color: #00cec9; color: #00cec9;" title="Voir les Barrages & Déluges">🌊 BARRAGE</button>
           <button id="btn-filter-mountain" class="btn-nuclear-shortcut" style="background: rgba(254, 202, 87, 0.25); border-color: #feca57; color: #feca57;" title="Voir les Éboulements de Montagne">🏔️ MONTAGNE</button>
+          <button id="btn-open-tycoon" class="btn-nuclear-shortcut" style="background: rgba(46, 213, 115, 0.25); border-color: #2ed573; color: #2ed573; font-weight: 900;" title="Ouvrir le QG Tycoon de l'Apocalypse">🏭 EMPIRE TYCOON</button>
         </div>
 
         <div class="europe-map-canvas-container" id="europe-canvas">
@@ -686,6 +688,11 @@ export class UIManager {
         centerOnCity(nextMtn, true);
         soundManager.playRockAvalanche();
       }
+    });
+
+    mapScreen.querySelector('#btn-open-tycoon')?.addEventListener('click', () => {
+      soundManager.playClick();
+      this.showTycoonModal();
     });
 
     if (viewportEl) {
@@ -2511,6 +2518,302 @@ export class UIManager {
       soundManager.playClick();
       overlay.remove();
       this.activeModals = this.activeModals.filter(m => m !== overlay);
+    });
+
+    this.root.appendChild(overlay);
+  }
+
+  // --- QG EMPIRE TYCOON WORLDMAGEDDON (IDLE ARCADE TYCOON) ---
+
+  showTycoonModal() {
+    this.closeActiveModals();
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-backdrop interactive';
+    overlay.style.cssText = `
+      position: fixed; inset: 0; background: rgba(10, 12, 18, 0.94);
+      backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center;
+      z-index: 9999; padding: 14px;
+    `;
+    this.activeModals.push(overlay);
+
+    const renderTycoonContent = () => {
+      const rates = tycoonManager.getTotalRates();
+      const currentCoins = storage.data.coins || 0;
+      const wmProgress = storage.getWorldmageddonProgress();
+
+      overlay.innerHTML = `
+        <div class="modal-card" style="max-width: 520px; width: 100%; max-height: 92vh; overflow-y: auto; background: #151824; border: 2px solid #ffd32a; border-radius: 16px; padding: 16px; color: #fff; box-shadow: 0 0 35px rgba(255, 211, 42, 0.35);">
+          <!-- EN-TÊTE DU QG TYCOON -->
+          <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255, 211, 42, 0.3); padding-bottom: 10px; margin-bottom: 12px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 1.6rem;">🏭</span>
+              <div>
+                <h2 style="margin: 0; font-size: 1.15rem; color: #ffd32a; font-weight: 900; letter-spacing: 0.5px;">QG EMPIRE WORLDMAGEDDON</h2>
+                <span style="font-size: 0.72rem; color: #2ed573; font-weight: 700;">★ PRODUCTION CLANDESTINE ACTIVE (IDLE)</span>
+              </div>
+            </div>
+            <button id="btn-close-tycoon" class="btn-round-action" style="background: rgba(255, 71, 87, 0.2); border-color: #ff4757; color: #ff4757; width: 34px; height: 34px;">✕</button>
+          </div>
+
+          <!-- TABLEAU DE BORD DE RENTABILITÉ DOUBLE DEVISE -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+            <div style="background: rgba(30, 39, 46, 0.8); border: 1px solid #ffd32a; border-radius: 10px; padding: 10px; text-align: center;">
+              <div style="font-size: 0.72rem; color: #ced6e0; font-weight: 700;">TRÉSORERIE LIQUIDE</div>
+              <div style="font-size: 1.25rem; font-weight: 900; color: #ffd32a; margin: 3px 0;">🪙 ${currentCoins.toLocaleString('fr-FR')}</div>
+              <div style="font-size: 0.75rem; color: #2ed573; font-weight: 800;">+${rates.cashPerSec.toLocaleString('fr-FR')} $/s</div>
+            </div>
+            <div style="background: rgba(30, 39, 46, 0.8); border: 1px solid #ff4757; border-radius: 10px; padding: 10px; text-align: center;">
+              <div style="font-size: 0.72rem; color: #ced6e0; font-weight: 700;">EXTINCTION MONDIALE</div>
+              <div style="font-size: 1.25rem; font-weight: 900; color: #ff4757; margin: 3px 0;">☠️ ${wmProgress.totalKills.toLocaleString('fr-FR')}</div>
+              <div style="font-size: 0.75rem; color: #ff6b81; font-weight: 800;">+${rates.killsPerSec.toLocaleString('fr-FR')} cibles/s</div>
+            </div>
+          </div>
+
+          <!-- SYNERGIE DE COURSE & BONUS ÉTOILES -->
+          <div style="background: rgba(0, 206, 201, 0.12); border: 1px dashed #00cec9; border-radius: 8px; padding: 6px 12px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; font-size: 0.76rem;">
+            <span style="color: #81ecec;">⭐ Synergie Grand Tour d'Europe :</span>
+            <strong style="color: #00cec9; font-weight: 900;">+${rates.starBonusPct}% Rendement Global</strong>
+          </div>
+
+          <!-- BOUTON INTERACTIF TURBO BOOST TAP -->
+          <div style="position: relative; margin-bottom: 14px;">
+            <button id="btn-turbo-boost-tap" class="tycoon-boost-tap-btn">
+              <span>⚡</span> <span>TURBO FRAPPE (TAP !)</span> <span style="font-size: 0.82rem; background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 6px;">+${Math.max(10, Math.floor(rates.cashPerSec * 2))} 🪙</span>
+            </button>
+          </div>
+
+          <!-- BOUTONS D'ACCÈS RAPIDE : RECHERCHE R&D -->
+          <div style="display: flex; gap: 8px; margin-bottom: 14px;">
+            <button id="btn-open-research-modal" class="btn-arcade" style="flex: 1; padding: 8px 12px; font-size: 0.82rem; background: linear-gradient(135deg, #0984e3, #6c5ce7);">
+              🔬 ARBRE DE RECHERCHE R&D
+            </button>
+          </div>
+
+          <!-- LISTE DES 6 INFRASTRUCTURES CLANDESTINES -->
+          <h3 style="margin: 0 0 10px 0; font-size: 0.85rem; color: #fffa65; letter-spacing: 0.5px;">🏢 INFRASTRUCTURES D'EXTINCTION GLOBALE</h3>
+          <div class="tycoon-buildings-list" style="display: flex; flex-direction: column; gap: 8px;">
+            ${TYCOON_BUILDINGS.map(b => {
+              const lvl = tycoonManager.getBuildingLevel(b.id);
+              const cost = tycoonManager.getUpgradeCost(b.id);
+              const bRates = tycoonManager.getBuildingRates(b.id);
+              const canAfford = currentCoins >= cost;
+
+              return `
+                <div class="tycoon-card" style="background: rgba(26, 32, 44, 0.85); border: 1px solid ${lvl > 0 ? '#ffd32a' : '#4a5568'}; border-radius: 10px; padding: 10px; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                  <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
+                    <div style="font-size: 1.8rem; background: rgba(0,0,0,0.3); border-radius: 8px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;">${b.icon}</div>
+                    <div style="flex: 1;">
+                      <div style="display: flex; align-items: center; gap: 6px;">
+                        <strong style="font-size: 0.85rem; color: ${lvl > 0 ? '#fff' : '#a0aec0'};">${b.name}</strong>
+                        <span style="font-size: 0.72rem; color: #ffd32a; font-weight: 800; background: rgba(255, 211, 42, 0.15); padding: 1px 6px; border-radius: 6px;">Niv. ${lvl}</span>
+                      </div>
+                      <div style="font-size: 0.7rem; color: #a4b0be; margin-top: 2px;">${b.tag}</div>
+                      ${lvl > 0 ? `
+                        <div style="font-size: 0.72rem; color: #2ed573; font-weight: 700; margin-top: 2px;">
+                          +${bRates.cashPerSec.toLocaleString('fr-FR')} $/s • <span style="color: #ff7675;">+${bRates.killsPerSec.toLocaleString('fr-FR')} cibles/s</span>
+                        </div>
+                      ` : `
+                        <div style="font-size: 0.7rem; color: #e17055; font-weight: 700; margin-top: 2px;">Inactif • Acheter pour débloquer</div>
+                      `}
+                    </div>
+                  </div>
+                  <button class="btn-arcade btn-upgrade-building" data-b-id="${b.id}" style="padding: 7px 12px; font-size: 0.78rem; min-width: 95px; background: ${canAfford ? 'linear-gradient(135deg, #2ed573, #26de81)' : 'rgba(100, 110, 120, 0.3)'}; color: ${canAfford ? '#fff' : '#888'};" ${canAfford ? '' : 'disabled'}>
+                    ${lvl === 0 ? 'DÉBLOQUER' : 'AMÉLIORER'}<br>
+                    <span style="font-size: 0.7rem; font-weight: 900;">🪙 ${cost.toLocaleString('fr-FR')}</span>
+                  </button>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+
+      // Handlers
+      overlay.querySelector('#btn-close-tycoon')?.addEventListener('click', () => {
+        soundManager.playClick();
+        overlay.remove();
+        this.activeModals = this.activeModals.filter(m => m !== overlay);
+      });
+
+      overlay.querySelector('#btn-open-research-modal')?.addEventListener('click', () => {
+        soundManager.playClick();
+        this.showResearchModal();
+      });
+
+      overlay.querySelectorAll('.btn-upgrade-building').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const bId = e.currentTarget.getAttribute('data-b-id');
+          const res = tycoonManager.upgradeBuilding(bId);
+          if (res.success) {
+            soundManager.playCoin();
+            renderTycoonContent();
+          }
+        });
+      });
+
+      // Turbo Boost Tap
+      const tapBtn = overlay.querySelector('#btn-turbo-boost-tap');
+      if (tapBtn) {
+        tapBtn.addEventListener('click', (e) => {
+          soundManager.playClick();
+          const tapGain = Math.max(10, Math.floor(rates.cashPerSec * 2));
+          storage.addCoins(tapGain);
+          storage.recordCataclysmKill(Math.max(1, Math.floor(rates.killsPerSec)), 'STREET');
+
+          const floatEl = document.createElement('div');
+          floatEl.className = 'floating-cash-text';
+          floatEl.textContent = `+${tapGain} 🪙`;
+          const rect = tapBtn.getBoundingClientRect();
+          floatEl.style.left = `${rect.left + rect.width / 2}px`;
+          floatEl.style.top = `${rect.top}px`;
+          document.body.appendChild(floatEl);
+          setTimeout(() => floatEl.remove(), 850);
+
+          renderTycoonContent();
+        });
+      }
+    };
+
+    renderTycoonContent();
+    this.root.appendChild(overlay);
+  }
+
+  showResearchModal() {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-backdrop interactive';
+    overlay.style.cssText = `
+      position: fixed; inset: 0; background: rgba(10, 12, 18, 0.94);
+      backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center;
+      z-index: 10000; padding: 14px;
+    `;
+    this.activeModals.push(overlay);
+
+    const renderResearch = () => {
+      const currentCoins = storage.data.coins || 0;
+      overlay.innerHTML = `
+        <div class="modal-card" style="max-width: 480px; width: 100%; max-height: 88vh; overflow-y: auto; background: #151824; border: 2px solid #00d2d3; border-radius: 16px; padding: 16px; color: #fff;">
+          <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(0, 210, 211, 0.3); padding-bottom: 8px; margin-bottom: 12px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 1.5rem;">🔬</span>
+              <div>
+                <h2 style="margin: 0; font-size: 1.1rem; color: #00d2d3;">ARBRE DE RECHERCHE R&D</h2>
+                <span style="font-size: 0.72rem; color: #a4b0be;">🪙 ${currentCoins.toLocaleString('fr-FR')} Pièces disponibles</span>
+              </div>
+            </div>
+            <button id="btn-close-research" class="btn-round-action" style="width: 32px; height: 32px;">✕</button>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            ${RESEARCH_NODES.map(node => {
+              const unlocked = tycoonManager.isResearchUnlocked(node.id);
+              const canAfford = currentCoins >= node.cost;
+
+              return `
+                <div style="background: rgba(26, 32, 44, 0.85); border: 1px solid ${unlocked ? '#2ed573' : (canAfford ? '#00d2d3' : '#4a5568')}; border-radius: 10px; padding: 10px; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                  <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
+                    <div style="font-size: 1.6rem;">${node.icon}</div>
+                    <div>
+                      <strong style="font-size: 0.84rem; color: ${unlocked ? '#2ed573' : '#fff'};">${node.name}</strong>
+                      <div style="font-size: 0.7rem; color: #a4b0be; margin-top: 2px;">${node.desc}</div>
+                    </div>
+                  </div>
+                  <div>
+                    ${unlocked ? `
+                      <span style="font-size: 0.75rem; color: #2ed573; font-weight: 900; background: rgba(46, 213, 115, 0.15); padding: 4px 10px; border-radius: 6px;">ACTIVÉ ✅</span>
+                    ` : `
+                      <button class="btn-arcade btn-buy-research" data-tech-id="${node.id}" style="padding: 6px 12px; font-size: 0.78rem; background: ${canAfford ? 'linear-gradient(135deg, #0984e3, #00cec9)' : 'rgba(100,110,120,0.3)'};" ${canAfford ? '' : 'disabled'}>
+                        RECHERCHER<br>
+                        <span style="font-size: 0.7rem; font-weight: 900;">🪙 ${node.cost.toLocaleString('fr-FR')}</span>
+                      </button>
+                    `}
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+
+      overlay.querySelector('#btn-close-research')?.addEventListener('click', () => {
+        soundManager.playClick();
+        overlay.remove();
+        this.activeModals = this.activeModals.filter(m => m !== overlay);
+      });
+
+      overlay.querySelectorAll('.btn-buy-research').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const techId = e.currentTarget.getAttribute('data-tech-id');
+          const res = tycoonManager.unlockResearch(techId);
+          if (res.success) {
+            soundManager.playCoin();
+            renderResearch();
+          }
+        });
+      });
+    };
+
+    renderResearch();
+    this.root.appendChild(overlay);
+  }
+
+  showOfflineReportModal(earnings) {
+    if (!earnings) return;
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-backdrop interactive';
+    overlay.style.cssText = `
+      position: fixed; inset: 0; background: rgba(8, 10, 15, 0.95);
+      backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center;
+      z-index: 10001; padding: 14px;
+    `;
+    this.activeModals.push(overlay);
+
+    const minutesAway = Math.max(1, Math.round(earnings.creditedSeconds / 60));
+
+    overlay.innerHTML = `
+      <div class="modal-card double-btn-pulse" style="max-width: 440px; width: 100%; background: #151824; border: 2px solid #2ed573; border-radius: 18px; padding: 20px; text-align: center; color: #fff; box-shadow: 0 0 40px rgba(46, 213, 115, 0.4);">
+        <div style="font-size: 2.4rem; margin-bottom: 6px;">🛰️</div>
+        <div style="font-size: 0.75rem; color: #2ed573; font-weight: 900; letter-spacing: 2px; text-transform: uppercase;">TRANSMISSION DU COMMANDEMENT</div>
+        <h2 style="font-size: 1.25rem; color: #ffd32a; margin: 4px 0 12px 0;">RAPPORT DE CRISE HORS-LIGNE</h2>
+        
+        <p style="font-size: 0.82rem; color: #ced6e0; line-height: 1.4; margin-bottom: 14px;">
+          Pendant vos <strong>${minutesAway} minutes</strong> d'absence, vos infrastructures clandestines ont continué le sabotage mondial sans relâche :
+        </p>
+
+        <div style="background: rgba(30, 39, 46, 0.9); border: 1px solid #ffd32a; border-radius: 12px; padding: 12px; margin-bottom: 16px;">
+          <div style="font-size: 1.5rem; font-weight: 900; color: #ffd32a;">+${earnings.cashEarned.toLocaleString('fr-FR')} 🪙</div>
+          <div style="font-size: 0.75rem; color: #a4b0be; margin-bottom: 8px;">Crédits Noirs récoltés</div>
+          <div style="font-size: 1.35rem; font-weight: 900; color: #ff4757;">+${earnings.killsEarned.toLocaleString('fr-FR')} ☠️</div>
+          <div style="font-size: 0.75rem; color: #a4b0be;">Cibles mondiales anéanties</div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <button id="btn-offline-double" class="btn-arcade double-btn-pulse" style="width: 100%; padding: 12px; font-size: 0.92rem; background: linear-gradient(135deg, #ffd32a, #ff9f43); color: #1e272e; font-weight: 900;">
+            🎬 DOUBLER X2 LE BUTIN (SPONSOR)
+          </button>
+          <button id="btn-offline-collect" class="btn-arcade" style="width: 100%; padding: 10px; font-size: 0.82rem; background: #2ed573; color: #fff;">
+            💰 RÉCOLTER (1X)
+          </button>
+        </div>
+      </div>
+    `;
+
+    overlay.querySelector('#btn-offline-collect')?.addEventListener('click', () => {
+      soundManager.playCoin();
+      tycoonManager.collectOfflineEarnings(earnings, false);
+      overlay.remove();
+      this.activeModals = this.activeModals.filter(m => m !== overlay);
+      this.showToastUnlock({ name: `💰 +${earnings.cashEarned} Pièces encaissées !` });
+    });
+
+    overlay.querySelector('#btn-offline-double')?.addEventListener('click', () => {
+      soundManager.playClick();
+      adManager.showRewardedAd(() => {
+        soundManager.playCoin();
+        tycoonManager.collectOfflineEarnings(earnings, true);
+        overlay.remove();
+        this.activeModals = this.activeModals.filter(m => m !== overlay);
+        this.showToastUnlock({ name: `🔥 DOUBLÉ : +${earnings.cashEarned * 2} Pièces & +${earnings.killsEarned * 2} Cibles !` });
+      });
     });
 
     this.root.appendChild(overlay);
