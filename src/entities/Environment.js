@@ -56,71 +56,29 @@ export class Environment {
   initSharedMaterials(cityDef) {
     let roadMat, sidewalkMat, curbMat, stripeMat;
 
-    if (this.isDamMission) {
-      // --- CANAL FLUVIAL AQUATIQUE (BARRAGE HYDROÉLECTRIQUE) ---
-      roadMat = new THREE.MeshStandardMaterial({
-        color: 0x0984e3,
-        roughness: 0.15,
-        metalness: 0.75
-      });
-      sidewalkMat = new THREE.MeshStandardMaterial({
-        color: 0x636e72,
-        roughness: 0.88,
-        metalness: 0.12
-      });
-      curbMat = new THREE.MeshStandardMaterial({ color: 0x00cec9, roughness: 0.4 });
-      stripeMat = new THREE.MeshBasicMaterial({ color: 0x81ecec, transparent: true, opacity: 0.5 });
-    } else if (this.isNuclearMission) {
-      // --- ZONE D'EXCLUSION RADIOLOGIQUE INDUSTRIELLE ---
-      roadMat = new THREE.MeshStandardMaterial({
-        color: 0x2d3436,
-        roughness: 0.9,
-        metalness: 0.25
-      });
-      sidewalkMat = new THREE.MeshStandardMaterial({
-        color: 0x3d4239,
-        roughness: 0.95
-      });
-      curbMat = new THREE.MeshStandardMaterial({ color: 0xf1c40f, roughness: 0.5 });
-      stripeMat = new THREE.MeshBasicMaterial({ color: 0x00ff88 }); // Rayures vert radioactif
-    } else if (this.isMountainMission) {
-      // --- COL ALPIN VERGLACÉ & NEIGE BLANCHE ---
-      roadMat = new THREE.MeshStandardMaterial({
-        color: 0xdfe6e9,
-        roughness: 0.22,
-        metalness: 0.2
-      });
-      sidewalkMat = new THREE.MeshStandardMaterial({
-        color: 0xf5f6fa,
-        roughness: 0.6
-      });
-      curbMat = new THREE.MeshStandardMaterial({ color: 0x74b9ff, roughness: 0.3 });
-      stripeMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-    } else {
-      // --- URBAIN STANDARD BITUME & TROTTOIR ---
-      const roadTex = textureFactory.getRoadTexture();
-      roadTex.wrapS = THREE.RepeatWrapping;
-      roadTex.wrapT = THREE.RepeatWrapping;
-      roadTex.repeat.set(1, this.chunkLength / 14);
+    // Toutes les étapes sont des villes authentiques avec routes en bitume haute fidélité
+    const roadTex = textureFactory.getRoadTexture();
+    roadTex.wrapS = THREE.RepeatWrapping;
+    roadTex.wrapT = THREE.RepeatWrapping;
+    roadTex.repeat.set(1, this.chunkLength / 14);
 
-      const sidewalkTex = textureFactory.getSidewalkTexture();
-      sidewalkTex.wrapS = THREE.RepeatWrapping;
-      sidewalkTex.wrapT = THREE.RepeatWrapping;
-      sidewalkTex.repeat.set(1.5, this.chunkLength / 4);
+    const sidewalkTex = textureFactory.getSidewalkTexture();
+    sidewalkTex.wrapS = THREE.RepeatWrapping;
+    sidewalkTex.wrapT = THREE.RepeatWrapping;
+    sidewalkTex.repeat.set(1.5, this.chunkLength / 4);
 
-      roadMat = new THREE.MeshStandardMaterial({
-        map: roadTex,
-        roughness: 0.85,
-        metalness: 0.05
-      });
-      sidewalkMat = new THREE.MeshStandardMaterial({
-        map: sidewalkTex,
-        roughness: 0.7,
-        metalness: 0.05
-      });
-      curbMat = new THREE.MeshStandardMaterial({ color: 0x7f8c8d, roughness: 0.6 });
-      stripeMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-    }
+    roadMat = new THREE.MeshStandardMaterial({
+      map: roadTex,
+      roughness: 0.85,
+      metalness: 0.05
+    });
+    sidewalkMat = new THREE.MeshStandardMaterial({
+      map: sidewalkTex,
+      roughness: 0.9,
+      metalness: 0.05
+    });
+    curbMat = new THREE.MeshStandardMaterial({ color: 0x7f8c8d, roughness: 0.7 });
+    stripeMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
 
     const hexColorStr = '#' + (cityDef.buildingColors?.[0] || 0xdfe4ea).toString(16).padStart(6, '0');
     const roofColorStr = '#' + (cityDef.roofColor || 0x576574).toString(16).padStart(6, '0');
@@ -186,6 +144,7 @@ export class Environment {
     this.delugeZ = 600;
     this.avalancheActive = false;
     this.mountainBoulders = [];
+    this.speedBumps = [];
 
     if (finishDistance) {
       this.finishDistance = finishDistance;
@@ -1299,9 +1258,16 @@ export class Environment {
     curbR.position.set(4.25, 0.15, 0);
     chunk.add(curbR);
 
-    // Bâtiments
+    // Bâtiments (avec dégagement des carrefours)
     this.populateBuildings(chunk, -1);
     this.populateBuildings(chunk, 1);
+
+    // Ralentisseur / Dos d'âne 3D avec marquages dents de requin & panneau 30 km/h
+    // Placer à des chunks réguliers (tous les ~160m en alternance avec les carrefours)
+    const relBump = ((zPos - 35) % 160 + 160) % 160;
+    if (relBump < 20 && zPos > 40) {
+      this.addSpeedBump(chunk, 0);
+    }
 
     // Accessoires urbains et terrasses
     this.populateStreetProps(chunk);
@@ -1309,99 +1275,61 @@ export class Environment {
     return chunk;
   }
 
+  addSpeedBump(chunk, localZ) {
+    const bumpGroup = new THREE.Group();
+    bumpGroup.position.set(0, 0, localZ);
+
+    // 1. Corps trapézoïdal du ralentisseur (dos d'âne asphalté surélevé de 18cm)
+    const bumpGeo = new THREE.BoxGeometry(8.4, 0.18, 2.6);
+    const bumpMat = new THREE.MeshStandardMaterial({ color: 0x1e272e, roughness: 0.85 });
+    const bumpMesh = new THREE.Mesh(bumpGeo, bumpMat);
+    bumpMesh.position.y = 0.09;
+    bumpMesh.receiveShadow = true;
+    bumpGroup.add(bumpMesh);
+
+    // 2. Dents de requin réfléchissantes jaunes/blanches sur les rampes
+    const sharkMat = new THREE.MeshBasicMaterial({ color: 0xfffa65 });
+    for (let x = -3.6; x <= 3.6; x += 0.9) {
+      const sharkGeo = new THREE.ConeGeometry(0.24, 0.65, 3);
+      const shark = new THREE.Mesh(sharkGeo, sharkMat);
+      shark.rotation.x = -Math.PI / 2;
+      shark.rotation.z = Math.PI;
+      shark.position.set(x, 0.19, -0.6);
+      bumpGroup.add(shark);
+
+      const shark2 = new THREE.Mesh(sharkGeo, sharkMat);
+      shark2.rotation.x = -Math.PI / 2;
+      shark2.position.set(x, 0.19, 0.6);
+      bumpGroup.add(shark2);
+    }
+
+    // 3. Panneau routier officiel A2a (Ralentisseur 30 km/h) sur le trottoir
+    const poleMat = new THREE.MeshStandardMaterial({ color: 0xbdc3c7, metalness: 0.85, roughness: 0.2 });
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 2.4, 8), poleMat);
+    pole.position.set(-4.5, 1.2, 0);
+    bumpGroup.add(pole);
+
+    const signMat = new THREE.MeshBasicMaterial({ color: 0xe74c3c });
+    const signTri = new THREE.Mesh(new THREE.ConeGeometry(0.38, 0.65, 3), signMat);
+    signTri.rotation.y = Math.PI / 2;
+    signTri.position.set(-4.5, 2.15, 0);
+    bumpGroup.add(signTri);
+
+    chunk.add(bumpGroup);
+
+    // Enregistrer le dos d'âne pour la détection de saut de suspension
+    if (!this.speedBumps) this.speedBumps = [];
+    this.speedBumps.push({
+      z: chunk.position.z + localZ,
+      length: 2.8,
+      height: 0.24,
+      hit: false
+    });
+  }
+
   populateBuildings(chunk, side) {
     const xBase = side * 8.5;
     let currentZ = -this.chunkLength / 2;
-
-    if (this.isDamMission) {
-      // --- DIGUES & MURS DE RETENUE EN BÉTON HYDROÉLECTRIQUE ---
-      const concreteMat = new THREE.MeshStandardMaterial({ color: 0x718093, roughness: 0.85, metalness: 0.15 });
-      const damGateMat = new THREE.MeshStandardMaterial({ color: 0x2c3e50, roughness: 0.5, metalness: 0.6 });
-      const warningCyanMat = new THREE.MeshBasicMaterial({ color: 0x00cec9 });
-
-      while (currentZ < this.chunkLength / 2) {
-        const segWidth = 10.0 + Math.random() * 4.0;
-        const segHeight = 9.0 + Math.random() * 8.0;
-
-        const wall = new THREE.Mesh(new THREE.BoxGeometry(6.0, segHeight, segWidth), concreteMat);
-        wall.position.set(xBase + side * 3.0, segHeight / 2, currentZ + segWidth / 2);
-        chunk.add(wall);
-
-        const gate = new THREE.Mesh(new THREE.BoxGeometry(0.4, 4.0, segWidth * 0.6), damGateMat);
-        gate.position.set(xBase - side * 0.1, 2.5, currentZ + segWidth / 2);
-        chunk.add(gate);
-
-        const beacon = new THREE.Mesh(new THREE.SphereGeometry(0.4, 6, 6), warningCyanMat);
-        beacon.position.set(xBase - side * 0.2, segHeight + 0.5, currentZ + segWidth / 2);
-        chunk.add(beacon);
-
-        currentZ += segWidth;
-      }
-      return;
-    }
-
-    if (this.isNuclearMission) {
-      // --- ENCEINTE DE SÉCURITÉ INDUSTRIELLE & ZONE DE DÉCONTAMINATION ---
-      const reactorConcreteMat = new THREE.MeshStandardMaterial({ color: 0x3d4239, roughness: 0.95 });
-      const hazardYellowMat = new THREE.MeshStandardMaterial({ color: 0xf1c40f, roughness: 0.5 });
-      const radGlowMat = new THREE.MeshBasicMaterial({ color: 0x00ff88 });
-
-      while (currentZ < this.chunkLength / 2) {
-        const segWidth = 9.0 + Math.random() * 4.0;
-        const segHeight = 8.0 + Math.random() * 7.0;
-
-        const wall = new THREE.Mesh(new THREE.BoxGeometry(7.0, segHeight, segWidth), reactorConcreteMat);
-        wall.position.set(xBase + side * 3.5, segHeight / 2, currentZ + segWidth / 2);
-        chunk.add(wall);
-
-        const hazardBand = new THREE.Mesh(new THREE.BoxGeometry(0.2, 1.2, segWidth * 0.8), hazardYellowMat);
-        hazardBand.position.set(xBase - side * 0.15, segHeight * 0.6, currentZ + segWidth / 2);
-        chunk.add(hazardBand);
-
-        if (Math.random() < 0.5) {
-          const vat = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.2, 2.4, 8), reactorConcreteMat);
-          vat.position.set(xBase + side * 1.5, 1.2, currentZ + segWidth / 2);
-          const fluid = new THREE.Mesh(new THREE.SphereGeometry(0.8, 6, 6), radGlowMat);
-          fluid.position.set(xBase + side * 1.5, 2.2, currentZ + segWidth / 2);
-          chunk.add(vat, fluid);
-        }
-
-        currentZ += segWidth;
-      }
-      return;
-    }
-
-    if (this.isMountainMission) {
-      // --- PAROIS SISMIQUES ROCHEUSES & FORÊTS ALPINES ---
-      const rockMat = new THREE.MeshStandardMaterial({ color: 0x485460, roughness: 0.95 });
-      const snowMat = new THREE.MeshStandardMaterial({ color: 0xf5f6fa, roughness: 0.3 });
-      const chaletWoodMat = new THREE.MeshStandardMaterial({ color: 0x5a2d0c, roughness: 0.8 });
-
-      while (currentZ < this.chunkLength / 2) {
-        const segWidth = 12.0 + Math.random() * 6.0;
-        const peakHeight = 16.0 + Math.random() * 18.0;
-
-        const rock = new THREE.Mesh(new THREE.ConeGeometry(8.0, peakHeight, 5), rockMat);
-        rock.position.set(xBase + side * 5.0, peakHeight / 2, currentZ + segWidth / 2);
-        rock.rotation.y = Math.random() * Math.PI;
-
-        const snowCap = new THREE.Mesh(new THREE.ConeGeometry(4.2, peakHeight * 0.35, 5), snowMat);
-        snowCap.position.set(xBase + side * 5.0, peakHeight * 0.82, currentZ + segWidth / 2);
-        chunk.add(rock, snowCap);
-
-        if (Math.random() < 0.35) {
-          const chalet = new THREE.Mesh(new THREE.BoxGeometry(4.5, 3.2, 5.0), chaletWoodMat);
-          chalet.position.set(xBase + side * 1.2, 1.6, currentZ + segWidth / 2);
-          const chaletRoof = new THREE.Mesh(new THREE.ConeGeometry(3.6, 2.0, 4), snowMat);
-          chaletRoof.position.set(xBase + side * 1.2, 4.0, currentZ + segWidth / 2);
-          chaletRoof.rotation.y = Math.PI / 4;
-          chunk.add(chalet, chaletRoof);
-        }
-
-        currentZ += segWidth;
-      }
-      return;
-    }
 
     const buildingMatPalette = this.sharedMats?.buildingPalette || this.cityTheme.buildingColors.map(c =>
       new THREE.MeshToonMaterial({ color: c })
@@ -1416,6 +1344,16 @@ export class Environment {
       const bWidth = 8.5 + Math.random() * 5.0;
       const bHeight = 13.0 + Math.random() * 14.0;
       const bDepth = 10.0;
+
+      // LAISSER UN CARREFOUR TOTALEMENT OUVERT POUR CHAQUE INTERSECTION
+      // Intersections régulières à Z = 95 + k * 160 (95, 255, 415, 575, ...)
+      const worldZ = chunk.position.z + currentZ + bWidth / 2;
+      const relInter = ((worldZ - 95) % 160 + 160) % 160;
+      if (relInter < 14 || relInter > 146) {
+        // En plein couloir transversal : ne PAS poser de mur pour laisser circuler les voitures de traverse !
+        currentZ += bWidth;
+        continue;
+      }
 
       const randomMat = buildingMatPalette[Math.floor(Math.random() * buildingMatPalette.length)];
       const bGeo = new THREE.BoxGeometry(bDepth, bHeight, bWidth);

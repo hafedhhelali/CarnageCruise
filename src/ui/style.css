@@ -1074,6 +1074,116 @@ html, body {
   margin-top: 2px;
 }
 
+/* BARRE DE FILTRES DÉFILANTE HORIZONTALE DE LA CARTE (ZERO CROP) */
+.map-filter-scroll-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 8px 12px;
+  background: rgba(15, 18, 28, 0.95);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  scrollbar-width: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+  z-index: 15;
+}
+
+.map-filter-scroll-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.map-filter-pill {
+  padding: 6px 14px;
+  font-size: 0.78rem;
+  font-weight: 850;
+  border-radius: 20px;
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  background: rgba(30, 39, 46, 0.85);
+  color: #dfe4ea;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.map-filter-pill:active {
+  transform: scale(0.95);
+}
+
+.map-filter-pill.active {
+  border-color: #ffd700;
+  background: rgba(255, 215, 0, 0.25);
+  color: #fffa65;
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.4);
+}
+
+.map-filter-pill.pill-france {
+  border-color: #00cec9;
+  color: #81ecec;
+  background: rgba(0, 206, 201, 0.18);
+}
+
+.map-filter-pill.pill-france.active {
+  border-color: #00cec9;
+  background: rgba(0, 206, 201, 0.35);
+  box-shadow: 0 0 12px rgba(0, 206, 201, 0.5);
+}
+
+.map-filter-pill.pill-europe {
+  border-color: #74b9ff;
+  color: #74b9ff;
+  background: rgba(116, 185, 255, 0.18);
+}
+
+.map-filter-pill.pill-europe.active {
+  border-color: #74b9ff;
+  background: rgba(116, 185, 255, 0.35);
+  box-shadow: 0 0 12px rgba(116, 185, 255, 0.5);
+}
+
+.map-filter-pill.pill-med {
+  border-color: #ff7675;
+  color: #ff7675;
+  background: rgba(255, 118, 117, 0.18);
+}
+
+.map-filter-pill.pill-med.active {
+  border-color: #ff7675;
+  background: rgba(255, 118, 117, 0.35);
+  box-shadow: 0 0 12px rgba(255, 118, 117, 0.5);
+}
+
+.map-filter-pill.pill-tycoon {
+  border-color: #2ed573;
+  color: #2ed573;
+  background: rgba(46, 213, 115, 0.2);
+  box-shadow: 0 0 10px rgba(46, 213, 115, 0.35);
+}
+
+/* CONTRÔLES DE ZOOM FLOTTANTS EN BAS À DROITE */
+.map-zoom-controls-floating {
+  position: absolute;
+  bottom: 18px;
+  right: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  z-index: 35;
+  background: rgba(15, 23, 42, 0.88);
+  border: 1px solid rgba(0, 206, 201, 0.45);
+  border-radius: 14px;
+  padding: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(10px);
+}
+
 /* CONTRÔLES DE ZOOM FLOTTANTS DE LA CARTE (DOCKÉS EN HAUT À DROITE DANS LE VIEWPORT, NE COUVRENT PAS LE TITRE) */
 .europe-map-scroll-viewport .map-zoom-controls,
 .map-zoom-controls {
@@ -1565,6 +1675,17 @@ html, body {
   margin-right: auto;
   box-sizing: border-box;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+}
+
+.city-target-rank-pill {
+  font-size: 0.7rem;
+  font-weight: 900;
+  color: #ffd32a;
+  background: rgba(241, 196, 15, 0.2);
+  border: 1px solid #ffd32a;
+  padding: 2px 7px;
+  border-radius: 8px;
+  letter-spacing: 0.5px;
 }
 
 .city-detail-actions {

@@ -14,6 +14,7 @@ import { CharacterSystem } from './entities/Characters.js';
 import { Environment } from './entities/Environment.js';
 import { ParticleSystem } from './entities/Particles.js';
 import { IntersectionManager } from './entities/Intersections.js';
+import { ProjectileManager } from './entities/Projectiles.js';
 import { Traffic } from './entities/Traffic.js';
 import { PigeonSystem } from './entities/Pigeons.js';
 import { UIManager } from './ui/UIManager.js';
@@ -36,6 +37,7 @@ class GameApp {
     this.pigeons = new PigeonSystem(this.engine.scene);
     this.particles = new ParticleSystem(this.engine.scene);
     this.intersections = new IntersectionManager(this.engine.scene);
+    this.projectiles = new ProjectileManager(this.engine.scene, this.particles, soundManager, this.engine);
 
     // 3. État des contrôles et de la course
     this.steerInput = 0;
@@ -73,6 +75,7 @@ class GameApp {
     this.environment.setCity(cityDef);
     this.characters.reset();
     if (this.traffic) this.traffic.reset();
+    if (this.projectiles) this.projectiles.reset();
     this.intersections.reset();
   }
 
@@ -253,152 +256,126 @@ class GameApp {
       const bikeZ = this.bike.z;
       const bikeX = this.bike.mesh.position.x;
       const muzzlePos = new THREE.Vector3(bikeX, this.bike.mesh.position.y + 0.95, bikeZ + 2.8);
+      // Tir physique réel d'obus 120mm propulsé en avant dans l'espace 3D !
+      this.projectiles.spawnTankShell(muzzlePos);
+      return;
+    }
 
-      // 1. Déflagration d'obus et onde de choc au frein de bouche du canon 120mm
-      this.particles.spawnShockwave(muzzlePos, 0xff793f);
-      this.particles.spawnCannonBlast(muzzlePos);
-      this.engine.triggerCameraShake(0.72);
+    if (attack.type === 'missile' || attack.type === 'torpedo' || attack.type === 'ice_missile') {
+      const bikeZ = this.bike.z;
+      const bikeX = this.bike.mesh.position.x;
+      const bikeY = this.bike.mesh.position.y;
+      const launchPosL = new THREE.Vector3(bikeX - 1.8, bikeY + 0.4, bikeZ + 2.2);
+      const launchPosR = new THREE.Vector3(bikeX + 1.8, bikeY + 0.4, bikeZ + 2.2);
+      // Doubles missiles propulsés en avant avec traînées de fumée !
+      this.projectiles.spawnTwinMissiles(launchPosL, launchPosR);
+      return;
+    }
 
-      let hits = 0;
+    if (attack.type === 'plasma_emp') {
+      const bikeZ = this.bike.z;
+      const bikeX = this.bike.mesh.position.x;
+      const muzzlePos = new THREE.Vector3(bikeX, this.bike.mesh.position.y + 1.1, bikeZ + 2.4);
+      // Orbe de plasma ionique EMP propulsé en avant !
+      this.projectiles.spawnPlasmaOrb(muzzlePos);
+      return;
+    }
 
-      // 2. Pulvérisation des voitures sur la trajectoire du tir
+    if (attack.type === 'flamethrower') {
+      const bikeZ = this.bike.z;
+      const bikeX = this.bike.mesh.position.x;
+      const bikeY = this.bike.mesh.position.y;
+
+      // Gerbe de flammes continues projetées vers l'avant
+      for (let f = 1; f <= 5; f++) {
+        const fPos = new THREE.Vector3(bikeX + (Math.random() - 0.5) * 1.5, bikeY + 0.5, bikeZ + f * 5.0);
+        this.particles.spawnShockwave(fPos, 0xff793f);
+        this.particles.spawnCannonBlast(fPos);
+      }
+      this.engine.triggerCameraShake(0.45);
+
       if (this.traffic) {
         this.traffic.vehicles.forEach(v => {
           if (v.userData.active && !v.userData.isCrashed) {
             const vZ = v.position.z - bikeZ;
             const vX = Math.abs(v.position.x - bikeX);
-            if (vZ > 1.2 && vZ < attack.range && vX < attack.radius) {
+            if (vZ > 1.5 && vZ < attack.range && vX < attack.radius) {
               this.traffic.blowUpVehicle(v, this.bike.mesh.position);
-              this.particles.spawnCannonBlast(v.position);
-              const carPts = 1500;
-              gameState.score += carPts;
-              this.particles.spawnComicBurst(v.position, carPts, gameState.combo);
-              soundManager.playCrash();
-              hits++;
+              gameState.score += 1200;
+              this.particles.spawnComicBurst(v.position, 1200, gameState.combo);
             }
           }
         });
       }
 
-      // 3. Déflagration d'obus sur les piétons
+      this.characters.characters.forEach(char => {
+        if (!char.group.visible || char.isFlying) return;
+        const dZ = char.group.position.z - bikeZ;
+        const dX = Math.abs(char.group.position.x - bikeX);
+        if (dZ > 1.0 && dZ < attack.range && dX < attack.radius) {
+          this.characters.triggerSlapstickFlight(char, bikeX, 45);
+          this.particles.spawnBloodBurst(char.group.position);
+          this.ui.triggerPedestrianCarnageFlash();
+          gameState.recordKill(800, 'WEAPON_FLAMETHROWER', char.typeDef.category);
+        }
+      });
+      return;
+    }
+
+    if (attack.type === 'shotgun') {
+      const bikeZ = this.bike.z;
+      const bikeX = this.bike.mesh.position.x;
+      this.particles.spawnShockwave(new THREE.Vector3(bikeX, this.bike.mesh.position.y + 0.8, bikeZ + 2.0), 0xfffa65);
+      this.engine.triggerCameraShake(0.55);
+
+      if (this.traffic) {
+        this.traffic.vehicles.forEach(v => {
+          if (v.userData.active && !v.userData.isCrashed) {
+            const vZ = v.position.z - bikeZ;
+            const vX = Math.abs(v.position.x - bikeX);
+            if (vZ > 1.5 && vZ < attack.range && vX < attack.radius) {
+              this.traffic.blowUpVehicle(v, this.bike.mesh.position);
+              gameState.score += 1100;
+              this.particles.spawnComicBurst(v.position, 1100, gameState.combo);
+              soundManager.playCrash();
+            }
+          }
+        });
+      }
+
       this.characters.characters.forEach(char => {
         if (!char.group.visible || char.isFlying) return;
         const dZ = char.group.position.z - bikeZ;
         const dX = Math.abs(char.group.position.x - bikeX);
         if (dZ > 1.0 && dZ < attack.range && dX < attack.radius) {
           this.characters.triggerSlapstickFlight(char, bikeX, 48);
-          this.particles.spawnCannonBlast(char.group.position);
           this.particles.spawnBloodBurst(char.group.position);
           this.ui.triggerPedestrianCarnageFlash();
-          gameState.recordKill(850, 'WEAPON_CANNON', char.typeDef.category);
-          hits++;
+          gameState.recordKill(750, 'WEAPON_SHOTGUN', char.typeDef.category);
         }
       });
-
-      // 4. Dégâts collatéraux sur le mobilier urbain
-      this.environment.chunks.forEach(chunk => {
-        if (chunk.userData && chunk.userData.props) {
-          chunk.userData.props.forEach(prop => {
-            if (prop.userData.isHit) return;
-            const worldZ = chunk.position.z + prop.position.z;
-            const worldX = chunk.position.x + prop.position.x;
-            const pZ = worldZ - bikeZ;
-            const pX = Math.abs(worldX - bikeX);
-            if (pZ > 1.0 && pZ < attack.range && pX < attack.radius) {
-              prop.userData.isHit = true;
-              prop.rotation.z = (prop.position.x > 0 ? 1 : -1) * 1.1;
-              this.particles.spawnCannonBlast(new THREE.Vector3(worldX, 1.0, worldZ));
-              soundManager.playPropSmash();
-            }
-          });
-        }
-      });
-
-      if (hits > 0) {
-        soundManager.playCoin();
-      }
-
-      // 5. Tir d'obus sur le monument cataclysmique (centrale, barrage ou montagne)
-      if (gameState.disasterType !== 'STREET' && !gameState.cataclysmDetonated && this.bike.z >= 380) {
-        this.triggerCityCataclysm();
-      }
       return;
     }
 
-    if (attack.type === 'missile') {
+    if (attack.type === 'crusher') {
       const bikeZ = this.bike.z;
       const bikeX = this.bike.mesh.position.x;
-      const bikeY = this.bike.mesh.position.y;
-      const launchPosL = new THREE.Vector3(bikeX - 2.0, bikeY - 0.5, bikeZ + 3.0);
-      const launchPosR = new THREE.Vector3(bikeX + 2.0, bikeY - 0.5, bikeZ + 3.0);
+      this.particles.spawnShockwave(this.bike.mesh.position, 0xffd32a);
+      this.engine.triggerCameraShake(0.7);
 
-      // Traînées plasma et onde de choc de frappe aérienne
-      this.particles.spawnShockwave(launchPosL, 0x00f2fe);
-      this.particles.spawnShockwave(launchPosR, 0x4facfe);
-      this.engine.triggerCameraShake(0.65);
-
-      let hits = 0;
-
-      // 1. Détection de véhicules au sol dans le rayon d'impact
       if (this.traffic) {
         this.traffic.vehicles.forEach(v => {
           if (v.userData.active && !v.userData.isCrashed) {
             const vZ = v.position.z - bikeZ;
             const vX = Math.abs(v.position.x - bikeX);
-            if (vZ > 4.0 && vZ < attack.range && vX < attack.radius) {
-              this.traffic.blowUpVehicle(v, new THREE.Vector3(bikeX, 0, bikeZ + 10));
-              this.particles.spawnCannonBlast(v.position);
-              const carPts = 1800;
-              gameState.score += carPts;
-              this.particles.spawnComicBurst(v.position, carPts, gameState.combo);
+            if (vZ > 1.0 && vZ < attack.range && vX < attack.radius) {
+              this.traffic.blowUpVehicle(v, this.bike.mesh.position);
+              gameState.score += 1600;
+              this.particles.spawnComicBurst(v.position, 1600, gameState.combo);
               soundManager.playCrash();
-              hits++;
             }
           }
         });
-      }
-
-      // 2. Frappe plasma sur les piétons au sol
-      this.characters.characters.forEach(char => {
-        if (!char.group.visible || char.isFlying) return;
-        const dZ = char.group.position.z - bikeZ;
-        const dX = Math.abs(char.group.position.x - bikeX);
-        if (dZ > 4.0 && dZ < attack.range && dX < attack.radius) {
-          this.characters.triggerSlapstickFlight(char, bikeX, 55);
-          this.particles.spawnCannonBlast(char.group.position);
-          this.particles.spawnBloodBurst(char.group.position);
-          this.ui.triggerPedestrianCarnageFlash();
-          gameState.recordKill(900, 'WEAPON_MISSILE', char.typeDef.category);
-          hits++;
-        }
-      });
-
-      // 3. Déflagration sur le mobilier urbain
-      this.environment.chunks.forEach(chunk => {
-        if (chunk.userData && chunk.userData.props) {
-          chunk.userData.props.forEach(prop => {
-            if (prop.userData.isHit) return;
-            const worldZ = chunk.position.z + prop.position.z;
-            const worldX = chunk.position.x + prop.position.x;
-            const pZ = worldZ - bikeZ;
-            const pX = Math.abs(worldX - bikeX);
-            if (pZ > 4.0 && pZ < attack.range && pX < attack.radius) {
-              prop.userData.isHit = true;
-              prop.rotation.z = (prop.position.x > 0 ? 1 : -1) * 1.3;
-              this.particles.spawnCannonBlast(new THREE.Vector3(worldX, 1.0, worldZ));
-              soundManager.playPropSmash();
-            }
-          });
-        }
-      });
-
-      if (hits > 0) {
-        soundManager.playCoin();
-      }
-
-      // 4. Frappe aérienne longue portée sur le monument cataclysmique (centrale, barrage ou montagne)
-      if (gameState.disasterType !== 'STREET' && !gameState.cataclysmDetonated && this.bike.z >= 380) {
-        this.triggerCityCataclysm();
       }
       return;
     }
@@ -707,6 +684,33 @@ class GameApp {
             if (this.ui) this.ui.showTrafficLightWarning(streetName);
           }
         );
+
+        // 9b. Franchissement des dos d'âne / ralentisseurs 3D (saut de suspension & bonus Air Time)
+        if (this.environment.speedBumps) {
+          for (let bump of this.environment.speedBumps) {
+            if (!bump.hit && Math.abs(this.bike.z - bump.z) < 1.6) {
+              bump.hit = true;
+              this.bike.mesh.position.y += 0.32;
+              soundManager.playSuspensionThud();
+
+              if (currentSpeed > 15.0) {
+                const airPts = 150;
+                gameState.score += airPts;
+                this.particles.spawnComicBurst(
+                  new THREE.Vector3(this.bike.mesh.position.x, this.bike.mesh.position.y + 1.4, this.bike.z + 1.2),
+                  airPts,
+                  gameState.combo
+                );
+                this.engine.triggerCameraShake(0.35);
+              }
+            }
+          }
+        }
+      }
+
+      // 9c. Gestion des projectiles physiques 3D (Obus 120mm, Missiles, Plasma EMP)
+      if (this.projectiles) {
+        this.projectiles.update(delta, this.bike.z, this.traffic, this.characters, this.environment, gameState, this.ui);
       }
 
       // 10. Particules, étoiles et lignes de vitesse

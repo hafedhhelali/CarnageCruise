@@ -2587,13 +2587,13 @@ export class Bike {
       this.attackTimer = 0.38;
       this.attackType = 'whip';
       soundManager.playWhipCrack();
-      return { type: 'whip', range: 9.5, radius: 3.0 };
+      return { type: 'whip', range: 10.0, radius: 3.5 };
     } else if (this.currentBikeId === 'trottinette_hache') {
       this.isAttacking = true;
       this.attackTimer = 0.42;
       this.attackType = 'axe';
       soundManager.playAxeSlash();
-      return { type: 'axe', range: 8.5, radius: 3.6 };
+      return { type: 'axe', range: 9.0, radius: 3.8 };
     } else if (this.currentBikeId === 'run_ak47') {
       this.isAttacking = true;
       this.attackTimer = 0.36;
@@ -2606,25 +2606,66 @@ export class Bike {
       this.attackTimer = 0.45;
       this.attackType = 'chainsaw';
       soundManager.playChainsawRev();
-      return { type: 'chainsaw', range: 8.0, radius: 3.0 };
+      return { type: 'chainsaw', range: 8.5, radius: 3.2 };
     } else if (this.currentBikeId === 'tank') {
       this.isAttacking = true;
       this.attackTimer = 0.55;
       this.attackType = 'cannon';
       this.tankRecoil = 1.0;
       soundManager.playTankCannon();
-      return { type: 'cannon', range: 85.0, radius: 5.2, isExplosive: true };
+      return { type: 'cannon', range: 90.0, radius: 5.5, isExplosive: true };
     } else if (this.currentBikeId === 'aero_jet') {
       this.isAttacking = true;
       this.attackTimer = 0.5;
       this.attackType = 'missile';
       soundManager.playRocketMissile();
       return { type: 'missile', range: 110.0, radius: 8.5, isExplosive: true };
+    } else if (this.currentBikeId === 'rad_rover') {
+      this.isAttacking = true;
+      this.attackTimer = 0.48;
+      this.attackType = 'plasma_emp';
+      return { type: 'plasma_emp', range: 85.0, radius: 6.5, isExplosive: true };
+    } else if (this.currentBikeId === 'hovercraft') {
+      this.isAttacking = true;
+      this.attackTimer = 0.48;
+      this.attackType = 'torpedo';
+      soundManager.playRocketMissile();
+      return { type: 'torpedo', range: 95.0, radius: 6.0, isExplosive: true };
+    } else if (this.currentBikeId === 'snowmobile') {
+      this.isAttacking = true;
+      this.attackTimer = 0.48;
+      this.attackType = 'ice_missile';
+      soundManager.playRocketMissile();
+      return { type: 'ice_missile', range: 100.0, radius: 6.5, isExplosive: true };
+    } else if (this.currentBikeId === 'dragster') {
+      this.isAttacking = true;
+      this.attackTimer = 0.52;
+      this.attackType = 'flamethrower';
+      soundManager.playNitroHiss();
+      return { type: 'flamethrower', range: 32.0, radius: 4.8, isFire: true };
+    } else if (this.currentBikeId === 'decapotable') {
+      this.isAttacking = true;
+      this.attackTimer = 0.4;
+      this.attackType = 'shotgun';
+      soundManager.playAk47Burst();
+      return { type: 'shotgun', range: 38.0, radius: 5.2, isPellets: true };
+    } else if (this.currentBikeId === 'chopper') {
+      this.isAttacking = true;
+      this.attackTimer = 0.38;
+      this.attackType = 'chain';
+      soundManager.playWhipCrack();
+      return { type: 'chain', range: 12.0, radius: 4.0 };
+    } else if (this.currentBikeId === 'scooter') {
+      this.isAttacking = true;
+      this.attackTimer = 0.35;
+      this.attackType = 'uzi';
+      soundManager.playAk47Burst();
+      this.spawnTracerBurst();
+      return { type: 'uzi', range: 40.0, radius: 3.5 };
     } else if (this.currentBikeId === 'rouleau') {
       soundManager.playSteamrollerHorn();
-      return { type: 'horn', range: 25.0, radius: 5.5 };
+      return { type: 'crusher', range: 26.0, radius: 6.5 };
     } else {
-      // Scooter, Chopper, Décapotable, Dragster, Aéro-Jet : Puissant Klaxon bi-ton italien/français !
       soundManager.playHorn(this.currentBikeId);
       return { type: 'horn', range: 24.0, radius: 5.0 };
     }

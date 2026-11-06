@@ -339,8 +339,8 @@ export class UIManager {
           <span>🏠</span>
         </button>
         <div class="map-header-center">
-          <h2 class="map-title" style="margin: 0; font-size: 1.35rem; color: #fffa65; letter-spacing: 1px;">ÉTAPES D'EUROPE</h2>
-          <span class="map-stars-badge">★ ${totalStars} / ${CITIES.length * 3} ÉTOILES</span>
+          <h2 class="map-title" style="margin: 0; font-size: 1.22rem; color: #fffa65; letter-spacing: 1px;">OPÉRATIONS WORLDMAGEDDON</h2>
+          <span class="map-stars-badge">☠️ CARTE DE L'EXTINCTION • ★ ${totalStars} / ${CITIES.length * 3} ÉTOILES</span>
         </div>
         <div class="map-header-right">
           <button id="btn-map-garage" class="btn-round-action btn-garage-glow" title="Accéder au Garage">
@@ -369,18 +369,23 @@ export class UIManager {
         </div>
       </div>
 
+      <!-- BARRE DE NAVIGATION & FILTRES HORIZONTALE DÉFILANTE (SANS SÉGRÉGATION, ZERO CROP) -->
+      <div class="map-filter-scroll-bar">
+        <button id="btn-filter-all" class="map-filter-pill active" title="Toutes les Villes d'Europe">🗺️ TOUTES (${CITIES.length})</button>
+        <button id="btn-filter-france" class="map-filter-pill pill-france" title="Villes de France">🇫🇷 FRANCE & OUEST</button>
+        <button id="btn-filter-europe" class="map-filter-pill pill-europe" title="Métropoles d'Europe">🇪🇺 GRANDE EUROPE</button>
+        <button id="btn-filter-med" class="map-filter-pill pill-med" title="Bassin Méditerranéen">🌊 MÉDITERRANÉE</button>
+        <button id="btn-open-tycoon" class="map-filter-pill pill-tycoon" title="QG Empire Tycoon Clandestin">🏭 QG TYCOON</button>
+      </div>
+
       <!-- CARTE D'EUROPE ET BASSIN MÉDITERRANÉEN HAUTE-FIDÉLITÉ AVEC ZOOM INTERACTIF -->
       <div class="europe-map-scroll-viewport" id="europe-viewport">
-        <!-- Contrôles de zoom intégrés à l'intérieur du cadre de carte (aucun masquage du titre) -->
-        <div class="map-zoom-controls">
-          <button id="btn-zoom-in" class="btn-zoom" title="Agrandir la carte (Zoom +)">➕</button>
+        <!-- CONTRÔLES DE ZOOM FLOTTANTS (EN BAS À DROITE, SANS AUCUNE SUPERPOSITION) -->
+        <div class="map-zoom-controls-floating">
+          <button id="btn-zoom-in" class="btn-zoom" title="Agrandir (Zoom +)">➕</button>
           <span class="zoom-level-badge" id="zoom-badge">${Math.round(this.mapZoom * 100)}%</span>
-          <button id="btn-zoom-out" class="btn-zoom" title="Réduire la carte (Zoom -)">➖</button>
+          <button id="btn-zoom-out" class="btn-zoom" title="Réduire (Zoom -)">➖</button>
           <button id="btn-zoom-reset" class="btn-zoom" title="Recentrer">🎯</button>
-          <button id="btn-filter-nuclear" class="btn-nuclear-shortcut" title="Voir les Centrales Nucléaires">☢️ NUCLÉAIRE</button>
-          <button id="btn-filter-dam" class="btn-nuclear-shortcut" style="background: rgba(0, 206, 201, 0.25); border-color: #00cec9; color: #00cec9;" title="Voir les Barrages & Déluges">🌊 BARRAGE</button>
-          <button id="btn-filter-mountain" class="btn-nuclear-shortcut" style="background: rgba(254, 202, 87, 0.25); border-color: #feca57; color: #feca57;" title="Voir les Éboulements de Montagne">🏔️ MONTAGNE</button>
-          <button id="btn-open-tycoon" class="btn-nuclear-shortcut" style="background: rgba(46, 213, 115, 0.25); border-color: #2ed573; color: #2ed573; font-weight: 900;" title="Ouvrir le QG Tycoon de l'Apocalypse">🏭 EMPIRE TYCOON</button>
         </div>
 
         <div class="europe-map-canvas-container" id="europe-canvas">
@@ -648,50 +653,68 @@ export class UIManager {
       this.showWorldmageddonModal();
     });
 
-    let nucCycleIdx = 0;
-    mapScreen.querySelector('#btn-filter-nuclear')?.addEventListener('click', () => {
-      const nuclearCities = CITIES.filter(c => c.isNuclearMission || c.disasterType === 'NUCLEAR');
-      if (nuclearCities.length > 0) {
-        const nextNuc = nuclearCities[nucCycleIdx % nuclearCities.length];
-        nucCycleIdx++;
-        this.selectedMapCity = nextNuc;
-        gameState.selectCity(nextNuc.id);
+    const setFilterActive = (btnId) => {
+      mapScreen.querySelectorAll('.map-filter-pill').forEach(b => b.classList.remove('active'));
+      mapScreen.querySelector('#' + btnId)?.classList.add('active');
+    };
+
+    mapScreen.querySelector('#btn-filter-all')?.addEventListener('click', () => {
+      soundManager.playClick();
+      setFilterActive('btn-filter-all');
+      this.selectedMapCity = CITIES[0];
+      gameState.selectCity(CITIES[0].id);
+      this.updateCityDetail(mapScreen.querySelector('#city-detail'));
+      centerOnCity(CITIES[0], true);
+    });
+
+    let frCycleIdx = 0;
+    mapScreen.querySelector('#btn-filter-france')?.addEventListener('click', () => {
+      soundManager.playClick();
+      setFilterActive('btn-filter-france');
+      const frCities = CITIES.filter(c => c.country === 'France' || c.countryFlag === '🇫🇷');
+      if (frCities.length > 0) {
+        const nextCity = frCities[frCycleIdx % frCities.length];
+        frCycleIdx++;
+        this.selectedMapCity = nextCity;
+        gameState.selectCity(nextCity.id);
         this.updateCityDetail(mapScreen.querySelector('#city-detail'));
-        centerOnCity(nextNuc, true);
-        soundManager.playGeigerClick();
+        centerOnCity(nextCity, true);
       }
     });
 
-    let damCycleIdx = 0;
-    mapScreen.querySelector('#btn-filter-dam')?.addEventListener('click', () => {
-      const damCities = CITIES.filter(c => c.isDamMission || c.disasterType === 'DAM');
-      if (damCities.length > 0) {
-        const nextDam = damCities[damCycleIdx % damCities.length];
-        damCycleIdx++;
-        this.selectedMapCity = nextDam;
-        gameState.selectCity(nextDam.id);
+    let euCycleIdx = 0;
+    mapScreen.querySelector('#btn-filter-europe')?.addEventListener('click', () => {
+      soundManager.playClick();
+      setFilterActive('btn-filter-europe');
+      const euCities = CITIES.filter(c => c.country !== 'France' && c.country !== 'Maroc' && c.country !== 'Algérie' && c.country !== 'Tunisie');
+      if (euCities.length > 0) {
+        const nextCity = euCities[euCycleIdx % euCities.length];
+        euCycleIdx++;
+        this.selectedMapCity = nextCity;
+        gameState.selectCity(nextCity.id);
         this.updateCityDetail(mapScreen.querySelector('#city-detail'));
-        centerOnCity(nextDam, true);
-        soundManager.playWaterRush();
+        centerOnCity(nextCity, true);
       }
     });
 
-    let mtnCycleIdx = 0;
-    mapScreen.querySelector('#btn-filter-mountain')?.addEventListener('click', () => {
-      const mtnCities = CITIES.filter(c => c.isMountainMission || c.disasterType === 'MOUNTAIN');
-      if (mtnCities.length > 0) {
-        const nextMtn = mtnCities[mtnCycleIdx % mtnCities.length];
-        mtnCycleIdx++;
-        this.selectedMapCity = nextMtn;
-        gameState.selectCity(nextMtn.id);
+    let medCycleIdx = 0;
+    mapScreen.querySelector('#btn-filter-med')?.addEventListener('click', () => {
+      soundManager.playClick();
+      setFilterActive('btn-filter-med');
+      const medCities = CITIES.filter(c => ['Marseille', 'Nice', 'Monaco', 'Madrid', 'Barcelone', 'Rome', 'Naples', 'Alger', 'Tunis', 'Saragosse'].includes(c.name));
+      if (medCities.length > 0) {
+        const nextCity = medCities[medCycleIdx % medCities.length];
+        medCycleIdx++;
+        this.selectedMapCity = nextCity;
+        gameState.selectCity(nextCity.id);
         this.updateCityDetail(mapScreen.querySelector('#city-detail'));
-        centerOnCity(nextMtn, true);
-        soundManager.playRockAvalanche();
+        centerOnCity(nextCity, true);
       }
     });
 
     mapScreen.querySelector('#btn-open-tycoon')?.addEventListener('click', () => {
       soundManager.playClick();
+      setFilterActive('btn-open-tycoon');
       this.showTycoonModal();
     });
 
@@ -996,32 +1019,22 @@ export class UIManager {
 
     const starsHtml = '★'.repeat(cityData.stars) + '☆'.repeat(3 - cityData.stars);
 
-    const dType = city.disasterType || (city.isNuclearMission ? 'NUCLEAR' : (city.isDamMission ? 'DAM' : (city.isMountainMission ? 'MOUNTAIN' : 'STREET')));
-    let disasterBadge = '';
-    if (dType === 'NUCLEAR') {
-      disasterBadge = `<span style="background: rgba(46, 213, 115, 0.2); border: 1px solid #2ed573; color: #2ed573; font-size: 0.75rem; padding: 2px 8px; border-radius: 8px; font-weight: 800;">☢️ CATACLYSME : RÉACTEUR NUCLÉAIRE</span>`;
-    } else if (dType === 'DAM') {
-      disasterBadge = `<span style="background: rgba(0, 206, 201, 0.2); border: 1px solid #00cec9; color: #00cec9; font-size: 0.75rem; padding: 2px 8px; border-radius: 8px; font-weight: 800;">🌊 CATACLYSME : RUPTURE DE BARRAGE & DÉLUGE</span>`;
-    } else if (dType === 'MOUNTAIN') {
-      disasterBadge = `<span style="background: rgba(254, 202, 87, 0.2); border: 1px solid #feca57; color: #feca57; font-size: 0.75rem; padding: 2px 8px; border-radius: 8px; font-weight: 800;">🏔️ CATACLYSME : ÉBOULEMENT DE MONTAGNE</span>`;
-    } else {
-      disasterBadge = `<span style="background: rgba(255, 71, 87, 0.2); border: 1px solid #ff4757; color: #ff4757; font-size: 0.75rem; padding: 2px 8px; border-radius: 8px; font-weight: 800;">🩸 EXTERMINATION : CARNAGE DE RUE</span>`;
-    }
-
     detailCard.innerHTML = `
-      <div class="city-detail-header clickable" id="btn-detail-header-launch" style="cursor: pointer;" title="Appuyez pour lancer la course">
+      <div class="city-detail-header clickable" id="btn-detail-header-launch" style="cursor: pointer;" title="Lancer l'assaut">
         <div>
-          <span class="city-detail-name">${city.countryFlag || ''} ${city.name}</span>
-          <div style="margin: 3px 0;">${disasterBadge}</div>
-          <span class="city-tag">ÉTAPE ${stageIndex} / ${CITIES.length} • ${city.country || 'Europe'}</span>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="city-detail-name">${city.countryFlag || '🌍'} ${city.name.toUpperCase()}</span>
+            <span class="city-target-rank-pill">CIBLE #${stageIndex}</span>
+          </div>
+          <span class="city-tag">${city.country || 'Europe'} • ${city.typeTag || 'Métropole Européenne'}</span>
           <div style="font-size: 0.82rem; color: #fffa65; font-weight: 800; margin-top: 3px;">
             🏛️ Monument : <strong>${city.monument || 'Monument Historique'}</strong>
           </div>
-          <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 2px;">${city.subtitle}</div>
+          <div style="font-size: 0.78rem; color: #ced6e0; margin-top: 2px;">${city.subtitle}</div>
         </div>
-        <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+        <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0;">
           <div class="city-stars">${starsHtml}</div>
-          ${unlocked ? '<span style="font-size: 0.72rem; color: #2ed573; font-weight: 800; background: rgba(46, 213, 115, 0.15); padding: 2px 6px; border-radius: 6px;">▶ JOUER</span>' : ''}
+          ${unlocked ? '<span style="font-size: 0.72rem; color: #2ed573; font-weight: 900; background: rgba(46, 213, 115, 0.2); border: 1px solid #2ed573; padding: 2px 8px; border-radius: 8px;">▶ DÉPLOYER</span>' : '<span style="font-size: 0.72rem; color: #ff7675; font-weight: 900; background: rgba(255, 118, 117, 0.2); border: 1px solid #ff7675; padding: 2px 8px; border-radius: 8px;">🔒 VERROUILLÉ</span>'}
         </div>
       </div>
 
@@ -1029,13 +1042,13 @@ export class UIManager {
 
       <div class="city-target-info">
         <span>🏆 Record : <strong>${cityData.bestScore} pts</strong></span>
-        <span>💀 Pertes Monde : <strong style="color: #fffa65;">+${(city.exterminationTarget || 35000).toLocaleString('fr-FR')} Humains</strong></span>
+        <span>💀 Cibles Humaines : <strong style="color: #fffa65;">+${(city.exterminationTarget || 35000).toLocaleString('fr-FR')}</strong></span>
       </div>
 
       <div class="city-detail-actions">
         ${unlocked ? `
           <button id="btn-launch-city" class="btn-arcade btn-play-pulse btn-action-launch">
-            <span>▶ ENTRER DANS ${city.name.toUpperCase()} (LANCER LA COURSE)</span>
+            <span>▶ LANCER L'ASSAUT SUR ${city.name.toUpperCase()}</span>
           </button>
           <button id="btn-city-ad-coins" class="btn-ad-gift" title="Cadeau Sponsor : Obtenir +20 Pièces d'or">
             <span class="ad-gift-top">🎁 🪙</span>
@@ -1867,7 +1880,7 @@ export class UIManager {
           </div>
         </div>
 
-        <h3 style="font-size: 0.9rem; font-weight: 800; color: #ced6e0; margin-top: 4px;">ÉTAPES HOMOLOGUÉES</h3>
+        <h3 style="font-size: 0.9rem; font-weight: 800; color: #ced6e0; margin-top: 4px;">CIBLES & VILLES EXTERMINÉES</h3>
         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; max-height: 120px; overflow-y: auto;">
           ${CITIES.map(c => {
             const unl = storage.isCityUnlocked(c.id);

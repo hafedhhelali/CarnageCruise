@@ -245,117 +245,129 @@ export class IntersectionManager {
     return lampGroup;
   }
 
-  // --- MODÈLES DE VÉHICULES TRANSVERSAUX FRANÇAIS ---
+  // --- MODÈLES DE VÉHICULES TRANSVERSAUX FRANÇAIS HAUTE DÉFINITION ---
   createCrossingCarMesh(type = 'taxi') {
     const carGroup = new THREE.Group();
 
-    const chromeMat = new THREE.MeshStandardMaterial({ color: 0xdcdde1, metalness: 0.85, roughness: 0.15 });
-    const glassMat = new THREE.MeshBasicMaterial({ color: 0x1e272e });
-    const wheelMat = new THREE.MeshLambertMaterial({ color: 0x222222 });
+    const chromeMat = new THREE.MeshStandardMaterial({ color: 0xf5f6fa, metalness: 0.95, roughness: 0.1 });
+    const glassMat = new THREE.MeshStandardMaterial({ color: 0x111927, metalness: 0.9, roughness: 0.05 });
+    const rubberMat = new THREE.MeshStandardMaterial({ color: 0x181818, roughness: 0.85 });
+    const rimMat = new THREE.MeshStandardMaterial({ color: 0xecf0f1, metalness: 0.95, roughness: 0.12 });
+    const caliperMat = new THREE.MeshStandardMaterial({ color: 0xff3838, roughness: 0.3, metalness: 0.6 });
 
-    let bodyColor = 0x0984e3; // Bleu taxi parisien
-    if (type === 'van') bodyColor = 0xf5f6fa; // Blanc utilitaire livraison
-    if (type === 'compact') bodyColor = 0xe74c3c; // Rouge sport compact
-    if (type === 'berline') bodyColor = 0x2c3e50; // Berline classe
+    let bodyColor = 0xf1c40f; // Jaune taxi
+    if (type === 'van') bodyColor = 0xf5f6fa; // Blanc utilitaire
+    if (type === 'compact') bodyColor = 0xe74c3c; // Rouge sport
+    if (type === 'berline') bodyColor = 0x2c3e50; // Noir ébène
 
-    const bodyMat = new THREE.MeshToonMaterial({ color: bodyColor, roughness: 0.35 });
+    const bodyMat = new THREE.MeshStandardMaterial({
+      color: bodyColor,
+      metalness: 0.88,
+      roughness: 0.16
+    });
 
-    // Châssis profilé
-    const chassisGeo = new THREE.BoxGeometry(4.3, 0.88, 1.95);
+    // 1. Châssis principal sculpté avec biseautages aérodynamiques
+    const chassisGeo = new THREE.BoxGeometry(4.4, 0.75, 2.0);
     const chassis = new THREE.Mesh(chassisGeo, bodyMat);
-    chassis.position.y = 0.68;
+    chassis.position.y = 0.65;
     chassis.castShadow = true;
     carGroup.add(chassis);
 
-    // Habitacle
-    const cabinGeo = new THREE.BoxGeometry(2.4, 0.88, 1.75);
+    // Calandre avant chromée
+    const grille = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.4, 1.4), chromeMat);
+    grille.position.set(2.22, 0.65, 0);
+    carGroup.add(grille);
+
+    // 2. Habitacle profilé
+    const cabinGeo = new THREE.BoxGeometry(2.5, 0.85, 1.8);
     const cabin = new THREE.Mesh(cabinGeo, bodyMat);
-    cabin.position.set(-0.2, 1.48, 0);
+    cabin.position.set(-0.25, 1.42, 0);
     cabin.castShadow = true;
     carGroup.add(cabin);
 
-    // Vitrage teinté
-    const winGeo = new THREE.BoxGeometry(2.45, 0.74, 1.8);
+    // Vitrage teinté réfléchissant
+    const winGeo = new THREE.BoxGeometry(2.55, 0.72, 1.84);
     const win = new THREE.Mesh(winGeo, glassMat);
-    win.position.set(-0.2, 1.48, 0);
+    win.position.set(-0.25, 1.42, 0);
     carGroup.add(win);
 
     // Si Taxi : enseigne de toit lumineuse bicolore "TAXI"
     if (type === 'taxi') {
       const taxiSignGeo = new THREE.BoxGeometry(0.85, 0.26, 0.35);
-      const taxiSignMat = new THREE.MeshBasicMaterial({ color: 0xffd32a });
+      const taxiSignMat = new THREE.MeshBasicMaterial({ color: 0xfffa65 });
       const taxiSign = new THREE.Mesh(taxiSignGeo, taxiSignMat);
-      taxiSign.position.set(-0.2, 2.05, 0);
+      taxiSign.position.set(-0.25, 1.95, 0);
       carGroup.add(taxiSign);
 
-      const lightR = new THREE.Mesh(new THREE.SphereGeometry(0.08, 6, 6), new THREE.MeshBasicMaterial({ color: 0x00d2d3 }));
-      lightR.position.set(-0.2, 2.22, 0);
+      const lightR = new THREE.Mesh(new THREE.SphereGeometry(0.08, 6, 6), new THREE.MeshBasicMaterial({ color: 0x2ed573 }));
+      lightR.position.set(-0.25, 2.12, 0);
       carGroup.add(lightR);
     }
 
     // Si Camionnette : grand caisson arrière de livraison
     if (type === 'van') {
-      const vanBoxGeo = new THREE.BoxGeometry(2.2, 1.3, 1.92);
+      const vanBoxGeo = new THREE.BoxGeometry(2.2, 1.3, 1.95);
       const vanBox = new THREE.Mesh(vanBoxGeo, bodyMat);
       vanBox.position.set(-1.0, 1.35, 0);
       carGroup.add(vanBox);
     }
 
-    // 4 Roues tournantes
+    // 3. 4 Roues en alliage d'aluminium avec jantes bâtons et étriers rouges
     const wheels = [];
     const wheelPositions = [
-      [-1.35, 0.38, 0.96],
-      [1.35, 0.38, 0.96],
-      [-1.35, 0.38, -0.96],
-      [1.35, 0.38, -0.96]
+      [-1.35, 0.38, 1.02],
+      [1.35, 0.38, 1.02],
+      [-1.35, 0.38, -1.02],
+      [1.35, 0.38, -1.02]
     ];
 
     wheelPositions.forEach(pos => {
       const wGroup = new THREE.Group();
       wGroup.position.set(pos[0], pos[1], pos[2]);
 
-      const tireGeo = new THREE.CylinderGeometry(0.38, 0.38, 0.28, 12);
-      const tire = new THREE.Mesh(tireGeo, wheelMat);
+      const tireGeo = new THREE.CylinderGeometry(0.38, 0.38, 0.28, 14);
+      const tire = new THREE.Mesh(tireGeo, rubberMat);
       tire.rotation.x = Math.PI / 2;
       wGroup.add(tire);
 
-      const capGeo = new THREE.CylinderGeometry(0.2, 0.2, 0.29, 8);
-      const cap = new THREE.Mesh(capGeo, chromeMat);
-      cap.rotation.x = Math.PI / 2;
-      wGroup.add(cap);
+      const rimGeo = new THREE.CylinderGeometry(0.24, 0.24, 0.29, 10);
+      const rim = new THREE.Mesh(rimGeo, rimMat);
+      rim.rotation.x = Math.PI / 2;
+      wGroup.add(rim);
+
+      const caliper = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.16, 0.12), caliperMat);
+      caliper.position.set(0, 0.16, 0);
+      wGroup.add(caliper);
 
       carGroup.add(wGroup);
       wheels.push(wGroup);
     });
 
-    // Phares avant puissants et feux arrière rouges
+    // 4. Optiques avant LED et bande de feux arrière
     const headMat = new THREE.MeshBasicMaterial({ color: 0xfffa65 });
-    const tailMat = new THREE.MeshBasicMaterial({ color: 0xff3838 });
+    const tailMat = new THREE.MeshBasicMaterial({ color: 0xff1744 });
 
-    const lightGeo = new THREE.SphereGeometry(0.14, 8, 8);
+    const lightGeo = new THREE.BoxGeometry(0.1, 0.18, 0.38);
     const lightL = new THREE.Mesh(lightGeo, headMat);
-    lightL.position.set(2.15, 0.72, 0.65);
+    lightL.position.set(2.22, 0.72, 0.65);
     const lightR = new THREE.Mesh(lightGeo, headMat);
-    lightR.position.set(2.15, 0.72, -0.65);
-    carGroup.add(lightL);
-    carGroup.add(lightR);
+    lightR.position.set(2.22, 0.72, -0.65);
+    carGroup.add(lightL, lightR);
 
-    const tailL = new THREE.Mesh(lightGeo, tailMat);
-    tailL.position.set(-2.15, 0.72, 0.65);
-    const tailR = new THREE.Mesh(lightGeo, tailMat);
-    tailR.position.set(-2.15, 0.72, -0.65);
-    carGroup.add(tailL);
-    carGroup.add(tailR);
+    // Barre LED rouge continue à l'arrière
+    const lightbar = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.12, 1.7), tailMat);
+    lightbar.position.set(-2.22, 0.72, 0);
+    carGroup.add(lightbar);
 
-    // Ombre de contact au sol sous le véhicule
+    // 5. Ombre de contact au sol
     const shadowTex = textureFactory.getContactShadowTexture();
     const shadowMat = new THREE.MeshBasicMaterial({
       map: shadowTex,
       transparent: true,
-      opacity: 0.72,
+      opacity: 0.75,
       depthWrite: false
     });
-    const shadow = new THREE.Mesh(new THREE.PlaneGeometry(5.0, 2.6), shadowMat);
+    const shadow = new THREE.Mesh(new THREE.PlaneGeometry(5.2, 2.7), shadowMat);
     shadow.rotation.x = -Math.PI / 2;
     shadow.position.y = 0.02;
     carGroup.add(shadow);
