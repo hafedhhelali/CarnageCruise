@@ -48,7 +48,7 @@ export class PigeonSystem {
   initPool() {
     for (let i = 0; i < this.totalPigeons; i++) {
       const pigeon = this.createPigeonMesh();
-      pigeon.userData = {
+      Object.assign(pigeon.userData, {
         flockId: Math.floor(i / this.pigeonsPerFlock),
         indexInFlock: i % this.pigeonsPerFlock,
         active: false,
@@ -61,7 +61,7 @@ export class PigeonSystem {
         velY: 0,
         velZ: 0,
         rotY: Math.random() * Math.PI * 2
-      };
+      });
       pigeon.visible = false;
       this.pigeons.push(pigeon);
       this.container.add(pigeon);
@@ -154,9 +154,9 @@ export class PigeonSystem {
       p.userData.velZ = 0;
       p.visible = true;
 
-      p.userData.wingL.rotation.set(0, 0, 0);
-      p.userData.wingR.rotation.set(0, 0, 0);
-      p.userData.headGroup.rotation.set(0, 0, 0);
+      if (p.userData.wingL) p.userData.wingL.rotation.set(0, 0, 0);
+      if (p.userData.wingR) p.userData.wingR.rotation.set(0, 0, 0);
+      if (p.userData.headGroup) p.userData.headGroup.rotation.set(0, 0, 0);
     });
   }
 
@@ -217,8 +217,8 @@ export class PigeonSystem {
         // Battements d'ailes ultra rapides (30Hz)
         p.userData.wingPhase += delta * 32.0;
         const flapAngle = Math.sin(p.userData.wingPhase) * 0.95;
-        p.userData.wingL.rotation.z = flapAngle;
-        p.userData.wingR.rotation.z = -flapAngle;
+        if (p.userData.wingL) p.userData.wingL.rotation.z = flapAngle;
+        if (p.userData.wingR) p.userData.wingR.rotation.z = -flapAngle;
 
         // Orientation vers la trajectoire de vol
         p.rotation.y = Math.atan2(p.userData.velX, -p.userData.velZ);
@@ -232,7 +232,7 @@ export class PigeonSystem {
         // Au sol : hochements de tête réalistes pour picorer le bitume
         p.userData.peckPhase += delta * 9.0;
         const peckAngle = Math.max(0, Math.sin(p.userData.peckPhase)) * 0.42;
-        p.userData.headGroup.rotation.x = peckAngle;
+        if (p.userData.headGroup) p.userData.headGroup.rotation.x = peckAngle;
 
         // Petits pas saccadés occasionnels
         p.position.z += Math.cos(p.userData.rotY) * 0.25 * delta;

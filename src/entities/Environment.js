@@ -89,9 +89,9 @@ export class Environment {
       greenLight: new THREE.MeshBasicMaterial({ color: 0x2f3542 }),
       mast: new THREE.MeshStandardMaterial({ color: 0x2d3436, roughness: 0.5, metalness: 0.2 }),
       trafficBox: new THREE.MeshToonMaterial({ color: 0x1e272e }),
-      roof: new THREE.MeshToonMaterial({ color: cityDef.roofColor || 0x576574, roughness: 0.3 }),
+      roof: new THREE.MeshToonMaterial({ color: cityDef.roofColor || 0x576574 }),
       buildingPalette: (cityDef.buildingColors || [0xdfe4ea, 0xced6e0]).map(c =>
-        new THREE.MeshToonMaterial({ color: c, roughness: 0.4 })
+        new THREE.MeshToonMaterial({ color: c })
       ),
       facade: new THREE.MeshStandardMaterial({
         map: facadeTex,
@@ -257,7 +257,7 @@ export class Environment {
       lmGroup.add(nucGroup);
     } else if (cityId === 'paris') {
       // 1. TOUR EIFFEL MONUMENTALE
-      const eiffelMat = new THREE.MeshToonMaterial({ color: 0x5a4d41, metalness: 0.5, roughness: 0.5 });
+      const eiffelMat = new THREE.MeshStandardMaterial({ color: 0x5a4d41, metalness: 0.5, roughness: 0.5 });
       const platMat = new THREE.MeshToonMaterial({ color: 0x3d352e });
       
       const eiffel = new THREE.Group();
@@ -581,7 +581,7 @@ export class Environment {
 
     } else if (cityId === 'madrid') {
       // PUERTA DE ALCALÁ & PALAIS DE CIBELES (Monument néo-classique en granit royal)
-      const graniteMat = new THREE.MeshToonMaterial({ color: 0xdcdde1, roughness: 0.6 });
+      const graniteMat = new THREE.MeshToonMaterial({ color: 0xdcdde1 });
       const goldMat = new THREE.MeshBasicMaterial({ color: 0xffd700 });
       const redMat = new THREE.MeshToonMaterial({ color: 0xc0392b });
       const waterMat = new THREE.MeshBasicMaterial({ color: 0x00cec9 });
@@ -632,7 +632,7 @@ export class Environment {
 
     } else if (cityId === 'lisbonne') {
       // TOUR DE BELÉM & TRAMWAY JAUNE n°28 SUR LE TAGE (Style manuélin portugais)
-      const stoneMat = new THREE.MeshToonMaterial({ color: 0xf5f6fa, roughness: 0.5 });
+      const stoneMat = new THREE.MeshToonMaterial({ color: 0xf5f6fa });
       const riverMat = new THREE.MeshBasicMaterial({ color: 0x0984e3 });
       const roofMat = new THREE.MeshToonMaterial({ color: 0xd35400 });
       const tramYellowMat = new THREE.MeshToonMaterial({ color: 0xf1c40f });
@@ -688,7 +688,7 @@ export class Environment {
 
     } else if (cityId === 'rome') {
       // LE COLISÉE FLAVIER (Amphithéâtre impérial géant en travertin romain ocre)
-      const travertineMat = new THREE.MeshToonMaterial({ color: 0xecd5b3, roughness: 0.7 });
+      const travertineMat = new THREE.MeshToonMaterial({ color: 0xecd5b3 });
       const darkInterior = new THREE.MeshBasicMaterial({ color: 0x2d3436 });
 
       const colosseum = new THREE.Group();
@@ -726,7 +726,7 @@ export class Environment {
 
     } else if (cityId === 'napoli') {
       // LE MONT VÉSUVE AVEC CRATÈRE FUMANT & CASTEL DELL'OVO
-      const rockMat = new THREE.MeshToonMaterial({ color: 0x485460, roughness: 0.9 });
+      const rockMat = new THREE.MeshToonMaterial({ color: 0x485460 });
       const lavaMat = new THREE.MeshBasicMaterial({ color: 0xff3838 });
       const smokeMat = new THREE.MeshBasicMaterial({ color: 0xdfe4ea, transparent: true, opacity: 0.75 });
       const bayMat = new THREE.MeshBasicMaterial({ color: 0x0652dd });
@@ -770,7 +770,7 @@ export class Environment {
 
     } else if (cityId === 'tunis') {
       // GRANDE MOSQUÉE ZITOUNA (Minaret Mauresque & Arcades de Sidi Bou Saïd)
-      const stoneMat = new THREE.MeshToonMaterial({ color: 0xf7d794, roughness: 0.6 });
+      const stoneMat = new THREE.MeshToonMaterial({ color: 0xf7d794 });
       const whiteMat = new THREE.MeshToonMaterial({ color: 0xffffff });
       const blueMat = new THREE.MeshToonMaterial({ color: 0x0abde3 });
       const goldMat = new THREE.MeshBasicMaterial({ color: 0xffd700 });
@@ -856,8 +856,8 @@ export class Environment {
 
     } else if (cityId === 'annaba') {
       // BASILIQUE SAINT-AUGUSTIN D'HIPPONE (Style romano-byzantin et mauresque)
-      const marbleMat = new THREE.MeshToonMaterial({ color: 0xf5f6fa, roughness: 0.5 });
-      const domeTurquoiseMat = new THREE.MeshToonMaterial({ color: 0x00cec9, roughness: 0.3 });
+      const marbleMat = new THREE.MeshToonMaterial({ color: 0xf5f6fa });
+      const domeTurquoiseMat = new THREE.MeshToonMaterial({ color: 0x00cec9 });
       const redMarbleMat = new THREE.MeshToonMaterial({ color: 0xb33939 });
       const seaMat = new THREE.MeshBasicMaterial({ color: 0x0984e3 });
 
@@ -1110,9 +1110,9 @@ export class Environment {
     let currentZ = -this.chunkLength / 2;
 
     const buildingMatPalette = this.sharedMats?.buildingPalette || this.cityTheme.buildingColors.map(c =>
-      new THREE.MeshToonMaterial({ color: c, roughness: 0.4 })
+      new THREE.MeshToonMaterial({ color: c })
     );
-    const roofMat = this.sharedMats?.roof || new THREE.MeshToonMaterial({ color: this.cityTheme.roofColor, roughness: 0.3 });
+    const roofMat = this.sharedMats?.roof || new THREE.MeshToonMaterial({ color: this.cityTheme.roofColor });
     const facadeMat = this.sharedMats?.facade || new THREE.MeshStandardMaterial({ roughness: 0.8, metalness: 0.05 });
     const awningMat = side > 0 ? (this.sharedMats?.awningRed || new THREE.MeshStandardMaterial({ roughness: 0.7 })) : (this.sharedMats?.awningBlue || new THREE.MeshStandardMaterial({ roughness: 0.7 }));
     const balconyMat = this.sharedMats?.balcony || new THREE.MeshStandardMaterial({ color: 0x2d3436, metalness: 0.8, roughness: 0.25 });

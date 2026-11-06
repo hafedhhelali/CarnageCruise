@@ -135,34 +135,54 @@ class GameApp {
   }
 
   handleUIAction(action, payload) {
-    if (action === 'START_RUN') {
-      const city = payload;
-      this.setupCity(city);
-      this.bike.mesh.position.set(0, 0, 0);
-      this.bike.x = 0;
-      this.bike.z = 0;
-      this.bike.isCrashed = false;
-      this.bike.crashTimer = 0;
-      this.hasCrossedFinish = false;
-      this.characters.reset();
-      this.pigeons.reset(0);
-      this.intersections.reset();
-      this.particles.reset();
-      gameState.startRun();
-    } else if (action === 'PAUSE') {
-      gameState.currentMode = 'PAUSED';
-      soundManager.stopEngine();
-    } else if (action === 'RESUME') {
-      gameState.currentMode = 'PLAYING';
-      soundManager.startEngine();
-    } else if (action === 'PREVIEW_BIKE' || action === 'BIKE_EQUIPPED') {
-      const bikeId = (payload && payload.id) ? payload.id : payload;
-      this.bike.buildCurrentBike(bikeId);
-    } else if (action === 'COLOR_CHANGED') {
-      const bikeId = (payload && payload.bikeId) ? payload.bikeId : null;
-      this.bike.buildCurrentBike(bikeId);
-    } else if (action === 'HORN' || action === 'ATTACK') {
-      this.executePlayerAttack();
+    try {
+      if (action === 'START_RUN') {
+        const city = payload || gameState.selectedCity;
+        if (city && city.id) {
+          gameState.selectCity(city.id);
+        }
+        this.setupCity(gameState.selectedCity);
+
+        if (this.bike && this.bike.mesh) {
+          this.bike.mesh.position.set(0, 0, 0);
+          this.bike.mesh.rotation.set(0, 0, 0);
+        }
+        this.bike.x = 0;
+        this.bike.z = 0;
+        this.bike.isCrashed = false;
+        this.bike.crashTimer = 0;
+        this.hasCrossedFinish = false;
+
+        if (this.characters) this.characters.reset();
+        if (this.pigeons) this.pigeons.reset(0);
+        if (this.intersections) this.intersections.reset();
+        if (this.particles) this.particles.reset();
+
+        gameState.startRun();
+      } else if (action === 'PAUSE') {
+        gameState.currentMode = 'PAUSED';
+        soundManager.stopEngine();
+      } else if (action === 'RESUME') {
+        gameState.currentMode = 'PLAYING';
+        soundManager.startEngine();
+      } else if (action === 'PREVIEW_BIKE' || action === 'BIKE_EQUIPPED') {
+        const bikeId = (payload && payload.id) ? payload.id : payload;
+        this.bike.buildCurrentBike(bikeId);
+      } else if (action === 'COLOR_CHANGED') {
+        const bikeId = (payload && payload.bikeId) ? payload.bikeId : null;
+        this.bike.buildCurrentBike(bikeId);
+      } else if (action === 'HORN' || action === 'ATTACK') {
+        this.executePlayerAttack();
+      }
+    } catch (err) {
+      console.error('[GameApp] Erreur critique lors de handleUIAction:', action, err);
+      if (action === 'START_RUN') {
+        try {
+          gameState.startRun();
+        } catch (e) {
+          console.error('[GameApp] Fallback startRun failed:', e);
+        }
+      }
     }
   }
 

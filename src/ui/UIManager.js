@@ -823,6 +823,7 @@ export class UIManager {
       }
     };
 
+    let lastPinTapTime = 0;
     pins.forEach(pin => {
       let pinTouchStartX = 0;
       let pinTouchStartY = 0;
@@ -849,11 +850,13 @@ export class UIManager {
       pin.addEventListener('touchend', (e) => {
         if (!pinTouchMoved) {
           e.preventDefault();
+          lastPinTapTime = Date.now();
           handleCityAction(pin.getAttribute('data-city-id'));
         }
       }, { passive: false });
 
       pin.addEventListener('click', () => {
+        if (Date.now() - lastPinTapTime < 400) return; // Évite le double-déclenchement tactile (ghost click)
         handleCityAction(pin.getAttribute('data-city-id'));
       });
     });
@@ -978,7 +981,13 @@ export class UIManager {
   }
 
   triggerCityEntryCinematic(city) {
-    // Effet cinématique de zoom et distorsion lors de l'entrée dans la ville avec monument
+    if (this.isEnteringCity) return;
+    this.isEnteringCity = true;
+
+    // Nettoyer toute transition orpheline préalable
+    document.querySelectorAll('.city-entry-transition').forEach(el => el.remove());
+
+    // Effet cinématique fluide d'entrée dans la ville avec monument
     const overlay = document.createElement('div');
     overlay.className = 'city-entry-transition';
     overlay.innerHTML = `
@@ -997,14 +1006,24 @@ export class UIManager {
     const launchNow = () => {
       if (launched) return;
       launched = true;
-      overlay.classList.add('fade-out');
-      if (this.onAction) this.onAction('START_RUN', city);
-      setTimeout(() => overlay.remove(), 250);
+      try {
+        overlay.classList.add('fade-out');
+        if (this.onAction) {
+          this.onAction('START_RUN', city);
+        }
+      } catch (err) {
+        console.error('[UIManager] Erreur lors du lancement de START_RUN:', err);
+      } finally {
+        setTimeout(() => {
+          overlay.remove();
+          this.isEnteringCity = false;
+        }, 180);
+      }
     };
 
     overlay.addEventListener('click', launchNow);
     overlay.addEventListener('pointerdown', launchNow);
-    setTimeout(launchNow, 650);
+    setTimeout(launchNow, 550);
   }
 
   // --- 3. GARAGE ET PERSONNALISATION (NAVIGATION FLÈCHES ◀ ▶ ET RETOUR CARTE) ---
