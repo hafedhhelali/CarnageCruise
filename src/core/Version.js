@@ -3,11 +3,11 @@
  * Canal : BETA
  */
 
-export const APP_VERSION = "0.9.18-beta";
-export const BUILD_NUMBER = 28;
-export const VERSION_NAME = "0.9.18-beta";
+export const APP_VERSION = "0.9.19-beta";
+export const BUILD_NUMBER = 29;
+export const VERSION_NAME = "0.9.19-beta";
 export const IS_BETA = true;
 export const CHANNEL = "BETA";
-export const FULL_VERSION = "v0.9.18-beta (Build 28)";
+export const FULL_VERSION = "v0.9.19-beta (Build 29)";
 export const RELEASE_NAME = "Motormageddon v0.9.15-beta";
 export const COPYRIGHT_NOTICE = "© 2026 EOMedia. Tous droits réservés.";

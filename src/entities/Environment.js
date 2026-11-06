@@ -1287,40 +1287,38 @@ export class Environment {
     bumpMesh.receiveShadow = true;
     bumpGroup.add(bumpMesh);
 
-    // 2. Dents de requin réfléchissantes jaunes/blanches sur les rampes
-    const sharkMat = new THREE.MeshBasicMaterial({ color: 0xfffa65 });
-    for (let x = -3.6; x <= 3.6; x += 0.9) {
-      const sharkGeo = new THREE.ConeGeometry(0.24, 0.65, 3);
-      const shark = new THREE.Mesh(sharkGeo, sharkMat);
-      shark.rotation.x = -Math.PI / 2;
-      shark.rotation.z = Math.PI;
-      shark.position.set(x, 0.19, -0.6);
-      bumpGroup.add(shark);
-
-      const shark2 = new THREE.Mesh(sharkGeo, sharkMat);
-      shark2.rotation.x = -Math.PI / 2;
-      shark2.position.set(x, 0.19, 0.6);
-      bumpGroup.add(shark2);
+    // 2. Bandes blanches réfléchissantes plates au sol (marquage officiel discret)
+    const stripeMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.85 });
+    for (let x = -3.6; x <= 3.6; x += 1.2) {
+      const stripeMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.32, 1.8), stripeMat);
+      stripeMesh.rotation.x = -Math.PI / 2;
+      stripeMesh.position.set(x, 0.19, 0);
+      bumpGroup.add(stripeMesh);
     }
 
-    // 3. Panneau routier officiel A2a (Ralentisseur 30 km/h) sur le trottoir
+    // 3. Panneau routier officiel circulaire 30 km/h sur le trottoir
     const poleMat = new THREE.MeshStandardMaterial({ color: 0xbdc3c7, metalness: 0.85, roughness: 0.2 });
     const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 2.4, 8), poleMat);
     pole.position.set(-4.5, 1.2, 0);
     bumpGroup.add(pole);
 
-    const signMat = new THREE.MeshBasicMaterial({ color: 0xe74c3c });
-    const signTri = new THREE.Mesh(new THREE.ConeGeometry(0.38, 0.65, 3), signMat);
-    signTri.rotation.y = Math.PI / 2;
-    signTri.position.set(-4.5, 2.15, 0);
-    bumpGroup.add(signTri);
+    const signBorder = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.34, 0.03, 16), new THREE.MeshStandardMaterial({ color: 0xe74c3c }));
+    signBorder.rotation.z = Math.PI / 2;
+    signBorder.position.set(-4.5, 2.15, 0);
+    bumpGroup.add(signBorder);
+
+    const signCore = new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.26, 0.04, 16), new THREE.MeshStandardMaterial({ color: 0xffffff }));
+    signCore.rotation.z = Math.PI / 2;
+    signCore.position.set(-4.5, 2.15, 0);
+    bumpGroup.add(signCore);
 
     chunk.add(bumpGroup);
 
-    // Enregistrer le dos d'âne pour la détection de saut de suspension
+    // Enregistrer le dos d'âne pour la détection dynamique de saut de suspension
     if (!this.speedBumps) this.speedBumps = [];
     this.speedBumps.push({
-      z: chunk.position.z + localZ,
+      chunk: chunk,
+      localZ: localZ,
       length: 2.8,
       height: 0.24,
       hit: false
@@ -1654,6 +1652,13 @@ export class Environment {
 
         chunk.position.set(newX, 0, newZ);
         chunk.rotation.y = newAngle;
+
+        // Réinitialiser les dos d'âne du chunk recyclé
+        if (this.speedBumps) {
+          this.speedBumps.forEach(b => {
+            if (b.chunk === chunk) b.hit = false;
+          });
+        }
 
         // Réinitialiser les accessoires urbains (feux tricolores, lampadaires, arbres)
         // afin d'éliminer définitivement les feux rouges inclinés ou couchés après recyclage !

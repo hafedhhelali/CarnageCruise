@@ -154,23 +154,10 @@ class GameApp {
           gameState.selectCity(city.id);
         }
 
-        // --- ADAPTATION DYNAMIQUE DU VÉHICULE AU TERRAIN DU CATACLYSME ---
-        const disaster = gameState.selectedCity?.disasterType || (gameState.selectedCity?.isNuclearMission ? 'NUCLEAR' : (gameState.selectedCity?.isDamMission ? 'DAM' : (gameState.selectedCity?.isMountainMission ? 'MOUNTAIN' : 'STREET')));
-        const currentBikeId = gameState.selectedBike?.id || storage.getEquippedBike();
-
-        if (disaster === 'DAM' && currentBikeId !== 'hovercraft' && currentBikeId !== 'aero_jet') {
-          gameState.selectBike('hovercraft');
-          this.bike.buildCurrentBike('hovercraft');
-          this.ui.showToastUnlock({ name: '🌊 MISSION BARRAGE : Hydro-Glisseur déployé !' });
-        } else if (disaster === 'NUCLEAR' && currentBikeId !== 'rad_rover' && currentBikeId !== 'tank' && currentBikeId !== 'aero_jet') {
-          gameState.selectBike('rad_rover');
-          this.bike.buildCurrentBike('rad_rover');
-          this.ui.showToastUnlock({ name: '☢️ MISSION CENTRALE : Blindé NRBC 8x8 déployé !' });
-        } else if (disaster === 'MOUNTAIN' && currentBikeId !== 'snowmobile' && currentBikeId !== 'aero_jet') {
-          gameState.selectBike('snowmobile');
-          this.bike.buildCurrentBike('snowmobile');
-          this.ui.showToastUnlock({ name: '🏔️ MISSION MONTAGNE : Motoneige Alpine déployée !' });
-        }
+        // Équipement et reconstruction immédiate de l'engin sélectionné
+        const equippedBikeId = gameState.selectedBike?.id || storage.getEquippedBike() || 'scooter';
+        this.bike.buildCurrentBike(equippedBikeId);
+        this.bike.buildRider();
 
         this.setupCity(gameState.selectedCity);
 
@@ -180,6 +167,9 @@ class GameApp {
         }
         this.bike.x = 0;
         this.bike.z = 0;
+        this.bike.jumpAltitude = 0;
+        this.bike.jumpVelocity = 0;
+        this.bike.pitchAngle = 0;
         this.bike.isCrashed = false;
         this.bike.crashTimer = 0;
         this.hasCrossedFinish = false;
@@ -199,10 +189,12 @@ class GameApp {
       } else if (action === 'PREVIEW_BIKE' || action === 'BIKE_EQUIPPED') {
         const bikeId = (payload && payload.id) ? payload.id : payload;
         this.bike.buildCurrentBike(bikeId);
+        this.bike.buildRider();
       } else if (action === 'COLOR_CHANGED') {
         const bikeId = (payload && payload.bikeId) ? payload.bikeId : null;
         this.bike.buildCurrentBike(bikeId);
-      } else if (action === 'HORN' || action === 'ATTACK') {
+        this.bike.buildRider();
+      } else if (action === 'ATTACK') {
         this.executePlayerAttack();
       }
     } catch (err) {
@@ -685,23 +677,23 @@ class GameApp {
           }
         );
 
-        // 9b. Franchissement des dos d'âne / ralentisseurs 3D (saut de suspension & bonus Air Time)
+        // 9b. Franchissement des dos d'âne / ralentisseurs 3D (saut dynamique de l'engin & bonus Air Time)
         if (this.environment.speedBumps) {
           for (let bump of this.environment.speedBumps) {
-            if (!bump.hit && Math.abs(this.bike.z - bump.z) < 1.6) {
+            const worldZ = bump.chunk ? (bump.chunk.position.z + bump.localZ) : (bump.z || 0);
+            if (!bump.hit && Math.abs(this.bike.z - worldZ) < 1.8) {
               bump.hit = true;
-              this.bike.mesh.position.y += 0.32;
-              soundManager.playSuspensionThud();
+              this.bike.triggerSpeedBumpJump(currentSpeed);
 
-              if (currentSpeed > 15.0) {
-                const airPts = 150;
+              if (currentSpeed > 10.0) {
+                const airPts = Math.round(150 + (currentSpeed * 8));
                 gameState.score += airPts;
                 this.particles.spawnComicBurst(
                   new THREE.Vector3(this.bike.mesh.position.x, this.bike.mesh.position.y + 1.4, this.bike.z + 1.2),
                   airPts,
                   gameState.combo
                 );
-                this.engine.triggerCameraShake(0.35);
+                this.engine.triggerCameraShake(Math.min(0.55, 0.25 + (currentSpeed / 60)));
               }
             }
           }

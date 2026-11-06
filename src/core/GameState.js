@@ -29,6 +29,8 @@ export const CITIES = [
     roofColor: 0x4a5568,
     accentColor: 0x3498db,
     unlockedByDefault: true,
+    population: 2160000,
+    exterminationTarget: 2160000,
     mapCoords: { x: 44.8, y: 40.2 }
   },
   {
@@ -52,6 +54,8 @@ export const CITIES = [
     roofColor: 0x2c3e50,
     accentColor: 0xf9ca24,
     unlockedByDefault: false,
+    population: 1220000,
+    exterminationTarget: 1220000,
     mapCoords: { x: 51.4, y: 31.4 }
   },
   {
@@ -75,6 +79,8 @@ export const CITIES = [
     roofColor: 0x1e272e,
     accentColor: 0xff4757,
     unlockedByDefault: false,
+    population: 8980000,
+    exterminationTarget: 8980000,
     mapCoords: { x: 39.2, y: 27.0 }
   },
   {
@@ -98,6 +104,8 @@ export const CITIES = [
     roofColor: 0x2f3542,
     accentColor: 0x00a8ff,
     unlockedByDefault: false,
+    population: 47000,
+    exterminationTarget: 47000,
     mapCoords: { x: 31.1, y: 39.9 }
   },
   {
@@ -121,6 +129,8 @@ export const CITIES = [
     roofColor: 0x37474f,
     accentColor: 0x8e24aa,
     unlockedByDefault: false,
+    population: 260000,
+    exterminationTarget: 260000,
     mapCoords: { x: 35.4, y: 54.7 }
   },
   {
@@ -144,6 +154,8 @@ export const CITIES = [
     roofColor: 0xb71540,
     accentColor: 0xe67e22,
     unlockedByDefault: false,
+    population: 1660000,
+    exterminationTarget: 1660000,
     mapCoords: { x: 48.1, y: 65.2 }
   },
   {
@@ -167,6 +179,8 @@ export const CITIES = [
     roofColor: 0x962d3e,
     accentColor: 0xf1c40f,
     unlockedByDefault: false,
+    population: 3300000,
+    exterminationTarget: 3300000,
     mapCoords: { x: 27.8, y: 69.9 }
   },
   {
@@ -190,6 +204,8 @@ export const CITIES = [
     roofColor: 0xd35400,
     accentColor: 0x2ed573,
     unlockedByDefault: false,
+    population: 545000,
+    exterminationTarget: 545000,
     mapCoords: { x: 8.5, y: 74.0 }
   },
   {
@@ -213,6 +229,8 @@ export const CITIES = [
     roofColor: 0x37474f,
     accentColor: 0xff3838,
     unlockedByDefault: false,
+    population: 22000,
+    exterminationTarget: 22000,
     mapCoords: { x: 49.1, y: 56.4 }
   },
   {
@@ -236,6 +254,8 @@ export const CITIES = [
     roofColor: 0xd84315,
     accentColor: 0x00bcd4,
     unlockedByDefault: false,
+    population: 870000,
+    exterminationTarget: 870000,
     mapCoords: { x: 55.2, y: 61.8 }
   },
   {
@@ -259,6 +279,8 @@ export const CITIES = [
     roofColor: 0xc2185b,
     accentColor: 0xff4081,
     unlockedByDefault: false,
+    population: 343000,
+    exterminationTarget: 343000,
     mapCoords: { x: 61.8, y: 60.5 }
   },
   {
@@ -282,6 +304,8 @@ export const CITIES = [
     roofColor: 0x747d8c,
     accentColor: 0xff9f43,
     unlockedByDefault: false,
+    population: 1390000,
+    exterminationTarget: 1390000,
     mapCoords: { x: 64.2, y: 49.3 }
   },
   {
@@ -305,7 +329,8 @@ export const CITIES = [
     roofColor: 0x0984e3,
     accentColor: 0x00d2d3,
     unlockedByDefault: false,
-    exterminationTarget: 550000,
+    population: 203000,
+    exterminationTarget: 203000,
     mapCoords: { x: 59.0, y: 49.7 }
   },
   {
@@ -329,7 +354,8 @@ export const CITIES = [
     roofColor: 0x30336b,
     accentColor: 0x22a6b3,
     unlockedByDefault: false,
-    exterminationTarget: 750000,
+    population: 434000,
+    exterminationTarget: 434000,
     mapCoords: { x: 56.5, y: 52.8 }
   },
   {
@@ -353,7 +379,8 @@ export const CITIES = [
     roofColor: 0xecf0f1,
     accentColor: 0x00cec9,
     unlockedByDefault: false,
-    exterminationTarget: 480000,
+    population: 8600,
+    exterminationTarget: 8600,
     mapCoords: { x: 59.9, y: 50.7 }
   },
   {
@@ -377,7 +404,8 @@ export const CITIES = [
     roofColor: 0x4834d4,
     accentColor: 0xe056fd,
     unlockedByDefault: false,
-    exterminationTarget: 620000,
+    population: 132000,
+    exterminationTarget: 132000,
     mapCoords: { x: 67.5, y: 47.8 }
   },
   {
@@ -401,6 +429,8 @@ export const CITIES = [
     roofColor: 0xb71540,
     accentColor: 0x0984e3,
     unlockedByDefault: false,
+    population: 131000,
+    exterminationTarget: 131000,
     mapCoords: { x: 58.5, y: 50.3 }
   },
   {
@@ -424,6 +454,8 @@ export const CITIES = [
     roofColor: 0x962d22,
     accentColor: 0xe67e22,
     unlockedByDefault: false,
+    population: 522000,
+    exterminationTarget: 522000,
     mapCoords: { x: 52.8, y: 51.4 }
   },
   {
@@ -447,6 +479,8 @@ export const CITIES = [
     roofColor: 0xb71c1c,
     accentColor: 0xd32f2f,
     unlockedByDefault: false,
+    population: 290000,
+    exterminationTarget: 290000,
     mapCoords: { x: 62.3, y: 40.5 }
   },
   {
@@ -470,6 +504,8 @@ export const CITIES = [
     roofColor: 0xb71540,
     accentColor: 0xe67e22,
     unlockedByDefault: false,
+    population: 2870000,
+    exterminationTarget: 2870000,
     mapCoords: { x: 73.6, y: 62.5 }
   },
   {
@@ -493,6 +529,8 @@ export const CITIES = [
     roofColor: 0xc23616,
     accentColor: 0xe84118,
     unlockedByDefault: false,
+    population: 960000,
+    exterminationTarget: 960000,
     mapCoords: { x: 79.2, y: 67.6 }
   },
   {
@@ -516,6 +554,8 @@ export const CITIES = [
     roofColor: 0x0abde3,
     accentColor: 0xee5253,
     unlockedByDefault: false,
+    population: 1070000,
+    exterminationTarget: 1070000,
     mapCoords: { x: 69.3, y: 80.4 }
   },
   {
@@ -539,6 +579,8 @@ export const CITIES = [
     roofColor: 0xb33939,
     accentColor: 0x20bf6b,
     unlockedByDefault: false,
+    population: 460000,
+    exterminationTarget: 460000,
     mapCoords: { x: 61.3, y: 80.7 }
   },
   {
@@ -562,6 +604,8 @@ export const CITIES = [
     roofColor: 0x10ac84,
     accentColor: 0xeb4d4b,
     unlockedByDefault: false,
+    population: 2980000,
+    exterminationTarget: 2980000,
     mapCoords: { x: 40.6, y: 82.1 }
   },
   {
@@ -585,6 +629,8 @@ export const CITIES = [
     roofColor: 0x2f3542,
     accentColor: 0xffa502,
     unlockedByDefault: false,
+    population: 3750000,
+    exterminationTarget: 3750000,
     mapCoords: { x: 70.8, y: 32.4 }
   },
   {
@@ -608,6 +654,8 @@ export const CITIES = [
     roofColor: 0x2c3e50,
     accentColor: 0xff7f50,
     unlockedByDefault: false,
+    population: 920000,
+    exterminationTarget: 920000,
     mapCoords: { x: 52.8, y: 25.0 }
   },
   {
@@ -631,6 +679,8 @@ export const CITIES = [
     roofColor: 0xc44569,
     accentColor: 0xe15f41,
     unlockedByDefault: false,
+    population: 688000,
+    exterminationTarget: 688000,
     mapCoords: { x: 17.9, y: 80.7 }
   },
   {
@@ -654,6 +704,8 @@ export const CITIES = [
     roofColor: 0x10ac84,
     accentColor: 0xff6b6b,
     unlockedByDefault: false,
+    population: 3700000,
+    exterminationTarget: 3700000,
     mapCoords: { x: 15.1, y: 89.2 }
   },
   {
@@ -677,6 +729,8 @@ export const CITIES = [
     roofColor: 0xb33939,
     accentColor: 0xcd6133,
     unlockedByDefault: false,
+    population: 258000,
+    exterminationTarget: 258000,
     mapCoords: { x: 69.8, y: 50.0 }
   },
   {
@@ -701,7 +755,8 @@ export const CITIES = [
     accentColor: 0x2ed573,
     unlockedByDefault: true,
     killQuota: 25,
-    exterminationTarget: 1200000,
+    population: 78000,
+    exterminationTarget: 78000,
     mapCoords: { x: 37.5, y: 36.8 }
   },
   {
@@ -726,7 +781,8 @@ export const CITIES = [
     accentColor: 0x26de81,
     unlockedByDefault: true,
     killQuota: 30,
-    exterminationTarget: 1600000,
+    population: 530000,
+    exterminationTarget: 530000,
     mapCoords: { x: 50.8, y: 29.5 }
   },
   {
@@ -751,7 +807,8 @@ export const CITIES = [
     accentColor: 0x00cec9,
     unlockedByDefault: true,
     killQuota: 30,
-    exterminationTarget: 1400000,
+    population: 675000,
+    exterminationTarget: 675000,
     mapCoords: { x: 33.5, y: 64.2 }
   },
   {
@@ -776,7 +833,8 @@ export const CITIES = [
     accentColor: 0x00cec9,
     unlockedByDefault: true,
     killQuota: 35,
-    exterminationTarget: 2500000,
+    population: 2950000,
+    exterminationTarget: 2950000,
     mapCoords: { x: 94.3, y: 33.8 }
   }
 ];
@@ -1124,13 +1182,11 @@ export class GameState {
       'grande-dixence': 'zurich'
     };
     const resolvedId = legacyMap[cityId] || cityId;
-    const city = CITIES.find(c => c.id === resolvedId);
-    if (city && (storage.isCityUnlocked(resolvedId) || storage.isCityUnlocked(cityId))) {
-      this.selectedCity = city;
-      this.notify('city_selected', city);
-      return true;
-    }
-    return false;
+    const city = CITIES.find(c => c.id === resolvedId) || CITIES[0];
+    this.selectedCity = city;
+    storage.unlockCity(city.id);
+    this.notify('city_selected', city);
+    return true;
   }
 
   selectBike(bikeId) {
@@ -1191,7 +1247,7 @@ export class GameState {
     this.cataclysmEscapeTimer = 22.0;
 
     const type = forcedType || this.disasterType;
-    let victims = this.selectedCity.exterminationTarget || 500000;
+    let victims = this.selectedCity.population || this.selectedCity.exterminationTarget || 500000;
     let bonusScore = 15000;
 
     if (type === 'NUCLEAR') {
@@ -1553,16 +1609,14 @@ export class GameState {
     soundManager.stopEngine();
     soundManager.switchMusicTrack('MENU');
 
-    // Extermination bonus de fin d'étape pour Worldmageddon
-    const cityVictims = this.selectedCity.exterminationTarget || 35000;
+    // Extermination proportionnelle à la vraie population de la métropole
+    const cityPop = this.selectedCity.population || this.selectedCity.exterminationTarget || 500000;
+    const carnageRatio = Math.min(1.0, Math.max(0.05, this.score / (this.selectedCity.targetScore || 2500)));
+    const cityVictims = Math.round(cityPop * (this.cataclysmDetonated ? 1.0 : (carnageRatio * 0.15)));
     let runVictims = this.killsCount;
-    if (this.disasterType === 'STREET' || !this.cataclysmDetonated) {
-      this.worldPopulationEliminated += cityVictims;
-      storage.incrementTotalKills(cityVictims);
-      runVictims += cityVictims;
-    } else {
-      runVictims += (this.selectedCity.exterminationTarget || 500000);
-    }
+    this.worldPopulationEliminated += cityVictims;
+    storage.incrementTotalKills(cityVictims);
+    runVictims += cityVictims;
 
     // Calcul des étoiles avec les nouveaux seuils
     let stars = 0;

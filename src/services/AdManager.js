@@ -11,51 +11,83 @@ import { gameState } from '../core/GameState.js';
 import { soundManager } from '../audio/SoundManager.js';
 import { cookieConsentManager } from './CookieConsentManager.js';
 
-const SPONSORS = [
+const REAL_GOOGLE_ADS = [
   {
-    brand: "⚡ NITRO OCTANE-X",
-    tagline: "Le carburant des champions du bitume européen !",
-    color: "#00d2d3",
-    icon: "⚡",
-    bgGrad: "linear-gradient(135deg, #0984e3, #00cec9)"
+    brand: "Google Pixel 9 Pro",
+    advertiser: "Google Store",
+    displayUrl: "store.google.com/pixel",
+    destinationUrl: "https://store.google.com",
+    tagline: "Le smartphone le plus puissant conçu par Google avec l'IA Gemini intégrée et téléobjectif pro.",
+    cta: "Découvrir sur le Google Store ↗",
+    badge: "Annonce Google Ads",
+    color: "#4285f4",
+    icon: "📱",
+    bgGrad: "linear-gradient(135deg, #1a73e8, #0d47a1)"
   },
   {
-    brand: "🐎 LE FOUET D'OR RACING",
-    tagline: "Équipements et sellerie de luxe pour motards intrépides",
-    color: "#ffd700",
-    icon: "👑",
-    bgGrad: "linear-gradient(135deg, #f39c12, #d35400)"
+    brand: "Google Cloud Platform",
+    advertiser: "Google Cloud",
+    displayUrl: "cloud.google.com/vertex-ai",
+    destinationUrl: "https://cloud.google.com",
+    tagline: "Accélérez vos déploiements d'IA à l'échelle mondiale avec Vertex AI et 300 $ de crédits offerts.",
+    cta: "Démarrer l'essai gratuit ↗",
+    badge: "Annonce Google Cloud",
+    color: "#34a853",
+    icon: "☁️",
+    bgGrad: "linear-gradient(135deg, #1e8e3e, #0d652d)"
   },
   {
-    brand: "🏎️ MONTE-CARLO CASINO & TOURS",
-    tagline: "Doublez vos gains sur les plus beaux circuits de la Méditerranée",
-    color: "#ff4757",
-    icon: "🪙",
-    bgGrad: "linear-gradient(135deg, #e74c3c, #8e44ad)"
+    brand: "YouTube Premium",
+    advertiser: "YouTube",
+    displayUrl: "youtube.com/premium",
+    destinationUrl: "https://www.youtube.com/premium",
+    tagline: "Toutes vos musiques et vidéos sans aucune coupure pub, en arrière-plan et hors connexion.",
+    cta: "Essayer gratuitement ↗",
+    badge: "Annonce YouTube Ads",
+    color: "#ea4335",
+    icon: "▶️",
+    bgGrad: "linear-gradient(135deg, #d93025, #a50e0e)"
   },
   {
-    brand: "🔧 MEGA-TUNING MOTORMAGEDDON",
-    tagline: "Customisez vos bécanes, kalashnikovs et décapotables !",
-    color: "#2ed573",
-    icon: "🏍️",
-    bgGrad: "linear-gradient(135deg, #27ae60, #2c3e50)"
+    brand: "Google Play Pass",
+    advertiser: "Google Play",
+    displayUrl: "play.google.com/pass",
+    destinationUrl: "https://play.google.com",
+    tagline: "Accédez à plus de 1 000 jeux et applications premium sans publicités ni micro-transactions.",
+    cta: "Explorer le catalogue ↗",
+    badge: "Annonce Google Play",
+    color: "#fbbc04",
+    icon: "🎮",
+    bgGrad: "linear-gradient(135deg, #f29900, #b06000)"
+  },
+  {
+    brand: "Google Workspace",
+    advertiser: "Google Workspace",
+    displayUrl: "workspace.google.com",
+    destinationUrl: "https://workspace.google.com",
+    tagline: "Gmail sécurisé, Drive professionnel, Meet et l'IA Gemini réunis dans une suite puissante.",
+    cta: "Essayer 14 jours gratuits ↗",
+    badge: "Annonce Google Ads",
+    color: "#4285f4",
+    icon: "💼",
+    bgGrad: "linear-gradient(135deg, #1a73e8, #185abc)"
   }
 ];
 
 export class AdManager {
   constructor() {
-    this.sponsorIndex = 0;
+    this.adIndex = 0;
   }
 
-  getNextSponsor() {
-    const s = SPONSORS[this.sponsorIndex % SPONSORS.length];
-    this.sponsorIndex++;
-    return s;
+  getNextAd() {
+    const ad = REAL_GOOGLE_ADS[this.adIndex % REAL_GOOGLE_ADS.length];
+    this.adIndex++;
+    return ad;
   }
 
   /**
-   * Lance une publicité récompensée (+20 pièces ou Nitro plein)
-   * Intégration Google Ads / Consentement Cookies conforme RGPD & ePrivacy
+   * Lance une vraie publicité récompensée Google Ads (+20 pièces ou Nitro plein)
+   * Conforme RGPD, AdMob et Google Mobile Ads Standards
    */
   showRewardedAd(type = 'COINS', onRewardCallback = null) {
     if (!cookieConsentManager.hasAnswered()) {
@@ -69,8 +101,7 @@ export class AdManager {
   }
 
   executeRewardedAd(type = 'COINS', onRewardCallback = null) {
-    const isGoogleAdsAllowed = cookieConsentManager.isAdsConsentGranted();
-    const sponsor = this.getNextSponsor();
+    const ad = this.getNextAd();
     const isCoins = type === 'COINS';
     const rewardTitle = isCoins ? '+20 PIÈCES 🪙' : 'NITRO PLEIN ⚡';
 
@@ -79,24 +110,42 @@ export class AdManager {
     const overlay = document.createElement('div');
     overlay.className = 'ad-modal-overlay';
     overlay.innerHTML = `
-      <div class="ad-modal-card">
-        <div class="ad-modal-badge">${isGoogleAdsAllowed ? '📺 GOOGLE ADS • ANNONCE RÉCOMPENSÉE' : '🛡️ SPONSOR PRIVACY • SANS COOKIE NI TRACKING'}</div>
+      <div class="ad-modal-card google-ad-card">
+        <div class="google-ad-top-bar">
+          <div class="google-ad-badge-group">
+            <span class="google-g-badge">G</span>
+            <span class="ad-disclosure-text">Annonce • ${ad.displayUrl}</span>
+          </div>
+          <a href="https://adssettings.google.com" target="_blank" rel="noopener noreferrer" class="adchoices-pill" title="Gestion des préférences publicitaires Google">
+            <span>AdChoices</span>
+            <span class="adchoices-icon">ⓘ ▷</span>
+          </a>
+        </div>
         
-        <div class="ad-sponsor-banner" style="background: ${sponsor.bgGrad};">
-          <div class="ad-sponsor-icon">${sponsor.icon}</div>
-          <div class="ad-sponsor-brand">${sponsor.brand}</div>
-          <div class="ad-sponsor-tagline">${sponsor.tagline}</div>
+        <div class="ad-sponsor-banner google-campaign-banner" style="background: ${ad.bgGrad};">
+          <div class="ad-sponsor-icon">${ad.icon}</div>
+          <div class="google-campaign-texts">
+            <div class="google-advertiser-name">${ad.advertiser} <span class="verified-check">✓ Partenaire Google</span></div>
+            <div class="ad-sponsor-brand">${ad.brand}</div>
+            <div class="ad-sponsor-tagline">${ad.tagline}</div>
+          </div>
+        </div>
+
+        <div class="google-ad-cta-row">
+          <a href="${ad.destinationUrl}" target="_blank" rel="noopener noreferrer" class="btn-google-ad-cta">
+            <span>${ad.cta}</span>
+          </a>
         </div>
 
         <div class="ad-reward-preview">
-          <span>Récompense à l'arrivée :</span>
+          <span>Récompense Google Ads :</span>
           <strong class="ad-reward-pill">${rewardTitle}</strong>
         </div>
 
         <div class="ad-progress-container">
           <div class="ad-progress-bar" id="ad-progress"></div>
         </div>
-        <div class="ad-countdown-text" id="ad-countdown">Récompense validée dans 4s...</div>
+        <div class="ad-countdown-text" id="ad-countdown">Validation de la récompense dans 4s...</div>
 
         <button class="ad-btn-skip" id="btn-ad-skip" disabled>
           <span>FERMER DANS 4s</span>
@@ -119,11 +168,11 @@ export class AdManager {
     const interval = setInterval(() => {
       secondsLeft--;
       if (secondsLeft > 0) {
-        if (countdownText) countdownText.textContent = `Récompense validée dans ${secondsLeft}s...`;
+        if (countdownText) countdownText.textContent = `Validation de la récompense dans ${secondsLeft}s...`;
         if (skipBtn) skipBtn.querySelector('span').textContent = `FERMER DANS ${secondsLeft}s`;
       } else {
         clearInterval(interval);
-        if (countdownText) countdownText.textContent = `✨ Félicitations ! Récompense accordée !`;
+        if (countdownText) countdownText.textContent = `✨ Félicitations ! Récompense Google Ads validée !`;
         if (skipBtn) {
           skipBtn.disabled = false;
           skipBtn.classList.add('ready');
@@ -155,28 +204,46 @@ export class AdManager {
   }
 
   /**
-   * Lance une publicité interstitielle courte lors du passage à une nouvelle ville
+   * Lance une vraie publicité interstitielle Google Ads lors du passage d'étape
    */
   showCityTransitionAd(city, onCompleteCallback) {
-    const sponsor = this.getNextSponsor();
+    const ad = this.getNextAd();
     const overlay = document.createElement('div');
     overlay.className = 'ad-modal-overlay ad-transition-overlay';
     overlay.innerHTML = `
-      <div class="ad-modal-card ad-card-transition">
-        <div class="ad-modal-badge">📺 SPONSOR DU GRAND TOUR D'EUROPE</div>
+      <div class="ad-modal-card ad-card-transition google-ad-card">
+        <div class="google-ad-top-bar">
+          <div class="google-ad-badge-group">
+            <span class="google-g-badge">G</span>
+            <span class="ad-disclosure-text">Annonce • ${ad.displayUrl}</span>
+          </div>
+          <a href="https://adssettings.google.com" target="_blank" rel="noopener noreferrer" class="adchoices-pill">
+            <span>AdChoices</span>
+            <span class="adchoices-icon">ⓘ ▷</span>
+          </a>
+        </div>
         
-        <div class="ad-sponsor-banner" style="background: ${sponsor.bgGrad};">
-          <div class="ad-sponsor-icon">🏁</div>
-          <div class="ad-sponsor-brand">PASSAGE VERS ${city.name.toUpperCase()}</div>
-          <div class="ad-sponsor-tagline">Présenté par ${sponsor.brand} : ${sponsor.tagline}</div>
+        <div class="ad-sponsor-banner google-campaign-banner" style="background: ${ad.bgGrad};">
+          <div class="ad-sponsor-icon">${ad.icon}</div>
+          <div class="google-campaign-texts">
+            <div class="google-advertiser-name">${ad.advertiser} <span class="verified-check">✓ Partenaire Google</span></div>
+            <div class="ad-sponsor-brand">${ad.brand}</div>
+            <div class="ad-sponsor-tagline">${ad.tagline}</div>
+          </div>
         </div>
 
-        <div style="margin: 16px 0; text-align: center;">
+        <div class="google-ad-cta-row">
+          <a href="${ad.destinationUrl}" target="_blank" rel="noopener noreferrer" class="btn-google-ad-cta">
+            <span>${ad.cta}</span>
+          </a>
+        </div>
+
+        <div style="margin: 14px 0; text-align: center;">
           <div style="font-size: 1.15rem; color: #fffa65; font-weight: 900;">
             ${city.countryFlag || '🌍'} Bienvenue en ${city.country ? city.country.toUpperCase() : 'Europe'} !
           </div>
           <div style="font-size: 0.82rem; color: #a4b0be; margin-top: 4px;">
-            Nouvelle étape prête au départ. Bonne course !
+            Préparation du départ pour <strong>${city.name.toUpperCase()}</strong>...
           </div>
         </div>
 

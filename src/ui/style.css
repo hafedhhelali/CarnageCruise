@@ -1024,45 +1024,100 @@ html, body {
 /* TOAST AVERTISSEMENT FEU ROUGE EN APPROCHE */
 .hud-traffic-warning-toast {
   position: absolute;
-  top: 105px;
+  top: 96px;
   left: 50%;
-  transform: translateX(-50%) translateY(-30px);
+  transform: translateX(-50%) translateY(-35px) scale(0.92);
   opacity: 0;
   pointer-events: none;
-  z-index: 100;
+  z-index: 120;
+  width: 90%;
+  max-width: 440px;
   transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.35s ease;
 }
 
 .hud-traffic-warning-toast.visible {
   opacity: 1;
-  transform: translateX(-50%) translateY(0);
+  transform: translateX(-50%) translateY(0) scale(1);
 }
 
 .traffic-toast-inner {
   display: flex;
   align-items: center;
-  gap: 12px;
-  background: linear-gradient(135deg, rgba(235, 77, 75, 0.95), rgba(192, 57, 43, 0.95));
-  border: 2px solid #ff7675;
-  box-shadow: 0 10px 30px rgba(235, 77, 75, 0.65), 0 0 20px rgba(255, 118, 117, 0.5);
+  gap: 14px;
+  background: linear-gradient(135deg, rgba(235, 77, 75, 0.96), rgba(183, 21, 64, 0.96));
+  border: 2px solid #ff4757;
+  box-shadow: 0 10px 32px rgba(235, 77, 75, 0.75), 0 0 24px rgba(255, 71, 87, 0.55);
   border-radius: 18px;
-  padding: 10px 20px;
-  backdrop-filter: blur(8px);
+  padding: 10px 16px;
+  backdrop-filter: blur(12px);
+  position: relative;
+  overflow: hidden;
+}
+
+.traffic-toast-inner::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: repeating-linear-gradient(45deg, #fffa65, #fffa65 10px, #1e272e 10px, #1e272e 20px);
+}
+
+.traffic-toast-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 12px;
+  flex-shrink: 0;
 }
 
 .traffic-toast-icon {
-  font-size: 2rem;
-  animation: toastIconFlash 0.5s infinite alternate;
+  font-size: 1.8rem;
+  animation: toastIconFlash 0.45s infinite alternate;
 }
 
 @keyframes toastIconFlash {
-  0% { transform: scale(0.9); filter: brightness(0.8); }
+  0% { transform: scale(0.9); filter: brightness(0.85); }
   100% { transform: scale(1.15); filter: brightness(1.3); }
 }
 
-.traffic-toast-title {
-  font-size: 0.95rem;
+.traffic-toast-text {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  gap: 2px;
+  min-width: 0;
+}
+
+.traffic-toast-top-tag {
+  font-size: 0.64rem;
   font-weight: 900;
+  color: #fffa65;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.traffic-toast-title {
+  font-size: 0.98rem;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.6);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.traffic-toast-sub {
+  font-size: 0.72rem;
+  color: #f1f2f6;
+  line-height: 1.2;
+}
   color: #fff;
   letter-spacing: 1px;
 }
@@ -3019,6 +3074,119 @@ html, body {
   text-overflow: ellipsis;
 }
 
+/* AUTHENTIC GOOGLE ADS STYLING */
+.google-ad-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 0 4px;
+}
+
+.google-ad-badge-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.google-g-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  background: #ffffff;
+  color: #4285f4;
+  font-weight: 900;
+  font-size: 0.8rem;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.ad-disclosure-text {
+  font-size: 0.72rem;
+  color: #ced6e0;
+  font-weight: 700;
+}
+
+.adchoices-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #9aa0a6;
+  font-size: 0.65rem;
+  text-decoration: none;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: color 0.15s;
+}
+
+.adchoices-pill:hover {
+  color: #4285f4;
+}
+
+.google-campaign-banner {
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+.google-campaign-texts {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+}
+
+.google-advertiser-name {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.verified-check {
+  font-size: 0.62rem;
+  background: rgba(46, 213, 115, 0.25);
+  color: #2ed573;
+  padding: 1px 4px;
+  border-radius: 4px;
+  font-weight: 900;
+}
+
+.google-ad-cta-row {
+  margin: 10px 0;
+  width: 100%;
+}
+
+.btn-google-ad-cta {
+  display: block;
+  width: 100%;
+  background: #1a73e8;
+  color: #ffffff;
+  text-decoration: none;
+  font-weight: 900;
+  font-size: 0.88rem;
+  padding: 10px;
+  border-radius: 8px;
+  text-align: center;
+  box-sizing: border-box;
+  box-shadow: 0 4px 12px rgba(26, 115, 232, 0.4);
+  transition: transform 0.1s, filter 0.1s;
+}
+
+.btn-google-ad-cta:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+.btn-google-ad-cta:active {
+  transform: scale(0.98);
+}
+
 /* ==========================================================================
    PINS EXTERMINÉS & FERMÉS
    ========================================================================== */
@@ -3661,6 +3829,60 @@ html, body {
   width: 100%;
   margin-top: 6px;
   box-sizing: border-box;
+}
+
+.btn-city-vehicle-banner {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(135deg, rgba(235, 77, 75, 0.22), rgba(30, 39, 46, 0.95));
+  border: 1.5px solid #ff4757;
+  border-radius: 14px;
+  padding: 8px 12px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(255, 71, 87, 0.35);
+  box-sizing: border-box;
+  transition: transform 0.12s, filter 0.12s;
+  margin-bottom: 2px;
+}
+
+.btn-city-vehicle-banner:active {
+  transform: scale(0.97);
+  filter: brightness(1.2);
+}
+
+.veh-banner-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.veh-banner-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
+}
+
+.veh-banner-text {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.veh-banner-action {
+  font-size: 0.72rem;
+  font-weight: 900;
+  color: #ffd32a;
+  background: rgba(255, 211, 42, 0.16);
+  border: 1px solid rgba(255, 211, 42, 0.4);
+  padding: 4px 8px;
+  border-radius: 8px;
+  letter-spacing: 0.5px;
+}
+
+.btn-wmd-results {
+  animation: pulseWmdBtn 2s infinite ease-in-out;
 }
 
 .city-action-grid {

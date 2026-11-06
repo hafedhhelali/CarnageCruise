@@ -112,9 +112,9 @@ export class UIManager {
       return;
     }
 
-    // Si on est sur l'écran d'accueil principal : demander confirmation pour quitter
+    // Si on est sur l'écran d'accueil principal : ne pas quitter (rester dans l'application)
     if (this.currentScreen === 'SPLASH') {
-      this.showQuitConfirmationModal();
+      return;
     }
   }
 
@@ -580,7 +580,7 @@ export class UIManager {
 
     let panX = 0;
     let panY = 0;
-    this.mapZoom = Math.max(0.65, Math.min(2.8, this.mapZoom || 1.0));
+    this.mapZoom = Math.max(0.26, Math.min(3.0, this.mapZoom || 0.85));
 
     const clampPan = (targetX, targetY, zoom) => {
       if (!viewportEl) return { x: targetX, y: targetY };
@@ -593,16 +593,16 @@ export class UIManager {
       if (effectiveW <= vw) {
         minX = maxX = (vw - effectiveW) / 2;
       } else {
-        minX = vw - effectiveW - 30;
-        maxX = 30;
+        minX = vw - effectiveW - 40;
+        maxX = 40;
       }
 
       let minY, maxY;
       if (effectiveH <= vh) {
         minY = maxY = (vh - effectiveH) / 2;
       } else {
-        minY = vh - effectiveH - 30;
-        maxY = 30;
+        minY = vh - effectiveH - 40;
+        maxY = 40;
       }
 
       return {
@@ -640,7 +640,7 @@ export class UIManager {
 
     const zoomAtPoint = (newZoom, focalX, focalY, animate = false) => {
       const oldZoom = this.mapZoom;
-      const clampedZoom = Math.max(0.65, Math.min(2.8, newZoom));
+      const clampedZoom = Math.max(0.26, Math.min(3.0, newZoom));
       if (Math.abs(clampedZoom - oldZoom) < 0.001) return;
 
       const ratio = clampedZoom / oldZoom;
@@ -654,19 +654,33 @@ export class UIManager {
       applyTransform(animate, animate ? 300 : 0);
     };
 
-    mapScreen.querySelector('#btn-zoom-in')?.addEventListener('click', () => {
+    // Empêcher les gestes sur les boutons de zoom de parasiter le pan de la carte
+    const zoomControls = mapScreen.querySelector('.map-zoom-controls-floating');
+    if (zoomControls) {
+      zoomControls.addEventListener('touchstart', (e) => e.stopPropagation(), { passive: true });
+      zoomControls.addEventListener('touchmove', (e) => e.stopPropagation(), { passive: true });
+    }
+
+    mapScreen.querySelector('#btn-zoom-in')?.addEventListener('click', (e) => {
+      e?.stopPropagation();
       soundManager.playClick();
       const rect = viewportEl.getBoundingClientRect();
-      zoomAtPoint(this.mapZoom + 0.3, rect.width / 2, rect.height / 2, true);
+      zoomAtPoint(this.mapZoom + 0.35, rect.width / 2, rect.height / 2, true);
     });
-    mapScreen.querySelector('#btn-zoom-out')?.addEventListener('click', () => {
+    mapScreen.querySelector('#btn-zoom-out')?.addEventListener('click', (e) => {
+      e?.stopPropagation();
       soundManager.playClick();
       const rect = viewportEl.getBoundingClientRect();
-      zoomAtPoint(this.mapZoom - 0.3, rect.width / 2, rect.height / 2, true);
+      zoomAtPoint(this.mapZoom - 0.35, rect.width / 2, rect.height / 2, true);
     });
-    mapScreen.querySelector('#btn-zoom-reset')?.addEventListener('click', () => {
+    mapScreen.querySelector('#btn-zoom-reset')?.addEventListener('click', (e) => {
+      e?.stopPropagation();
       soundManager.playClick();
-      this.mapZoom = 1.0;
+      const vw = viewportEl.clientWidth || 360;
+      const vh = viewportEl.clientHeight || 400;
+      const fitZoom = Math.max(0.28, Math.min(0.55, Math.min(vw / 1060, vh / 1480) * 0.95));
+      // Si déjà dézoomé, recentre à 100%, sinon bascule sur vue globale MAX CARTE !
+      this.mapZoom = (this.mapZoom <= fitZoom + 0.05) ? 1.0 : fitZoom;
       centerOnCity(this.selectedMapCity, true);
     });
 
@@ -1027,7 +1041,7 @@ export class UIManager {
         </p>
 
         <div class="city-target-info target-info-closed">
-          <span>💀 Bilan Fatal : <strong style="color: #ff4757;">+${(city.exterminationTarget || 1500000).toLocaleString('fr-FR')} victimes</strong></span>
+          <span>💀 Bilan Fatal : <strong style="color: #ff4757;">+${(city.population || city.exterminationTarget || 500000).toLocaleString('fr-FR')} victimes</strong></span>
           <span style="color: #2ed573;">Statut : <strong>CONQUIS & DÉTRUIT</strong></span>
         </div>
 
@@ -1065,10 +1079,22 @@ export class UIManager {
 
         <div class="city-target-info">
           <span>🏆 Record : <strong>${cityData.bestScore} pts</strong></span>
-          <span>💀 Population Cible : <strong style="color: #fffa65;">+${(city.exterminationTarget || 1500000).toLocaleString('fr-FR')} âmes</strong></span>
+          <span>💀 Population Cible : <strong style="color: #fffa65;">+${(city.population || city.exterminationTarget || 500000).toLocaleString('fr-FR')} âmes</strong></span>
         </div>
 
         <div class="city-detail-actions-vertical">
+          <!-- RACCOURCI ENGIN HYPER VISIBLE SUR LA FICHE VILLE -->
+          <button id="btn-city-vehicle-shortcut" class="btn-city-vehicle-banner" title="Changer d'engin ou d'arsenal">
+            <span class="veh-banner-left">
+              <span class="veh-banner-icon">${currentBike.icon || '🪖'}</span>
+              <span class="veh-banner-text">
+                <small style="color: #ffd32a; font-size: 0.62rem; font-weight: 900; letter-spacing: 0.5px;">VÉHICULE ACTIF</small>
+                <strong style="color: #fff; font-size: 0.85rem;">${currentBike.shortName || currentBike.name}</strong>
+              </span>
+            </span>
+            <span class="veh-banner-action">CHANGER ▾</span>
+          </button>
+
           ${unlocked ? `
             <div class="city-action-grid">
               <button id="btn-launch-city" class="btn-arcade btn-city-primary" title="Conduire l'assaut au sol">
@@ -1081,7 +1107,7 @@ export class UIManager {
               </button>
             </div>
             <button id="btn-city-ad-coins" class="btn-ad-strip" title="Cadeau Sponsor : Obtenir +20 Pièces d'or">
-              <span class="ad-strip-left">🎁 <strong>BONUS ADMOB : +20 PIÈCES D'OR</strong></span>
+              <span class="ad-strip-left">🎁 <strong>BONUS GOOGLE ADS : +20 PIÈCES D'OR</strong></span>
               <span class="ad-strip-action">RÉCUPÉRER ▶</span>
             </button>
           ` : `
@@ -1089,12 +1115,19 @@ export class UIManager {
               <span>🔒 BLOQUÉ (${city.unlockScoreRequired.toLocaleString('fr-FR')} PTS REQUIS)</span>
             </button>
             <button id="btn-city-ad-coins" class="btn-ad-strip" title="Cadeau Sponsor : Obtenir +20 Pièces d'or">
-              <span class="ad-strip-left">🎁 <strong>BONUS ADMOB : +20 PIÈCES D'OR</strong></span>
+              <span class="ad-strip-left">🎁 <strong>BONUS GOOGLE ADS : +20 PIÈCES D'OR</strong></span>
               <span class="ad-strip-action">RÉCUPÉRER ▶</span>
             </button>
           `}
         </div>
       `;
+    }
+
+    const cityVehBtn = detailCard.querySelector('#btn-city-vehicle-shortcut');
+    if (cityVehBtn) {
+      cityVehBtn.addEventListener('click', () => {
+        this.showQuickVehicleModal();
+      });
     }
 
     const cityAdBtn = detailCard.querySelector('#btn-city-ad-coins');
@@ -1205,6 +1238,7 @@ export class UIManager {
         gameState.selectBike(bikeId);
         soundManager.playClick('garage');
         modal.remove();
+        if (this.onAction) this.onAction('BIKE_EQUIPPED', bikeId);
         this.render();
         this.showToastUnlock({ name: `Engin équipé : ${gameState.selectedBike.shortName || gameState.selectedBike.name}` });
       });
@@ -1289,7 +1323,7 @@ export class UIManager {
     const existing = document.getElementById('modal-wmd-strike');
     if (existing) existing.remove();
 
-    const victimPop = city.exterminationTarget || 1500000;
+    const victimPop = city.population || city.exterminationTarget || 500000;
 
     const modal = document.createElement('div');
     modal.id = 'modal-wmd-strike';
@@ -1412,11 +1446,11 @@ export class UIManager {
     let weaponIcon = '☢️';
 
     if (weaponType === 'CARPET') {
-      weaponTitle = '🚀 TAPIS DE BOMBARDEMENT MASSIF MOAB/NAPALM';
+      weaponTitle = '🚀 TAPIS DE BOMBARDEMENT MASSIF B-52';
       weaponColor = '#ff9f43';
       weaponIcon = '🚀';
     } else if (weaponType === 'ORBITAL') {
-      weaponTitle = '🛰️ CANON PARTICULAIRE ORBITAL PULSAR';
+      weaponTitle = '🛰️ RAYON IONIQUE SATELLITAIRE PULSAR';
       weaponColor = '#00cec9';
       weaponIcon = '🛰️';
     } else if (weaponType === 'BIO') {
@@ -1431,30 +1465,30 @@ export class UIManager {
       <div class="wmd-sim-flash" id="wmd-screen-flash"></div>
 
       <!-- BANDEAU SUPÉRIEUR : TÉLÉMÉTRIE SATELLITE RECON -->
-      <div class="wmd-sat-header" style="width: 100%; max-width: 600px; display: flex; align-items: center; justify-content: space-between; background: rgba(15, 23, 42, 0.88); border: 1.5px solid ${weaponColor}; border-radius: 12px; padding: 8px 12px; box-sizing: border-box; z-index: 10;">
+      <div class="wmd-sat-header" style="width: 100%; max-width: 600px; display: flex; align-items: center; justify-content: space-between; background: rgba(15, 23, 42, 0.92); border: 1.5px solid ${weaponColor}; border-radius: 12px; padding: 8px 12px; box-sizing: border-box; z-index: 10; box-shadow: 0 4px 16px rgba(0,0,0,0.6);">
         <div style="display: flex; align-items: center; gap: 8px;">
-          <span style="font-size: 1.3rem;">🛰️</span>
+          <span style="font-size: 1.4rem;">🛰️</span>
           <div>
-            <div style="font-size: 0.68rem; color: #ced6e0; font-weight: 800; letter-spacing: 0.8px;">SATELLITE RECON-KH11 • ORBITE BASSE</div>
+            <div style="font-size: 0.65rem; color: #ced6e0; font-weight: 800; letter-spacing: 0.8px;">SATELLITE RECON KH-11 • ORBITE BASSE</div>
             <div style="font-size: 0.88rem; font-weight: 900; color: #ffffff;">${city.countryFlag || '🌍'} ${city.name.toUpperCase()} (CIBLE PRIORITAIRE)</div>
           </div>
         </div>
         <div style="text-align: right;">
-          <div style="font-size: 0.65rem; color: ${weaponColor}; font-weight: 900; letter-spacing: 0.5px;" id="wmd-status-phase">T-03 : APPROCHE</div>
+          <div style="font-size: 0.65rem; color: ${weaponColor}; font-weight: 900; letter-spacing: 0.5px;" id="wmd-status-phase">T-03 : ACQUISITION</div>
           <div style="font-size: 0.75rem; font-family: monospace; color: #fffa65; font-weight: 800;">POP : ${(victimPop).toLocaleString('fr-FR')}</div>
         </div>
       </div>
 
       <!-- ÉCRAN RADAR TACTIQUE 60 FPS INTERACTIF (CANVAS) -->
-      <div class="wmd-canvas-wrapper" style="position: relative; width: 100%; max-width: 600px; height: clamp(240px, 42vh, 380px); border-radius: 16px; border: 2px solid ${weaponColor}; overflow: hidden; background: #080d1a; box-shadow: 0 0 30px rgba(0,0,0,0.8), inset 0 0 40px rgba(0,0,0,0.9); z-index: 10;">
+      <div class="wmd-canvas-wrapper" style="position: relative; width: 100%; max-width: 600px; height: clamp(240px, 42vh, 380px); border-radius: 16px; border: 2px solid ${weaponColor}; overflow: hidden; background: #060a14; box-shadow: 0 0 30px rgba(0,0,0,0.85), inset 0 0 40px rgba(0,0,0,0.95); z-index: 10;">
         <canvas id="wmd-tactical-canvas" style="width: 100%; height: 100%; display: block;"></canvas>
-        <div id="wmd-impact-banner" style="position: absolute; top: 12px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); border: 1.5px solid ${weaponColor}; color: #fffa65; padding: 4px 12px; border-radius: 8px; font-weight: 900; font-size: 0.8rem; letter-spacing: 1px; pointer-events: none; z-index: 20;">
+        <div id="wmd-impact-banner" style="position: absolute; top: 12px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.85); border: 1.5px solid ${weaponColor}; color: #fffa65; padding: 4px 14px; border-radius: 8px; font-weight: 900; font-size: 0.8rem; letter-spacing: 1px; pointer-events: none; z-index: 20; box-shadow: 0 4px 14px rgba(0,0,0,0.8);">
           🎯 VERROUILLAGE BALISTIQUE EN COURS...
         </div>
       </div>
 
       <!-- BANDEAU INFÉRIEUR : COMPTEUR DE PERTES EN TEMPS RÉEL & TÉLÉMÉTRIE D'IMPACT -->
-      <div class="wmd-telemetry-card" style="width: 100%; max-width: 600px; background: rgba(15, 23, 42, 0.92); border: 1.5px solid rgba(255, 255, 255, 0.2); border-radius: 14px; padding: 10px 14px; box-sizing: border-box; z-index: 10; display: flex; flex-direction: column; gap: 6px;">
+      <div class="wmd-telemetry-card" style="width: 100%; max-width: 600px; background: rgba(15, 23, 42, 0.94); border: 1.5px solid rgba(255, 255, 255, 0.2); border-radius: 14px; padding: 10px 14px; box-sizing: border-box; z-index: 10; display: flex; flex-direction: column; gap: 6px; box-shadow: 0 4px 20px rgba(0,0,0,0.7);">
         <div style="display: flex; align-items: center; justify-content: space-between;">
           <span style="font-size: 0.72rem; color: #ced6e0; font-weight: 800; letter-spacing: 0.8px;">💀 BILAN ESTIMÉ DES PERTES HUMAINES</span>
           <span style="font-size: 0.72rem; color: #ff4757; font-weight: 900;" id="wmd-telemetry-destruction">DÉSTRUCTION : 0%</span>
@@ -1504,38 +1538,77 @@ export class UIManager {
     const centerX = w / 2;
     const centerY = h / 2;
 
-    // Génération de 350 points thermiques de population sur la grille urbaine
+    // Génération de 400 points thermiques de population sur la grille urbaine
     const thermalDots = [];
-    for (let i = 0; i < 350; i++) {
+    for (let i = 0; i < 400; i++) {
       const angle = Math.random() * Math.PI * 2;
-      const dist = Math.pow(Math.random(), 0.65) * (Math.min(w, h) * 0.42);
+      const dist = Math.pow(Math.random(), 0.62) * (Math.min(w, h) * 0.44);
       thermalDots.push({
         x: centerX + Math.cos(angle) * dist,
         y: centerY + Math.sin(angle) * dist,
-        baseColor: (Math.random() < 0.25) ? '#fffa65' : '#2ed573',
+        baseColor: (Math.random() < 0.3) ? '#fffa65' : '#2ed573',
         size: 1.2 + Math.random() * 2.2,
-        alive: true
+        alive: true,
+        flicker: Math.random() * Math.PI * 2
       });
     }
 
-    // Particules de détonation
-    const blastParticles = [];
-    const spawnBlastParticles = (originX, originY, count, color) => {
-      for (let i = 0; i < count; i++) {
-        const ang = Math.random() * Math.PI * 2;
-        const spd = 1.0 + Math.random() * 7.0;
-        blastParticles.push({
-          x: originX,
-          y: originY,
-          vx: Math.cos(ang) * spd,
-          vy: Math.sin(ang) * spd,
-          life: 1.0,
-          maxLife: 0.6 + Math.random() * 0.8,
-          size: 2.0 + Math.random() * 4.0,
-          color: color
+    // Particules de détonation génériques et spécifiques
+    const particles = [];
+    const spawnParticle = (x, y, vx, vy, color, size, life, decay, type = 'spark') => {
+      particles.push({ x, y, vx, vy, color, size, life, maxLife: life, decay, type });
+    };
+
+    // Pour Carpet Bombing : file d'impacts d'explosions
+    const carpetStrikes = [];
+    if (weaponType === 'CARPET') {
+      for (let s = 0; s < 24; s++) {
+        const ang = -0.4 + (Math.random() - 0.5) * 0.35;
+        const dist = -w * 0.45 + (s / 24) * (w * 0.9);
+        carpetStrikes.push({
+          x: centerX + Math.cos(ang) * dist + (Math.random() - 0.5) * 45,
+          y: centerY + Math.sin(ang) * dist + (Math.random() - 0.5) * 35,
+          delay: 1.8 + (s * 0.11),
+          exploded: false,
+          radius: 0
         });
       }
+    }
+
+    // Pour Laser Orbital : éclairs électriques d'arcs EMP
+    const empArcs = [];
+    const createEmpArc = () => {
+      const pts = [{ x: centerX, y: centerY }];
+      let curX = centerX;
+      let curY = centerY;
+      const angle = Math.random() * Math.PI * 2;
+      const length = 40 + Math.random() * (Math.min(w, h) * 0.4);
+      const steps = 6 + Math.floor(Math.random() * 5);
+      for (let step = 1; step <= steps; step++) {
+        const segLen = (length / steps);
+        curX += Math.cos(angle) * segLen + (Math.random() - 0.5) * 22;
+        curY += Math.sin(angle) * segLen + (Math.random() - 0.5) * 22;
+        pts.push({ x: curX, y: curY });
+      }
+      return { pts, life: 1.0 };
     };
+
+    // Pour Aérosol Bio : nuages de gaz toxique
+    const bioGasPuffs = [];
+    if (weaponType === 'BIO') {
+      for (let g = 0; g < 32; g++) {
+        bioGasPuffs.push({
+          x: centerX + (Math.random() - 0.5) * 40,
+          y: centerY + (Math.random() - 0.5) * 40,
+          vx: (Math.random() - 0.5) * 1.8,
+          vy: (Math.random() - 0.5) * 1.8,
+          radius: 12 + Math.random() * 20,
+          targetRadius: 40 + Math.random() * 70,
+          opacity: 0,
+          rot: Math.random() * Math.PI * 2
+        });
+      }
+    }
 
     let startTime = performance.now();
     let simPhase = 'APPROACH';
@@ -1544,7 +1617,7 @@ export class UIManager {
     let cameraShake = 0;
     let animFrameId = null;
 
-    // Eléments HUD DOM
+    // Éléments HUD DOM
     const impactBanner = overlay.querySelector('#wmd-impact-banner');
     const statusPhaseEl = overlay.querySelector('#wmd-status-phase');
     const liveCounterEl = overlay.querySelector('#wmd-live-counter');
@@ -1571,7 +1644,16 @@ export class UIManager {
         simPhase = 'APPROACH';
         const remainingT = Math.max(0, 1.8 - elapsed).toFixed(1);
         statusPhaseEl.textContent = `T-${remainingT}s : APPROCHE`;
-        impactBanner.textContent = `🎯 VERROUILLAGE SATELLITE T-${remainingT}s...`;
+
+        if (weaponType === 'NUKE') {
+          impactBanner.textContent = `☢️ TRAJECTOIRE BALISTIQUE ICBM T-${remainingT}s`;
+        } else if (weaponType === 'CARPET') {
+          impactBanner.textContent = `✈️ FORMATION B-52 EN APPROCHE RADAR T-${remainingT}s`;
+        } else if (weaponType === 'ORBITAL') {
+          impactBanner.textContent = `🛰️ SYNCHRONISATION FAISCEAU IONIQUE T-${remainingT}s`;
+        } else if (weaponType === 'BIO') {
+          impactBanner.textContent = `☣️ VECTEUR DE DISPERSION CHIMIQUE T-${remainingT}s`;
+        }
       }
       // 2. PHASE DÉTONATION & IMPACT (1.8s - 5.0s)
       else if (elapsed >= 1.8 && !hasCompleted) {
@@ -1587,24 +1669,30 @@ export class UIManager {
             navigator.vibrate([200, 80, 350, 100, 600]);
           }
 
-          cameraShake = 14;
+          cameraShake = (weaponType === 'NUKE' ? 18 : (weaponType === 'CARPET' ? 12 : (weaponType === 'ORBITAL' ? 14 : 7)));
 
           if (weaponType === 'NUKE') {
             soundManager.playNuclearAlarm();
             setTimeout(() => soundManager.playNuclearBlast(), 150);
           } else if (weaponType === 'CARPET') {
             soundManager.playExplosion();
-            setTimeout(() => soundManager.playExplosion(), 350);
-            setTimeout(() => soundManager.playExplosion(), 700);
+            setTimeout(() => soundManager.playExplosion(), 250);
+            setTimeout(() => soundManager.playExplosion(), 550);
+            setTimeout(() => soundManager.playExplosion(), 850);
           } else if (weaponType === 'ORBITAL') {
             soundManager.playCrash();
-            setTimeout(() => soundManager.playExplosion(), 250);
+            setTimeout(() => soundManager.playExplosion(), 200);
           } else {
             soundManager.playClick('nuclear');
             setTimeout(() => soundManager.playExplosion(), 300);
           }
 
-          spawnBlastParticles(centerX, centerY, 120, weaponColor);
+          // Particules explosives initiales
+          for (let p = 0; p < 140; p++) {
+            const ang = Math.random() * Math.PI * 2;
+            const spd = 1.0 + Math.random() * 8.0;
+            spawnParticle(centerX, centerY, Math.cos(ang) * spd, Math.sin(ang) * spd, weaponColor, 2 + Math.random() * 4, 0.8 + Math.random() * 0.8, 0.02);
+          }
         }
 
         const detTime = elapsed - 1.8;
@@ -1621,8 +1709,8 @@ export class UIManager {
         destrEl.textContent = `DÉSTRUCTION : ${(detProgress * 100).toFixed(0)}%`;
         radTempEl.textContent = `${Math.floor(22 + detProgress * 4800)} °C`;
 
-        impactBanner.textContent = `💥 IMPACT CATACLYSMIQUE EN COURS...`;
-        statusPhaseEl.textContent = `ONDE DE CHOC : ${(detProgress * 100).toFixed(0)}%`;
+        impactBanner.textContent = `💥 ANÉANTISSEMENT EN COURS...`;
+        statusPhaseEl.textContent = `DÉVASTATION : ${(detProgress * 100).toFixed(0)}%`;
 
         if (cameraShake > 0) cameraShake *= 0.94;
 
@@ -1630,21 +1718,19 @@ export class UIManager {
           hasCompleted = true;
           simPhase = 'EXTERMINATED';
 
-          // Bilan final
           liveCounterEl.textContent = `+${victimPop.toLocaleString('fr-FR')} VICTIMES (TOTAL)`;
           liveRateEl.textContent = `EXTINCTION 100%`;
           liveProgressEl.style.width = '100%';
           destrEl.textContent = `DÉSTRUCTION : 100%`;
           radTempEl.textContent = `4 822 °C`;
-          statusPhaseEl.textContent = `☠️ SCELLÉE DÉFINITIVEMENT`;
-          impactBanner.textContent = `☠️ TOUTE POPULATION ANÉANTIE !`;
+          statusPhaseEl.textContent = `☠️ VILLE CONDAMNÉE`;
+          impactBanner.textContent = `☠️ POPULATION ENTIÈRE ANÉANTIE !`;
           impactBanner.style.borderColor = '#ff4757';
           impactBanner.style.color = '#ff7675';
 
           soundManager.playEvilLaugh();
           soundManager.playVictory();
 
-          // Activer le bouton de fermeture définitive
           if (confirmBtn) {
             confirmBtn.style.opacity = '1';
             confirmBtn.style.pointerEvents = 'auto';
@@ -1653,11 +1739,11 @@ export class UIManager {
         }
       }
 
-      // --- RENDU CANVAS 2D TACTIQUE SATELLITE ---
+      // --- RENDU CANVAS 2D TACTIQUE SATELLITE HAUTE DÉFINITION ---
       ctx.save();
 
       // Secousse caméra (Screen Shake)
-      if (cameraShake > 0.5) {
+      if (cameraShake > 0.4) {
         const shakeX = (Math.random() - 0.5) * cameraShake;
         const shakeY = (Math.random() - 0.5) * cameraShake;
         ctx.translate(shakeX, shakeY);
@@ -1668,9 +1754,9 @@ export class UIManager {
       ctx.fillRect(0, 0, w, h);
 
       // Grille radar militaire
-      ctx.strokeStyle = 'rgba(0, 206, 201, 0.12)';
+      ctx.strokeStyle = 'rgba(0, 206, 201, 0.08)';
       ctx.lineWidth = 1;
-      const gridSize = 32;
+      const gridSize = 30;
       for (let x = 0; x < w; x += gridSize) {
         ctx.beginPath();
         ctx.moveTo(x, 0);
@@ -1685,16 +1771,16 @@ export class UIManager {
       }
 
       // Cercles concentriques radar
-      ctx.strokeStyle = 'rgba(0, 206, 201, 0.22)';
-      [40, 80, 130, 190].forEach(r => {
+      ctx.strokeStyle = 'rgba(0, 206, 201, 0.18)';
+      [35, 75, 125, 180].forEach(r => {
         ctx.beginPath();
         ctx.arc(centerX, centerY, r, 0, Math.PI * 2);
         ctx.stroke();
       });
 
-      // Lignes de rues / réseau routier urbain vers le centre
-      ctx.strokeStyle = 'rgba(116, 185, 255, 0.25)';
-      ctx.lineWidth = 2;
+      // Lignes de rues / réseau urbain
+      ctx.strokeStyle = 'rgba(116, 185, 255, 0.22)';
+      ctx.lineWidth = 1.5;
       for (let a = 0; a < Math.PI * 2; a += Math.PI / 4) {
         ctx.beginPath();
         ctx.moveTo(centerX, centerY);
@@ -1702,35 +1788,305 @@ export class UIManager {
         ctx.stroke();
       }
 
-      // Dessin des 350 points thermiques de population
+      // --- DESSIN DES POINTS THERMIQUES DE POPULATION ---
       for (let p of thermalDots) {
         if (!p.alive) continue;
         const dFromCenter = Math.hypot(p.x - centerX, p.y - centerY);
 
-        // Si l'onde de choc l'a dépassé : vaporisation
-        if (simPhase === 'DETONATION' && dFromCenter <= shockwaveRadius) {
-          p.alive = false;
-          if (Math.random() < 0.35) {
-            spawnBlastParticles(p.x, p.y, 2, '#fffa65');
+        if (simPhase === 'DETONATION' || simPhase === 'EXTERMINATED') {
+          let shouldVaporize = (dFromCenter <= shockwaveRadius);
+
+          // Pour Carpet Bombing : vérifie les sous-explosions
+          if (weaponType === 'CARPET') {
+            for (let strike of carpetStrikes) {
+              if (strike.exploded && Math.hypot(p.x - strike.x, p.y - strike.y) < strike.radius) {
+                shouldVaporize = true;
+                break;
+              }
+            }
           }
-          continue;
+
+          if (shouldVaporize) {
+            p.alive = false;
+            if (Math.random() < 0.25) {
+              spawnParticle(p.x, p.y, (Math.random() - 0.5) * 2, (Math.random() - 0.5) * 2, weaponColor, 1.5, 0.5, 0.03);
+            }
+            continue;
+          }
         }
 
-        ctx.fillStyle = p.baseColor;
+        ctx.fillStyle = (weaponType === 'BIO' && simPhase === 'DETONATION' && dFromCenter < shockwaveRadius * 1.2) ? '#a29bfe' : p.baseColor;
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
         ctx.fill();
       }
 
-      // Rendu des particules de détonation
-      for (let i = blastParticles.length - 1; i >= 0; i--) {
-        const bp = blastParticles[i];
+      // =========================================================================
+      // RENDU SPÉCIFIQUE PAR ARME : 4 ANIMATIONS TOTALEMENT DISTINCTES
+      // =========================================================================
+
+      // --- 1. NUKE : MISSILE THERMONUCLÉAIRE BALISTIQUE + CHAMPIGNON ATOMIQUE ---
+      if (weaponType === 'NUKE') {
+        if (simPhase === 'APPROACH') {
+          // Missiles plongeant en diagonale depuis le coin haut-droit
+          const t = elapsed / 1.8;
+          const missileX = w * 0.95 + (centerX - w * 0.95) * t;
+          const missileY = -20 + (centerY - (-20)) * t;
+
+          // Traînée de fumée et feu de propulsion
+          ctx.strokeStyle = 'rgba(255, 71, 87, 0.8)';
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.moveTo(w * 0.95, -20);
+          ctx.lineTo(missileX, missileY);
+          ctx.stroke();
+
+          // Cône d'onde de choc supersonique
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(missileX, missileY, 14, 0, Math.PI * 2);
+          ctx.stroke();
+
+          // Missile / Ogive
+          ctx.fillStyle = '#fffa65';
+          ctx.beginPath();
+          ctx.arc(missileX, missileY, 5, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Réticule nucléaire tournant au centre
+          const rot = elapsed * 3;
+          ctx.strokeStyle = '#ff3838';
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.arc(centerX, centerY, 42, rot, rot + Math.PI * 1.5);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(centerX, centerY, 56, -rot, -rot + Math.PI);
+          ctx.stroke();
+        } else if (simPhase === 'DETONATION' || simPhase === 'EXTERMINATED') {
+          // Onde de choc blanche supersonique
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 5;
+          ctx.beginPath();
+          ctx.arc(centerX, centerY, shockwaveRadius, 0, Math.PI * 2);
+          ctx.stroke();
+
+          // Halo thermique brûlant
+          const nukeGrad = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, Math.min(shockwaveRadius, Math.max(w, h)));
+          nukeGrad.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
+          nukeGrad.addColorStop(0.25, 'rgba(255, 250, 101, 0.85)');
+          nukeGrad.addColorStop(0.55, 'rgba(235, 77, 75, 0.65)');
+          nukeGrad.addColorStop(0.85, 'rgba(183, 21, 64, 0.35)');
+          nukeGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+          ctx.fillStyle = nukeGrad;
+          ctx.beginPath();
+          ctx.arc(centerX, centerY, Math.min(shockwaveRadius, Math.max(w, h)), 0, Math.PI * 2);
+          ctx.fill();
+
+          // Chapeau du champignon atomique en expansion
+          const capY = centerY - shockwaveRadius * 0.35;
+          const capR = shockwaveRadius * 0.45;
+          const capGrad = ctx.createRadialGradient(centerX, capY, 0, centerX, capY, capR);
+          capGrad.addColorStop(0, 'rgba(255, 255, 255, 0.85)');
+          capGrad.addColorStop(0.4, 'rgba(235, 77, 75, 0.8)');
+          capGrad.addColorStop(0.8, 'rgba(45, 52, 54, 0.85)');
+          capGrad.addColorStop(1, 'rgba(0,0,0,0)');
+          ctx.fillStyle = capGrad;
+          ctx.beginPath();
+          ctx.arc(centerX, capY, capR, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Pied / colonne du champignon
+          ctx.fillStyle = 'rgba(235, 77, 75, 0.6)';
+          ctx.fillRect(centerX - capR * 0.25, capY, capR * 0.5, centerY - capY);
+        }
+      }
+
+      // --- 2. CARPET : FLOTTE B-52 + CASCADE DE 24 EXPLOSIONS EN TAPIS ---
+      else if (weaponType === 'CARPET') {
+        if (simPhase === 'APPROACH') {
+          // Escadrille de 3 bombardiers B-52 survolant la zone
+          const t = elapsed / 1.8;
+          const fleetX = -80 + (w + 160) * t;
+          const fleetY = 50 + t * 40;
+
+          [-30, 0, 30].forEach((offsetY, idx) => {
+            const bx = fleetX - idx * 25;
+            const by = fleetY + offsetY;
+
+            // Silhouette de bombardier furtif en coin
+            ctx.fillStyle = '#2d3436';
+            ctx.beginPath();
+            ctx.moveTo(bx + 18, by);
+            ctx.lineTo(bx - 14, by - 16);
+            ctx.lineTo(bx - 8, by);
+            ctx.lineTo(bx - 14, by + 16);
+            ctx.closePath();
+            ctx.fill();
+
+            // Feux de navigation clignotants
+            ctx.fillStyle = (Math.floor(elapsed * 6) % 2 === 0) ? '#ff4757' : '#2ed573';
+            ctx.beginPath();
+            ctx.arc(bx - 12, by - 14, 2, 0, Math.PI * 2);
+            ctx.arc(bx - 12, by + 14, 2, 0, Math.PI * 2);
+            ctx.fill();
+          });
+        } else if (simPhase === 'DETONATION' || simPhase === 'EXTERMINATED') {
+          // Cascade de détonations multiples le long du vecteur
+          carpetStrikes.forEach(strike => {
+            if (elapsed >= strike.delay) {
+              if (!strike.exploded) {
+                strike.exploded = true;
+                cameraShake = Math.max(cameraShake, 8);
+                soundManager.playExplosion();
+                for (let p = 0; p < 18; p++) {
+                  const ang = Math.random() * Math.PI * 2;
+                  const spd = 0.5 + Math.random() * 4;
+                  spawnParticle(strike.x, strike.y, Math.cos(ang) * spd, Math.sin(ang) * spd, '#ff9f43', 2, 0.6, 0.03);
+                }
+              }
+
+              strike.radius = Math.min(65, strike.radius + 1.8);
+              const expGrad = ctx.createRadialGradient(strike.x, strike.y, 0, strike.x, strike.y, strike.radius);
+              expGrad.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+              expGrad.addColorStop(0.3, 'rgba(255, 159, 67, 0.8)');
+              expGrad.addColorStop(0.7, 'rgba(235, 77, 75, 0.5)');
+              expGrad.addColorStop(1, 'rgba(0,0,0,0)');
+              ctx.fillStyle = expGrad;
+              ctx.beginPath();
+              ctx.arc(strike.x, strike.y, strike.radius, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          });
+        }
+      }
+
+      // --- 3. ORBITAL : FAISCEAU IONIQUE PULSAR + ARCS ÉLECTRIQUES EMP ---
+      else if (weaponType === 'ORBITAL') {
+        if (simPhase === 'APPROACH') {
+          // 4 faisceaux de focalisation convergents depuis les coins
+          const t = elapsed / 1.8;
+          ctx.strokeStyle = 'rgba(0, 206, 201, 0.7)';
+          ctx.lineWidth = 2;
+          const corners = [[0, 0], [w, 0], [0, h], [w, h]];
+          corners.forEach(c => {
+            ctx.beginPath();
+            ctx.moveTo(c[0], c[1]);
+            ctx.lineTo(centerX + (Math.random() - 0.5) * 8, centerY + (Math.random() - 0.5) * 8);
+            ctx.stroke();
+          });
+
+          // Réticule géométrique futuriste
+          ctx.strokeStyle = '#00cec9';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(centerX - 35, centerY - 35, 70, 70);
+          ctx.beginPath();
+          ctx.arc(centerX, centerY, 20 + Math.sin(elapsed * 10) * 8, 0, Math.PI * 2);
+          ctx.stroke();
+        } else if (simPhase === 'DETONATION' || simPhase === 'EXTERMINATED') {
+          // Colonne de rayon laser ionique vertical tombant du ciel
+          const beamWidth = Math.max(12, 45 * (1.0 - Math.min(1.0, (elapsed - 1.8) / 2.5)));
+          const beamGrad = ctx.createLinearGradient(centerX - beamWidth, 0, centerX + beamWidth, 0);
+          beamGrad.addColorStop(0, 'rgba(0, 206, 201, 0.1)');
+          beamGrad.addColorStop(0.3, 'rgba(0, 206, 201, 0.9)');
+          beamGrad.addColorStop(0.5, '#ffffff');
+          beamGrad.addColorStop(0.7, 'rgba(0, 206, 201, 0.9)');
+          beamGrad.addColorStop(1, 'rgba(0, 206, 201, 0.1)');
+          ctx.fillStyle = beamGrad;
+          ctx.fillRect(centerX - beamWidth, 0, beamWidth * 2, h);
+
+          // Anneaux d'ondes de choc EMP bleus
+          ctx.strokeStyle = '#00cec9';
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.arc(centerX, centerY, shockwaveRadius, 0, Math.PI * 2);
+          ctx.stroke();
+
+          // Générer et dessiner des arcs électriques de foudre EMP
+          if (Math.random() < 0.45) empArcs.push(createEmpArc());
+          for (let a = empArcs.length - 1; a >= 0; a--) {
+            const arc = empArcs[a];
+            arc.life -= 0.08;
+            if (arc.life <= 0) {
+              empArcs.splice(a, 1);
+              continue;
+            }
+            ctx.strokeStyle = `rgba(129, 236, 236, ${arc.life})`;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(arc.pts[0].x, arc.pts[0].y);
+            for (let pt of arc.pts) ctx.lineTo(pt.x, pt.y);
+            ctx.stroke();
+          }
+        }
+      }
+
+      // --- 4. BIO : DISPERSION D'AÉROSOL TOXIQUE TURBULENT & ASYSTOLIE ---
+      else if (weaponType === 'BIO') {
+        if (simPhase === 'APPROACH') {
+          // 4 Drones canistres parachutés en losange
+          const t = elapsed / 1.8;
+          const dropPositions = [
+            [centerX, centerY - 60],
+            [centerX + 60, centerY],
+            [centerX, centerY + 60],
+            [centerX - 60, centerY]
+          ];
+
+          dropPositions.forEach(dp => {
+            const curY = -20 + (dp[1] - (-20)) * t;
+            ctx.fillStyle = '#2ed573';
+            ctx.beginPath();
+            ctx.arc(dp[0], curY, 6, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Lignes de largage vertes
+            ctx.strokeStyle = 'rgba(46, 213, 115, 0.4)';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(dp[0], 0);
+            ctx.lineTo(dp[0], curY);
+            ctx.stroke();
+          });
+        } else if (simPhase === 'DETONATION' || simPhase === 'EXTERMINATED') {
+          // Expansion volumétrique des bouffées de gaz neuro-toxique
+          bioGasPuffs.forEach(puff => {
+            puff.x += puff.vx;
+            puff.y += puff.vy;
+            puff.radius = Math.min(puff.targetRadius, puff.radius + 0.6);
+            puff.opacity = Math.min(0.65, puff.opacity + 0.02);
+
+            const gasGrad = ctx.createRadialGradient(puff.x, puff.y, 0, puff.x, puff.y, puff.radius);
+            gasGrad.addColorStop(0, `rgba(46, 213, 115, ${puff.opacity})`);
+            gasGrad.addColorStop(0.5, `rgba(38, 222, 129, ${puff.opacity * 0.7})`);
+            gasGrad.addColorStop(0.8, `rgba(16, 172, 132, ${puff.opacity * 0.4})`);
+            gasGrad.addColorStop(1, 'rgba(0,0,0,0)');
+
+            ctx.fillStyle = gasGrad;
+            ctx.beginPath();
+            ctx.arc(puff.x, puff.y, puff.radius, 0, Math.PI * 2);
+            ctx.fill();
+          });
+
+          // Symbole Biohazard pulsant au centre
+          const bioScale = 1.0 + Math.sin(elapsed * 8) * 0.15;
+          ctx.font = `${Math.round(36 * bioScale)}px sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('☣️', centerX, centerY);
+        }
+      }
+
+      // Rendu des particules volantes
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const bp = particles[i];
         bp.x += bp.vx;
         bp.y += bp.vy;
-        bp.life -= 0.016;
+        bp.life -= bp.decay;
 
         if (bp.life <= 0) {
-          blastParticles.splice(i, 1);
+          particles.splice(i, 1);
           continue;
         }
 
@@ -1743,70 +2099,11 @@ export class UIManager {
       }
       ctx.globalAlpha = 1.0;
 
-      // Traçage de l'onde de choc cataclysmique
-      if (simPhase === 'DETONATION' || simPhase === 'EXTERMINATED') {
-        const waveGrad = ctx.createRadialGradient(centerX, centerY, Math.max(0, shockwaveRadius - 40), centerX, centerY, shockwaveRadius);
-        waveGrad.addColorStop(0, 'rgba(0,0,0,0)');
-        waveGrad.addColorStop(0.7, weaponColor);
-        waveGrad.addColorStop(1, '#ffffff');
-
-        ctx.strokeStyle = waveGrad;
-        ctx.lineWidth = 6;
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, shockwaveRadius, 0, Math.PI * 2);
-        ctx.stroke();
-
-        // Zone calcinée intérieure
-        ctx.fillStyle = (weaponType === 'BIO') ? 'rgba(46, 213, 115, 0.25)' : ((weaponType === 'ORBITAL') ? 'rgba(0, 206, 201, 0.25)' : 'rgba(235, 77, 75, 0.28)');
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, Math.min(shockwaveRadius, Math.max(w, h)), 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      // Phase Approche : Réticule de visée et trajectoire du projectile
-      if (simPhase === 'APPROACH') {
-        const rot = elapsed * 3;
-        ctx.strokeStyle = weaponColor;
-        ctx.lineWidth = 2.5;
-
-        // Viseur circulaire rotatif
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, 38, rot, rot + Math.PI * 1.5);
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, 48, -rot, -rot + Math.PI);
-        ctx.stroke();
-
-        // Réticule en croix
-        ctx.beginPath();
-        ctx.moveTo(centerX - 55, centerY); ctx.lineTo(centerX - 15, centerY);
-        ctx.moveTo(centerX + 15, centerY); ctx.lineTo(centerX + 55, centerY);
-        ctx.moveTo(centerX, centerY - 55); ctx.lineTo(centerX, centerY - 15);
-        ctx.moveTo(centerX, centerY + 15); ctx.lineTo(centerX, centerY + 55);
-        ctx.stroke();
-
-        // Icône du projectile arrivant du haut
-        const projY = (elapsed / 1.8) * centerY;
-        ctx.font = '24px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(weaponIcon, centerX, projY);
-
-        // Traînée de fumée du missile
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.moveTo(centerX, 0);
-        ctx.lineTo(centerX, projY);
-        ctx.stroke();
-      }
-
       // Monument central / Symbole de la cible
       ctx.font = '28px sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      if (simPhase === 'EXTERMINATED' || (simPhase === 'DETONATION' && shockwaveRadius > 40)) {
+      if (simPhase === 'EXTERMINATED' || (simPhase === 'DETONATION' && shockwaveRadius > 45)) {
         ctx.fillText('☠️', centerX, centerY);
       } else {
         ctx.fillText(city.countryFlag || '🏛️', centerX, centerY);
@@ -2233,16 +2530,18 @@ export class UIManager {
             </button>
           </div>
 
-          <!-- Bouton d'Attaque / Frappe / Tir / Klaxon (pouce droit) -->
-          <button class="btn-horn-pedal ${isWeapon ? 'btn-attack-pedal' : ''}" id="btn-hud-horn" title="${actionTitle}">
-            <span class="horn-icon">${actionIcon}</span>
-            <span class="horn-label">${actionLabel}</span>
-          </button>
+          ${isWeapon ? `
+            <!-- Bouton d'Attaque / Frappe / Tir Arme Spécifique (pouce droit) -->
+            <button class="btn-horn-pedal btn-attack-pedal" id="btn-hud-horn" title="${actionTitle}">
+              <span class="horn-icon">${actionIcon}</span>
+              <span class="horn-label">${actionLabel}</span>
+            </button>
+          ` : ''}
         </div>
       </div>
 
       <div class="touch-hint auto-fade" id="hud-touch-hint">
-        ← Glissez pour braquer | FREIN pour stopper | ${isWeapon ? `${actionIcon} ${actionLabel} pour FRAPPER !` : '📢 KLAXON'} | ⚡ NITRO →
+        ← Glisser pour braquer | FREIN pour stopper | ⚡ NITRO ${isWeapon ? `| ${actionIcon} ${actionLabel}` : ''}
       </div>
     `;
 
@@ -2496,6 +2795,14 @@ export class UIManager {
         const icon = (dType === 'NUCLEAR') ? '☢️' : (dType === 'DAM' ? '🌊' : '🏔️');
         targetPts.innerHTML = `<span style="color: #2ed573;">${icon} ${distToCore}m</span>`;
       }
+    } else {
+      if (cityName) {
+        const currentCity = gameState.selectedCity;
+        cityName.textContent = `${currentCity.emblem || '📍'} ${currentCity.name.toUpperCase()}`;
+      }
+      if (targetPts) {
+        targetPts.textContent = `🎯 ${(data.targetScore || gameState.selectedCity.targetScore || 2500).toLocaleString('fr-FR')} PTS`;
+      }
     }
 
     if (targetRemaining) {
@@ -2547,6 +2854,7 @@ export class UIManager {
   }
 
   showTrafficLightWarning(streetName) {
+    soundManager.playCrashPenalty();
     let toast = this.root.querySelector('.hud-traffic-warning-toast');
     if (!toast) {
       toast = document.createElement('div');
@@ -2555,10 +2863,13 @@ export class UIManager {
     }
     toast.innerHTML = `
       <div class="traffic-toast-inner">
-        <span class="traffic-toast-icon">🚦</span>
+        <div class="traffic-toast-icon-wrap">
+          <span class="traffic-toast-icon">🚨</span>
+        </div>
         <div class="traffic-toast-text">
-          <div class="traffic-toast-title">FEU ROUGE EN APPROCHE !</div>
-          <div class="traffic-toast-sub">${streetName} • Arrête-toi au stop pour +250 pts !</div>
+          <div class="traffic-toast-top-tag">⚠️ DANGER CARREFOUR</div>
+          <div class="traffic-toast-title">FEU ROUGE : ${streetName.toUpperCase()}</div>
+          <div class="traffic-toast-sub">ARRÊT AU STOP = <strong>+250 PTS</strong> • FRANCHISSEZ À PLEIN RÉGIME !</div>
         </div>
       </div>
     `;
@@ -2566,7 +2877,7 @@ export class UIManager {
     clearTimeout(this.trafficToastTimer);
     this.trafficToastTimer = setTimeout(() => {
       toast.classList.remove('visible');
-    }, 3000);
+    }, 3200);
   }
   showProfileModal() {
     const overlay = document.createElement('div');
@@ -2717,6 +3028,8 @@ export class UIManager {
 
     const starsHtml = '★'.repeat(data.stars) + '☆'.repeat(3 - data.stars);
     const currentCityId = (data.city ? data.city.id : gameState.selectedCity?.id);
+    const currentCityObj = CITIES.find(c => c.id === currentCityId) || gameState.selectedCity;
+    const isAlreadyExterminated = storage.isCityExterminated(currentCityObj.id);
     const currentIndex = CITIES.findIndex(c => c.id === currentCityId);
     const nextCity = (currentIndex >= 0 && currentIndex < CITIES.length - 1) ? CITIES[currentIndex + 1] : null;
     const isNextUnlocked = nextCity && (storage.isCityUnlocked(nextCity.id) || (data.newlyUnlockedCity && data.newlyUnlockedCity.id === nextCity.id));
@@ -2768,6 +3081,11 @@ export class UIManager {
         ` : ''}
 
         <div class="modal-actions">
+          ${!isAlreadyExterminated ? `
+            <button id="btn-results-wmd-exterminate" class="btn-arcade btn-wmd-results" style="background: linear-gradient(135deg, #eb4d4b, #b71540); border: 2px solid #ff4757; box-shadow: 0 4px 18px rgba(235, 77, 75, 0.55); font-weight: 900; color: #fff; padding: 12px;">
+              💀 EXTERMINER ${currentCityObj.name.toUpperCase()} (ARME DE DESTRUCTION MASSIVE)
+            </button>
+          ` : ''}
           ${nextCity && isNextUnlocked ? `
             <button id="btn-results-next" class="btn-arcade" style="background: linear-gradient(135deg, #2ed573, #10ac84); font-size: 1.05rem; box-shadow: 0 4px 16px rgba(46, 213, 115, 0.4); border: 2px solid #7bed9f;">
               ▶ ÉTAPE SUIVANTE : ${nextCity.name.toUpperCase()}
@@ -2785,6 +3103,16 @@ export class UIManager {
         </div>
       </div>
     `;
+
+    const btnWmdResults = overlay.querySelector('#btn-results-wmd-exterminate');
+    if (btnWmdResults) {
+      btnWmdResults.addEventListener('click', () => {
+        soundManager.playClick();
+        overlay.remove();
+        this.activeModals = this.activeModals.filter(m => m !== overlay);
+        this.showWmdStrikeModal(currentCityObj);
+      });
+    }
 
     const btnNext = overlay.querySelector('#btn-results-next');
     if (btnNext && nextCity) {

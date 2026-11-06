@@ -132,64 +132,86 @@ export class IntersectionManager {
   // --- PORTIQUE GÉANT LUMINEUX AU-DESSUS DE LA VOIE DU CARREFOUR ---
   createOverheadGantryMesh() {
     const gantry = new THREE.Group();
-    const trussMat = new THREE.MeshToonMaterial({ color: 0x2f3640 });
-    const chromeMat = new THREE.MeshStandardMaterial({ color: 0xced6e0, metalness: 0.85, roughness: 0.2 });
-    const boxMat = new THREE.MeshToonMaterial({ color: 0x1e272e });
+    const postMat = new THREE.MeshStandardMaterial({ color: 0x2d3436, metalness: 0.85, roughness: 0.25 });
+    const signBlueMat = new THREE.MeshStandardMaterial({ color: 0x0984e3, roughness: 0.35 });
+    const signBorderMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    const boxMat = new THREE.MeshStandardMaterial({ color: 0x1e272e, roughness: 0.5 });
 
-    // 1. Deux poteaux d'acier verticaux de part et d'autre de la chaussée
-    const postGeo = new THREE.CylinderGeometry(0.12, 0.16, 5.6, 8);
-    const postL = new THREE.Mesh(postGeo, trussMat);
-    postL.position.set(-5.8, 2.8, 0);
-    const postR = new THREE.Mesh(postGeo, trussMat);
-    postR.position.set(5.8, 2.8, 0);
+    // 1. Deux poteaux tubulaires profilés en acier anthracite
+    const postGeo = new THREE.CylinderGeometry(0.14, 0.16, 6.2, 12);
+    const postL = new THREE.Mesh(postGeo, postMat);
+    postL.position.set(-6.2, 3.1, 0);
+    const postR = new THREE.Mesh(postGeo, postMat);
+    postR.position.set(6.2, 3.1, 0);
     gantry.add(postL, postR);
 
-    // 2. Tablier métallique transversal franchissant toute la chaussée (hauteur 5.2m)
-    const beamGeo = new THREE.BoxGeometry(12.0, 0.45, 0.45);
-    const beam = new THREE.Mesh(beamGeo, trussMat);
-    beam.position.set(0, 5.2, 0);
+    // 2. Traverse supérieure profilée avec platelage
+    const beamGeo = new THREE.BoxGeometry(12.8, 0.38, 0.42);
+    const beam = new THREE.Mesh(beamGeo, postMat);
+    beam.position.set(0, 5.7, 0);
     gantry.add(beam);
 
-    const subBeam = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 11.8, 6), chromeMat);
-    subBeam.rotation.z = Math.PI / 2;
-    subBeam.position.set(0, 4.8, 0);
-    gantry.add(subBeam);
+    // 3. Panneaux de signalisation routière européens bleu & blanc
+    // Panneau Gauche : ⬆ CENTRE-VILLE
+    const signLeft = new THREE.Group();
+    signLeft.position.set(-2.8, 4.8, 0.25);
+    const plateL = new THREE.Mesh(new THREE.BoxGeometry(4.2, 1.25, 0.08), signBlueMat);
+    const borderL = new THREE.Mesh(new THREE.BoxGeometry(4.32, 1.35, 0.04), signBorderMat);
+    borderL.position.z = -0.02;
+    const arrowStem = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.6, 0.1), signBorderMat);
+    arrowStem.position.set(-1.6, 0, 0.06);
+    const arrowHead = new THREE.Mesh(new THREE.ConeGeometry(0.28, 0.4, 3), signBorderMat);
+    arrowHead.position.set(-1.6, 0.35, 0.06);
+    signLeft.add(borderL, plateL, arrowStem, arrowHead);
 
-    // 3. Boîtier central de feux suspendu au-dessus des voies du joueur
-    const centerBox = new THREE.Mesh(new THREE.BoxGeometry(0.68, 1.85, 0.48), boxMat);
-    centerBox.position.set(0, 4.5, 0.1);
+    // Panneau Droit : ➡ PÉRIPHÉRIQUE / ROCADE
+    const signRight = new THREE.Group();
+    signRight.position.set(2.8, 4.8, 0.25);
+    const plateR = new THREE.Mesh(new THREE.BoxGeometry(4.2, 1.25, 0.08), signBlueMat);
+    const borderR = new THREE.Mesh(new THREE.BoxGeometry(4.32, 1.35, 0.04), signBorderMat);
+    borderR.position.z = -0.02;
+    const arrowStemR = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.15, 0.1), signBorderMat);
+    arrowStemR.position.set(1.5, 0, 0.06);
+    const arrowHeadR = new THREE.Mesh(new THREE.ConeGeometry(0.25, 0.35, 3), signBorderMat);
+    arrowHeadR.rotation.z = -Math.PI / 2;
+    arrowHeadR.position.set(1.8, 0, 0.06);
+    signRight.add(borderR, plateR, arrowStemR, arrowHeadR);
+
+    gantry.add(signLeft, signRight);
+
+    // 4. Boîtier central de feux suspendu au-dessus des voies
+    const centerBox = new THREE.Mesh(new THREE.BoxGeometry(0.72, 1.7, 0.42), boxMat);
+    centerBox.position.set(0, 4.2, 0.1);
     gantry.add(centerBox);
 
-    // Optiques 3D géantes (Rouge, Orange, Vert)
+    // Optiques 3D LED (Rouge, Orange, Vert)
     const lampGeo = new THREE.SphereGeometry(0.18, 12, 10);
     const lampRed = new THREE.Mesh(lampGeo, new THREE.MeshBasicMaterial({ color: 0xff2d55 }));
-    lampRed.position.set(0, 5.08, 0.36);
+    lampRed.position.set(0, 4.75, 0.32);
     const lampOrange = new THREE.Mesh(lampGeo, new THREE.MeshBasicMaterial({ color: 0x442200 }));
-    lampOrange.position.set(0, 4.5, 0.36);
+    lampOrange.position.set(0, 4.2, 0.32);
     const lampGreen = new THREE.Mesh(lampGeo, new THREE.MeshBasicMaterial({ color: 0x004400 }));
-    lampGreen.position.set(0, 3.92, 0.36);
+    lampGreen.position.set(0, 3.65, 0.32);
     gantry.add(lampRed, lampOrange, lampGreen);
 
     // Visières pare-soleil incurvées
     const visorMat = new THREE.MeshToonMaterial({ color: 0x111111 });
-    [5.08, 4.5, 3.92].forEach(y => {
-      const visor = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.24, 0.2, 8, 1, true, 0, Math.PI), visorMat);
+    [4.75, 4.2, 3.65].forEach(y => {
+      const visor = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.18, 8, 1, true, 0, Math.PI), visorMat);
       visor.rotation.x = Math.PI / 2;
-      visor.position.set(0, y + 0.12, 0.36);
+      visor.position.set(0, y + 0.1, 0.32);
       gantry.add(visor);
     });
 
-    // Gyrophare orange clignotant au centre supérieur du portique
-    const beacon = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.18, 8), new THREE.MeshBasicMaterial({ color: 0xffa502 }));
-    beacon.position.set(0, 5.54, 0);
-    gantry.add(beacon);
+    const dummyBeacon = new THREE.Mesh(new THREE.BoxGeometry(0.01, 0.01, 0.01), new THREE.MeshBasicMaterial({ visible: false }));
+    gantry.add(dummyBeacon);
 
     return {
       group: gantry,
       lampRed,
       lampOrange,
       lampGreen,
-      beacon
+      beacon: dummyBeacon
     };
   }
 
@@ -245,118 +267,147 @@ export class IntersectionManager {
     return lampGroup;
   }
 
-  // --- MODÈLES DE VÉHICULES TRANSVERSAUX FRANÇAIS HAUTE DÉFINITION ---
+  // --- MODÈLES DE VÉHICULES TRANSVERSAUX HAUTE FIDÉLITÉ (GT, SUV, BERLINE, TAXI) ---
   createCrossingCarMesh(type = 'taxi') {
     const carGroup = new THREE.Group();
 
-    const chromeMat = new THREE.MeshStandardMaterial({ color: 0xf5f6fa, metalness: 0.95, roughness: 0.1 });
-    const glassMat = new THREE.MeshStandardMaterial({ color: 0x111927, metalness: 0.9, roughness: 0.05 });
-    const rubberMat = new THREE.MeshStandardMaterial({ color: 0x181818, roughness: 0.85 });
-    const rimMat = new THREE.MeshStandardMaterial({ color: 0xecf0f1, metalness: 0.95, roughness: 0.12 });
-    const caliperMat = new THREE.MeshStandardMaterial({ color: 0xff3838, roughness: 0.3, metalness: 0.6 });
+    const chromeMat = new THREE.MeshStandardMaterial({ color: 0xf5f6fa, metalness: 0.95, roughness: 0.08 });
+    const glassMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.92, roughness: 0.04 });
+    const rubberMat = new THREE.MeshStandardMaterial({ color: 0x141414, roughness: 0.9 });
+    const rimMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.96, roughness: 0.1 });
+    const caliperMat = new THREE.MeshStandardMaterial({ color: 0xff3838, roughness: 0.25, metalness: 0.6 });
 
-    let bodyColor = 0xf1c40f; // Jaune taxi
-    if (type === 'van') bodyColor = 0xf5f6fa; // Blanc utilitaire
-    if (type === 'compact') bodyColor = 0xe74c3c; // Rouge sport
-    if (type === 'berline') bodyColor = 0x2c3e50; // Noir ébène
+    let bodyColor = 0xf39c12; // Jaune ambré taxi
+    if (type === 'van') bodyColor = 0x3b82f6; // Bleu saphir SUV
+    if (type === 'compact') bodyColor = 0xeb4d4b; // Rouge carmin GT sport
+    if (type === 'berline') bodyColor = 0x1e272e; // Noir onyx berline
 
     const bodyMat = new THREE.MeshStandardMaterial({
       color: bodyColor,
-      metalness: 0.88,
-      roughness: 0.16
+      metalness: 0.86,
+      roughness: 0.14
     });
 
-    // 1. Châssis principal sculpté avec biseautages aérodynamiques
-    const chassisGeo = new THREE.BoxGeometry(4.4, 0.75, 2.0);
+    // 1. Châssis principal sculpté selon le type
+    const isSUV = (type === 'van');
+    const isGT = (type === 'compact');
+    const chassisL = isGT ? 4.2 : (isSUV ? 4.4 : 4.6);
+    const chassisH = isGT ? 0.58 : (isSUV ? 0.82 : 0.66);
+    const chassisW = isSUV ? 2.1 : 1.95;
+    const chassisY = isSUV ? 0.82 : 0.62;
+
+    const chassisGeo = new THREE.BoxGeometry(chassisL, chassisH, chassisW);
     const chassis = new THREE.Mesh(chassisGeo, bodyMat);
-    chassis.position.y = 0.65;
+    chassis.position.y = chassisY;
     chassis.castShadow = true;
     carGroup.add(chassis);
 
     // Calandre avant chromée
-    const grille = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.4, 1.4), chromeMat);
-    grille.position.set(2.22, 0.65, 0);
+    const grilleH = isSUV ? 0.48 : 0.32;
+    const grille = new THREE.Mesh(new THREE.BoxGeometry(0.14, grilleH, 1.4), chromeMat);
+    grille.position.set(chassisL / 2 + 0.02, chassisY, 0);
     carGroup.add(grille);
 
-    // 2. Habitacle profilé
-    const cabinGeo = new THREE.BoxGeometry(2.5, 0.85, 1.8);
+    // 2. Habitacle et vitrage profilé
+    const cabinL = isGT ? 2.2 : (isSUV ? 2.7 : 2.5);
+    const cabinH = isGT ? 0.68 : (isSUV ? 0.88 : 0.78);
+    const cabinW = chassisW * 0.88;
+    const cabinX = isGT ? -0.32 : -0.15;
+    const cabinY = chassisY + (chassisH / 2) + (cabinH / 2);
+
+    const cabinGeo = new THREE.BoxGeometry(cabinL, cabinH, cabinW);
     const cabin = new THREE.Mesh(cabinGeo, bodyMat);
-    cabin.position.set(-0.25, 1.42, 0);
+    cabin.position.set(cabinX, cabinY, 0);
     cabin.castShadow = true;
     carGroup.add(cabin);
 
     // Vitrage teinté réfléchissant
-    const winGeo = new THREE.BoxGeometry(2.55, 0.72, 1.84);
+    const winGeo = new THREE.BoxGeometry(cabinL + 0.04, cabinH * 0.85, cabinW + 0.04);
     const win = new THREE.Mesh(winGeo, glassMat);
-    win.position.set(-0.25, 1.42, 0);
+    win.position.set(cabinX, cabinY, 0);
     carGroup.add(win);
 
-    // Si Taxi : enseigne de toit lumineuse bicolore "TAXI"
-    if (type === 'taxi') {
-      const taxiSignGeo = new THREE.BoxGeometry(0.85, 0.26, 0.35);
-      const taxiSignMat = new THREE.MeshBasicMaterial({ color: 0xfffa65 });
-      const taxiSign = new THREE.Mesh(taxiSignGeo, taxiSignMat);
-      taxiSign.position.set(-0.25, 1.95, 0);
-      carGroup.add(taxiSign);
-
-      const lightR = new THREE.Mesh(new THREE.SphereGeometry(0.08, 6, 6), new THREE.MeshBasicMaterial({ color: 0x2ed573 }));
-      lightR.position.set(-0.25, 2.12, 0);
-      carGroup.add(lightR);
+    // Si GT Sport : Aileron arrière aérodynamique & diffuseur carbone
+    if (isGT) {
+      const wingMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.3 });
+      const wing = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.06, 1.8), wingMat);
+      wing.position.set(-chassisL / 2 + 0.15, chassisY + 0.58, 0);
+      const postW1 = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.28, 0.06), wingMat);
+      postW1.position.set(-chassisL / 2 + 0.15, chassisY + 0.44, 0.6);
+      const postW2 = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.28, 0.06), wingMat);
+      postW2.position.set(-chassisL / 2 + 0.15, chassisY + 0.44, -0.6);
+      carGroup.add(wing, postW1, postW2);
     }
 
-    // Si Camionnette : grand caisson arrière de livraison
-    if (type === 'van') {
-      const vanBoxGeo = new THREE.BoxGeometry(2.2, 1.3, 1.95);
-      const vanBox = new THREE.Mesh(vanBoxGeo, bodyMat);
-      vanBox.position.set(-1.0, 1.35, 0);
-      carGroup.add(vanBox);
+    // Si SUV : Barres de toit argentées et plaques de protection
+    if (isSUV) {
+      const railMat = new THREE.MeshStandardMaterial({ color: 0xdcdde1, metalness: 0.9, roughness: 0.2 });
+      [-0.75, 0.75].forEach(zSide => {
+        const rail = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 2.4, 6), railMat);
+        rail.rotation.z = Math.PI / 2;
+        rail.position.set(cabinX, cabinY + (cabinH / 2) + 0.06, zSide);
+        carGroup.add(rail);
+      });
+    }
+
+    // Si Taxi : enseigne de toit lumineuse bicolore "TAXI PARISIEN"
+    if (type === 'taxi') {
+      const taxiSign = new THREE.Mesh(new THREE.BoxGeometry(0.78, 0.24, 0.38), new THREE.MeshBasicMaterial({ color: 0xfffa65 }));
+      taxiSign.position.set(cabinX, cabinY + (cabinH / 2) + 0.16, 0);
+      const statusLight = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 8), new THREE.MeshBasicMaterial({ color: 0x2ed573 }));
+      statusLight.position.set(cabinX, cabinY + (cabinH / 2) + 0.32, 0);
+      carGroup.add(taxiSign, statusLight);
     }
 
     // 3. 4 Roues en alliage d'aluminium avec jantes bâtons et étriers rouges
     const wheels = [];
+    const wheelR = isSUV ? 0.44 : 0.36;
+    const wheelY = isSUV ? 0.44 : 0.36;
     const wheelPositions = [
-      [-1.35, 0.38, 1.02],
-      [1.35, 0.38, 1.02],
-      [-1.35, 0.38, -1.02],
-      [1.35, 0.38, -1.02]
+      [-chassisL * 0.32, wheelY, chassisW * 0.52],
+      [chassisL * 0.32, wheelY, chassisW * 0.52],
+      [-chassisL * 0.32, wheelY, -chassisW * 0.52],
+      [chassisL * 0.32, wheelY, -chassisW * 0.52]
     ];
 
     wheelPositions.forEach(pos => {
       const wGroup = new THREE.Group();
       wGroup.position.set(pos[0], pos[1], pos[2]);
 
-      const tireGeo = new THREE.CylinderGeometry(0.38, 0.38, 0.28, 14);
+      const tireGeo = new THREE.CylinderGeometry(wheelR, wheelR, 0.28, 14);
       const tire = new THREE.Mesh(tireGeo, rubberMat);
       tire.rotation.x = Math.PI / 2;
       wGroup.add(tire);
 
-      const rimGeo = new THREE.CylinderGeometry(0.24, 0.24, 0.29, 10);
+      const rimGeo = new THREE.CylinderGeometry(wheelR * 0.65, wheelR * 0.65, 0.29, 10);
       const rim = new THREE.Mesh(rimGeo, rimMat);
       rim.rotation.x = Math.PI / 2;
       wGroup.add(rim);
 
-      const caliper = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.16, 0.12), caliperMat);
-      caliper.position.set(0, 0.16, 0);
+      const caliper = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.15, 0.12), caliperMat);
+      caliper.position.set(0, wheelR * 0.4, 0);
       wGroup.add(caliper);
 
       carGroup.add(wGroup);
       wheels.push(wGroup);
     });
 
+    carGroup.userData.wheels = wheels;
+
     // 4. Optiques avant LED et bande de feux arrière
     const headMat = new THREE.MeshBasicMaterial({ color: 0xfffa65 });
     const tailMat = new THREE.MeshBasicMaterial({ color: 0xff1744 });
 
-    const lightGeo = new THREE.BoxGeometry(0.1, 0.18, 0.38);
+    const lightGeo = new THREE.BoxGeometry(0.12, 0.16, 0.36);
     const lightL = new THREE.Mesh(lightGeo, headMat);
-    lightL.position.set(2.22, 0.72, 0.65);
+    lightL.position.set(chassisL / 2 + 0.02, chassisY + 0.12, chassisW * 0.32);
     const lightR = new THREE.Mesh(lightGeo, headMat);
-    lightR.position.set(2.22, 0.72, -0.65);
+    lightR.position.set(chassisL / 2 + 0.02, chassisY + 0.12, -chassisW * 0.32);
     carGroup.add(lightL, lightR);
 
     // Barre LED rouge continue à l'arrière
-    const lightbar = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.12, 1.7), tailMat);
-    lightbar.position.set(-2.22, 0.72, 0);
+    const lightbar = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.12, chassisW * 0.85), tailMat);
+    lightbar.position.set(-chassisL / 2 - 0.02, chassisY + 0.12, 0);
     carGroup.add(lightbar);
 
     // 5. Ombre de contact au sol
@@ -489,27 +540,10 @@ export class IntersectionManager {
     tlRight.group.position.set(5.6, 0, -8.6);
     nodeGroup.add(tlRight.group);
 
-    // 6. Portique monumental en treillis d'acier au-dessus des voies avec feu central
+    // 6. Portique monumental au-dessus des voies avec signalisation européenne et feux
     const overheadGantry = this.createOverheadGantryMesh();
     overheadGantry.group.position.set(0, 0, -8.6);
     nodeGroup.add(overheadGantry.group);
-
-    // 7. Zébras peints rouge et blanc d'avertissement d'approche 35m avant le stop
-    const warnRedMat = new THREE.MeshBasicMaterial({ color: 0xeb4d4b });
-    const warnWhiteMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-    for (let az = -34; az <= -14; az += 5.0) {
-      const chevronL = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.45), warnRedMat);
-      chevronL.rotation.x = -Math.PI / 2;
-      chevronL.rotation.z = -0.4;
-      chevronL.position.set(-3.2, 0.024, az);
-
-      const chevronR = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.45), warnWhiteMat);
-      chevronR.rotation.x = -Math.PI / 2;
-      chevronR.rotation.z = 0.4;
-      chevronR.position.set(3.2, 0.024, az);
-
-      nodeGroup.add(chevronL, chevronR);
-    }
 
     const streetName = STREET_NAMES[this.streetNameIndex % STREET_NAMES.length];
     this.streetNameIndex++;

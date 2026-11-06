@@ -41,6 +41,11 @@ export class Bike {
     this.currentBikeId = 'scooter';
     this.lastWhipSnap = 0;
 
+    // Physique de saut réaliste pour ralentisseurs / dos d'âne (Air Time)
+    this.jumpAltitude = 0;
+    this.jumpVelocity = 0;
+    this.pitchAngle = 0;
+
     // État de crash et relèvement comique
     this.isCrashed = false;
     this.crashTimer = 0;
@@ -2321,7 +2326,26 @@ export class Bike {
     this.bouncePhase += delta * (speed * 0.8 + 2.0);
     const suspensionBounce = Math.sin(this.bouncePhase) * 0.02;
     const baseAltitude = this.isFlyingEscape || this.currentBikeId === 'aero_jet' ? 38.0 : (onSidewalk ? 0.25 : 0.0);
-    this.mesh.position.y = THREE.MathUtils.lerp(this.mesh.position.y, baseAltitude + suspensionBounce, delta * 8.0);
+
+    // Mise à jour de la physique de saut (Gravité 18 m/s² et amorti de suspension)
+    if (this.jumpAltitude > 0 || this.jumpVelocity > 0) {
+      this.jumpVelocity -= 18.0 * delta;
+      this.jumpAltitude = Math.max(0, this.jumpAltitude + this.jumpVelocity * delta);
+      if (this.jumpVelocity < 0) {
+        this.pitchAngle = THREE.MathUtils.lerp(this.pitchAngle, 0.15, delta * 6.0); // nez plongeant à la retombée
+      }
+      if (this.jumpAltitude <= 0) {
+        this.jumpAltitude = 0;
+        this.jumpVelocity = 0;
+        this.pitchAngle = 0;
+        soundManager.playSuspensionThud();
+      }
+    } else {
+      this.pitchAngle = THREE.MathUtils.lerp(this.pitchAngle, 0, delta * 10.0);
+    }
+
+    const targetY = baseAltitude + suspensionBounce + this.jumpAltitude;
+    this.mesh.position.y = THREE.MathUtils.lerp(this.mesh.position.y, targetY, delta * 12.0);
 
     // Inclinaison du châssis (atténuée pour la décapotable 4 roues)
     if (this.currentBikeId === 'decapotable') {
@@ -2332,6 +2356,7 @@ export class Bike {
     } else {
       this.bikeModelGroup.rotation.z = this.currentLean;
     }
+    this.bikeModelGroup.rotation.x = this.pitchAngle;
 
     // Orientation de la fourche avant
     if (this.frontFork) {
@@ -2663,12 +2688,19 @@ export class Bike {
       this.spawnTracerBurst();
       return { type: 'uzi', range: 40.0, radius: 3.5 };
     } else if (this.currentBikeId === 'rouleau') {
-      soundManager.playSteamrollerHorn();
+      soundManager.playExplosion();
       return { type: 'crusher', range: 26.0, radius: 6.5 };
     } else {
-      soundManager.playHorn(this.currentBikeId);
-      return { type: 'horn', range: 24.0, radius: 5.0 };
+      return null;
     }
+  }
+
+  triggerSpeedBumpJump(speed = 15.0) {
+    if (this.currentBikeId === 'aero_jet' || this.isFlyingEscape) return;
+    const speedRatio = Math.min(2.5, Math.max(0.65, speed / 18.0));
+    this.jumpVelocity = 4.8 * speedRatio;
+    this.pitchAngle = -0.22 * speedRatio; // cabrage vif
+    soundManager.playSuspensionThud();
   }
 
   getExhaustPosition() {
