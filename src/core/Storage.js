@@ -14,7 +14,7 @@ const DEFAULT_SAVE = {
     'madrid', 'lisbonne',
     'millau', 'marseille', 'nice', 'milan', 'geneve', 'chamonix',
     'annecy', 'lyon', 'strasbourg', 'rome', 'napoli', 'tunis', 'annaba', 'alger',
-    'berlin', 'amsterdam', 'seville', 'casablanca', 'venise', 'tchernobyl'
+    'berlin', 'amsterdam', 'seville', 'casablanca', 'venise', 'flamanville-nuc', 'doel-nuc', 'asco-nuc', 'tchernobyl'
   ],
   cityScores: {
     paris: { bestScore: 0, stars: 0, completed: false },
@@ -24,9 +24,10 @@ const DEFAULT_SAVE = {
     bordeaux: { bestScore: 0, stars: 0, completed: false },
     strasbourg: { bestScore: 0, stars: 0, completed: false }
   },
-  unlockedBikes: ['scooter', 'chopper', 'decapotable', 'trottinette_hache', 'cheval', 'run_ak47', 'run_chainsaw', 'rouleau', 'dragster', 'aero_jet'],
+  unlockedBikes: ['tank', 'scooter', 'chopper', 'decapotable', 'trottinette_hache', 'cheval', 'run_ak47', 'run_chainsaw', 'rouleau', 'dragster', 'aero_jet'],
   equippedBike: 'scooter',
   bikeColors: {
+    tank: '#3d4f36',
     scooter: '#e74c3c',
     chopper: '#f39c12',
     decapotable: '#c0392b',

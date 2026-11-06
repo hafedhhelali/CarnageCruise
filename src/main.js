@@ -68,12 +68,16 @@ class GameApp {
   bindInputEvents() {
     // --- CONTRÔLES TACTILES MOBILES (TOUCH & POINTER) ---
     window.addEventListener('pointerdown', (e) => {
-      // Ignorer si clic sur une interface interactive ou bouton
+      soundManager.resumeContext();
+      if (storage.data.settings.music && !soundManager.musicPlaying && (gameState.currentMode === 'SPLASH' || gameState.currentMode === 'MAP' || gameState.currentMode === 'GARAGE')) {
+        soundManager.startMusic('MENU');
+      }
+
+      // Ignorer la conduite si clic sur une interface interactive ou bouton
       if (e.target.closest('.interactive') || e.target.closest('button')) return;
 
       this.isPointerDown = true;
       this.touchStartX = e.clientX;
-      soundManager.resumeContext();
     });
 
     window.addEventListener('pointermove', (e) => {

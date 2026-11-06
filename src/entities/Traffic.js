@@ -17,9 +17,6 @@ export class Traffic {
     this.container = new THREE.Group();
     this.scene.add(this.container);
 
-    this.ambulance = this.createAmbulance();
-    this.container.add(this.ambulance);
-
     // Géométries partagées optimisées
     this.sharedGeos = {
       wheelTire: new THREE.CylinderGeometry(0.36, 0.36, 0.24, 18),
@@ -76,6 +73,10 @@ export class Traffic {
     };
 
     this.initPool();
+
+    // Initialiser l'ambulance d'urgence après avoir défini les géométries et matériaux partagés
+    this.ambulance = this.createAmbulance();
+    this.container.add(this.ambulance);
   }
 
   initPool() {

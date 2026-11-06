@@ -111,6 +111,15 @@ export class UIManager {
       this.previousScreen = this.currentScreen;
     }
     this.currentScreen = screenName;
+
+    // Transition musicale dynamique selon l'écran
+    if (screenName === 'SPLASH' || screenName === 'MAP' || screenName === 'GARAGE') {
+      soundManager.switchMusicTrack('MENU');
+    } else if (screenName === 'HUD') {
+      const isNuc = gameState.selectedCity?.isNuclearMission;
+      soundManager.switchMusicTrack(isNuc ? 'NUCLEAR' : 'GAMEPLAY');
+    }
+
     this.render();
   }
 
@@ -128,67 +137,156 @@ export class UIManager {
     }
   }
 
-  // --- 1. ÉCRAN DE LANCEMENT (SPLASH SCREEN) ---
+  // --- 1. ÉCRAN DE LANCEMENT ÉPIQUE & ERGONOMIQUE (SPLASH SCREEN AAA) ---
   renderSplashScreen() {
     const splash = document.createElement('div');
     splash.className = 'screen-splash interactive';
 
-    splash.innerHTML = `
-      <div class="splash-badge-version">${IS_BETA ? '<span class="badge-beta-pill">BETA</span>' : ''}${FULL_VERSION}</div>
+    const coins = storage.data.coins;
+    const totalStars = storage.getTotalStars();
+    const equippedBikeId = storage.getEquippedBike() || 'scooter';
+    const equippedBike = BIKES.find(b => b.id === equippedBikeId) || BIKES[0];
+    const isMusicOn = storage.data.settings.music;
 
-      <div class="logo-container">
-        <h1 class="game-title">MOTORMAGEDDON</h1>
-        <div class="game-subtitle">★ ARCADE 3D RACER ★</div>
+    splash.innerHTML = `
+      <!-- En-tête supérieur ergonomique avec statuts, pièces, étoiles et toggle audio -->
+      <div class="splash-header-bar">
+        <div class="splash-badge-version">
+          ${IS_BETA ? '<span class="badge-beta-pill">BETA</span>' : ''}
+          <span class="badge-version-text">${FULL_VERSION}</span>
+        </div>
+        <div class="splash-header-right">
+          <div class="currency-pill clickable" id="splash-gift-coins" title="Cadeau Sponsor : +20 Pièces d'or">
+            <span>🪙 ${coins}</span>
+            <span class="currency-ad-gift-tag">🎁 +20</span>
+          </div>
+          <div class="stars-pill" title="Total d'étoiles gagnées">
+            <span>★ ${totalStars}</span>
+          </div>
+          <button id="btn-splash-audio" class="btn-round-action btn-audio-quick" title="${isMusicOn ? 'Couper la Musique' : 'Activer la Musique'}">
+            <span>${isMusicOn ? '🔊' : '🔇'}</span>
+          </button>
+        </div>
       </div>
 
+      <!-- Hero Titre & Logo Arcade Stylisé 3D -->
+      <div class="logo-container">
+        <div class="logo-glow-ring"></div>
+        <h1 class="game-title">MOTORMAGEDDON</h1>
+        <div class="game-subtitle">⚡ CARNAGE URBAIN & COURSES D'ASSAUT ⚡</div>
+      </div>
+
+      <!-- Carte d'Aperçu du Véhicule Équipé (Accès Rapide Garage) -->
+      <div class="splash-vehicle-card clickable" id="btn-splash-quick-garage" title="Personnaliser et équiper dans le Garage">
+        <div class="vehicle-card-badge">VÉHICULE PRÊT AU DÉPART</div>
+        <div class="vehicle-card-main">
+          <span class="vehicle-card-icon">${equippedBike.icon}</span>
+          <div class="vehicle-card-text">
+            <span class="vehicle-card-name">${equippedBike.name}</span>
+            <span class="vehicle-card-tag">${equippedBike.tagline}</span>
+          </div>
+          <span class="vehicle-card-cta">GARAGE ➔</span>
+        </div>
+      </div>
+
+      <!-- Zone Ergonomique Inférieure pour Pouces (Thumb Zone Mobile) -->
       <div class="splash-footer">
-        <button id="btn-splash-play" class="btn-arcade btn-play-pulse">
-          <span>🚀 JOUER</span>
+        <!-- Bouton Héros Principal de Lancement -->
+        <button id="btn-splash-play" class="btn-arcade btn-play-pulse hero-play-btn">
+          <span class="hero-play-icon">🚀</span>
+          <span class="hero-play-label">LANCER LA COURSE</span>
+          <span class="hero-play-arrow">▶</span>
         </button>
-        <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
-          <button id="btn-splash-profile" class="btn-arcade btn-accent" style="font-size: 0.95rem; padding: 10px 18px;">
+
+        <!-- Grille 2 Colonnes Tactile Ergonomique -->
+        <div class="splash-action-grid">
+          <button id="btn-splash-garage" class="btn-arcade btn-secondary btn-touch-target">
+            <span class="btn-icon">🪖</span>
+            <span class="btn-label">GARAGE & ARSENAL</span>
+          </button>
+          <button id="btn-splash-nuclear" class="btn-arcade btn-nuclear-launch btn-touch-target">
+            <span class="btn-icon">☢️</span>
+            <span class="btn-label">ÉPREUVES NUCLÉAIRES</span>
+          </button>
+        </div>
+
+        <!-- Ligne d'Utilitaires Secondaires -->
+        <div class="splash-utility-row">
+          <button id="btn-splash-profile" class="btn-arcade btn-accent btn-sm-utility">
             <span>👤 PROFIL</span>
           </button>
-          <button id="btn-splash-garage" class="btn-arcade btn-secondary" style="font-size: 0.95rem; padding: 10px 18px;">
-            <span>🏍️ GARAGE</span>
-          </button>
-          <button id="btn-splash-settings" class="btn-arcade btn-ghost" style="font-size: 0.95rem; padding: 10px 16px;">
+          <button id="btn-splash-settings" class="btn-arcade btn-ghost btn-sm-utility">
             <span>⚙️ OPTIONS</span>
+          </button>
+          <button id="btn-splash-legal" class="btn-arcade btn-ghost btn-sm-utility">
+            <span>ℹ️ INFOS</span>
           </button>
         </div>
 
         <div class="splash-legal">
           <span>${COPYRIGHT_NOTICE}</span>
-          <button id="btn-splash-legal" class="btn-legal-link">Mentions Légales & Version</button>
         </div>
       </div>
     `;
 
     splash.querySelector('#btn-splash-play').addEventListener('click', () => {
-      soundManager.playClick();
+      soundManager.playClick('hero');
       soundManager.resumeContext();
+      soundManager.switchMusicTrack('MENU');
       this.setScreen('MAP');
     });
 
-    splash.querySelector('#btn-splash-profile').addEventListener('click', () => {
-      soundManager.playClick();
-      this.showProfileModal();
+    splash.querySelector('#btn-splash-nuclear').addEventListener('click', () => {
+      soundManager.playClick('nuclear');
+      soundManager.resumeContext();
+      const nuc = CITIES.find(c => c.isNuclearMission);
+      if (nuc) {
+        gameState.selectCity(nuc.id);
+        this.selectedMapCity = nuc;
+      }
+      this.setScreen('MAP');
     });
 
     splash.querySelector('#btn-splash-garage').addEventListener('click', () => {
-      soundManager.playClick();
+      soundManager.playClick('garage');
       this.previousScreen = 'SPLASH';
       this.setScreen('GARAGE');
     });
 
+    splash.querySelector('#btn-splash-quick-garage').addEventListener('click', () => {
+      soundManager.playClick('garage');
+      this.previousScreen = 'SPLASH';
+      this.setScreen('GARAGE');
+    });
+
+    splash.querySelector('#btn-splash-profile').addEventListener('click', () => {
+      soundManager.playClick('default');
+      this.showProfileModal();
+    });
+
     splash.querySelector('#btn-splash-settings').addEventListener('click', () => {
-      soundManager.playClick();
+      soundManager.playClick('default');
       this.showSettingsModal();
     });
 
     splash.querySelector('#btn-splash-legal').addEventListener('click', () => {
-      soundManager.playClick();
+      soundManager.playClick('default');
       this.showLegalModal();
+    });
+
+    splash.querySelector('#splash-gift-coins')?.addEventListener('click', () => {
+      adManager.showRewardedAd('COINS', () => {
+        storage.addCoins(20);
+        soundManager.playCashRegister();
+        this.render();
+      });
+    });
+
+    splash.querySelector('#btn-splash-audio')?.addEventListener('click', () => {
+      const nextMusicState = !storage.data.settings.music;
+      soundManager.toggleMusic(nextMusicState);
+      soundManager.playClick('default');
+      this.render();
     });
 
     this.root.appendChild(splash);
@@ -1094,6 +1192,11 @@ export class UIManager {
       actionIcon = '⚡';
       actionLabel = 'TRONÇON';
       actionTitle = 'Tronçonner les obstacles !';
+      isWeapon = true;
+    } else if (equippedBikeId === 'tank') {
+      actionIcon = '💥';
+      actionLabel = 'CANON';
+      actionTitle = 'Tirer un obus 120mm destructeur !';
       isWeapon = true;
     }
 

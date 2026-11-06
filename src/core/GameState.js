@@ -1041,7 +1041,8 @@ export class GameState {
 
     soundManager.startEngine();
     soundManager.updateEngine(0.08); // Ronronnement au ralenti à l'arrêt
-    soundManager.startMusic();
+    const track = this.selectedCity?.isNuclearMission ? 'NUCLEAR' : 'GAMEPLAY';
+    soundManager.switchMusicTrack(track);
     this.notify('run_started', { city: this.selectedCity, bike: this.selectedBike });
   }
 
@@ -1338,6 +1339,7 @@ export class GameState {
     this.currentMode = 'RESULTS';
     this.isGameOver = true;
     soundManager.stopEngine();
+    soundManager.switchMusicTrack('MENU');
 
     // Calcul des étoiles avec les nouveaux seuils
     let stars = 0;

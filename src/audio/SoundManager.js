@@ -29,7 +29,26 @@ export class SoundManager {
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
     if (AudioContextClass && !this.ctx) {
       this.ctx = new AudioContextClass();
+
+      // Master Dynamics Compressor & Limiteur Studio pour un son pur, percutant et sans distorsion mobile
+      this.masterCompressor = this.ctx.createDynamicsCompressor();
+      this.masterCompressor.threshold.setValueAtTime(-14, this.ctx.currentTime);
+      this.masterCompressor.knee.setValueAtTime(8, this.ctx.currentTime);
+      this.masterCompressor.ratio.setValueAtTime(5, this.ctx.currentTime);
+      this.masterCompressor.attack.setValueAtTime(0.003, this.ctx.currentTime);
+      this.masterCompressor.release.setValueAtTime(0.12, this.ctx.currentTime);
+
+      this.masterGain = this.ctx.createGain();
+      this.masterGain.gain.setValueAtTime(0.92, this.ctx.currentTime);
+
+      this.masterCompressor.connect(this.masterGain);
+      this.masterGain.connect(this.ctx.destination);
     }
+  }
+
+  getMasterOutput() {
+    if (!this.ctx) this.initContext();
+    return this.masterCompressor || (this.ctx ? this.ctx.destination : null);
   }
 
   resumeContext() {
@@ -1025,27 +1044,60 @@ export class SoundManager {
     });
   }
 
-  playClick() {
+  playClick(type = 'default') {
     if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
     this.resumeContext();
 
     const now = this.ctx.currentTime;
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
+    const dest = this.getMasterOutput();
 
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(800, now);
-    osc.frequency.exponentialRampToValueAtTime(400, now + 0.05);
-
-    gain.gain.setValueAtTime(0.15, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
-
-    osc.connect(gain);
-    gain.connect(this.ctx.destination);
-
-    osc.onended = () => this.cleanupNodes(osc, gain);
-    osc.start(now);
-    osc.stop(now + 0.05);
+    if (type === 'hero' || type === 'play') {
+      // Accord ascendant héroïque et brillant (C5, E5, G5, C6)
+      const notes = [523.25, 659.25, 783.99, 1046.50];
+      notes.forEach((freq, idx) => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, now + idx * 0.04);
+        gain.gain.setValueAtTime(0.2, now + idx * 0.04);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.04 + 0.22);
+        osc.connect(gain);
+        gain.connect(dest);
+        osc.onended = () => this.cleanupNodes(osc, gain);
+        osc.start(now + idx * 0.04);
+        osc.stop(now + idx * 0.04 + 0.22);
+      });
+    } else if (type === 'garage') {
+      // Clang mécanique / verrouillage hydraulique
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(440, now);
+      osc.frequency.exponentialRampToValueAtTime(110, now + 0.09);
+      gain.gain.setValueAtTime(0.22, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+      osc.connect(gain);
+      gain.connect(dest);
+      osc.onended = () => this.cleanupNodes(osc, gain);
+      osc.start(now);
+      osc.stop(now + 0.09);
+    } else if (type === 'nuclear') {
+      this.playGeigerClick();
+    } else {
+      // Clic arcade vif et tactile
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(950, now);
+      osc.frequency.exponentialRampToValueAtTime(450, now + 0.045);
+      gain.gain.setValueAtTime(0.18, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.045);
+      osc.connect(gain);
+      gain.connect(dest);
+      osc.onended = () => this.cleanupNodes(osc, gain);
+      osc.start(now);
+      osc.stop(now + 0.045);
+    }
   }
 
   playVictory() {
@@ -1258,40 +1310,165 @@ export class SoundManager {
     }
   }
 
-  // --- MUSIQUE D'ARCADE ÉNERGIQUE PROCÉDURALE ---
+  // --- MOTEUR AUDIO & COMPOSITEUR MUSICAL PROCÉDURAL (SYNTHWAVE, FUNK & DARKSYNTH) ---
 
-  // --- MUSIQUE SADIQUE INDUSTRIELLE & CYBERPUNK (EXTERMINATION MONDIALE) ---
-  startMusic() {
-    if (this.musicPlaying || this.isMutedMusic || !this.ctx || this.isDestroyed) return;
+  startMusic(track = 'MENU') {
+    if (this.isMutedMusic || !this.ctx || this.isDestroyed) return;
     this.resumeContext();
-    this.musicPlaying = true;
 
-    const tempo = 136;
+    if (this.musicPlaying && this.currentTrack === track) return;
+    this.stopMusic();
+
+    this.musicPlaying = true;
+    this.currentTrack = track;
+
+    if (track === 'MENU' || track === 'SPLASH') {
+      this.playMenuSynthwaveTheme();
+    } else if (track === 'NUCLEAR') {
+      this.playNuclearDarksynthTheme();
+    } else {
+      this.playGameplayArcadeTheme();
+    }
+  }
+
+  switchMusicTrack(track) {
+    if (this.currentTrack === track && this.musicPlaying) return;
+    this.startMusic(track);
+  }
+
+  // --- 1. THÈME D'ACCUEIL : FRENCH TOUCH & SYNTHWAVE DISCO-FUNK (122 BPM) ---
+  playMenuSynthwaveTheme() {
+    const tempo = 122;
+    const beatDuration = 60 / tempo;
+    const stepDuration = beatDuration / 2; // Croches
+    let step = 0;
+
+    // Ligne de basse disco-funk syncopée (Am7 -> Fmaj7 -> Cmaj7 -> G7)
+    const bassGroove = [
+      110.00, 0, 110.00, 164.81, 0, 110.00, 130.81, 146.83, // Am7 (A1, E2, C2, D2)
+      87.31, 0, 87.31, 130.81, 0, 87.31, 110.00, 130.81,    // Fmaj7 (F1, C2, A1, C2)
+      130.81, 0, 130.81, 196.00, 0, 130.81, 164.81, 146.83, // Cmaj7 (C2, G2, E2, D2)
+      98.00, 0, 98.00, 146.83, 0, 98.00, 123.47, 146.83     // G7 (G1, D2, B1, D2)
+    ];
+
+    // Accords de nappes chaudes analogiques (chords pad)
+    const chordProgression = [
+      [220.00, 261.63, 329.63, 392.00], // Am7
+      [174.61, 220.00, 261.63, 329.63], // Fmaj7
+      [261.63, 329.63, 392.00, 493.88], // Cmaj7
+      [196.00, 246.94, 293.66, 349.23]  // G7
+    ];
+
+    const playStep = () => {
+      if (!this.musicPlaying || this.currentTrack !== 'MENU' || !this.ctx || this.isDestroyed) return;
+      const now = this.ctx.currentTime;
+      const dest = this.getMasterOutput();
+
+      // 1. Basse Slap Synthwave punchy
+      const bassFreq = bassGroove[step % bassGroove.length];
+      if (bassFreq > 0) {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        const filter = this.ctx.createBiquadFilter();
+
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(bassFreq, now);
+
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(850, now);
+        filter.frequency.exponentialRampToValueAtTime(140, now + stepDuration * 0.9);
+        filter.Q.value = 4.0;
+
+        gain.gain.setValueAtTime(0.18, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + stepDuration * 0.95);
+
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(dest);
+
+        osc.onended = () => this.cleanupNodes(osc, filter, gain);
+        osc.start(now);
+        osc.stop(now + stepDuration * 0.95);
+      }
+
+      // 2. Nappe d'accords Daft Punk tous les 8 steps
+      if (step % 8 === 0) {
+        const chordIdx = Math.floor((step % 32) / 8);
+        const chord = chordProgression[chordIdx];
+        chord.forEach(freq => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          const filter = this.ctx.createBiquadFilter();
+
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(freq, now);
+
+          filter.type = 'bandpass';
+          filter.frequency.setValueAtTime(1200, now);
+          filter.Q.value = 2.5;
+
+          gain.gain.setValueAtTime(0.035, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + stepDuration * 7.5);
+
+          osc.connect(filter);
+          filter.connect(gain);
+          gain.connect(dest);
+
+          osc.onended = () => this.cleanupNodes(osc, filter, gain);
+          osc.start(now);
+          osc.stop(now + stepDuration * 7.5);
+        });
+      }
+
+      // 3. Kick Disco rond et chaud (temps 0, 4, 8, 12...)
+      if (step % 4 === 0) {
+        this.playDiscoKick(now);
+      }
+
+      // 4. Claps Disco étincelants (temps 2, 6, 10, 14...)
+      if (step % 4 === 2) {
+        this.playDiscoClap(now);
+      }
+
+      // 5. Charleston / Hi-Hat swingant
+      if (step % 2 === 1) {
+        this.playHiHat(now);
+      }
+
+      step++;
+      this.musicTimer = setTimeout(playStep, stepDuration * 1000);
+    };
+
+    playStep();
+  }
+
+  // --- 2. THÈME DE COURSE : ARCADE ADRENALINE CHASE (138 BPM) ---
+  playGameplayArcadeTheme() {
+    const tempo = 138;
     const beatDuration = 60 / tempo;
     const stepDuration = beatDuration / 2;
     let step = 0;
 
-    // Ligne de basse agressive & sadique en Ré mineur / Tritons ténébreux
     const bassLine = [
-      73.42, 73.42, 110.00, 73.42, 103.83, 73.42, 110.00, 146.83, // D1 / A1 / G#1 (triton démoniaque)
-      73.42, 73.42, 87.31, 73.42, 110.00, 98.00, 87.31, 103.83,   // D1 / F1 / G#1
-      65.41, 65.41, 98.00, 65.41, 123.47, 65.41, 98.00, 130.81,   // C1 / G1 / B1
-      69.30, 69.30, 103.83, 69.30, 138.59, 103.83, 92.50, 73.42   // C#1 / F#1 (tension sadique maximale)
+      73.42, 73.42, 110.00, 73.42, 103.83, 73.42, 110.00, 146.83,
+      73.42, 73.42, 87.31, 73.42, 110.00, 98.00, 87.31, 103.83,
+      65.41, 65.41, 98.00, 65.41, 123.47, 65.41, 98.00, 130.81,
+      69.30, 69.30, 103.83, 69.30, 138.59, 103.83, 92.50, 73.42
     ];
 
-    // Arpèges sombres, stridents et métalliques
     const leadLine = [
-      293.66, 0, 349.23, 415.30, 0, 440.00, 293.66, 0,            // D4, F4, G#4, A4
+      293.66, 0, 349.23, 415.30, 0, 440.00, 293.66, 0,
       349.23, 415.30, 0, 440.00, 587.33, 0, 415.30, 349.23,
-      261.63, 0, 329.63, 392.00, 0, 523.25, 392.00, 0,            // C4, E4, G4, C5
-      277.18, 0, 349.23, 415.30, 554.37, 415.30, 349.23, 293.66   // C#4, F4, G#4, C#5
+      261.63, 0, 329.63, 392.00, 0, 523.25, 392.00, 0,
+      277.18, 0, 349.23, 415.30, 554.37, 415.30, 349.23, 293.66
     ];
 
     const playStep = () => {
-      if (!this.musicPlaying || !this.ctx || this.isDestroyed) return;
+      if (!this.musicPlaying || this.currentTrack !== 'GAMEPLAY' || !this.ctx || this.isDestroyed) return;
       const now = this.ctx.currentTime;
+      const dest = this.getMasterOutput();
 
-      // 1. Grosse Basse Distordue Sawtooth
+      // 1. Basse Acide Résonante
       const bassFreq = bassLine[step % bassLine.length];
       if (bassFreq > 0) {
         const bassOsc = this.ctx.createOscillator();
@@ -1302,22 +1479,23 @@ export class SoundManager {
         bassOsc.frequency.setValueAtTime(bassFreq, now);
 
         filter.type = 'lowpass';
-        filter.frequency.setValueAtTime(650, now);
-        filter.frequency.exponentialRampToValueAtTime(180, now + stepDuration * 0.9);
+        filter.frequency.setValueAtTime(750, now);
+        filter.frequency.exponentialRampToValueAtTime(160, now + stepDuration * 0.9);
+        filter.Q.value = 4.5;
 
-        bassGain.gain.setValueAtTime(0.18, now);
+        bassGain.gain.setValueAtTime(0.19, now);
         bassGain.gain.exponentialRampToValueAtTime(0.001, now + stepDuration * 0.95);
 
         bassOsc.connect(filter);
         filter.connect(bassGain);
-        bassGain.connect(this.ctx.destination);
+        bassGain.connect(dest);
 
         bassOsc.onended = () => this.cleanupNodes(bassOsc, filter, bassGain);
         bassOsc.start(now);
         bassOsc.stop(now + stepDuration * 0.95);
       }
 
-      // 2. Lead Synthétique Sombre & Aigu
+      // 2. Synth Lead Arpégé Héroïque
       const leadFreq = leadLine[step % leadLine.length];
       if (leadFreq > 0) {
         const leadOsc = this.ctx.createOscillator();
@@ -1325,37 +1503,171 @@ export class SoundManager {
         leadOsc.type = 'square';
         leadOsc.frequency.setValueAtTime(leadFreq, now);
 
-        leadGain.gain.setValueAtTime(0.065, now);
+        leadGain.gain.setValueAtTime(0.075, now);
         leadGain.gain.exponentialRampToValueAtTime(0.001, now + stepDuration * 0.85);
 
         leadOsc.connect(leadGain);
-        leadGain.connect(this.ctx.destination);
+        leadGain.connect(dest);
 
         leadOsc.onended = () => this.cleanupNodes(leadOsc, leadGain);
         leadOsc.start(now);
         leadOsc.stop(now + stepDuration * 0.85);
       }
 
-      // 3. Kick Industriel Lourd (temps 0, 4, 8, 12)
-      if (step % 4 === 0) {
-        this.playIndustrialKick(now);
-      }
-
-      // 4. Snare / Claque Métallique (temps 2, 6, 10, 14)
-      if (step % 4 === 2) {
-        this.playMetalSnare(now);
-      }
-
-      // 5. Hi-Hat frénétique
-      if (step % 2 === 1) {
-        this.playHiHat(now);
-      }
+      // 3. Percussions de Course
+      if (step % 4 === 0) this.playIndustrialKick(now);
+      if (step % 4 === 2) this.playMetalSnare(now);
+      if (step % 2 === 1) this.playHiHat(now);
 
       step++;
       this.musicTimer = setTimeout(playStep, stepDuration * 1000);
     };
 
     playStep();
+  }
+
+  // --- 3. THÈME NUCLÉAIRE : DARKSYNTH APOCALYPTIQUE & ÉVASION (144 BPM) ---
+  playNuclearDarksynthTheme() {
+    const tempo = 144;
+    const beatDuration = 60 / tempo;
+    const stepDuration = beatDuration / 2;
+    let step = 0;
+
+    const nucBass = [
+      58.27, 58.27, 82.41, 58.27, 77.78, 58.27, 87.31, 58.27,
+      55.00, 55.00, 77.78, 55.00, 73.42, 55.00, 82.41, 55.00
+    ];
+
+    const playStep = () => {
+      if (!this.musicPlaying || this.currentTrack !== 'NUCLEAR' || !this.ctx || this.isDestroyed) return;
+      const now = this.ctx.currentTime;
+      const dest = this.getMasterOutput();
+
+      // Drone lourd saturé
+      const freq = nucBass[step % nucBass.length];
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      const filter = this.ctx.createBiquadFilter();
+
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(freq, now);
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(550, now);
+      filter.Q.value = 5.0;
+
+      gain.gain.setValueAtTime(0.22, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + stepDuration * 0.95);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(dest);
+
+      osc.onended = () => this.cleanupNodes(osc, filter, gain);
+      osc.start(now);
+      osc.stop(now + stepDuration * 0.95);
+
+      // Stabs d'alarme tous les 16 steps
+      if (step % 16 === 0) {
+        this.playNuclearAlarm();
+      }
+
+      if (step % 4 === 0) this.playIndustrialKick(now);
+      if (step % 4 === 2) this.playMetalSnare(now);
+      if (step % 2 === 1) this.playHiHat(now);
+
+      step++;
+      this.musicTimer = setTimeout(playStep, stepDuration * 1000);
+    };
+
+    playStep();
+  }
+
+  playDiscoKick(time) {
+    if (!this.ctx || this.isDestroyed) return;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(130, time);
+    osc.frequency.exponentialRampToValueAtTime(42, time + 0.12);
+
+    gain.gain.setValueAtTime(0.38, time);
+    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.14);
+
+    osc.connect(gain);
+    gain.connect(this.getMasterOutput());
+
+    osc.onended = () => this.cleanupNodes(osc, gain);
+    osc.start(time);
+    osc.stop(time + 0.14);
+  }
+
+  playDiscoClap(time) {
+    if (!this.ctx || this.isDestroyed) return;
+    const bufferSize = Math.floor(this.ctx.sampleRate * 0.14);
+    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.28));
+    }
+
+    const noise = this.ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(1250, time);
+    filter.Q.value = 1.8;
+
+    const gain = this.ctx.createGain();
+    gain.gain.setValueAtTime(0.24, time);
+    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.14);
+
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.getMasterOutput());
+
+    noise.onended = () => this.cleanupNodes(noise, filter, gain);
+    noise.start(time);
+  }
+
+  // Caisse enregistreuse dorée "Cha-Ching !" pour les pièces et bonus
+  playCashRegister() {
+    if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
+    this.resumeContext();
+
+    const now = this.ctx.currentTime;
+    const dest = this.getMasterOutput();
+
+    // 1. Clochette aiguë "Ting !"
+    const bellOsc = this.ctx.createOscillator();
+    const bellGain = this.ctx.createGain();
+    bellOsc.type = 'sine';
+    bellOsc.frequency.setValueAtTime(1975.53, now); // B6
+    bellOsc.frequency.setValueAtTime(2637.02, now + 0.06); // E7
+
+    bellGain.gain.setValueAtTime(0.28, now);
+    bellGain.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
+
+    bellOsc.connect(bellGain);
+    bellGain.connect(dest);
+    bellOsc.onended = () => this.cleanupNodes(bellOsc, bellGain);
+    bellOsc.start(now);
+    bellOsc.stop(now + 0.38);
+
+    // 2. Choc de tiroir-caisse mécanique
+    const drawerOsc = this.ctx.createOscillator();
+    const drawerGain = this.ctx.createGain();
+    drawerOsc.type = 'triangle';
+    drawerOsc.frequency.setValueAtTime(320, now + 0.08);
+    drawerOsc.frequency.exponentialRampToValueAtTime(90, now + 0.18);
+    drawerGain.gain.setValueAtTime(0.2, now + 0.08);
+    drawerGain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+    drawerOsc.connect(drawerGain);
+    drawerGain.connect(dest);
+    drawerOsc.onended = () => this.cleanupNodes(drawerOsc, drawerGain);
+    drawerOsc.start(now + 0.08);
+    drawerOsc.stop(now + 0.18);
   }
 
   playIndustrialKick(time) {
