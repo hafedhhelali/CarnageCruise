@@ -430,6 +430,32 @@ export class ParticleSystem {
     }
   }
 
+  // Étincelles et fragments traçants à haute vélocité
+  spawnSparks(pos, count = 4, colorHex = 0xffa502) {
+    const mat = (colorHex === 0xff6b00) ? this.sharedMats.starOrange : (colorHex === 0xff3838 ? this.sharedMats.starRed : this.sharedMats.sparkAmber);
+    for (let i = 0; i < count; i++) {
+      const spark = new THREE.Mesh(this.sharedGeos.sparkBox || this.sharedGeos.starCone, mat);
+      spark.position.copy(pos);
+      spark.position.x += (Math.random() - 0.5) * 0.3;
+      spark.position.y += (Math.random() - 0.5) * 0.3;
+
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 2.0 + Math.random() * 5.0;
+
+      this.scene.add(spark);
+      this.debris.push({
+        mesh: spark,
+        velX: Math.cos(angle) * speed,
+        velY: 1.5 + Math.random() * 3.5,
+        velZ: (Math.random() - 0.5) * speed,
+        rotVelX: Math.random() * 15,
+        rotVelY: Math.random() * 15,
+        life: 0.45,
+        maxLife: 0.45
+      });
+    }
+  }
+
   // Confettis de victoire tricolores et dorés
   spawnVictoryConfetti(pos) {
     const numConfetti = 55;

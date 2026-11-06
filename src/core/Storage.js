@@ -24,6 +24,7 @@ const DEFAULT_SAVE = {
     bordeaux: { bestScore: 0, stars: 0, completed: false },
     strasbourg: { bestScore: 0, stars: 0, completed: false }
   },
+  exterminatedCities: [],
   unlockedBikes: ['tank', 'scooter', 'chopper', 'decapotable', 'trottinette_hache', 'cheval', 'run_ak47', 'run_chainsaw', 'rouleau', 'dragster', 'aero_jet'],
   equippedBike: 'scooter',
   bikeColors: {
@@ -91,6 +92,7 @@ export class Storage {
           ...parsed,
           unlockedCities: Array.from(new Set([...DEFAULT_SAVE.unlockedCities, ...(parsed.unlockedCities || [])])),
           unlockedBikes: Array.from(new Set([...DEFAULT_SAVE.unlockedBikes, ...(parsed.unlockedBikes || [])])),
+          exterminatedCities: Array.from(new Set(parsed.exterminatedCities || [])),
           cityScores: { ...DEFAULT_SAVE.cityScores, ...(parsed.cityScores || {}) },
           bikeColors: { ...DEFAULT_SAVE.bikeColors, ...(parsed.bikeColors || {}) },
           settings: { ...DEFAULT_SAVE.settings, ...(parsed.settings || {}) },
@@ -129,6 +131,33 @@ export class Storage {
       return true;
     }
     return false;
+  }
+
+  isCityExterminated(cityId) {
+    if (!cityId) return false;
+    return Array.isArray(this.data.exterminatedCities) && this.data.exterminatedCities.includes(cityId);
+  }
+
+  markCityExterminated(cityId, victims = 1500000) {
+    if (!cityId) return;
+    if (!Array.isArray(this.data.exterminatedCities)) {
+      this.data.exterminatedCities = [];
+    }
+    if (!this.data.exterminatedCities.includes(cityId)) {
+      this.data.exterminatedCities.push(cityId);
+    }
+    
+    if (!this.data.cityScores) this.data.cityScores = {};
+    if (!this.data.cityScores[cityId]) {
+      this.data.cityScores[cityId] = { bestScore: victims, stars: 3, completed: true };
+    } else {
+      this.data.cityScores[cityId].stars = 3;
+      this.data.cityScores[cityId].completed = true;
+      this.data.cityScores[cityId].bestScore = Math.max(this.data.cityScores[cityId].bestScore || 0, victims);
+    }
+
+    this.recordCataclysmKill(victims, 'WMD');
+    this.save();
   }
 
   recordRunResult(cityId, score, starsEarned, coinsEarned, interactionsCount, distance, maxCombo = 1) {
@@ -376,6 +405,28 @@ export class Storage {
         mountain: (this.data.worldmageddon && this.data.worldmageddon.mountainVictims) || 0
       }
     };
+  }
+
+  resetWorldmageddonProgression() {
+    this.data.exterminatedCities = [];
+    this.data.cityScores = {};
+    this.data.worldmageddon = {
+      streetVictims: 0,
+      nuclearVictims: 0,
+      damVictims: 0,
+      mountainVictims: 0,
+      tierIndex: 0
+    };
+    if (this.data.stats) {
+      this.data.stats.totalScore = 0;
+      this.data.stats.totalInteractions = 0;
+      this.data.stats.totalKills = 0;
+      this.data.stats.totalDistance = 0;
+      this.data.stats.totalRuns = 0;
+      this.data.stats.maxCombo = 1;
+    }
+    this.save();
+    return true;
   }
 
   resetAll() {

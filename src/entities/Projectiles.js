@@ -236,83 +236,101 @@ export class ProjectileManager {
    * Met à jour tous les projectiles actifs et résout les impacts
    */
   update(delta, playerZ, traffic, characters, environment, gameState, ui) {
-    for (let i = this.projectiles.length - 1; i >= 0; i--) {
-      const p = this.projectiles[i];
-
-      // 1. Déplacement physique en avant dans l'espace 3D
-      p.mesh.position.z += p.speedZ * delta;
-      p.mesh.position.x += p.velX * delta;
-
-      // Animation rotationnelle de l'obus / missile sur son axe
-      p.mesh.rotation.z += delta * 15;
-
-      // 2. Particules de traînée de fumée et feu
-      p.trailTimer += delta;
-      if (p.trailTimer > 0.035) {
-        p.trailTimer = 0;
-        const trailPos = p.mesh.position.clone();
-        trailPos.z -= 0.6;
-        if (p.type === '120mm_shell') {
-          this.particles.spawnSparks(trailPos, 2, 0xff793f);
-        } else if (p.type === 'missile') {
-          this.particles.spawnSparks(trailPos, 3, 0xffffff);
-        } else if (p.type === 'plasma_emp') {
-          this.particles.spawnShockwave(trailPos, 0x00cec9);
+    try {
+      for (let i = this.projectiles.length - 1; i >= 0; i--) {
+        const p = this.projectiles[i];
+        if (!p || !p.mesh) {
+          this.projectiles.splice(i, 1);
+          continue;
         }
-      }
 
-      const pPos = p.mesh.position;
-      const traveledDist = pPos.z - p.startZ;
+        // 1. Déplacement physique en avant dans l'espace 3D
+        p.mesh.position.z += p.speedZ * delta;
+        p.mesh.position.x += (p.velX || 0) * delta;
 
-      let hitOccurred = false;
+        // Animation rotationnelle de l'obus / missile sur son axe
+        p.mesh.rotation.z += delta * 15;
 
-      // 3. Test d'impact sur les véhicules de circulation
-      if (traffic && traffic.vehicles) {
-        for (let v of traffic.vehicles) {
-          if (!v.userData.active || v.userData.isCrashed) continue;
-          const distZ = Math.abs(v.position.z - pPos.z);
-          const distX = Math.abs(v.position.x - pPos.x);
-
-          if (distZ < 3.2 && distX < p.damageRadius) {
-            traffic.blowUpVehicle(v, pPos);
-            gameState.score += p.points;
-            this.particles.spawnComicBurst(v.position, p.points, gameState.combo);
-            this.soundManager.playCrash();
-            hitOccurred = true;
-            break;
+        // 2. Particules de traînée de fumée et feu
+        p.trailTimer = (p.trailTimer || 0) + delta;
+        if (p.trailTimer > 0.035) {
+          p.trailTimer = 0;
+          const trailPos = p.mesh.position.clone();
+          trailPos.z -= 0.6;
+          if (this.particles) {
+            if (p.type === '120mm_shell') {
+              if (this.particles.spawnSparks) this.particles.spawnSparks(trailPos, 2, 0xff793f);
+              else if (this.particles.spawnExhaustSmoke) this.particles.spawnExhaustSmoke(trailPos, 1.0);
+            } else if (p.type === 'missile') {
+              if (this.particles.spawnSparks) this.particles.spawnSparks(trailPos, 2, 0xffffff);
+              else if (this.particles.spawnExhaustSmoke) this.particles.spawnExhaustSmoke(trailPos, 1.0);
+            } else if (p.type === 'plasma_emp') {
+              if (this.particles.spawnShockwave) this.particles.spawnShockwave(trailPos, 0x00cec9);
+            }
           }
         }
-      }
 
-      // 4. Test d'impact sur les piétons
-      if (!hitOccurred && characters && characters.pedestrians) {
-        for (let char of characters.pedestrians) {
-          if (!char.group.visible || char.isFlying) continue;
-          const distZ = Math.abs(char.group.position.z - pPos.z);
-          const distX = Math.abs(char.group.position.x - pPos.x);
+        const pPos = p.mesh.position;
+        const traveledDist = pPos.z - p.startZ;
 
-          if (distZ < 2.5 && distX < p.damageRadius) {
-            characters.triggerSlapstickFlight(char, pPos.x, 52);
-            this.particles.spawnBloodBurst(char.group.position);
-            ui.triggerPedestrianCarnageFlash();
-            gameState.recordKill(850, 'PROJECTILE_' + p.type.toUpperCase(), char.typeDef.category);
-            hitOccurred = true;
-            break;
+        let hitOccurred = false;
+
+        // 3. Test d'impact sur les véhicules de circulation
+        if (traffic && traffic.vehicles) {
+          for (let v of traffic.vehicles) {
+            if (!v.userData || !v.userData.active || v.userData.isCrashed) continue;
+            const distZ = Math.abs(v.position.z - pPos.z);
+            const distX = Math.abs(v.position.x - pPos.x);
+
+            if (distZ < 3.2 && distX < p.damageRadius) {
+              if (traffic.blowUpVehicle) traffic.blowUpVehicle(v, pPos);
+              if (gameState) gameState.score = (gameState.score || 0) + p.points;
+              if (this.particles?.spawnComicBurst) this.particles.spawnComicBurst(v.position, p.points, gameState?.combo || 1);
+              if (this.soundManager?.playCrash) this.soundManager.playCrash();
+              hitOccurred = true;
+              break;
+            }
           }
         }
-      }
 
-      // 5. Explosion à l'impact ou au terme de la portée maximale
-      if (hitOccurred || traveledDist >= p.maxDistance) {
-        this.particles.spawnCannonBlast(pPos);
-        this.particles.spawnShockwave(pPos, 0xff793f);
-        this.engine.triggerCameraShake(0.7);
-        this.soundManager.playExplosion();
+        // 4. Test d'impact sur les piétons
+        const pedList = characters?.characters || characters?.pedestrians;
+        if (!hitOccurred && pedList && Array.isArray(pedList)) {
+          for (let char of pedList) {
+            if (!char.group || !char.group.visible || char.isFlying) continue;
+            const distZ = Math.abs(char.group.position.z - pPos.z);
+            const distX = Math.abs(char.group.position.x - pPos.x);
 
-        // Nettoyage de la scène
-        this.container.remove(p.mesh);
-        this.projectiles.splice(i, 1);
+            if (distZ < 2.5 && distX < p.damageRadius) {
+              if (characters.triggerSlapstickFlight) characters.triggerSlapstickFlight(char, pPos.x, 52);
+              if (this.particles?.spawnBloodBurst) this.particles.spawnBloodBurst(char.group.position);
+              if (ui?.triggerPedestrianCarnageFlash) ui.triggerPedestrianCarnageFlash();
+              if (gameState?.recordKill) {
+                gameState.recordKill(850, 'PROJECTILE_' + p.type.toUpperCase(), char.typeDef?.category || 'default');
+              }
+              hitOccurred = true;
+              break;
+            }
+          }
+        }
+
+        // 5. Explosion à l'impact ou au terme de la portée maximale
+        if (hitOccurred || traveledDist >= p.maxDistance) {
+          if (this.particles?.spawnCannonBlast) this.particles.spawnCannonBlast(pPos);
+          if (this.particles?.spawnShockwave) this.particles.spawnShockwave(pPos, 0xff793f);
+          if (this.engine?.triggerCameraShake) this.engine.triggerCameraShake(0.7);
+          if (this.soundManager?.playExplosion) this.soundManager.playExplosion();
+          else if (this.soundManager?.playCrash) this.soundManager.playCrash();
+
+          // Nettoyage de la scène
+          try {
+            this.container.remove(p.mesh);
+          } catch (e) {}
+          this.projectiles.splice(i, 1);
+        }
       }
+    } catch (err) {
+      console.error('[ProjectileManager] Erreur dans update:', err);
     }
   }
 

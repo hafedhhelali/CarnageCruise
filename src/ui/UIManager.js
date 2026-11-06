@@ -228,9 +228,9 @@ export class UIManager {
             <span class="btn-icon">🪖</span>
             <span class="btn-label">GARAGE & ARSENAL</span>
           </button>
-          <button id="btn-splash-nuclear" class="btn-arcade btn-nuclear-launch btn-touch-target">
-            <span class="btn-icon">☢️</span>
-            <span class="btn-label">ÉPREUVES NUCLÉAIRES</span>
+          <button id="btn-splash-tycoon" class="btn-arcade btn-accent btn-touch-target">
+            <span class="btn-icon">🏭</span>
+            <span class="btn-label">EMPIRE TYCOON</span>
           </button>
         </div>
 
@@ -263,24 +263,19 @@ export class UIManager {
       this.setScreen('MAP');
     });
 
-    splash.querySelector('#btn-splash-nuclear').addEventListener('click', () => {
-      soundManager.playClick('nuclear');
+    splash.querySelector('#btn-splash-tycoon')?.addEventListener('click', () => {
+      soundManager.playClick();
       soundManager.resumeContext();
-      const nuc = CITIES.find(c => c.isNuclearMission);
-      if (nuc) {
-        gameState.selectCity(nuc.id);
-        this.selectedMapCity = nuc;
-      }
-      this.setScreen('MAP');
+      this.showTycoonModal();
     });
 
-    splash.querySelector('#btn-splash-garage').addEventListener('click', () => {
+    splash.querySelector('#btn-splash-garage')?.addEventListener('click', () => {
       soundManager.playClick('garage');
       this.previousScreen = 'SPLASH';
       this.setScreen('GARAGE');
     });
 
-    splash.querySelector('#btn-splash-quick-garage').addEventListener('click', () => {
+    splash.querySelector('#btn-splash-quick-garage')?.addEventListener('click', () => {
       soundManager.playClick('garage');
       this.previousScreen = 'SPLASH';
       this.setScreen('GARAGE');
@@ -332,50 +327,65 @@ export class UIManager {
     const coins = storage.data.coins;
     const totalStars = storage.getTotalStars();
     const wmProgress = storage.getWorldmageddonProgress();
+    const currentBikeId = storage.data.equippedBike || 'tank';
+    const currentBike = BIKES.find(b => b.id === currentBikeId) || BIKES[0];
 
     mapScreen.innerHTML = `
-      <div class="map-header">
-        <button id="btn-map-back" class="btn-round-action" title="Retour Accueil">
-          <span>🏠</span>
-        </button>
-        <div class="map-header-center">
-          <h2 class="map-title" style="margin: 0; font-size: 1.22rem; color: #fffa65; letter-spacing: 1px;">OPÉRATIONS WORLDMAGEDDON</h2>
-          <span class="map-stars-badge">☠️ CARTE DE L'EXTINCTION • ★ ${totalStars} / ${CITIES.length * 3} ÉTOILES</span>
-        </div>
-        <div class="map-header-right">
-          <button id="btn-map-garage" class="btn-round-action btn-garage-glow" title="Accéder au Garage">
-            <span>🏍️</span>
+      <!-- EN-TÊTE REDESIGNÉ UI/UX : ZERO CHEVAUCHEMENT, ERGONOMIE MOBILE PARFAITE -->
+      <div class="map-header-redesign">
+        <!-- Rangée 1 : Navigation, Raccourci Engin & AdMob Rewards -->
+        <div class="map-top-bar">
+          <button id="btn-map-back" class="map-top-btn" title="Retour Accueil">
+            <span class="top-btn-icon">🏠</span>
+            <span class="top-btn-text">ACCUEIL</span>
           </button>
-          <div class="currency-pill clickable" id="btn-header-ad-coins" title="Cadeau Sponsor : +20 Pièces d'or">
+
+          <!-- RACCOURCI ENGIN HYPER VISIBLE DIRECTEMENT SUR LA CARTE -->
+          <button id="btn-quick-vehicle-select" class="map-quick-vehicle-btn" title="Changer d'Engin d'Assaut">
+            <span class="quick-veh-icon-pill">${currentBike.icon || '🪖'}</span>
+            <div class="quick-veh-text-pill">
+              <span class="quick-veh-label">ENGIN D'ASSAUT</span>
+              <span class="quick-veh-title">${currentBike.shortName || currentBike.name} ▾</span>
+            </div>
+          </button>
+
+          <div class="currency-pill clickable" id="btn-header-ad-coins" title="Google AdMob : +20 Pièces d'or">
             <span>🪙 ${coins}</span>
             <span class="currency-ad-gift-tag">🎁 +20</span>
           </div>
         </div>
-      </div>
 
-      <!-- BANDEAU HAUT-DE-GAMME WORLDMAGEDDON : EXTERMINATION MONDIALE -->
-      <div class="worldmageddon-header-bar clickable" id="btn-open-worldmageddon" style="cursor: pointer; background: linear-gradient(90deg, #1e272e, #2d3436, #1e272e); border-bottom: 2px solid #ff4757; padding: 7px 12px; display: flex; align-items: center; justify-content: space-between; font-size: 0.8rem; font-weight: 800; color: #ffffff; z-index: 10;">
-        <span style="color: #ff4757; display: flex; align-items: center; gap: 8px;">
-          <span style="font-size: 1.1rem;">💀</span>
-          <strong>WORLDMAGEDDON</strong>
-          <span style="font-size: 0.72rem; color: #badc58; background: rgba(186, 220, 88, 0.15); border: 1px solid #badc58; padding: 1px 6px; border-radius: 6px;">${wmProgress.rank}</span>
-        </span>
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <span style="color: #fffa65; font-family: monospace; font-size: 0.85rem;">
-            ${wmProgress.totalKills.toLocaleString('fr-FR')} <span style="font-size: 0.7rem; color: #a4b0be;">/ 8Mds</span>
-          </span>
-          <span style="font-size: 0.72rem; color: #ff7675; font-weight: 900;">${wmProgress.percentage}%</span>
-          <span style="font-size: 0.75rem; color: #74b9ff;">📊 DOSSIER ▶</span>
+        <!-- Rangée 2 : Dossier Stratégique Worldmageddon + QG Tycoon + Reset Progression -->
+        <div class="map-sub-bar">
+          <div class="worldmageddon-strip clickable" id="btn-open-worldmageddon" title="Dossier Stratégique Worldmageddon">
+            <div class="wm-strip-badge">
+              <span class="wm-strip-skull">💀</span>
+              <div class="wm-strip-texts">
+                <span class="wm-strip-title">WORLDMAGEDDON</span>
+                <span class="wm-strip-rank">${wmProgress.rank}</span>
+              </div>
+            </div>
+            <div class="wm-strip-stats">
+              <span class="wm-strip-count">${wmProgress.totalKills.toLocaleString('fr-FR')} <small style="color:#a4b0be;">/ 8Mds</small></span>
+              <span class="wm-strip-pct">${wmProgress.percentage}%</span>
+            </div>
+          </div>
+
+          <div class="map-strip-actions">
+            <button id="btn-open-tycoon" class="map-pill-action pill-tycoon-action" title="QG Empire Clandestin">
+              <span>🏭 TYCOON</span>
+            </button>
+            <button id="btn-reset-progression" class="map-pill-action pill-reset-action" title="Réinitialiser l'avancement">
+              <span>🔄 RESET</span>
+            </button>
+          </div>
         </div>
-      </div>
 
-      <!-- BARRE DE NAVIGATION & FILTRES HORIZONTALE DÉFILANTE (SANS SÉGRÉGATION, ZERO CROP) -->
-      <div class="map-filter-scroll-bar">
-        <button id="btn-filter-all" class="map-filter-pill active" title="Toutes les Villes d'Europe">🗺️ TOUTES (${CITIES.length})</button>
-        <button id="btn-filter-france" class="map-filter-pill pill-france" title="Villes de France">🇫🇷 FRANCE & OUEST</button>
-        <button id="btn-filter-europe" class="map-filter-pill pill-europe" title="Métropoles d'Europe">🇪🇺 GRANDE EUROPE</button>
-        <button id="btn-filter-med" class="map-filter-pill pill-med" title="Bassin Méditerranéen">🌊 MÉDITERRANÉE</button>
-        <button id="btn-open-tycoon" class="map-filter-pill pill-tycoon" title="QG Empire Tycoon Clandestin">🏭 QG TYCOON</button>
+        <!-- Rangée 3 : Bannière Google AdMob / Sponsorisée -->
+        <div class="map-admob-banner-bar">
+          <span class="admob-badge">ANNONCE GOOGLE ADS</span>
+          <span class="admob-text">💥 SPONSOR OFFICIEL ADMOB • DÉBLOQUEZ TOUTES LES ARMES LOURDES !</span>
+        </div>
       </div>
 
       <!-- CARTE D'EUROPE ET BASSIN MÉDITERRANÉEN HAUTE-FIDÉLITÉ AVEC ZOOM INTERACTIF -->
@@ -522,24 +532,25 @@ export class UIManager {
           </div>
 
           <!-- Pins interactifs des 20 villes d'Europe et Méditerranée avec médaillons 3D et drapeaux -->
+          <!-- Pins interactifs des villes d'Europe et Méditerranée -->
           ${CITIES.map((city, idx) => {
             const unlocked = storage.isCityUnlocked(city.id);
+            const isExterminated = storage.isCityExterminated(city.id);
             const isSelected = this.selectedMapCity.id === city.id;
-            const isNuclear = !!city.isNuclearMission;
 
             return `
-              <div class="city-pin ${unlocked ? 'unlocked' : 'locked'} ${isSelected ? 'selected' : ''} ${isNuclear ? 'nuclear-pin' : ''}"
+              <div class="city-pin ${unlocked ? 'unlocked' : 'locked'} ${isSelected ? 'selected' : ''} ${isExterminated ? 'exterminated-pin' : ''}"
                    data-city-id="${city.id}"
                    style="left: ${city.mapCoords.x}%; top: ${city.mapCoords.y}%;">
                 <div class="city-pulse-ring"></div>
                 <div class="city-pin-dot">
-                  <span class="pin-badge-idx">${isNuclear ? '☢️' : (idx + 1)}</span>
-                  <span class="pin-emblem-icon">${unlocked ? (isNuclear ? '☣️' : (city.countryFlag || city.emblem || '★')) : '🔒'}</span>
+                  <span class="pin-badge-idx">${isExterminated ? '☠️' : (idx + 1)}</span>
+                  <span class="pin-emblem-icon">${isExterminated ? '💀' : (unlocked ? (city.countryFlag || city.emblem || '★') : '🔒')}</span>
                 </div>
-                <div class="city-pin-label">
-                  ${city.name}
+                <div class="city-pin-label ${isExterminated ? 'label-exterminated' : ''}">
+                  ${city.name}${isExterminated ? ' (FERMÉE)' : ''}
                 </div>
-                ${isSelected ? '<div class="city-pin-enter-pill">▶ ENTRER</div>' : ''}
+                ${isSelected ? (isExterminated ? '<div class="city-pin-closed-pill">☠️ FERMÉE</div>' : '<div class="city-pin-enter-pill">▶ ENTRER</div>') : ''}
               </div>
             `;
           }).join('')}
@@ -653,69 +664,17 @@ export class UIManager {
       this.showWorldmageddonModal();
     });
 
-    const setFilterActive = (btnId) => {
-      mapScreen.querySelectorAll('.map-filter-pill').forEach(b => b.classList.remove('active'));
-      mapScreen.querySelector('#' + btnId)?.classList.add('active');
-    };
-
-    mapScreen.querySelector('#btn-filter-all')?.addEventListener('click', () => {
-      soundManager.playClick();
-      setFilterActive('btn-filter-all');
-      this.selectedMapCity = CITIES[0];
-      gameState.selectCity(CITIES[0].id);
-      this.updateCityDetail(mapScreen.querySelector('#city-detail'));
-      centerOnCity(CITIES[0], true);
-    });
-
-    let frCycleIdx = 0;
-    mapScreen.querySelector('#btn-filter-france')?.addEventListener('click', () => {
-      soundManager.playClick();
-      setFilterActive('btn-filter-france');
-      const frCities = CITIES.filter(c => c.country === 'France' || c.countryFlag === '🇫🇷');
-      if (frCities.length > 0) {
-        const nextCity = frCities[frCycleIdx % frCities.length];
-        frCycleIdx++;
-        this.selectedMapCity = nextCity;
-        gameState.selectCity(nextCity.id);
-        this.updateCityDetail(mapScreen.querySelector('#city-detail'));
-        centerOnCity(nextCity, true);
-      }
-    });
-
-    let euCycleIdx = 0;
-    mapScreen.querySelector('#btn-filter-europe')?.addEventListener('click', () => {
-      soundManager.playClick();
-      setFilterActive('btn-filter-europe');
-      const euCities = CITIES.filter(c => c.country !== 'France' && c.country !== 'Maroc' && c.country !== 'Algérie' && c.country !== 'Tunisie');
-      if (euCities.length > 0) {
-        const nextCity = euCities[euCycleIdx % euCities.length];
-        euCycleIdx++;
-        this.selectedMapCity = nextCity;
-        gameState.selectCity(nextCity.id);
-        this.updateCityDetail(mapScreen.querySelector('#city-detail'));
-        centerOnCity(nextCity, true);
-      }
-    });
-
-    let medCycleIdx = 0;
-    mapScreen.querySelector('#btn-filter-med')?.addEventListener('click', () => {
-      soundManager.playClick();
-      setFilterActive('btn-filter-med');
-      const medCities = CITIES.filter(c => ['Marseille', 'Nice', 'Monaco', 'Madrid', 'Barcelone', 'Rome', 'Naples', 'Alger', 'Tunis', 'Saragosse'].includes(c.name));
-      if (medCities.length > 0) {
-        const nextCity = medCities[medCycleIdx % medCities.length];
-        medCycleIdx++;
-        this.selectedMapCity = nextCity;
-        gameState.selectCity(nextCity.id);
-        this.updateCityDetail(mapScreen.querySelector('#city-detail'));
-        centerOnCity(nextCity, true);
-      }
-    });
-
     mapScreen.querySelector('#btn-open-tycoon')?.addEventListener('click', () => {
       soundManager.playClick();
-      setFilterActive('btn-open-tycoon');
       this.showTycoonModal();
+    });
+
+    mapScreen.querySelector('#btn-reset-progression')?.addEventListener('click', () => {
+      this.showResetProgressionModal();
+    });
+
+    mapScreen.querySelector('#btn-quick-vehicle-select')?.addEventListener('click', () => {
+      this.showQuickVehicleModal();
     });
 
     if (viewportEl) {
@@ -888,15 +847,20 @@ export class UIManager {
       }
 
       this.selectedMapCity = city;
+      const isCityClosed = storage.isCityExterminated(cityId);
+
       pins.forEach(p => {
         const isCurrent = p.getAttribute('data-city-id') === cityId;
         p.classList.toggle('selected', isCurrent);
-        const existingPill = p.querySelector('.city-pin-enter-pill');
+        const existingPill = p.querySelector('.city-pin-enter-pill, .city-pin-closed-pill');
         if (isCurrent && !existingPill) {
           const pill = document.createElement('div');
-          pill.className = 'city-pin-enter-pill';
-          pill.textContent = '▶ ENTRER';
+          pill.className = isCityClosed ? 'city-pin-closed-pill' : 'city-pin-enter-pill';
+          pill.textContent = isCityClosed ? '☠️ FERMÉE' : '▶ ENTRER';
           p.appendChild(pill);
+        } else if (isCurrent && existingPill) {
+          existingPill.className = isCityClosed ? 'city-pin-closed-pill' : 'city-pin-enter-pill';
+          existingPill.textContent = isCityClosed ? '☠️ FERMÉE' : '▶ ENTRER';
         } else if (!isCurrent && existingPill) {
           existingPill.remove();
         }
@@ -920,6 +884,11 @@ export class UIManager {
       const isAlreadySelected = (this.selectedMapCity && this.selectedMapCity.id === cityId);
 
       if (isAlreadySelected) {
+        if (storage.isCityExterminated(city.id)) {
+          soundManager.playCrash();
+          this.showToastUnlock({ name: '☠️ VILLE FERMÉE : Accès définitivement condamné suite à l\'extermination totale !' });
+          return;
+        }
         // Clic sur ville déjà sélectionnée : ENTRÉE DIRECTE DANS LA COURSE !
         soundManager.playClick();
         gameState.selectCity(city.id);
@@ -1012,59 +981,108 @@ export class UIManager {
   }
 
   updateCityDetail(detailCard) {
+    if (!detailCard) return;
     const city = this.selectedMapCity;
+    if (!city) return;
+
     const stageIndex = CITIES.findIndex(c => c.id === city.id) + 1;
     const unlocked = storage.isCityUnlocked(city.id);
+    const isExterminated = storage.isCityExterminated(city.id);
     const cityData = storage.getCityData(city.id);
 
-    const starsHtml = '★'.repeat(cityData.stars) + '☆'.repeat(3 - cityData.stars);
+    const starsHtml = isExterminated ? '★★★' : ('★'.repeat(cityData.stars) + '☆'.repeat(3 - cityData.stars));
 
-    detailCard.innerHTML = `
-      <div class="city-detail-header clickable" id="btn-detail-header-launch" style="cursor: pointer;" title="Lancer l'assaut">
-        <div>
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <span class="city-detail-name">${city.countryFlag || '🌍'} ${city.name.toUpperCase()}</span>
-            <span class="city-target-rank-pill">CIBLE #${stageIndex}</span>
+    if (isExterminated) {
+      detailCard.innerHTML = `
+        <div class="city-detail-header">
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="city-detail-name" style="color: #ff4757;">☠️ ${city.countryFlag || '🌍'} ${city.name.toUpperCase()}</span>
+              <span class="city-target-rank-pill pill-rank-closed">ZONE ANÉANTIE</span>
+            </div>
+            <span class="city-tag tag-closed">☠️ Ville Exterminée & Fermée</span>
+            <div style="font-size: 0.82rem; color: #ff7675; font-weight: 800; margin-top: 3px;">
+              🏛️ Ruines : <strong>${city.monument || 'Zone Urbaine'} (Pulvérisé)</strong>
+            </div>
           </div>
-          <span class="city-tag">${city.country || 'Europe'} • ${city.typeTag || 'Métropole Européenne'}</span>
-          <div style="font-size: 0.82rem; color: #fffa65; font-weight: 800; margin-top: 3px;">
-            🏛️ Monument : <strong>${city.monument || 'Monument Historique'}</strong>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0;">
+            <div class="city-stars" style="color: #ff4757;">★★★</div>
+            <span class="badge-status-closed">FERMÉE</span>
           </div>
-          <div style="font-size: 0.78rem; color: #ced6e0; margin-top: 2px;">${city.subtitle}</div>
         </div>
-        <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0;">
-          <div class="city-stars">${starsHtml}</div>
-          ${unlocked ? '<span style="font-size: 0.72rem; color: #2ed573; font-weight: 900; background: rgba(46, 213, 115, 0.2); border: 1px solid #2ed573; padding: 2px 8px; border-radius: 8px;">▶ DÉPLOYER</span>' : '<span style="font-size: 0.72rem; color: #ff7675; font-weight: 900; background: rgba(255, 118, 117, 0.2); border: 1px solid #ff7675; padding: 2px 8px; border-radius: 8px;">🔒 VERROUILLÉ</span>'}
+
+        <p class="city-description desc-closed">
+          Cette métropole a été entièrement anéantie par une frappe d'extermination massive. Tout signe de vie a été balayé. Périmètre scellé militairement et accès terrestre définitivement fermé.
+        </p>
+
+        <div class="city-target-info target-info-closed">
+          <span>💀 Bilan Fatal : <strong style="color: #ff4757;">+${(city.exterminationTarget || 1500000).toLocaleString('fr-FR')} victimes</strong></span>
+          <span style="color: #2ed573;">Statut : <strong>CONQUIS & DÉTRUIT</strong></span>
         </div>
-      </div>
 
-      <p class="city-description">${city.description}</p>
-
-      <div class="city-target-info">
-        <span>🏆 Record : <strong>${cityData.bestScore} pts</strong></span>
-        <span>💀 Cibles Humaines : <strong style="color: #fffa65;">+${(city.exterminationTarget || 35000).toLocaleString('fr-FR')}</strong></span>
-      </div>
-
-      <div class="city-detail-actions">
-        ${unlocked ? `
-          <button id="btn-launch-city" class="btn-arcade btn-play-pulse btn-action-launch">
-            <span>▶ LANCER L'ASSAUT SUR ${city.name.toUpperCase()}</span>
+        <div class="city-detail-actions">
+          <button class="btn-arcade btn-action-locked" disabled style="background: #1e272e; color: #ff7675; border-color: #ff4757; font-weight: 900; letter-spacing: 0.5px;">
+            <span>☠️ VILLE FERMÉE (ACCÈS CONDAMNÉ)</span>
           </button>
           <button id="btn-city-ad-coins" class="btn-ad-gift" title="Cadeau Sponsor : Obtenir +20 Pièces d'or">
             <span class="ad-gift-top">🎁 🪙</span>
             <span class="ad-gift-val">+20</span>
           </button>
-        ` : `
-          <button class="btn-arcade btn-action-locked" disabled>
-            <span>🔒 BLOQUÉ (${city.unlockScoreRequired.toLocaleString('fr-FR')} PTS REQUIS)</span>
-          </button>
-          <button id="btn-city-ad-coins" class="btn-ad-gift" title="Cadeau Sponsor : Obtenir +20 Pièces d'or">
-            <span class="ad-gift-top">🎁 🪙</span>
-            <span class="ad-gift-val">+20</span>
-          </button>
-        `}
-      </div>
-    `;
+        </div>
+      `;
+    } else {
+      detailCard.innerHTML = `
+        <div class="city-detail-header clickable" id="btn-detail-header-launch" style="cursor: pointer;" title="Lancer l'assaut">
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="city-detail-name">${city.countryFlag || '🌍'} ${city.name.toUpperCase()}</span>
+              <span class="city-target-rank-pill">CIBLE #${stageIndex}</span>
+            </div>
+            <span class="city-tag">${city.country || 'Europe'} • ${city.typeTag || 'Métropole Européenne'}</span>
+            <div style="font-size: 0.82rem; color: #fffa65; font-weight: 800; margin-top: 3px;">
+              🏛️ Monument : <strong>${city.monument || 'Monument Historique'}</strong>
+            </div>
+            <div style="font-size: 0.78rem; color: #ced6e0; margin-top: 2px;">${city.subtitle}</div>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0;">
+            <div class="city-stars">${starsHtml}</div>
+            ${unlocked ? '<span class="badge-status-active">▶ ACTIVE</span>' : '<span class="badge-status-locked">🔒 VERROUILLÉ</span>'}
+          </div>
+        </div>
+
+        <p class="city-description">${city.description}</p>
+
+        <div class="city-target-info">
+          <span>🏆 Record : <strong>${cityData.bestScore} pts</strong></span>
+          <span>💀 Population Cible : <strong style="color: #fffa65;">+${(city.exterminationTarget || 1500000).toLocaleString('fr-FR')} âmes</strong></span>
+        </div>
+
+        <div class="city-detail-actions city-detail-actions-dual">
+          ${unlocked ? `
+            <button id="btn-launch-city" class="btn-arcade btn-action-launch-ground" title="Conduire l'assaut au sol">
+              <span class="action-btn-icon">🎮</span>
+              <span class="action-btn-text">ASSAUT AU SOL</span>
+            </button>
+            <button id="btn-wmd-city" class="btn-arcade btn-action-wmd-strike" title="Exterminer la ville avec armes de destruction massive">
+              <span class="action-btn-icon">💀</span>
+              <span class="action-btn-text">FRAPPE D'EXTINCTION</span>
+            </button>
+            <button id="btn-city-ad-coins" class="btn-ad-gift" title="Cadeau Sponsor : Obtenir +20 Pièces d'or">
+              <span class="ad-gift-top">🎁 🪙</span>
+              <span class="ad-gift-val">+20</span>
+            </button>
+          ` : `
+            <button class="btn-arcade btn-action-locked" disabled>
+              <span>🔒 BLOQUÉ (${city.unlockScoreRequired.toLocaleString('fr-FR')} PTS REQUIS)</span>
+            </button>
+            <button id="btn-city-ad-coins" class="btn-ad-gift" title="Cadeau Sponsor : Obtenir +20 Pièces d'or">
+              <span class="ad-gift-top">🎁 🪙</span>
+              <span class="ad-gift-val">+20</span>
+            </button>
+          `}
+        </div>
+      `;
+    }
 
     const cityAdBtn = detailCard.querySelector('#btn-city-ad-coins');
     if (cityAdBtn) {
@@ -1075,7 +1093,7 @@ export class UIManager {
       });
     }
 
-    if (unlocked) {
+    if (unlocked && !isExterminated) {
       const launchRun = () => {
         soundManager.playClick();
         gameState.selectCity(city.id);
@@ -1087,7 +1105,356 @@ export class UIManager {
 
       const headerBtn = detailCard.querySelector('#btn-detail-header-launch');
       if (headerBtn) headerBtn.addEventListener('click', launchRun);
+
+      const wmdBtn = detailCard.querySelector('#btn-wmd-city');
+      if (wmdBtn) {
+        wmdBtn.addEventListener('click', () => {
+          this.showWmdStrikeModal(city);
+        });
+      }
     }
+  }
+
+  // --- SÉLECTEUR RAPIDE D'ENGIN D'ASSAUT DEPUIS LA CARTE ---
+  showQuickVehicleModal() {
+    soundManager.playClick();
+    const existing = document.getElementById('modal-quick-vehicle');
+    if (existing) existing.remove();
+
+    const currentBikeId = storage.data.equippedBike || 'tank';
+    const unlockedBikes = storage.data.unlockedBikes || [];
+
+    const modal = document.createElement('div');
+    modal.id = 'modal-quick-vehicle';
+    modal.className = 'tactical-modal-overlay';
+
+    modal.innerHTML = `
+      <div class="tactical-modal-card quick-vehicle-modal-card">
+        <div class="tactical-modal-header">
+          <div class="tactical-modal-title">
+            <span>🪖</span>
+            <h3>ARSENAL & CHOIX D'ENGIN</h3>
+          </div>
+          <button id="btn-close-quick-veh" class="btn-close-modal">✕</button>
+        </div>
+
+        <p class="quick-veh-subtitle">
+          Basculez instantanément votre blindé ou bolide d'assaut pour la prochaine mission :
+        </p>
+
+        <div class="quick-vehicle-grid">
+          ${BIKES.map(bike => {
+            const isUnlocked = unlockedBikes.includes(bike.id);
+            const isEquipped = bike.id === currentBikeId;
+            return `
+              <div class="quick-veh-item ${isEquipped ? 'equipped' : ''} ${isUnlocked ? 'unlocked' : 'locked'}"
+                   data-bike-id="${bike.id}">
+                <div class="quick-veh-icon">${bike.icon || '🏍️'}</div>
+                <div class="quick-veh-details">
+                  <div class="quick-veh-name-row">
+                    <span class="quick-veh-name">${bike.shortName || bike.name}</span>
+                    ${isEquipped ? '<span class="quick-veh-badge-equipped">ÉQUIPÉ ✅</span>' : ''}
+                    ${!isUnlocked ? '<span class="quick-veh-badge-locked">🔒 BLOQUÉ</span>' : ''}
+                  </div>
+                  <div class="quick-veh-category">${bike.category || 'VÉHICULE D\'ASSAUT'}</div>
+                  <div class="quick-veh-weapon">💥 ${bike.weaponName || bike.description || 'Arme de carnage'}</div>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+
+        <div class="quick-veh-footer">
+          <button id="btn-open-full-garage" class="btn-arcade btn-secondary" style="flex: 1; padding: 12px;">
+            <span>🔧 OUVRIR LE GARAGE COMPLET (PEINTURES & STATS)</span>
+          </button>
+        </div>
+      </div>
+    `;
+
+    this.root.appendChild(modal);
+
+    modal.querySelector('#btn-close-quick-veh').addEventListener('click', () => {
+      soundManager.playClick();
+      modal.remove();
+    });
+
+    modal.querySelector('#btn-open-full-garage').addEventListener('click', () => {
+      soundManager.playClick('garage');
+      modal.remove();
+      this.previousScreen = 'MAP';
+      this.setScreen('GARAGE');
+    });
+
+    modal.querySelectorAll('.quick-veh-item.unlocked').forEach(item => {
+      item.addEventListener('click', () => {
+        const bikeId = item.getAttribute('data-bike-id');
+        gameState.selectBike(bikeId);
+        soundManager.playClick('garage');
+        modal.remove();
+        this.render();
+        this.showToastUnlock({ name: `Engin équipé : ${gameState.selectedBike.shortName || gameState.selectedBike.name}` });
+      });
+    });
+
+    modal.querySelectorAll('.quick-veh-item.locked').forEach(item => {
+      item.addEventListener('click', () => {
+        soundManager.playCrash();
+        this.showToastUnlock({ name: `🔒 Cet engin doit être débloqué dans le Garage !` });
+      });
+    });
+  }
+
+  // --- MODAL DE RÉINITIALISATION DE L'AVANCEMENT WORLDMAGEDDON ---
+  showResetProgressionModal() {
+    soundManager.playClick();
+    const existing = document.getElementById('modal-reset-progression');
+    if (existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'modal-reset-progression';
+    modal.className = 'tactical-modal-overlay';
+
+    modal.innerHTML = `
+      <div class="tactical-modal-card reset-modal-card">
+        <div class="tactical-modal-header" style="border-bottom-color: #ff4757;">
+          <div class="tactical-modal-title" style="color: #ff4757;">
+            <span>⚠️</span>
+            <h3>RÉINITIALISER L'AVANCEMENT ?</h3>
+          </div>
+          <button id="btn-close-reset-modal" class="btn-close-modal">✕</button>
+        </div>
+
+        <div style="padding: 16px; text-align: center;">
+          <div style="font-size: 3rem; margin-bottom: 8px;">🔄</div>
+          <p style="font-size: 0.95rem; line-height: 1.5; color: #ced6e0; margin: 0 0 16px 0;">
+            Voulez-vous vraiment <strong style="color: #ff4757;">réinitialiser toute la campagne Worldmageddon</strong> ?
+          </p>
+          <div style="background: rgba(255, 71, 87, 0.12); border: 1px solid rgba(255, 71, 87, 0.4); border-radius: 12px; padding: 12px; text-align: left; font-size: 0.85rem; color: #ff7675; margin-bottom: 20px; line-height: 1.6;">
+            • Toutes les villes fermées et exterminées seront <strong>réouvertes</strong>.<br>
+            • Les scores de villes et étoiles seront <strong>remis à zéro</strong>.<br>
+            • Le compteur total de victimes sera <strong>réinitialisé</strong>.<br>
+            • Vos pièces d'or et véhicules débloqués seront <em>conservés</em>.
+          </div>
+
+          <div style="display: flex; gap: 10px;">
+            <button id="btn-cancel-reset" class="btn-arcade btn-secondary" style="flex: 1; padding: 12px;">
+              <span>ANNULER</span>
+            </button>
+            <button id="btn-confirm-reset" class="btn-arcade" style="flex: 1.3; padding: 12px; background: linear-gradient(135deg, #eb4d4b, #c0392b); border-color: #ff7675; color: #ffffff;">
+              <span>💥 CONFIRMER LE RESET</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    this.root.appendChild(modal);
+
+    modal.querySelector('#btn-close-reset-modal').addEventListener('click', () => {
+      soundManager.playClick();
+      modal.remove();
+    });
+
+    modal.querySelector('#btn-cancel-reset').addEventListener('click', () => {
+      soundManager.playClick();
+      modal.remove();
+    });
+
+    modal.querySelector('#btn-confirm-reset').addEventListener('click', () => {
+      storage.resetWorldmageddonProgression();
+      soundManager.playExplosion();
+      modal.remove();
+      this.showToastUnlock({ name: '🔄 Campagne réinitialisée ! Toutes les villes sont réouvertes.' });
+      this.render();
+    });
+  }
+
+  // --- MODAL DE FRAPPE D'EXTINCTION MASSIVE (WMD) ---
+  showWmdStrikeModal(city) {
+    soundManager.playClick();
+    const existing = document.getElementById('modal-wmd-strike');
+    if (existing) existing.remove();
+
+    const victimPop = city.exterminationTarget || 1500000;
+
+    const modal = document.createElement('div');
+    modal.id = 'modal-wmd-strike';
+    modal.className = 'tactical-modal-overlay';
+
+    modal.innerHTML = `
+      <div class="tactical-modal-card wmd-modal-card">
+        <div class="tactical-modal-header" style="border-bottom-color: #ff3838;">
+          <div class="tactical-modal-title" style="color: #ff3838;">
+            <span>☢️</span>
+            <h3>CENTRE DE FRAPPE D'EXTINCTION MASSIVE</h3>
+          </div>
+          <button id="btn-close-wmd-modal" class="btn-close-modal">✕</button>
+        </div>
+
+        <div class="wmd-target-banner">
+          <div class="wmd-target-flag">${city.countryFlag || '🌍'}</div>
+          <div class="wmd-target-details">
+            <span class="wmd-target-name">${city.name.toUpperCase()} (${city.country || 'Europe'})</span>
+            <span class="wmd-target-pop">Population Cible : <strong>${victimPop.toLocaleString('fr-FR')} âmes</strong></span>
+          </div>
+          <span class="wmd-target-badge">PRÊT AU TIR</span>
+        </div>
+
+        <p class="wmd-instructions">
+          Choisissez l'arme stratégique pour anéantir cette ville et clore définitivement son accès :
+        </p>
+
+        <div class="wmd-weapons-grid">
+          <!-- 1. Missile Thermonucléaire 50MT -->
+          <div class="wmd-weapon-card weapon-nuke" data-weapon="NUKE">
+            <div class="wmd-weapon-icon">☢️</div>
+            <div class="wmd-weapon-body">
+              <div class="wmd-weapon-name">MISSILE THERMONUCLÉAIRE 50MT</div>
+              <div class="wmd-weapon-desc">Tête balistique ICBM lourde. Onde de choc cyclopéenne et blast atomique pulvérisant le centre urbain.</div>
+              <div class="wmd-weapon-tag">💥 VAPORISATION TOTALE</div>
+            </div>
+            <button class="wmd-fire-btn btn-fire-nuke">DÉTONER ▶</button>
+          </div>
+
+          <!-- 2. Tapis de Bombardement Massif -->
+          <div class="wmd-weapon-card weapon-carpet" data-weapon="CARPET">
+            <div class="wmd-weapon-icon">🚀</div>
+            <div class="wmd-weapon-body">
+              <div class="wmd-weapon-name">TAPIS DE BOMBARDEMENT MASSIF</div>
+              <div class="wmd-weapon-desc">Flotte de bombardiers lourds MOAB & Napalm. Tempête de feu incendiaire ininterrompue.</div>
+              <div class="wmd-weapon-tag">🔥 TEMPÊTE DE FEU</div>
+            </div>
+            <button class="wmd-fire-btn btn-fire-carpet">PILONNER ▶</button>
+          </div>
+
+          <!-- 3. Rayon Orbital Pulsar -->
+          <div class="wmd-weapon-card weapon-orbital" data-weapon="ORBITAL">
+            <div class="wmd-weapon-icon">🛰️</div>
+            <div class="wmd-weapon-body">
+              <div class="wmd-weapon-name">CANON PARTICULAIRE ORBITAL</div>
+              <div class="wmd-weapon-desc">Satellite en orbite basse. Faisceau laser ionique pulsé désintégrant chaque bloc urbain.</div>
+              <div class="wmd-weapon-tag">⚡ DÉSINTÉGRATION IONIQUE</div>
+            </div>
+            <button class="wmd-fire-btn btn-fire-orbital">TIRER ▶</button>
+          </div>
+
+          <!-- 4. Aérosol Chimique Neuro-Toxique -->
+          <div class="wmd-weapon-card weapon-bio" data-weapon="BIO">
+            <div class="wmd-weapon-icon">☣️</div>
+            <div class="wmd-weapon-body">
+              <div class="wmd-weapon-name">AÉROSOL CHIMIQUE NEURO-TOXIQUE</div>
+              <div class="wmd-weapon-desc">Brumisation aéroportée furtive. Agent létal foudroyant 100% de la biomasse en quelques secondes.</div>
+              <div class="wmd-weapon-tag">☠️ ASYSTOLIE FOUDROYANTE</div>
+            </div>
+            <button class="wmd-fire-btn btn-fire-bio">DISPERSER ▶</button>
+          </div>
+        </div>
+
+        <div class="wmd-modal-footer">
+          <button id="btn-cancel-wmd" class="btn-arcade btn-secondary" style="width: 100%; padding: 12px;">
+            <span>ANNULER L'ORDRE D'EXTINCTION</span>
+          </button>
+        </div>
+      </div>
+    `;
+
+    this.root.appendChild(modal);
+
+    modal.querySelector('#btn-close-wmd-modal').addEventListener('click', () => {
+      soundManager.playClick();
+      modal.remove();
+    });
+
+    modal.querySelector('#btn-cancel-wmd').addEventListener('click', () => {
+      soundManager.playClick();
+      modal.remove();
+    });
+
+    modal.querySelectorAll('.wmd-weapon-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const weaponType = card.getAttribute('data-weapon');
+        modal.remove();
+        this.simulateWmdExtinction(city, weaponType, victimPop);
+      });
+    });
+  }
+
+  // --- SIMULATION CINÉMATIQUE DE L'EXTINCTION MASSIVE (AUDIO/VISUEL FX) ---
+  simulateWmdExtinction(city, weaponType, victimPop) {
+    const overlay = document.createElement('div');
+    overlay.className = `wmd-simulation-overlay wmd-sim-${weaponType.toLowerCase()}`;
+
+    let titleText = '💥 FRAPPE STRATÉGIQUE EN COURS...';
+    let subText = 'VERROUILLAGE SATELLITE DU PÉRIMÈTRE';
+    let icon = '☢️';
+
+    if (weaponType === 'NUKE') {
+      titleText = '☢️ DÉTONATION NUCLÉAIRE 50MT';
+      subText = 'ONDE DE CHOC THERMIQUE & BLAST ATOMIQUE';
+      icon = '☢️';
+      soundManager.playNuclearAlarm();
+      setTimeout(() => soundManager.playNuclearBlast(), 700);
+    } else if (weaponType === 'CARPET') {
+      titleText = '🚀 TAPIS DE BOMBES NAPALM & MOAB';
+      subText = 'PILONNAGE AÉRIEN MASSIF DÉVASTATEUR';
+      icon = '🚀';
+      soundManager.playExplosion();
+      setTimeout(() => soundManager.playExplosion(), 450);
+      setTimeout(() => soundManager.playExplosion(), 900);
+    } else if (weaponType === 'ORBITAL') {
+      titleText = '🛰️ CANON PARTICULAIRE ORBITAL';
+      subText = 'DÉSINTÉGRATION MOLÉCULAIRE PAR FAISCEAU IONIQUE';
+      icon = '🛰️';
+      soundManager.playCrash();
+      setTimeout(() => soundManager.playExplosion(), 600);
+    } else {
+      titleText = '☣️ BRUMISATION NEURO-TOXIQUE';
+      subText = 'CONTAMINATION BIOLOGIQUE IMMÉDIATE';
+      icon = '☣️';
+      soundManager.playClick('nuclear');
+      setTimeout(() => soundManager.playExplosion(), 800);
+    }
+
+    overlay.innerHTML = `
+      <div class="wmd-sim-flash"></div>
+      <div class="wmd-sim-content">
+        <div class="wmd-sim-icon-blast">${icon}</div>
+        <h1 class="wmd-sim-title">${titleText}</h1>
+        <p class="wmd-sim-subtitle">${subText}</p>
+        <div class="wmd-sim-target-chip">
+          <span>🎯 CIBLE : ${city.countryFlag || ''} ${city.name.toUpperCase()}</span>
+        </div>
+        <div class="wmd-sim-counter-box">
+          <span class="wmd-sim-counter-label">BILAN D'ANÉANTISSEMENT CONFIRMÉ</span>
+          <span class="wmd-sim-counter-number">+${victimPop.toLocaleString('fr-FR')} VICTIMES</span>
+        </div>
+        <div class="wmd-sim-verdict">☠️ VILLE ENTIÈREMENT EXTERMINÉE & SCÉLLÉE DÉFINITIVEMENT</div>
+      </div>
+    `;
+
+    this.root.appendChild(overlay);
+
+    if (navigator.vibrate) {
+      navigator.vibrate([200, 100, 400, 150, 600]);
+    }
+
+    setTimeout(() => {
+      overlay.classList.add('wmd-detonated');
+    }, 80);
+
+    // Enregistrement définitif de l'extermination
+    storage.markCityExterminated(city.id, victimPop);
+
+    // Transition de sortie après 3.2 secondes
+    setTimeout(() => {
+      overlay.classList.add('wmd-fade-out');
+      setTimeout(() => {
+        overlay.remove();
+        this.render();
+        this.showToastUnlock({ name: `☠️ ${city.name.toUpperCase()} EST DÉSORMAIS EXTERMINÉE ET FERMÉE !` });
+      }, 500);
+    }, 3200);
   }
 
   triggerCityEntryCinematic(city) {

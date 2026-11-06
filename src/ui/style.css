@@ -2769,5 +2769,869 @@ html, body {
   transform-origin: center center;
 }
 
+/* ==========================================================================
+   REFONTE ERGONOMIQUE MAP HEADER & CONTROLES WORLDMAGEDDON (UI/UX HAUT DE GAMME)
+   ========================================================================== */
+
+.map-header-redesign {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto 10px auto;
+  box-sizing: border-box;
+}
+
+.map-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+
+.map-top-btn {
+  background: rgba(255, 255, 255, 0.10);
+  border: 1.5px solid rgba(255, 255, 255, 0.22);
+  border-radius: 16px;
+  padding: 6px 10px;
+  color: #ffffff;
+  font-size: 0.76rem;
+  font-weight: 850;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform 0.15s, background 0.15s;
+}
+
+.map-top-btn:active {
+  transform: scale(0.94);
+  background: rgba(255, 255, 255, 0.20);
+}
+
+.map-quick-vehicle-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, rgba(235, 77, 75, 0.28), rgba(45, 52, 54, 0.85));
+  border: 1.5px solid #ff4757;
+  border-radius: 18px;
+  padding: 5px 10px;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(255, 71, 87, 0.35);
+  transition: transform 0.15s, filter 0.15s;
+  min-width: 0;
+  text-align: left;
+}
+
+.map-quick-vehicle-btn:active {
+  transform: scale(0.96);
+  filter: brightness(1.2);
+}
+
+.quick-veh-icon-pill {
+  font-size: 1.35rem;
+  line-height: 1;
+  flex-shrink: 0;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
+}
+
+.quick-veh-text-pill {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.quick-veh-label {
+  font-size: 0.60rem;
+  font-weight: 900;
+  color: #ffd32a;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  line-height: 1.1;
+}
+
+.quick-veh-title {
+  font-size: 0.82rem;
+  font-weight: 900;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+
+.map-sub-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+
+.worldmageddon-strip {
+  flex: 1;
+  background: linear-gradient(90deg, #1e272e, #2d3436);
+  border: 1.5px solid #ff4757;
+  border-radius: 16px;
+  padding: 6px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+  transition: transform 0.15s, filter 0.15s;
+}
+
+.worldmageddon-strip:active {
+  transform: scale(0.97);
+  filter: brightness(1.15);
+}
+
+.wm-strip-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.wm-strip-skull {
+  font-size: 1.15rem;
+  filter: drop-shadow(0 0 6px rgba(255, 71, 87, 0.7));
+}
+
+.wm-strip-texts {
+  display: flex;
+  flex-direction: column;
+}
+
+.wm-strip-title {
+  font-size: 0.78rem;
+  font-weight: 900;
+  color: #ff4757;
+  letter-spacing: 0.5px;
+  line-height: 1.1;
+}
+
+.wm-strip-rank {
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: #badc58;
+  line-height: 1.1;
+}
+
+.wm-strip-stats {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.wm-strip-count {
+  font-size: 0.82rem;
+  font-weight: 900;
+  color: #fffa65;
+  font-family: monospace;
+  line-height: 1.1;
+}
+
+.wm-strip-pct {
+  font-size: 0.68rem;
+  font-weight: 900;
+  color: #ff7675;
+  line-height: 1.1;
+}
+
+.map-strip-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.map-pill-action {
+  padding: 7px 11px;
+  border-radius: 14px;
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  border: 1.5px solid;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: transform 0.15s, filter 0.15s;
+}
+
+.map-pill-action:active {
+  transform: scale(0.93);
+  filter: brightness(1.2);
+}
+
+.pill-tycoon-action {
+  background: linear-gradient(135deg, rgba(241, 196, 15, 0.22), rgba(230, 126, 34, 0.35));
+  border-color: #ffd32a;
+  color: #fffa65;
+  box-shadow: 0 0 10px rgba(255, 211, 42, 0.3);
+}
+
+.pill-reset-action {
+  background: rgba(235, 77, 75, 0.20);
+  border-color: #ff4757;
+  color: #ff7675;
+}
+
+.map-admob-banner-bar {
+  width: 100%;
+  background: linear-gradient(90deg, rgba(66, 133, 244, 0.16), rgba(52, 168, 83, 0.16), rgba(251, 188, 5, 0.16));
+  border: 1px dashed rgba(255, 255, 255, 0.32);
+  border-radius: 12px;
+  padding: 5px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.admob-badge {
+  font-size: 0.62rem;
+  font-weight: 900;
+  background: #4285f4;
+  color: #ffffff;
+  padding: 1px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+.admob-text {
+  font-size: 0.70rem;
+  font-weight: 800;
+  color: #ced6e0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ==========================================================================
+   PINS EXTERMINÉS & FERMÉS
+   ========================================================================== */
+
+.city-pin.exterminated-pin .city-pin-dot {
+  background: radial-gradient(circle, #eb4d4b 0%, #c0392b 70%, #1e272e 100%) !important;
+  border: 2px solid #ff3838 !important;
+  box-shadow: 0 0 16px rgba(235, 77, 75, 0.95), 0 0 30px rgba(0, 0, 0, 0.8) !important;
+}
+
+.city-pin.exterminated-pin .city-pulse-ring {
+  border-color: #eb4d4b !important;
+  animation: exterminatedPulse 1.4s ease-out infinite !important;
+}
+
+@keyframes exterminatedPulse {
+  0% { transform: scale(0.6); opacity: 1; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+
+.label-exterminated {
+  background: rgba(35, 10, 10, 0.92) !important;
+  border-color: #ff3838 !important;
+  color: #ff7675 !important;
+  text-shadow: 0 0 6px rgba(255, 71, 87, 0.8) !important;
+}
+
+.city-pin-closed-pill {
+  background: linear-gradient(135deg, #eb4d4b, #c0392b);
+  color: #ffffff;
+  font-weight: 900;
+  font-size: 0.70rem;
+  letter-spacing: 0.5px;
+  padding: 3px 9px;
+  border-radius: 12px;
+  border: 1.5px solid #fff;
+  box-shadow: 0 0 14px rgba(235, 77, 75, 0.95);
+  margin-top: 3px;
+  white-space: nowrap;
+  pointer-events: auto;
+  cursor: pointer;
+  animation: enterPillPulse 1.1s ease-in-out infinite alternate;
+}
+
+/* ==========================================================================
+   CARTE DU BAS (MISSION & DETAIL VILLE)
+   ========================================================================== */
+
+.city-detail-actions-dual {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  width: 100%;
+}
+
+.btn-action-launch-ground {
+  flex: 1.1;
+  padding: 12px 10px;
+  font-size: 0.88rem;
+  font-weight: 900;
+  background: linear-gradient(135deg, #0984e3, #00cec9);
+  border-radius: 16px;
+  border: 1.5px solid #74b9ff;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-shadow: 0 4px 16px rgba(0, 206, 201, 0.4);
+  margin: 0;
+}
+
+.btn-action-wmd-strike {
+  flex: 1.1;
+  padding: 12px 10px;
+  font-size: 0.88rem;
+  font-weight: 900;
+  background: linear-gradient(135deg, #d63031, #e17055);
+  border-radius: 16px;
+  border: 1.5px solid #ff7675;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-shadow: 0 4px 16px rgba(214, 48, 49, 0.5);
+  margin: 0;
+  animation: pulseWmdBtn 2s infinite ease-in-out;
+}
+
+@keyframes pulseWmdBtn {
+  0% { transform: scale(1); box-shadow: 0 4px 16px rgba(214, 48, 49, 0.5); }
+  50% { transform: scale(1.02); box-shadow: 0 4px 22px rgba(255, 56, 56, 0.85); }
+  100% { transform: scale(1); box-shadow: 0 4px 16px rgba(214, 48, 49, 0.5); }
+}
+
+.pill-rank-closed {
+  background: rgba(235, 77, 75, 0.25) !important;
+  border-color: #ff4757 !important;
+  color: #ff7675 !important;
+}
+
+.tag-closed {
+  background: rgba(235, 77, 75, 0.20) !important;
+  border-color: #ff4757 !important;
+  color: #ff7675 !important;
+}
+
+.desc-closed {
+  color: #ff7675 !important;
+  font-style: italic;
+}
+
+.target-info-closed {
+  border-color: rgba(255, 71, 87, 0.4) !important;
+}
+
+.badge-status-closed {
+  font-size: 0.72rem;
+  color: #ff4757;
+  font-weight: 900;
+  background: rgba(255, 71, 87, 0.2);
+  border: 1px solid #ff4757;
+  padding: 2px 8px;
+  border-radius: 8px;
+}
+
+.badge-status-active {
+  font-size: 0.72rem;
+  color: #2ed573;
+  font-weight: 900;
+  background: rgba(46, 213, 115, 0.2);
+  border: 1px solid #2ed573;
+  padding: 2px 8px;
+  border-radius: 8px;
+}
+
+/* ==========================================================================
+   TACTICAL MODALS (QUICK VEHICLE, RESET PROGRESSION, WMD STRIKE)
+   ========================================================================== */
+
+.tactical-modal-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 14px;
+  box-sizing: border-box;
+  z-index: 1000;
+  overflow-y: auto;
+  pointer-events: auto;
+}
+
+.tactical-modal-card {
+  width: 100%;
+  max-width: 460px;
+  max-height: 85vh;
+  overflow-y: auto;
+  background: #18283d;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 22px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.8);
+  animation: modalPop 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.tactical-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1.5px solid rgba(255, 255, 255, 0.15);
+}
+
+.tactical-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #fffa65;
+}
+
+.tactical-modal-title h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+}
+
+.btn-close-modal {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  color: #fff;
+  font-weight: 900;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Quick Vehicle Grid */
+.quick-veh-subtitle {
+  font-size: 0.85rem;
+  color: #ced6e0;
+  padding: 10px 16px 0 16px;
+  margin: 0;
+}
+
+.quick-vehicle-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+  overflow-y: auto;
+}
+
+.quick-veh-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  cursor: pointer;
+  transition: transform 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.quick-veh-item:active {
+  transform: scale(0.97);
+}
+
+.quick-veh-item.equipped {
+  background: rgba(46, 213, 115, 0.18);
+  border-color: #2ed573;
+  box-shadow: 0 0 12px rgba(46, 213, 115, 0.35);
+}
+
+.quick-veh-item.locked {
+  opacity: 0.6;
+  border-style: dashed;
+}
+
+.quick-veh-icon {
+  font-size: 1.8rem;
+  flex-shrink: 0;
+}
+
+.quick-veh-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.quick-veh-name-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.quick-veh-name {
+  font-size: 0.92rem;
+  font-weight: 900;
+  color: #ffffff;
+}
+
+.quick-veh-badge-equipped {
+  font-size: 0.68rem;
+  font-weight: 900;
+  color: #2ed573;
+  background: rgba(46, 213, 115, 0.2);
+  border: 1px solid #2ed573;
+  padding: 1px 6px;
+  border-radius: 6px;
+}
+
+.quick-veh-badge-locked {
+  font-size: 0.68rem;
+  font-weight: 900;
+  color: #ff7675;
+  background: rgba(255, 118, 117, 0.2);
+  border: 1px solid #ff7675;
+  padding: 1px 6px;
+  border-radius: 6px;
+}
+
+.quick-veh-category {
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: #ffd32a;
+}
+
+.quick-veh-weapon {
+  font-size: 0.76rem;
+  color: #a4b0be;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.quick-veh-footer {
+  padding: 12px 16px;
+  border-top: 1.5px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+}
+
+/* WMD Strike Modal */
+.wmd-target-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(235, 77, 75, 0.15);
+  border: 1.5px solid rgba(235, 77, 75, 0.4);
+  border-radius: 14px;
+  padding: 10px 14px;
+  margin: 12px 16px 0 16px;
+}
+
+.wmd-target-flag {
+  font-size: 1.8rem;
+  flex-shrink: 0;
+}
+
+.wmd-target-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.wmd-target-name {
+  font-size: 0.95rem;
+  font-weight: 900;
+  color: #ffffff;
+}
+
+.wmd-target-pop {
+  font-size: 0.78rem;
+  color: #ced6e0;
+}
+
+.wmd-target-badge {
+  font-size: 0.68rem;
+  font-weight: 900;
+  color: #ff3838;
+  background: rgba(255, 56, 56, 0.2);
+  border: 1px solid #ff3838;
+  padding: 2px 7px;
+  border-radius: 6px;
+  letter-spacing: 0.5px;
+  animation: pulseWmdBtn 1.5s infinite;
+}
+
+.wmd-instructions {
+  font-size: 0.84rem;
+  color: #ced6e0;
+  padding: 10px 16px 0 16px;
+  margin: 0;
+}
+
+.wmd-weapons-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 16px;
+}
+
+.wmd-weapon-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 16px;
+  border: 1.5px solid;
+  cursor: pointer;
+  transition: transform 0.15s, filter 0.15s;
+}
+
+.wmd-weapon-card:active {
+  transform: scale(0.97);
+  filter: brightness(1.2);
+}
+
+.weapon-nuke {
+  background: rgba(235, 77, 75, 0.15);
+  border-color: #ff3838;
+}
+
+.weapon-carpet {
+  background: rgba(230, 126, 34, 0.15);
+  border-color: #e67e22;
+}
+
+.weapon-orbital {
+  background: rgba(0, 206, 201, 0.15);
+  border-color: #00cec9;
+}
+
+.weapon-bio {
+  background: rgba(46, 213, 115, 0.15);
+  border-color: #2ed573;
+}
+
+.wmd-weapon-icon {
+  font-size: 1.8rem;
+  flex-shrink: 0;
+}
+
+.wmd-weapon-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.wmd-weapon-name {
+  font-size: 0.88rem;
+  font-weight: 900;
+  color: #ffffff;
+}
+
+.wmd-weapon-desc {
+  font-size: 0.72rem;
+  color: #ced6e0;
+  line-height: 1.3;
+}
+
+.wmd-weapon-tag {
+  font-size: 0.65rem;
+  font-weight: 900;
+  color: #ffd32a;
+}
+
+.wmd-fire-btn {
+  background: linear-gradient(135deg, #ff4757, #ff6b81);
+  border: 1px solid #fff;
+  border-radius: 12px;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 900;
+  padding: 8px 12px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.wmd-modal-footer {
+  padding: 10px 16px 14px 16px;
+}
+
+/* ==========================================================================
+   SIMULATION CINÉMATIQUE D'EXTINCTION MASSIVE
+   ========================================================================== */
+
+.wmd-simulation-overlay {
+  position: absolute;
+  inset: 0;
+  background: #000;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  box-sizing: border-box;
+  text-align: center;
+  overflow: hidden;
+  pointer-events: auto;
+}
+
+.wmd-sim-flash {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.1s ease;
+}
+
+.wmd-sim-nuke .wmd-sim-flash {
+  background: radial-gradient(circle, #ffffff 0%, #fffa65 40%, #ff4757 80%, #000 100%);
+}
+
+.wmd-sim-carpet .wmd-sim-flash {
+  background: radial-gradient(circle, #ff9f43 0%, #ee5253 60%, #000 100%);
+}
+
+.wmd-sim-orbital .wmd-sim-flash {
+  background: radial-gradient(circle, #00cec9 0%, #0984e3 60%, #000 100%);
+}
+
+.wmd-sim-bio .wmd-sim-flash {
+  background: radial-gradient(circle, #2ed573 0%, #10ac84 60%, #000 100%);
+}
+
+.wmd-simulation-overlay.wmd-detonated .wmd-sim-flash {
+  animation: wmdFlashBlast 1.2s ease-out forwards;
+}
+
+@keyframes wmdFlashBlast {
+  0% { opacity: 1; }
+  30% { opacity: 0.9; }
+  100% { opacity: 0.15; }
+}
+
+.wmd-sim-content {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  max-width: 480px;
+}
+
+.wmd-simulation-overlay.wmd-detonated .wmd-sim-content {
+  animation: wmdScreenShake 0.8s ease-in-out;
+}
+
+@keyframes wmdScreenShake {
+  0% { transform: translate(0, 0) scale(1); }
+  10% { transform: translate(-12px, 8px) scale(1.05); }
+  25% { transform: translate(14px, -10px) scale(1.03); }
+  45% { transform: translate(-8px, 6px) scale(1.02); }
+  70% { transform: translate(6px, -4px) scale(1.01); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+.wmd-sim-icon-blast {
+  font-size: 4.5rem;
+  animation: wmdIconPulse 1.2s infinite alternate;
+}
+
+@keyframes wmdIconPulse {
+  0% { transform: scale(0.9); filter: drop-shadow(0 0 10px #ff4757); }
+  100% { transform: scale(1.2); filter: drop-shadow(0 0 35px #fffa65); }
+}
+
+.wmd-sim-title {
+  font-size: 1.55rem;
+  font-weight: 900;
+  color: #fffa65;
+  margin: 0;
+  letter-spacing: 1px;
+  text-shadow: 0 0 16px rgba(255, 250, 101, 0.8);
+}
+
+.wmd-sim-subtitle {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: #ff7675;
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+.wmd-sim-target-chip {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  border-radius: 16px;
+  padding: 6px 14px;
+  font-size: 0.88rem;
+  font-weight: 900;
+  color: #ffffff;
+}
+
+.wmd-sim-counter-box {
+  background: rgba(235, 77, 75, 0.25);
+  border: 2px solid #ff3838;
+  border-radius: 18px;
+  padding: 12px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: 0 0 30px rgba(235, 77, 75, 0.6);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.wmd-sim-counter-label {
+  font-size: 0.72rem;
+  font-weight: 900;
+  color: #ced6e0;
+  letter-spacing: 1px;
+}
+
+.wmd-sim-counter-number {
+  font-size: 1.6rem;
+  font-weight: 950;
+  color: #fffa65;
+  font-family: monospace;
+  letter-spacing: 1px;
+  text-shadow: 0 0 12px rgba(255, 250, 101, 0.8);
+}
+
+.wmd-sim-verdict {
+  font-size: 0.82rem;
+  font-weight: 900;
+  color: #ff4757;
+  letter-spacing: 0.8px;
+}
+
+.wmd-simulation-overlay.wmd-fade-out {
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
 
 
