@@ -118,6 +118,17 @@ export class UIManager {
     }
   }
 
+  closeActiveModals() {
+    if (Array.isArray(this.activeModals)) {
+      while (this.activeModals.length > 0) {
+        const modal = this.activeModals.pop();
+        if (modal && modal.parentNode) {
+          try { modal.remove(); } catch (e) {}
+        }
+      }
+    }
+  }
+
   setScreen(screenName) {
     if (this.currentScreen !== screenName) {
       this.previousScreen = this.currentScreen;
@@ -1000,7 +1011,7 @@ export class UIManager {
               <span class="city-detail-name" style="color: #ff4757;">☠️ ${city.countryFlag || '🌍'} ${city.name.toUpperCase()}</span>
               <span class="city-target-rank-pill pill-rank-closed">ZONE ANÉANTIE</span>
             </div>
-            <span class="city-tag tag-closed">☠️ Ville Exterminée & Fermée</span>
+            <span class="city-tag tag-closed">☠️ Ville Exterminée & Scellée</span>
             <div style="font-size: 0.82rem; color: #ff7675; font-weight: 800; margin-top: 3px;">
               🏛️ Ruines : <strong>${city.monument || 'Zone Urbaine'} (Pulvérisé)</strong>
             </div>
@@ -1012,7 +1023,7 @@ export class UIManager {
         </div>
 
         <p class="city-description desc-closed">
-          Cette métropole a été entièrement anéantie par une frappe d'extermination massive. Tout signe de vie a été balayé. Périmètre scellé militairement et accès terrestre définitivement fermé.
+          Cette métropole a été entièrement anéantie par une frappe d'extermination massive. Tout signe de vie a été balayé. Périmètre scellé militairement et accès terrestre définitivement condamné.
         </p>
 
         <div class="city-target-info target-info-closed">
@@ -1020,13 +1031,13 @@ export class UIManager {
           <span style="color: #2ed573;">Statut : <strong>CONQUIS & DÉTRUIT</strong></span>
         </div>
 
-        <div class="city-detail-actions">
-          <button class="btn-arcade btn-action-locked" disabled style="background: #1e272e; color: #ff7675; border-color: #ff4757; font-weight: 900; letter-spacing: 0.5px;">
+        <div class="city-detail-actions-vertical">
+          <button class="btn-arcade btn-action-locked" disabled style="width: 100%; padding: 13px; background: #1e272e; color: #ff7675; border-color: #ff4757; font-weight: 900; white-space: nowrap; letter-spacing: 0.5px;">
             <span>☠️ VILLE FERMÉE (ACCÈS CONDAMNÉ)</span>
           </button>
-          <button id="btn-city-ad-coins" class="btn-ad-gift" title="Cadeau Sponsor : Obtenir +20 Pièces d'or">
-            <span class="ad-gift-top">🎁 🪙</span>
-            <span class="ad-gift-val">+20</span>
+          <button id="btn-city-ad-coins" class="btn-ad-strip" title="Cadeau Sponsor : Obtenir +20 Pièces d'or">
+            <span class="ad-strip-left">🎁 <strong>BONUS ADMOB : +20 PIÈCES D'OR</strong></span>
+            <span class="ad-strip-action">RÉCUPÉRER ▶</span>
           </button>
         </div>
       `;
@@ -1057,27 +1068,29 @@ export class UIManager {
           <span>💀 Population Cible : <strong style="color: #fffa65;">+${(city.exterminationTarget || 1500000).toLocaleString('fr-FR')} âmes</strong></span>
         </div>
 
-        <div class="city-detail-actions city-detail-actions-dual">
+        <div class="city-detail-actions-vertical">
           ${unlocked ? `
-            <button id="btn-launch-city" class="btn-arcade btn-action-launch-ground" title="Conduire l'assaut au sol">
-              <span class="action-btn-icon">🎮</span>
-              <span class="action-btn-text">ASSAUT AU SOL</span>
-            </button>
-            <button id="btn-wmd-city" class="btn-arcade btn-action-wmd-strike" title="Exterminer la ville avec armes de destruction massive">
-              <span class="action-btn-icon">💀</span>
-              <span class="action-btn-text">FRAPPE D'EXTINCTION</span>
-            </button>
-            <button id="btn-city-ad-coins" class="btn-ad-gift" title="Cadeau Sponsor : Obtenir +20 Pièces d'or">
-              <span class="ad-gift-top">🎁 🪙</span>
-              <span class="ad-gift-val">+20</span>
+            <div class="city-action-grid">
+              <button id="btn-launch-city" class="btn-arcade btn-city-primary" title="Conduire l'assaut au sol">
+                <span class="btn-city-icon">🎮</span>
+                <span class="btn-city-text">CONDUIRE</span>
+              </button>
+              <button id="btn-wmd-city" class="btn-arcade btn-city-wmd" title="Exterminer la métropole avec armes de destruction massive">
+                <span class="btn-city-icon">💀</span>
+                <span class="btn-city-text">EXTERMINER (ADM)</span>
+              </button>
+            </div>
+            <button id="btn-city-ad-coins" class="btn-ad-strip" title="Cadeau Sponsor : Obtenir +20 Pièces d'or">
+              <span class="ad-strip-left">🎁 <strong>BONUS ADMOB : +20 PIÈCES D'OR</strong></span>
+              <span class="ad-strip-action">RÉCUPÉRER ▶</span>
             </button>
           ` : `
-            <button class="btn-arcade btn-action-locked" disabled>
+            <button class="btn-arcade btn-action-locked" disabled style="width: 100%; padding: 13px; white-space: nowrap;">
               <span>🔒 BLOQUÉ (${city.unlockScoreRequired.toLocaleString('fr-FR')} PTS REQUIS)</span>
             </button>
-            <button id="btn-city-ad-coins" class="btn-ad-gift" title="Cadeau Sponsor : Obtenir +20 Pièces d'or">
-              <span class="ad-gift-top">🎁 🪙</span>
-              <span class="ad-gift-val">+20</span>
+            <button id="btn-city-ad-coins" class="btn-ad-strip" title="Cadeau Sponsor : Obtenir +20 Pièces d'or">
+              <span class="ad-strip-left">🎁 <strong>BONUS ADMOB : +20 PIÈCES D'OR</strong></span>
+              <span class="ad-strip-action">RÉCUPÉRER ▶</span>
             </button>
           `}
         </div>
@@ -1380,81 +1393,444 @@ export class UIManager {
     });
   }
 
-  // --- SIMULATION CINÉMATIQUE DE L'EXTINCTION MASSIVE (AUDIO/VISUEL FX) ---
+  // --- VRAIE SIMULATION TACTIQUE D'EXTINCTION MASSIVE APOCALYPTIQUE ---
   simulateWmdExtinction(city, weaponType, victimPop) {
+    this.closeActiveModals();
+
     const overlay = document.createElement('div');
     overlay.className = `wmd-simulation-overlay wmd-sim-${weaponType.toLowerCase()}`;
+    overlay.style.cssText = `
+      position: fixed; inset: 0; background: #050b14; z-index: 10000;
+      display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+      padding: calc(env(safe-area-inset-top, 24px) + 8px) 12px 16px 12px;
+      box-sizing: border-box; overflow: hidden; font-family: 'Montserrat', sans-serif;
+    `;
+    this.activeModals.push(overlay);
 
-    let titleText = '💥 FRAPPE STRATÉGIQUE EN COURS...';
-    let subText = 'VERROUILLAGE SATELLITE DU PÉRIMÈTRE';
-    let icon = '☢️';
+    let weaponTitle = '☢️ FRAPPE NUCLÉAIRE BALISTIQUE 50MT';
+    let weaponColor = '#ff3838';
+    let weaponIcon = '☢️';
 
-    if (weaponType === 'NUKE') {
-      titleText = '☢️ DÉTONATION NUCLÉAIRE 50MT';
-      subText = 'ONDE DE CHOC THERMIQUE & BLAST ATOMIQUE';
-      icon = '☢️';
-      soundManager.playNuclearAlarm();
-      setTimeout(() => soundManager.playNuclearBlast(), 700);
-    } else if (weaponType === 'CARPET') {
-      titleText = '🚀 TAPIS DE BOMBES NAPALM & MOAB';
-      subText = 'PILONNAGE AÉRIEN MASSIF DÉVASTATEUR';
-      icon = '🚀';
-      soundManager.playExplosion();
-      setTimeout(() => soundManager.playExplosion(), 450);
-      setTimeout(() => soundManager.playExplosion(), 900);
+    if (weaponType === 'CARPET') {
+      weaponTitle = '🚀 TAPIS DE BOMBARDEMENT MASSIF MOAB/NAPALM';
+      weaponColor = '#ff9f43';
+      weaponIcon = '🚀';
     } else if (weaponType === 'ORBITAL') {
-      titleText = '🛰️ CANON PARTICULAIRE ORBITAL';
-      subText = 'DÉSINTÉGRATION MOLÉCULAIRE PAR FAISCEAU IONIQUE';
-      icon = '🛰️';
-      soundManager.playCrash();
-      setTimeout(() => soundManager.playExplosion(), 600);
-    } else {
-      titleText = '☣️ BRUMISATION NEURO-TOXIQUE';
-      subText = 'CONTAMINATION BIOLOGIQUE IMMÉDIATE';
-      icon = '☣️';
-      soundManager.playClick('nuclear');
-      setTimeout(() => soundManager.playExplosion(), 800);
+      weaponTitle = '🛰️ CANON PARTICULAIRE ORBITAL PULSAR';
+      weaponColor = '#00cec9';
+      weaponIcon = '🛰️';
+    } else if (weaponType === 'BIO') {
+      weaponTitle = '☣️ AÉROSOL CHIMIQUE NEURO-TOXIQUE';
+      weaponColor = '#2ed573';
+      weaponIcon = '☣️';
     }
 
     overlay.innerHTML = `
-      <div class="wmd-sim-flash"></div>
-      <div class="wmd-sim-content">
-        <div class="wmd-sim-icon-blast">${icon}</div>
-        <h1 class="wmd-sim-title">${titleText}</h1>
-        <p class="wmd-sim-subtitle">${subText}</p>
-        <div class="wmd-sim-target-chip">
-          <span>🎯 CIBLE : ${city.countryFlag || ''} ${city.name.toUpperCase()}</span>
+      <!-- SCANLINES CRT MILITAIRE & FLASH DÉTONATION -->
+      <div class="wmd-crt-scanlines"></div>
+      <div class="wmd-sim-flash" id="wmd-screen-flash"></div>
+
+      <!-- BANDEAU SUPÉRIEUR : TÉLÉMÉTRIE SATELLITE RECON -->
+      <div class="wmd-sat-header" style="width: 100%; max-width: 600px; display: flex; align-items: center; justify-content: space-between; background: rgba(15, 23, 42, 0.88); border: 1.5px solid ${weaponColor}; border-radius: 12px; padding: 8px 12px; box-sizing: border-box; z-index: 10;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 1.3rem;">🛰️</span>
+          <div>
+            <div style="font-size: 0.68rem; color: #ced6e0; font-weight: 800; letter-spacing: 0.8px;">SATELLITE RECON-KH11 • ORBITE BASSE</div>
+            <div style="font-size: 0.88rem; font-weight: 900; color: #ffffff;">${city.countryFlag || '🌍'} ${city.name.toUpperCase()} (CIBLE PRIORITAIRE)</div>
+          </div>
         </div>
-        <div class="wmd-sim-counter-box">
-          <span class="wmd-sim-counter-label">BILAN D'ANÉANTISSEMENT CONFIRMÉ</span>
-          <span class="wmd-sim-counter-number">+${victimPop.toLocaleString('fr-FR')} VICTIMES</span>
+        <div style="text-align: right;">
+          <div style="font-size: 0.65rem; color: ${weaponColor}; font-weight: 900; letter-spacing: 0.5px;" id="wmd-status-phase">T-03 : APPROCHE</div>
+          <div style="font-size: 0.75rem; font-family: monospace; color: #fffa65; font-weight: 800;">POP : ${(victimPop).toLocaleString('fr-FR')}</div>
         </div>
-        <div class="wmd-sim-verdict">☠️ VILLE ENTIÈREMENT EXTERMINÉE & SCÉLLÉE DÉFINITIVEMENT</div>
+      </div>
+
+      <!-- ÉCRAN RADAR TACTIQUE 60 FPS INTERACTIF (CANVAS) -->
+      <div class="wmd-canvas-wrapper" style="position: relative; width: 100%; max-width: 600px; height: clamp(240px, 42vh, 380px); border-radius: 16px; border: 2px solid ${weaponColor}; overflow: hidden; background: #080d1a; box-shadow: 0 0 30px rgba(0,0,0,0.8), inset 0 0 40px rgba(0,0,0,0.9); z-index: 10;">
+        <canvas id="wmd-tactical-canvas" style="width: 100%; height: 100%; display: block;"></canvas>
+        <div id="wmd-impact-banner" style="position: absolute; top: 12px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); border: 1.5px solid ${weaponColor}; color: #fffa65; padding: 4px 12px; border-radius: 8px; font-weight: 900; font-size: 0.8rem; letter-spacing: 1px; pointer-events: none; z-index: 20;">
+          🎯 VERROUILLAGE BALISTIQUE EN COURS...
+        </div>
+      </div>
+
+      <!-- BANDEAU INFÉRIEUR : COMPTEUR DE PERTES EN TEMPS RÉEL & TÉLÉMÉTRIE D'IMPACT -->
+      <div class="wmd-telemetry-card" style="width: 100%; max-width: 600px; background: rgba(15, 23, 42, 0.92); border: 1.5px solid rgba(255, 255, 255, 0.2); border-radius: 14px; padding: 10px 14px; box-sizing: border-box; z-index: 10; display: flex; flex-direction: column; gap: 6px;">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <span style="font-size: 0.72rem; color: #ced6e0; font-weight: 800; letter-spacing: 0.8px;">💀 BILAN ESTIMÉ DES PERTES HUMAINES</span>
+          <span style="font-size: 0.72rem; color: #ff4757; font-weight: 900;" id="wmd-telemetry-destruction">DÉSTRUCTION : 0%</span>
+        </div>
+
+        <div style="display: flex; align-items: baseline; justify-content: space-between;">
+          <div id="wmd-live-counter" style="font-size: 1.7rem; font-weight: 950; color: #fffa65; font-family: monospace; letter-spacing: 1px; text-shadow: 0 0 15px rgba(255, 250, 101, 0.8);">
+            0 VICTIMES
+          </div>
+          <span id="wmd-live-rate" style="font-size: 0.8rem; color: #ff7675; font-weight: 900;">0 âmes/sec</span>
+        </div>
+
+        <!-- Jauge d'anéantissement urbain -->
+        <div style="width: 100%; height: 8px; background: rgba(255, 255, 255, 0.1); border-radius: 4px; overflow: hidden;">
+          <div id="wmd-live-progress" style="width: 0%; height: 100%; background: linear-gradient(90deg, #fffa65, #ff4757); transition: width 0.1s linear;"></div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; font-size: 0.68rem; color: #a4b0be; font-weight: 700;">
+          <span>🔥 RAD-CHALEUR : <strong id="wmd-rad-temp" style="color: #ff9f43;">22 °C</strong></span>
+          <span>⚡ STATUT : <strong style="color: #ff3838;">ZONE CONDAMNÉE</strong></span>
+        </div>
+      </div>
+
+      <!-- BOUTON DE CONFIRMATION / FERMETURE DE ZONE DÉFINITIVE -->
+      <div class="wmd-action-bar" style="width: 100%; max-width: 600px; z-index: 10;">
+        <button id="btn-wmd-confirm-close" class="btn-arcade" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #eb4d4b, #c0392b); border-color: #ff7675; color: #ffffff; font-weight: 900; font-size: 0.92rem; letter-spacing: 0.5px; opacity: 0.4; pointer-events: none; transition: opacity 0.3s, transform 0.15s;">
+          <span>⏳ EXTERMINATION EN COURS...</span>
+        </button>
       </div>
     `;
 
     this.root.appendChild(overlay);
 
-    if (navigator.vibrate) {
-      navigator.vibrate([200, 100, 400, 150, 600]);
+    // Initialisation et boucle de rendu du Canvas Tactique (60 FPS)
+    const canvas = overlay.querySelector('#wmd-tactical-canvas');
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = (rect.width || 360) * dpr;
+    canvas.height = (rect.height || 260) * dpr;
+    ctx.scale(dpr, dpr);
+
+    const w = rect.width || 360;
+    const h = rect.height || 260;
+    const centerX = w / 2;
+    const centerY = h / 2;
+
+    // Génération de 350 points thermiques de population sur la grille urbaine
+    const thermalDots = [];
+    for (let i = 0; i < 350; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const dist = Math.pow(Math.random(), 0.65) * (Math.min(w, h) * 0.42);
+      thermalDots.push({
+        x: centerX + Math.cos(angle) * dist,
+        y: centerY + Math.sin(angle) * dist,
+        baseColor: (Math.random() < 0.25) ? '#fffa65' : '#2ed573',
+        size: 1.2 + Math.random() * 2.2,
+        alive: true
+      });
     }
 
-    setTimeout(() => {
-      overlay.classList.add('wmd-detonated');
-    }, 80);
+    // Particules de détonation
+    const blastParticles = [];
+    const spawnBlastParticles = (originX, originY, count, color) => {
+      for (let i = 0; i < count; i++) {
+        const ang = Math.random() * Math.PI * 2;
+        const spd = 1.0 + Math.random() * 7.0;
+        blastParticles.push({
+          x: originX,
+          y: originY,
+          vx: Math.cos(ang) * spd,
+          vy: Math.sin(ang) * spd,
+          life: 1.0,
+          maxLife: 0.6 + Math.random() * 0.8,
+          size: 2.0 + Math.random() * 4.0,
+          color: color
+        });
+      }
+    };
 
-    // Enregistrement définitif de l'extermination
-    storage.markCityExterminated(city.id, victimPop);
+    let startTime = performance.now();
+    let simPhase = 'APPROACH';
+    let shockwaveRadius = 0;
+    let shockwaveMaxRadius = Math.hypot(w, h);
+    let cameraShake = 0;
+    let animFrameId = null;
 
-    // Transition de sortie après 3.2 secondes
-    setTimeout(() => {
-      overlay.classList.add('wmd-fade-out');
-      setTimeout(() => {
-        overlay.remove();
-        this.render();
-        this.showToastUnlock({ name: `☠️ ${city.name.toUpperCase()} EST DÉSORMAIS EXTERMINÉE ET FERMÉE !` });
-      }, 500);
-    }, 3200);
+    // Eléments HUD DOM
+    const impactBanner = overlay.querySelector('#wmd-impact-banner');
+    const statusPhaseEl = overlay.querySelector('#wmd-status-phase');
+    const liveCounterEl = overlay.querySelector('#wmd-live-counter');
+    const liveRateEl = overlay.querySelector('#wmd-live-rate');
+    const liveProgressEl = overlay.querySelector('#wmd-live-progress');
+    const destrEl = overlay.querySelector('#wmd-telemetry-destruction');
+    const radTempEl = overlay.querySelector('#wmd-rad-temp');
+    const screenFlash = overlay.querySelector('#wmd-screen-flash');
+    const confirmBtn = overlay.querySelector('#btn-wmd-confirm-close');
+
+    // Sons de décompte initial
+    soundManager.playCountdownBeep(false);
+    setTimeout(() => soundManager.playCountdownBeep(false), 600);
+    setTimeout(() => soundManager.playCountdownBeep(true), 1200);
+
+    let hasDetonated = false;
+    let hasCompleted = false;
+
+    const renderFrame = (now) => {
+      const elapsed = (now - startTime) / 1000;
+
+      // 1. PHASE APPROCHE (0 - 1.8s)
+      if (elapsed < 1.8) {
+        simPhase = 'APPROACH';
+        const remainingT = Math.max(0, 1.8 - elapsed).toFixed(1);
+        statusPhaseEl.textContent = `T-${remainingT}s : APPROCHE`;
+        impactBanner.textContent = `🎯 VERROUILLAGE SATELLITE T-${remainingT}s...`;
+      }
+      // 2. PHASE DÉTONATION & IMPACT (1.8s - 5.0s)
+      else if (elapsed >= 1.8 && !hasCompleted) {
+        simPhase = 'DETONATION';
+        if (!hasDetonated) {
+          hasDetonated = true;
+          if (screenFlash) {
+            screenFlash.classList.add('flash-active');
+            setTimeout(() => screenFlash.classList.remove('flash-active'), 800);
+          }
+
+          if (navigator.vibrate) {
+            navigator.vibrate([200, 80, 350, 100, 600]);
+          }
+
+          cameraShake = 14;
+
+          if (weaponType === 'NUKE') {
+            soundManager.playNuclearAlarm();
+            setTimeout(() => soundManager.playNuclearBlast(), 150);
+          } else if (weaponType === 'CARPET') {
+            soundManager.playExplosion();
+            setTimeout(() => soundManager.playExplosion(), 350);
+            setTimeout(() => soundManager.playExplosion(), 700);
+          } else if (weaponType === 'ORBITAL') {
+            soundManager.playCrash();
+            setTimeout(() => soundManager.playExplosion(), 250);
+          } else {
+            soundManager.playClick('nuclear');
+            setTimeout(() => soundManager.playExplosion(), 300);
+          }
+
+          spawnBlastParticles(centerX, centerY, 120, weaponColor);
+        }
+
+        const detTime = elapsed - 1.8;
+        const detDuration = 2.8;
+        const detProgress = Math.min(1.0, detTime / detDuration);
+
+        shockwaveRadius = detProgress * shockwaveMaxRadius;
+
+        // Mise à jour de la destruction et du compteur de pertes
+        const currentCasualties = Math.floor(victimPop * Math.pow(detProgress, 0.7));
+        liveCounterEl.textContent = `+${currentCasualties.toLocaleString('fr-FR')} VICTIMES`;
+        liveRateEl.textContent = `+${Math.floor(victimPop / 2.5).toLocaleString('fr-FR')} /s`;
+        liveProgressEl.style.width = `${(detProgress * 100).toFixed(0)}%`;
+        destrEl.textContent = `DÉSTRUCTION : ${(detProgress * 100).toFixed(0)}%`;
+        radTempEl.textContent = `${Math.floor(22 + detProgress * 4800)} °C`;
+
+        impactBanner.textContent = `💥 IMPACT CATACLYSMIQUE EN COURS...`;
+        statusPhaseEl.textContent = `ONDE DE CHOC : ${(detProgress * 100).toFixed(0)}%`;
+
+        if (cameraShake > 0) cameraShake *= 0.94;
+
+        if (detProgress >= 1.0) {
+          hasCompleted = true;
+          simPhase = 'EXTERMINATED';
+
+          // Bilan final
+          liveCounterEl.textContent = `+${victimPop.toLocaleString('fr-FR')} VICTIMES (TOTAL)`;
+          liveRateEl.textContent = `EXTINCTION 100%`;
+          liveProgressEl.style.width = '100%';
+          destrEl.textContent = `DÉSTRUCTION : 100%`;
+          radTempEl.textContent = `4 822 °C`;
+          statusPhaseEl.textContent = `☠️ SCELLÉE DÉFINITIVEMENT`;
+          impactBanner.textContent = `☠️ TOUTE POPULATION ANÉANTIE !`;
+          impactBanner.style.borderColor = '#ff4757';
+          impactBanner.style.color = '#ff7675';
+
+          soundManager.playEvilLaugh();
+          soundManager.playVictory();
+
+          // Activer le bouton de fermeture définitive
+          if (confirmBtn) {
+            confirmBtn.style.opacity = '1';
+            confirmBtn.style.pointerEvents = 'auto';
+            confirmBtn.innerHTML = `<span>☠️ CONFIRMER L'EXTINCTION & CONDAMNER ${city.name.toUpperCase()} ▶</span>`;
+          }
+        }
+      }
+
+      // --- RENDU CANVAS 2D TACTIQUE SATELLITE ---
+      ctx.save();
+
+      // Secousse caméra (Screen Shake)
+      if (cameraShake > 0.5) {
+        const shakeX = (Math.random() - 0.5) * cameraShake;
+        const shakeY = (Math.random() - 0.5) * cameraShake;
+        ctx.translate(shakeX, shakeY);
+      }
+
+      // Fond satellite sombre
+      ctx.fillStyle = '#060a14';
+      ctx.fillRect(0, 0, w, h);
+
+      // Grille radar militaire
+      ctx.strokeStyle = 'rgba(0, 206, 201, 0.12)';
+      ctx.lineWidth = 1;
+      const gridSize = 32;
+      for (let x = 0; x < w; x += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, h);
+        ctx.stroke();
+      }
+      for (let y = 0; y < h; y += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(w, y);
+        ctx.stroke();
+      }
+
+      // Cercles concentriques radar
+      ctx.strokeStyle = 'rgba(0, 206, 201, 0.22)';
+      [40, 80, 130, 190].forEach(r => {
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, r, 0, Math.PI * 2);
+        ctx.stroke();
+      });
+
+      // Lignes de rues / réseau routier urbain vers le centre
+      ctx.strokeStyle = 'rgba(116, 185, 255, 0.25)';
+      ctx.lineWidth = 2;
+      for (let a = 0; a < Math.PI * 2; a += Math.PI / 4) {
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.lineTo(centerX + Math.cos(a) * Math.max(w, h), centerY + Math.sin(a) * Math.max(w, h));
+        ctx.stroke();
+      }
+
+      // Dessin des 350 points thermiques de population
+      for (let p of thermalDots) {
+        if (!p.alive) continue;
+        const dFromCenter = Math.hypot(p.x - centerX, p.y - centerY);
+
+        // Si l'onde de choc l'a dépassé : vaporisation
+        if (simPhase === 'DETONATION' && dFromCenter <= shockwaveRadius) {
+          p.alive = false;
+          if (Math.random() < 0.35) {
+            spawnBlastParticles(p.x, p.y, 2, '#fffa65');
+          }
+          continue;
+        }
+
+        ctx.fillStyle = p.baseColor;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Rendu des particules de détonation
+      for (let i = blastParticles.length - 1; i >= 0; i--) {
+        const bp = blastParticles[i];
+        bp.x += bp.vx;
+        bp.y += bp.vy;
+        bp.life -= 0.016;
+
+        if (bp.life <= 0) {
+          blastParticles.splice(i, 1);
+          continue;
+        }
+
+        const alpha = bp.life / bp.maxLife;
+        ctx.fillStyle = bp.color;
+        ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
+        ctx.beginPath();
+        ctx.arc(bp.x, bp.y, bp.size * alpha, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1.0;
+
+      // Traçage de l'onde de choc cataclysmique
+      if (simPhase === 'DETONATION' || simPhase === 'EXTERMINATED') {
+        const waveGrad = ctx.createRadialGradient(centerX, centerY, Math.max(0, shockwaveRadius - 40), centerX, centerY, shockwaveRadius);
+        waveGrad.addColorStop(0, 'rgba(0,0,0,0)');
+        waveGrad.addColorStop(0.7, weaponColor);
+        waveGrad.addColorStop(1, '#ffffff');
+
+        ctx.strokeStyle = waveGrad;
+        ctx.lineWidth = 6;
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, shockwaveRadius, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Zone calcinée intérieure
+        ctx.fillStyle = (weaponType === 'BIO') ? 'rgba(46, 213, 115, 0.25)' : ((weaponType === 'ORBITAL') ? 'rgba(0, 206, 201, 0.25)' : 'rgba(235, 77, 75, 0.28)');
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, Math.min(shockwaveRadius, Math.max(w, h)), 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Phase Approche : Réticule de visée et trajectoire du projectile
+      if (simPhase === 'APPROACH') {
+        const rot = elapsed * 3;
+        ctx.strokeStyle = weaponColor;
+        ctx.lineWidth = 2.5;
+
+        // Viseur circulaire rotatif
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, 38, rot, rot + Math.PI * 1.5);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, 48, -rot, -rot + Math.PI);
+        ctx.stroke();
+
+        // Réticule en croix
+        ctx.beginPath();
+        ctx.moveTo(centerX - 55, centerY); ctx.lineTo(centerX - 15, centerY);
+        ctx.moveTo(centerX + 15, centerY); ctx.lineTo(centerX + 55, centerY);
+        ctx.moveTo(centerX, centerY - 55); ctx.lineTo(centerX, centerY - 15);
+        ctx.moveTo(centerX, centerY + 15); ctx.lineTo(centerX, centerY + 55);
+        ctx.stroke();
+
+        // Icône du projectile arrivant du haut
+        const projY = (elapsed / 1.8) * centerY;
+        ctx.font = '24px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(weaponIcon, centerX, projY);
+
+        // Traînée de fumée du missile
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(centerX, 0);
+        ctx.lineTo(centerX, projY);
+        ctx.stroke();
+      }
+
+      // Monument central / Symbole de la cible
+      ctx.font = '28px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      if (simPhase === 'EXTERMINATED' || (simPhase === 'DETONATION' && shockwaveRadius > 40)) {
+        ctx.fillText('☠️', centerX, centerY);
+      } else {
+        ctx.fillText(city.countryFlag || '🏛️', centerX, centerY);
+      }
+
+      ctx.restore();
+
+      animFrameId = requestAnimationFrame(renderFrame);
+    };
+
+    animFrameId = requestAnimationFrame(renderFrame);
+
+    // Handler de clôture définitive
+    const handleClose = () => {
+      if (animFrameId) cancelAnimationFrame(animFrameId);
+      storage.markCityExterminated(city.id, victimPop);
+      soundManager.playClick();
+      overlay.remove();
+      this.activeModals = this.activeModals.filter(m => m !== overlay);
+      this.render();
+      this.showToastUnlock({ name: `☠️ ${city.name.toUpperCase()} EST DÉSORMAIS EXTERMINÉE ET FERMÉE DÉFINITIVEMENT !` });
+    };
+
+    confirmBtn?.addEventListener('click', handleClose);
   }
 
   triggerCityEntryCinematic(city) {

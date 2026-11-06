@@ -3633,5 +3633,161 @@ html, body {
   transition: opacity 0.5s ease;
 }
 
+/* ==========================================================================
+   BOUTON SPLASH EMPIRE TYCOON
+   ========================================================================== */
+
+#btn-splash-tycoon {
+  background: linear-gradient(180deg, #f39c12 0%, #d35400 60%, #1e272e 100%) !important;
+  border: 1.5px solid #ffd32a !important;
+  box-shadow: 0 6px 20px rgba(243, 156, 18, 0.45), 0 0 12px rgba(255, 211, 42, 0.35) !important;
+  cursor: pointer;
+  pointer-events: auto !important;
+}
+
+#btn-splash-tycoon:active {
+  transform: scale(0.95);
+  filter: brightness(1.2);
+}
+
+/* ==========================================================================
+   REFONTE ERGONOMIQUE BOUTONS BAS CARTE DE VILLE (ZÉRO RETOUR LIGNE)
+   ========================================================================== */
+
+.city-detail-actions-vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  margin-top: 6px;
+  box-sizing: border-box;
+}
+
+.city-action-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.btn-city-primary {
+  padding: 13px 12px;
+  font-size: 0.88rem;
+  font-weight: 900;
+  white-space: nowrap;
+  background: linear-gradient(135deg, #0984e3, #00cec9);
+  border: 1.5px solid #74b9ff;
+  border-radius: 16px;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-shadow: 0 4px 16px rgba(0, 206, 201, 0.4);
+  letter-spacing: 0.5px;
+  margin: 0;
+  box-sizing: border-box;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.btn-city-primary:active {
+  transform: scale(0.96);
+  filter: brightness(1.2);
+}
+
+.btn-city-wmd {
+  padding: 13px 12px;
+  font-size: 0.88rem;
+  font-weight: 900;
+  white-space: nowrap;
+  background: linear-gradient(135deg, #d63031, #eb4d4b);
+  border: 1.5px solid #ff7675;
+  border-radius: 16px;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-shadow: 0 4px 16px rgba(214, 48, 49, 0.5);
+  letter-spacing: 0.5px;
+  margin: 0;
+  box-sizing: border-box;
+  animation: pulseWmdBtn 2s infinite ease-in-out;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.btn-city-wmd:active {
+  transform: scale(0.96);
+  filter: brightness(1.2);
+}
+
+.btn-ad-strip {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 14px;
+  background: linear-gradient(90deg, rgba(16, 172, 132, 0.22), rgba(0, 210, 211, 0.28));
+  border: 1.5px solid #1dd1a1;
+  border-radius: 14px;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 0.78rem;
+  transition: transform 0.12s, filter 0.12s;
+  box-sizing: border-box;
+}
+
+.btn-ad-strip:active {
+  transform: scale(0.98);
+  filter: brightness(1.2);
+}
+
+.ad-strip-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.76rem;
+  color: #ced6e0;
+}
+
+.ad-strip-left strong {
+  color: #fffa65;
+}
+
+.ad-strip-action {
+  font-size: 0.76rem;
+  font-weight: 950;
+  color: #55efc4;
+  letter-spacing: 0.5px;
+}
+
+/* ==========================================================================
+   SIMULATION TACTIQUE SATELLITE CANVAS D'EXTINCTION
+   ========================================================================== */
+
+.wmd-crt-scanlines {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+  background-size: 100% 3px, 6px 100%;
+  pointer-events: none;
+  z-index: 100;
+  opacity: 0.65;
+}
+
+.wmd-sim-flash.flash-active {
+  animation: wmdThermalFlash 0.9s cubic-bezier(0.1, 0.9, 0.2, 1.0) forwards !important;
+}
+
+@keyframes wmdThermalFlash {
+  0% { opacity: 1; background: #ffffff; }
+  25% { opacity: 0.95; background: #fff275; }
+  60% { opacity: 0.7; background: #ff4757; }
+  100% { opacity: 0; background: transparent; }
+}
+
 
 
