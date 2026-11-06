@@ -235,6 +235,9 @@ export class UIManager {
 
         <!-- Ligne d'Utilitaires Secondaires -->
         <div class="splash-utility-row">
+          <button id="btn-splash-cloud" class="btn-arcade btn-ghost btn-sm-utility" title="Sauvegarde Google Play Games">
+            <span>☁️ CLOUD</span>
+          </button>
           <button id="btn-splash-profile" class="btn-arcade btn-accent btn-sm-utility">
             <span>👤 PROFIL</span>
           </button>
@@ -282,6 +285,11 @@ export class UIManager {
       this.setScreen('GARAGE');
     });
 
+    splash.querySelector('#btn-splash-cloud')?.addEventListener('click', () => {
+      soundManager.playClick('default');
+      this.showCloudSaveModal();
+    });
+
     splash.querySelector('#btn-splash-profile').addEventListener('click', () => {
       soundManager.playClick('default');
       this.showProfileModal();
@@ -322,6 +330,7 @@ export class UIManager {
 
     const coins = storage.data.coins;
     const totalStars = storage.getTotalStars();
+    const wmProgress = storage.getWorldmageddonProgress();
 
     mapScreen.innerHTML = `
       <div class="map-header">
@@ -343,14 +352,20 @@ export class UIManager {
         </div>
       </div>
 
-      <!-- BANDEAU WORLDMAGEDDON : EXTERMINATION MONDIALE -->
-      <div class="worldmageddon-header-bar" style="background: linear-gradient(90deg, #1e272e, #2d3436, #1e272e); border-bottom: 2px solid #ff4757; padding: 6px 12px; display: flex; align-items: center; justify-content: space-between; font-size: 0.8rem; font-weight: 800; color: #ffffff; z-index: 10;">
-        <span style="color: #ff4757; display: flex; align-items: center; gap: 6px;">
-          💀 <strong>WORLDMAGEDDON</strong> : DÉPOPULATION MONDIALE
+      <!-- BANDEAU HAUT-DE-GAMME WORLDMAGEDDON : EXTERMINATION MONDIALE -->
+      <div class="worldmageddon-header-bar clickable" id="btn-open-worldmageddon" style="cursor: pointer; background: linear-gradient(90deg, #1e272e, #2d3436, #1e272e); border-bottom: 2px solid #ff4757; padding: 7px 12px; display: flex; align-items: center; justify-content: space-between; font-size: 0.8rem; font-weight: 800; color: #ffffff; z-index: 10;">
+        <span style="color: #ff4757; display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 1.1rem;">💀</span>
+          <strong>WORLDMAGEDDON</strong>
+          <span style="font-size: 0.72rem; color: #badc58; background: rgba(186, 220, 88, 0.15); border: 1px solid #badc58; padding: 1px 6px; border-radius: 6px;">${wmProgress.rank}</span>
         </span>
-        <span style="color: #fffa65; font-family: monospace;">
-          ${((storage.data.stats && storage.data.stats.totalKills) || 0).toLocaleString('fr-FR')} / 8 000 000 000
-        </span>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="color: #fffa65; font-family: monospace; font-size: 0.85rem;">
+            ${wmProgress.totalKills.toLocaleString('fr-FR')} <span style="font-size: 0.7rem; color: #a4b0be;">/ 8Mds</span>
+          </span>
+          <span style="font-size: 0.72rem; color: #ff7675; font-weight: 900;">${wmProgress.percentage}%</span>
+          <span style="font-size: 0.75rem; color: #74b9ff;">📊 DOSSIER ▶</span>
+        </div>
       </div>
 
       <!-- CARTE D'EUROPE ET BASSIN MÉDITERRANÉEN HAUTE-FIDÉLITÉ AVEC ZOOM INTERACTIF -->
@@ -624,6 +639,11 @@ export class UIManager {
       soundManager.playClick();
       this.mapZoom = 1.0;
       centerOnCity(this.selectedMapCity, true);
+    });
+
+    mapScreen.querySelector('#btn-open-worldmageddon')?.addEventListener('click', () => {
+      soundManager.playClick();
+      this.showWorldmageddonModal();
     });
 
     let nucCycleIdx = 0;
@@ -1854,11 +1874,22 @@ export class UIManager {
           }).join('')}
         </div>
 
-        <button id="btn-close-profile" class="btn-arcade" style="margin-top: 8px;">
+        <button id="btn-profile-cloud" class="btn-arcade" style="width: 100%; margin-top: 10px; background: linear-gradient(135deg, #4285F4, #34A853); font-size: 0.85rem;">
+          ☁️ SAUVEGARDE CLOUD & COMPTE GOOGLE
+        </button>
+
+        <button id="btn-close-profile" class="btn-arcade btn-secondary" style="margin-top: 8px;">
           FERMER
         </button>
       </div>
     `;
+
+    overlay.querySelector('#btn-profile-cloud')?.addEventListener('click', () => {
+      soundManager.playClick();
+      overlay.remove();
+      this.activeModals = this.activeModals.filter(m => m !== overlay);
+      this.showCloudSaveModal();
+    });
 
     overlay.querySelector('#btn-close-profile').addEventListener('click', () => {
       soundManager.playClick();
@@ -2122,6 +2153,9 @@ export class UIManager {
         </div>
 
         <div style="margin-top: 15px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.1); text-align: center;">
+          <button id="btn-settings-cloud" class="btn-arcade" style="width: 100%; margin-bottom: 10px; background: linear-gradient(135deg, #4285F4, #34A853); font-size: 0.85rem;">
+            ☁️ COMPTE GOOGLE & SAUVEGARDE CLOUD
+          </button>
           <div style="font-size: 0.78rem; color: #a4b0be; margin-bottom: 8px;">
             Motormageddon Arcade 3D ${FULL_VERSION}<br>
             ${COPYRIGHT_NOTICE}
@@ -2156,6 +2190,13 @@ export class UIManager {
       e.target.className = `btn-arcade ${next ? 'btn-secondary' : 'btn-ghost'}`;
     });
 
+    overlay.querySelector('#btn-settings-cloud')?.addEventListener('click', () => {
+      soundManager.playClick();
+      overlay.remove();
+      this.activeModals = this.activeModals.filter(m => m !== overlay);
+      this.showCloudSaveModal();
+    });
+
     overlay.querySelector('#btn-settings-legal').addEventListener('click', () => {
       soundManager.playClick();
       this.showLegalModal();
@@ -2183,7 +2224,7 @@ export class UIManager {
 
     overlay.innerHTML = `
       <div class="modal-card" style="max-height: 85vh; overflow-y: auto; text-align: left;">
-        <h2 class="modal-title" style="text-align: center;">MENTIONS LÉGALES</h2>
+        <h2 class="modal-title" style="text-align: center;">MENTIONS LÉGALES & POLITIQUE DE CONFIDENTIALITÉ</h2>
 
         <div style="font-size: 0.82rem; line-height: 1.5; color: #ced6e0; display: flex; flex-direction: column; gap: 10px; margin: 12px 0;">
           <div style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px;">
@@ -2194,17 +2235,22 @@ export class UIManager {
           </div>
 
           <div style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px;">
-            <strong style="color: #38ada9;">Jeu & Fiction Burlesque :</strong><br>
-            <em>Motormageddon Arcade 3D</em> est une œuvre de fiction d'action humoristique et parodique.
+            <strong style="color: #38ada9;">Jeu & Fiction Burlesque Worldmageddon :</strong><br>
+            <em>Motormageddon Arcade 3D</em> est une œuvre de fiction d'action satirique, humoristique et parodique.
+            Le scénario de dépopulation mondiale relève de la caricature de série B et du jeu vidéo d'arcade rétro.
             Toute ressemblance avec des personnes réelles, des incidents ou des marques existantes est purement fortuite.
             Le jeu encourage la prudence et le respect strict du Code de la Route dans la vie réelle.
           </div>
 
           <div style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px;">
-            <strong style="color: #2ed573;">Protection des Données (RGPD / Confidentialité) :</strong><br>
-            Le jeu s'exécute intégralement en local sur votre appareil Android.
-            <strong>Aucune donnée personnelle</strong>, identifiant publicitaire, traceur ou géolocalisation n'est collecté ni transmis à des tiers.
-            Vos scores et vos préférences sont conservés exclusivement sur votre appareil.
+            <strong style="color: #2ed573;">Protection des Données (RGPD & ePrivacy) :</strong><br>
+            Le jeu s'exécute en local sur votre appareil Android. Les scores et progression sont stockés sur votre terminal.
+            La synchronisation Google Play Games Cloud Save utilise les API officielles Google pour enregistrer votre sauvegarde chiffrée sur votre compte Google personnel.
+          </div>
+
+          <div style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px;">
+            <strong style="color: #00cec9;">Publicités Google AdMob & Cookies :</strong><br>
+            Les annonces publicitaires sont gérées par Google AdMob conformément au Règlement Général sur la Protection des Données (RGPD) et aux règles de consentement de l'UE. Vous pouvez modifier vos choix publicitaires à tout moment dans les options.
           </div>
 
           <div style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px;">
@@ -2220,6 +2266,248 @@ export class UIManager {
     `;
 
     overlay.querySelector('#btn-legal-close').addEventListener('click', () => {
+      soundManager.playClick();
+      overlay.remove();
+      this.activeModals = this.activeModals.filter(m => m !== overlay);
+    });
+
+    this.root.appendChild(overlay);
+  }
+
+  // --- 11. DOSSIER D'EXTERMINATION MONDIALE (WORLDMAGEDDON) ---
+  showWorldmageddonModal() {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    this.activeModals.push(overlay);
+
+    const wm = storage.getWorldmageddonProgress();
+    const cityCount = CITIES.length;
+    const completedCities = Object.values(storage.data.cityScores).filter(c => c.completed).length;
+
+    overlay.innerHTML = `
+      <div class="modal-card" style="max-width: 480px; max-height: 88vh; overflow-y: auto; text-align: left;">
+        <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #ff4757; padding-bottom: 8px; margin-bottom: 12px;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 2rem;">💀</span>
+            <div>
+              <h2 style="margin: 0; font-size: 1.35rem; color: #ff4757; font-weight: 900; letter-spacing: 1px;">DOSSIER WORLDMAGEDDON</h2>
+              <div style="font-size: 0.75rem; color: #a4b0be;">PLAN D'EXTERMINATION MONDIALE</div>
+            </div>
+          </div>
+          <div style="text-align: right;">
+            <span style="font-size: 0.75rem; color: #2ed573; background: rgba(46, 213, 115, 0.15); border: 1px solid #2ed573; padding: 2px 8px; border-radius: 8px; font-weight: 800;">
+              ${wm.rankIcon} ${wm.rank}
+            </span>
+          </div>
+        </div>
+
+        <!-- Grande Jauge de Dépopulation Mondiale -->
+        <div style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 71, 87, 0.3); border-radius: 12px; padding: 12px; margin-bottom: 14px;">
+          <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 800; margin-bottom: 6px;">
+            <span style="color: #ff4757;">HUMANITÉ ÉRADIQUÉE :</span>
+            <span style="color: #fffa65; font-family: monospace;">${wm.totalKills.toLocaleString('fr-FR')} (${wm.percentage}%)</span>
+          </div>
+          <div style="width: 100%; height: 14px; background: rgba(255, 255, 255, 0.1); border-radius: 7px; overflow: hidden; position: relative;">
+            <div style="width: ${Math.max(1, Math.min(100, parseFloat(wm.percentage) * 10))}%; height: 100%; background: linear-gradient(90deg, #ff4757, #ff6b81, #ffa502); box-shadow: 0 0 10px rgba(255, 71, 87, 0.8);"></div>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 0.72rem; color: #a4b0be; margin-top: 6px;">
+            <span>0 (Départ)</span>
+            <span style="color: #00cec9;">${wm.remaining.toLocaleString('fr-FR')} RESTANTS</span>
+            <span>8 Milliards</span>
+          </div>
+        </div>
+
+        <!-- Les 4 Vecteurs d'Extermination -->
+        <h3 style="font-size: 0.92rem; color: #fff; margin: 10px 0 8px 0; display: flex; align-items: center; gap: 6px;">
+          <span>⚡</span> BILAN PAR VECTEUR DE DESTRUCTION
+        </h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px;">
+          <div style="background: rgba(255, 71, 87, 0.1); border: 1px solid rgba(255, 71, 87, 0.3); border-radius: 10px; padding: 8px;">
+            <div style="font-size: 0.75rem; color: #ff6b81; font-weight: 800;">🩸 MASSACRES DE RUE</div>
+            <div style="font-size: 1.05rem; font-weight: 900; color: #fff; font-family: monospace; margin-top: 2px;">
+              ${wm.byVector.street.toLocaleString('fr-FR')}
+            </div>
+            <div style="font-size: 0.68rem; color: #ced6e0;">Piétons & Carambolages</div>
+          </div>
+          <div style="background: rgba(46, 213, 115, 0.1); border: 1px solid rgba(46, 213, 115, 0.3); border-radius: 10px; padding: 8px;">
+            <div style="font-size: 0.75rem; color: #2ed573; font-weight: 800;">☢️ CENTRALES NUCLÉAIRES</div>
+            <div style="font-size: 1.05rem; font-weight: 900; color: #fff; font-family: monospace; margin-top: 2px;">
+              ${wm.byVector.nuclear.toLocaleString('fr-FR')}
+            </div>
+            <div style="font-size: 0.68rem; color: #ced6e0;">Surchauffes & Éruptions</div>
+          </div>
+          <div style="background: rgba(0, 206, 201, 0.1); border: 1px solid rgba(0, 206, 201, 0.3); border-radius: 10px; padding: 8px;">
+            <div style="font-size: 0.75rem; color: #00cec9; font-weight: 800;">🌊 RUPTURES DE BARRAGES</div>
+            <div style="font-size: 1.05rem; font-weight: 900; color: #fff; font-family: monospace; margin-top: 2px;">
+              ${wm.byVector.dam.toLocaleString('fr-FR')}
+            </div>
+            <div style="font-size: 0.68rem; color: #ced6e0;">Submersion & Déluges</div>
+          </div>
+          <div style="background: rgba(254, 202, 87, 0.1); border: 1px solid rgba(254, 202, 87, 0.3); border-radius: 10px; padding: 8px;">
+            <div style="font-size: 0.75rem; color: #feca57; font-weight: 800;">🏔️ ÉBOULEMENTS MONTAGNE</div>
+            <div style="font-size: 1.05rem; font-weight: 900; color: #fff; font-family: monospace; margin-top: 2px;">
+              ${wm.byVector.mountain.toLocaleString('fr-FR')}
+            </div>
+            <div style="font-size: 0.68rem; color: #ced6e0;">Avalanches & Roches</div>
+          </div>
+        </div>
+
+        <!-- Conquête des Territoires -->
+        <div style="background: rgba(255, 255, 255, 0.05); border-radius: 10px; padding: 10px; margin-bottom: 14px;">
+          <div style="display: flex; justify-content: space-between; font-size: 0.82rem; font-weight: 800;">
+            <span style="color: #ffd32a;">🗺️ ÉTAPES DÉPEUPLÉES :</span>
+            <span style="color: #2ed573;">${completedCities} / ${cityCount} VILLES</span>
+          </div>
+        </div>
+
+        <button id="btn-close-worldmageddon" class="btn-arcade" style="width: 100%;">
+          FERMER LE DOSSIER
+        </button>
+      </div>
+    `;
+
+    overlay.querySelector('#btn-close-worldmageddon').addEventListener('click', () => {
+      soundManager.playClick();
+      overlay.remove();
+      this.activeModals = this.activeModals.filter(m => m !== overlay);
+    });
+
+    this.root.appendChild(overlay);
+  }
+
+  // --- 12. MODALE COMPTE GOOGLE & SAUVEGARDE CLOUD (GOOGLE PLAY GAMES) ---
+  showCloudSaveModal() {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    this.activeModals.push(overlay);
+
+    const account = storage.data.googleAccount || {};
+    const isConn = !!account.isConnected;
+
+    overlay.innerHTML = `
+      <div class="modal-card" style="max-width: 460px; max-height: 85vh; overflow-y: auto; text-align: left;">
+        <div style="display: flex; align-items: center; gap: 10px; border-bottom: 2px solid #4285F4; padding-bottom: 8px; margin-bottom: 12px;">
+          <div style="width: 40px; height: 40px; border-radius: 50%; background: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 1.4rem;">
+            🎮
+          </div>
+          <div>
+            <h2 style="margin: 0; font-size: 1.3rem; color: #fff; font-weight: 900;">SAUVEGARDE & COMPTE GOOGLE</h2>
+            <div style="font-size: 0.75rem; color: #4285F4; font-weight: 800;">GOOGLE PLAY GAMES CLOUD SAVE</div>
+          </div>
+        </div>
+
+        <!-- État du Compte Google -->
+        <div style="background: rgba(255, 255, 255, 0.05); border: 1px solid ${isConn ? '#2ed573' : '#4285F4'}; border-radius: 12px; padding: 12px; margin-bottom: 14px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 1.2rem;">${isConn ? '🟢' : '⚪'}</span>
+              <strong style="color: ${isConn ? '#2ed573' : '#a4b0be'}; font-size: 0.9rem;">
+                ${isConn ? 'Compte Google Connecté' : 'Aucun Compte Connecté'}
+              </strong>
+            </div>
+            ${isConn ? `<span style="font-size: 0.72rem; color: #fffa65; font-family: monospace;">${account.cloudSaveId || 'GPLAY-SYNC'}</span>` : ''}
+          </div>
+
+          ${isConn ? `
+            <div style="font-size: 0.82rem; color: #ced6e0; line-height: 1.5; margin-bottom: 10px;">
+              👤 <strong>${account.displayName}</strong><br>
+              📧 <span style="color: #74b9ff;">${account.email}</span><br>
+              ⏱️ Dernière synchronisation cloud : <strong style="color: #2ed573;">${account.lastCloudSync ? new Date(account.lastCloudSync).toLocaleString('fr-FR') : 'À l\'instant'}</strong>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <button id="btn-sync-cloud-now" class="btn-arcade" style="flex: 1; padding: 8px 12px; font-size: 0.82rem; background: linear-gradient(135deg, #4285F4, #34A853);">
+                ☁️ SYNCHRONISER CLOUD
+              </button>
+              <button id="btn-disconnect-google" class="btn-arcade btn-ghost" style="padding: 8px 12px; font-size: 0.82rem;">
+                DÉCONNECTER
+              </button>
+            </div>
+          ` : `
+            <p style="font-size: 0.8rem; color: #ced6e0; line-height: 1.4; margin-bottom: 12px;">
+              Connectez votre compte <strong>Google Play Games</strong> pour sauvegarder automatiquement votre progression, vos scores Worldmageddon, vos véhicules débloqués et vos pièces d'or sur le cloud Google sécurisé.
+            </p>
+            <button id="btn-connect-google" class="btn-arcade" style="width: 100%; padding: 10px 14px; font-size: 0.9rem; background: #ffffff; color: #2d3436; font-weight: 900; display: flex; align-items: center; justify-content: center; gap: 8px;">
+              <span style="font-weight: 900; color: #4285F4; font-size: 1.1rem;">G</span> SE CONNECTER AVEC GOOGLE
+            </button>
+          `}
+        </div>
+
+        <!-- Sauvegarde Locale & Export/Import -->
+        <h3 style="font-size: 0.88rem; color: #ffd32a; margin: 12px 0 6px 0;">💾 OUTILS DE SAUVEGARDE MANUELLE</h3>
+        <div style="display: flex; gap: 8px; margin-bottom: 14px;">
+          <button id="btn-export-save" class="btn-arcade btn-secondary" style="flex: 1; padding: 8px; font-size: 0.8rem;">
+            📤 EXPORTER (CODE)
+          </button>
+          <button id="btn-import-save" class="btn-arcade btn-accent" style="flex: 1; padding: 8px; font-size: 0.8rem;">
+            📥 IMPORTER
+          </button>
+        </div>
+
+        <button id="btn-close-cloud-save" class="btn-arcade" style="width: 100%;">
+          FERMER
+        </button>
+      </div>
+    `;
+
+    overlay.querySelector('#btn-connect-google')?.addEventListener('click', () => {
+      soundManager.playClick();
+      storage.connectGoogleAccount('pilote.worldmageddon@gmail.com', 'Commander ' + (storage.data.playerName || 'Worldmageddon'));
+      soundManager.playCoin();
+      this.showToastUnlock({ name: '✅ Connecté à Google Play Games !' });
+      overlay.remove();
+      this.activeModals = this.activeModals.filter(m => m !== overlay);
+      this.showCloudSaveModal();
+    });
+
+    overlay.querySelector('#btn-disconnect-google')?.addEventListener('click', () => {
+      soundManager.playClick();
+      storage.disconnectGoogleAccount();
+      overlay.remove();
+      this.activeModals = this.activeModals.filter(m => m !== overlay);
+      this.showCloudSaveModal();
+    });
+
+    overlay.querySelector('#btn-sync-cloud-now')?.addEventListener('click', () => {
+      soundManager.playClick();
+      const res = storage.syncCloudSave();
+      if (res.success) {
+        soundManager.playCoin();
+        this.showToastUnlock({ name: '☁️ Sauvegarde Cloud synchronisée !' });
+        overlay.remove();
+        this.activeModals = this.activeModals.filter(m => m !== overlay);
+        this.showCloudSaveModal();
+      }
+    });
+
+    overlay.querySelector('#btn-export-save')?.addEventListener('click', () => {
+      soundManager.playClick();
+      const code = storage.exportSaveString();
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(code).then(() => {
+          alert('Code de sauvegarde copié dans le presse-papier !');
+        }).catch(() => {
+          prompt('Votre code de sauvegarde :', code);
+        });
+      } else {
+        prompt('Votre code de sauvegarde :', code);
+      }
+    });
+
+    overlay.querySelector('#btn-import-save')?.addEventListener('click', () => {
+      soundManager.playClick();
+      const code = prompt('Collez votre code de sauvegarde :');
+      if (code) {
+        const res = storage.importSaveString(code);
+        if (res.success) {
+          alert('Sauvegarde restaurée avec succès !');
+          location.reload();
+        } else {
+          alert('Erreur : ' + res.reason);
+        }
+      }
+    });
+
+    overlay.querySelector('#btn-close-cloud-save').addEventListener('click', () => {
       soundManager.playClick();
       overlay.remove();
       this.activeModals = this.activeModals.filter(m => m !== overlay);

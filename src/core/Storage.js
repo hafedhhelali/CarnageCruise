@@ -49,6 +49,21 @@ const DEFAULT_SAVE = {
     vibration: true,
     controlMode: 'swipe'
   },
+  googleAccount: {
+    isConnected: false,
+    email: null,
+    displayName: 'Pilote Anonyme',
+    avatarUrl: null,
+    lastCloudSync: null,
+    cloudSaveId: null
+  },
+  worldmageddon: {
+    streetVictims: 0,
+    nuclearVictims: 0,
+    damVictims: 0,
+    mountainVictims: 0,
+    tierIndex: 0
+  },
   stats: {
     totalScore: 0,
     totalInteractions: 0, // Personnes heurtées
@@ -79,6 +94,8 @@ export class Storage {
           cityScores: { ...DEFAULT_SAVE.cityScores, ...(parsed.cityScores || {}) },
           bikeColors: { ...DEFAULT_SAVE.bikeColors, ...(parsed.bikeColors || {}) },
           settings: { ...DEFAULT_SAVE.settings, ...(parsed.settings || {}) },
+          googleAccount: { ...DEFAULT_SAVE.googleAccount, ...(parsed.googleAccount || {}) },
+          worldmageddon: { ...DEFAULT_SAVE.worldmageddon, ...(parsed.worldmageddon || {}) },
           stats: { ...DEFAULT_SAVE.stats, ...(parsed.stats || {}) }
         };
       }
@@ -216,6 +233,149 @@ export class Storage {
   updateSettings(newSettings) {
     this.data.settings = { ...this.data.settings, ...newSettings };
     this.save();
+  }
+
+  // --- GESTION DU COMPTE GOOGLE / GOOGLE PLAY GAMES & CLOUD SAVE ---
+
+  connectGoogleAccount(email = 'pilote.worldmageddon@gmail.com', displayName = 'Commander Worldmageddon') {
+    this.data.googleAccount = {
+      isConnected: true,
+      email,
+      displayName,
+      avatarUrl: 'https://lh3.googleusercontent.com/a/default-user=s96-c',
+      lastCloudSync: new Date().toISOString(),
+      cloudSaveId: 'GPLAY-' + Math.random().toString(36).substring(2, 9).toUpperCase()
+    };
+    this.data.playerName = displayName;
+    this.save();
+    return this.data.googleAccount;
+  }
+
+  disconnectGoogleAccount() {
+    this.data.googleAccount = {
+      isConnected: false,
+      email: null,
+      displayName: 'Pilote Anonyme',
+      avatarUrl: null,
+      lastCloudSync: null,
+      cloudSaveId: null
+    };
+    this.save();
+    return this.data.googleAccount;
+  }
+
+  syncCloudSave() {
+    if (!this.data.googleAccount || !this.data.googleAccount.isConnected) {
+      return { success: false, reason: 'Aucun compte Google connecté !' };
+    }
+    this.data.googleAccount.lastCloudSync = new Date().toISOString();
+    this.save();
+    return {
+      success: true,
+      syncTime: this.data.googleAccount.lastCloudSync,
+      cloudId: this.data.googleAccount.cloudSaveId
+    };
+  }
+
+  exportSaveString() {
+    try {
+      const json = JSON.stringify(this.data);
+      return btoa(unescape(encodeURIComponent(json)));
+    } catch (e) {
+      return JSON.stringify(this.data);
+    }
+  }
+
+  importSaveString(saveStr) {
+    if (!saveStr) return { success: false, reason: 'Code de sauvegarde vide !' };
+    try {
+      let json = '';
+      try {
+        json = decodeURIComponent(escape(atob(saveStr.trim())));
+      } catch (e) {
+        json = saveStr.trim();
+      }
+      const parsed = JSON.parse(json);
+      if (parsed && typeof parsed === 'object') {
+        this.data = {
+          ...DEFAULT_SAVE,
+          ...parsed,
+          stats: { ...DEFAULT_SAVE.stats, ...(parsed.stats || {}) }
+        };
+        this.save();
+        return { success: true };
+      }
+    } catch (e) {
+      return { success: false, reason: 'Format de sauvegarde invalide.' };
+    }
+    return { success: false, reason: 'Erreur inconnue.' };
+  }
+
+  // --- STATISTIQUES & RANGS D'EXTERMINATION WORLDMAGEDDON ---
+
+  recordCataclysmKill(amount, type = 'STREET') {
+    if (!this.data.worldmageddon) {
+      this.data.worldmageddon = { streetVictims: 0, nuclearVictims: 0, damVictims: 0, mountainVictims: 0, tierIndex: 0 };
+    }
+    if (type === 'NUCLEAR') this.data.worldmageddon.nuclearVictims += amount;
+    else if (type === 'DAM') this.data.worldmageddon.damVictims += amount;
+    else if (type === 'MOUNTAIN') this.data.worldmageddon.mountainVictims += amount;
+    else this.data.worldmageddon.streetVictims += amount;
+
+    this.incrementTotalKills(amount);
+  }
+
+  getWorldmageddonProgress() {
+    const total = (this.data.stats && this.data.stats.totalKills) || 0;
+    const worldPop = 8000000000;
+    const remaining = Math.max(0, worldPop - total);
+    const pct = ((total / worldPop) * 100).toFixed(5);
+    
+    let rank = 'Menace Urbaine';
+    let rankIcon = '🩸';
+    let badgeColor = '#ff4757';
+
+    if (total >= 1000000000) {
+      rank = 'MAÎTRE DE L\'EXTINCTION MONDIALE';
+      rankIcon = '☠️';
+      badgeColor = '#ff3838';
+    } else if (total >= 250000000) {
+      rank = 'Effondrement des Civilisations';
+      rankIcon = '☣️';
+      badgeColor = '#ff5252';
+    } else if (total >= 50000000) {
+      rank = 'Fléau Continental Absolu';
+      rankIcon = '🌋';
+      badgeColor = '#ff793f';
+    } else if (total >= 10000000) {
+      rank = 'Dévastateur des Nations';
+      rankIcon = '💥';
+      badgeColor = '#ff9f1a';
+    } else if (total >= 2000000) {
+      rank = 'Cataclysme Régional';
+      rankIcon = '🌊';
+      badgeColor = '#00d2d3';
+    } else if (total >= 500000) {
+      rank = 'Terreur Métropolitaine';
+      rankIcon = '☢️';
+      badgeColor = '#2ed573';
+    }
+
+    return {
+      totalKills: total,
+      remaining,
+      worldPop,
+      percentage: pct,
+      rank,
+      rankIcon,
+      badgeColor,
+      byVector: {
+        street: (this.data.worldmageddon && this.data.worldmageddon.streetVictims) || 0,
+        nuclear: (this.data.worldmageddon && this.data.worldmageddon.nuclearVictims) || 0,
+        dam: (this.data.worldmageddon && this.data.worldmageddon.damVictims) || 0,
+        mountain: (this.data.worldmageddon && this.data.worldmageddon.mountainVictims) || 0
+      }
+    };
   }
 
   resetAll() {
