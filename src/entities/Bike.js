@@ -137,7 +137,7 @@ export class Bike {
     this.frontRoller = null;
     this.carSteeringWheel = null;
 
-    const bikeId = previewBikeId || storage.getEquippedBike() || 'scooter';
+    const bikeId = previewBikeId || gameState.selectedBike?.id || storage.getEquippedBike() || 'tank';
     this.currentBikeId = bikeId;
     const bodyColorHex = storage.getBikeColor(bikeId);
     const bodyMaterial = new THREE.MeshStandardMaterial({
@@ -2322,10 +2322,10 @@ export class Bike {
     this.mesh.position.x = this.x;
     this.mesh.rotation.z = 0;
 
-    // Suspension / rebond + Dénivellation du trottoir (+0.25m) ou Vol
+    // Suspension / rebond + Dénivellation du trottoir (+0.25m) ou Vol basse altitude (4.2m)
     this.bouncePhase += delta * (speed * 0.8 + 2.0);
     const suspensionBounce = Math.sin(this.bouncePhase) * 0.02;
-    const baseAltitude = this.isFlyingEscape || this.currentBikeId === 'aero_jet' ? 38.0 : (onSidewalk ? 0.25 : 0.0);
+    const baseAltitude = this.isFlyingEscape ? 38.0 : (this.currentBikeId === 'aero_jet' ? (4.2 + Math.sin(this.bouncePhase * 0.45) * 0.25) : (onSidewalk ? 0.25 : 0.0));
 
     // Mise à jour de la physique de saut (Gravité 18 m/s² et amorti de suspension)
     if (this.jumpAltitude > 0 || this.jumpVelocity > 0) {

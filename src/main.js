@@ -155,7 +155,7 @@ class GameApp {
         }
 
         // Équipement et reconstruction immédiate de l'engin sélectionné
-        const equippedBikeId = gameState.selectedBike?.id || storage.getEquippedBike() || 'scooter';
+        const equippedBikeId = gameState.selectedBike?.id || storage.getEquippedBike() || 'tank';
         this.bike.buildCurrentBike(equippedBikeId);
         this.bike.buildRider();
 

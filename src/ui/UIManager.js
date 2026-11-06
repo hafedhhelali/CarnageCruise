@@ -338,35 +338,36 @@ export class UIManager {
     const coins = storage.data.coins;
     const totalStars = storage.getTotalStars();
     const wmProgress = storage.getWorldmageddonProgress();
-    const currentBikeId = storage.data.equippedBike || 'tank';
+    // Rangée 1 & 2 : En-tête de commande tactique
+    const currentBikeId = storage.getEquippedBike() || gameState.selectedBike?.id || 'tank';
     const currentBike = BIKES.find(b => b.id === currentBikeId) || BIKES[0];
 
     mapScreen.innerHTML = `
-      <!-- EN-TÊTE REDESIGNÉ UI/UX : ZERO CHEVAUCHEMENT, ERGONOMIE MOBILE PARFAITE -->
+      <!-- EN-TÊTE STABLE SANS PERTURBATIONS VISUELLES : 2 RANGÉES ÉPURÉES -->
       <div class="map-header-redesign">
-        <!-- Rangée 1 : Navigation, Raccourci Engin & AdMob Rewards -->
+        <!-- Rangée 1 : Navigation, Raccourci Engin & Récompense Google Ads -->
         <div class="map-top-bar">
           <button id="btn-map-back" class="map-top-btn" title="Retour Accueil">
             <span class="top-btn-icon">🏠</span>
             <span class="top-btn-text">ACCUEIL</span>
           </button>
 
-          <!-- RACCOURCI ENGIN HYPER VISIBLE DIRECTEMENT SUR LA CARTE -->
+          <!-- RACCOURCI ENGIN PRINCIPAL FIXE ET LISIBLE -->
           <button id="btn-quick-vehicle-select" class="map-quick-vehicle-btn" title="Changer d'Engin d'Assaut">
             <span class="quick-veh-icon-pill">${currentBike.icon || '🪖'}</span>
             <div class="quick-veh-text-pill">
-              <span class="quick-veh-label">ENGIN D'ASSAUT</span>
+              <span class="quick-veh-label">VÉHICULE D'ASSAUT</span>
               <span class="quick-veh-title">${currentBike.shortName || currentBike.name} ▾</span>
             </div>
           </button>
 
-          <div class="currency-pill clickable" id="btn-header-ad-coins" title="Google AdMob : +20 Pièces d'or">
+          <div class="currency-pill clickable" id="btn-header-ad-coins" title="Google Ads : +20 Pièces d'or">
             <span>🪙 ${coins}</span>
             <span class="currency-ad-gift-tag">🎁 +20</span>
           </div>
         </div>
 
-        <!-- Rangée 2 : Dossier Stratégique Worldmageddon + QG Tycoon + Reset Progression -->
+        <!-- Rangée 2 : Dossier Stratégique Worldmageddon + QG Tycoon + Reset -->
         <div class="map-sub-bar">
           <div class="worldmageddon-strip clickable" id="btn-open-worldmageddon" title="Dossier Stratégique Worldmageddon">
             <div class="wm-strip-badge">
@@ -387,15 +388,9 @@ export class UIManager {
               <span>🏭 TYCOON</span>
             </button>
             <button id="btn-reset-progression" class="map-pill-action pill-reset-action" title="Réinitialiser l'avancement">
-              <span>🔄 RESET</span>
+              <span>🔄</span>
             </button>
           </div>
-        </div>
-
-        <!-- Rangée 3 : Bannière Google AdMob / Sponsorisée -->
-        <div class="map-admob-banner-bar">
-          <span class="admob-badge">ANNONCE GOOGLE ADS</span>
-          <span class="admob-text">💥 SPONSOR OFFICIEL ADMOB • DÉBLOQUEZ TOUTES LES ARMES LOURDES !</span>
         </div>
       </div>
 
@@ -745,6 +740,7 @@ export class UIManager {
           lastTapTime = now;
           isPinching = false;
           isDragging = false;
+          touchMoveDistance = 0;
           lastTouchX = e.touches[0].clientX;
           lastTouchY = e.touches[0].clientY;
         }
@@ -872,6 +868,7 @@ export class UIManager {
       }
 
       this.selectedMapCity = city;
+      gameState.selectCity(cityId);
       const isCityClosed = storage.isCityExterminated(cityId);
 
       pins.forEach(p => {
@@ -1009,6 +1006,9 @@ export class UIManager {
     if (!detailCard) return;
     const city = this.selectedMapCity;
     if (!city) return;
+
+    const currentBikeId = storage.getEquippedBike() || gameState.selectedBike?.id || 'tank';
+    const currentBike = BIKES.find(b => b.id === currentBikeId) || BIKES[0];
 
     const stageIndex = CITIES.findIndex(c => c.id === city.id) + 1;
     const unlocked = storage.isCityUnlocked(city.id);
@@ -1167,8 +1167,7 @@ export class UIManager {
     const existing = document.getElementById('modal-quick-vehicle');
     if (existing) existing.remove();
 
-    const currentBikeId = storage.data.equippedBike || 'tank';
-    const unlockedBikes = storage.data.unlockedBikes || [];
+    const currentBikeId = storage.getEquippedBike() || gameState.selectedBike?.id || 'tank';
 
     const modal = document.createElement('div');
     modal.id = 'modal-quick-vehicle';
@@ -1185,25 +1184,23 @@ export class UIManager {
         </div>
 
         <p class="quick-veh-subtitle">
-          Basculez instantanément votre blindé ou bolide d'assaut pour la prochaine mission :
+          Sélectionnez et chargez immédiatement votre bolide d'assaut lourd :
         </p>
 
         <div class="quick-vehicle-grid">
           ${BIKES.map(bike => {
-            const isUnlocked = unlockedBikes.includes(bike.id);
             const isEquipped = bike.id === currentBikeId;
             return `
-              <div class="quick-veh-item ${isEquipped ? 'equipped' : ''} ${isUnlocked ? 'unlocked' : 'locked'}"
+              <div class="quick-veh-item ${isEquipped ? 'equipped' : ''} unlocked"
                    data-bike-id="${bike.id}">
                 <div class="quick-veh-icon">${bike.icon || '🏍️'}</div>
                 <div class="quick-veh-details">
                   <div class="quick-veh-name-row">
                     <span class="quick-veh-name">${bike.shortName || bike.name}</span>
                     ${isEquipped ? '<span class="quick-veh-badge-equipped">ÉQUIPÉ ✅</span>' : ''}
-                    ${!isUnlocked ? '<span class="quick-veh-badge-locked">🔒 BLOQUÉ</span>' : ''}
                   </div>
                   <div class="quick-veh-category">${bike.category || 'VÉHICULE D\'ASSAUT'}</div>
-                  <div class="quick-veh-weapon">💥 ${bike.weaponName || bike.description || 'Arme de carnage'}</div>
+                  <div class="quick-veh-weapon">💥 ${bike.tagline || bike.weaponName || 'Arme de carnage'}</div>
                 </div>
               </div>
             `;
@@ -1232,22 +1229,16 @@ export class UIManager {
       this.setScreen('GARAGE');
     });
 
-    modal.querySelectorAll('.quick-veh-item.unlocked').forEach(item => {
+    modal.querySelectorAll('.quick-veh-item').forEach(item => {
       item.addEventListener('click', () => {
         const bikeId = item.getAttribute('data-bike-id');
+        storage.equipBike(bikeId);
         gameState.selectBike(bikeId);
         soundManager.playClick('garage');
         modal.remove();
         if (this.onAction) this.onAction('BIKE_EQUIPPED', bikeId);
         this.render();
         this.showToastUnlock({ name: `Engin équipé : ${gameState.selectedBike.shortName || gameState.selectedBike.name}` });
-      });
-    });
-
-    modal.querySelectorAll('.quick-veh-item.locked').forEach(item => {
-      item.addEventListener('click', () => {
-        soundManager.playCrash();
-        this.showToastUnlock({ name: `🔒 Cet engin doit être débloqué dans le Garage !` });
       });
     });
   }

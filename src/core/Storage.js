@@ -25,8 +25,8 @@ const DEFAULT_SAVE = {
     strasbourg: { bestScore: 0, stars: 0, completed: false }
   },
   exterminatedCities: [],
-  unlockedBikes: ['tank', 'scooter', 'chopper', 'decapotable', 'trottinette_hache', 'cheval', 'run_ak47', 'run_chainsaw', 'rouleau', 'dragster', 'aero_jet'],
-  equippedBike: 'scooter',
+  unlockedBikes: ['tank', 'aero_jet', 'hovercraft', 'rad_rover', 'snowmobile', 'scooter', 'chopper', 'decapotable', 'trottinette_hache', 'cheval', 'run_ak47', 'run_chainsaw', 'rouleau', 'dragster'],
+  equippedBike: 'tank',
   bikeColors: {
     tank: '#3d4f36',
     scooter: '#e74c3c',
@@ -38,7 +38,10 @@ const DEFAULT_SAVE = {
     run_chainsaw: '#e67e22',
     rouleau: '#f1c40f',
     dragster: '#111111',
-    aero_jet: '#00cec9'
+    aero_jet: '#00cec9',
+    hovercraft: '#0984e3',
+    rad_rover: '#6c5ce7',
+    snowmobile: '#dfe6e9'
   },
   equippedAccessories: {
     helmet: 'beret',
@@ -238,12 +241,13 @@ export class Storage {
   }
 
   equipBike(bikeId) {
-    if (this.data.unlockedBikes.includes(bikeId)) {
-      this.data.equippedBike = bikeId;
-      this.save();
-      return true;
+    if (!bikeId) return false;
+    if (!this.data.unlockedBikes.includes(bikeId)) {
+      this.data.unlockedBikes.push(bikeId);
     }
-    return false;
+    this.data.equippedBike = bikeId;
+    this.save();
+    return true;
   }
 
   setBikeColor(bikeId, colorHex) {

@@ -178,23 +178,25 @@ export class ProjectileManager {
   }
 
   /**
-   * Lance une salve de doubles missiles pour l'Aéro-Jet
+   * Lance une salve de doubles missiles pour l'Aéro-Jet orientés vers le sol
    */
   spawnTwinMissiles(posL, posR) {
     [posL, posR].forEach((pos, idx) => {
       const mesh = this.createMissileMesh();
       mesh.position.copy(pos);
+      mesh.rotation.x = 0.28; // Incliné en piqué vers la rue et les passants
       this.container.add(mesh);
 
       this.projectiles.push({
         type: 'missile',
         mesh,
-        speedZ: 140.0,
-        velX: (idx === 0 ? -1.2 : 1.2), // Légère divergence balistique
+        speedZ: 130.0,
+        velX: (idx === 0 ? -1.0 : 1.0), // Légère divergence balistique
+        velY: -5.8, // Trajectoire descendante en piqué vers les passants au sol !
         startX: pos.x,
         startZ: pos.z,
-        maxDistance: 110.0,
-        damageRadius: 7.0,
+        maxDistance: 120.0,
+        damageRadius: 8.5,
         points: 1800,
         trailTimer: 0,
         isExplosive: true
@@ -244,9 +246,13 @@ export class ProjectileManager {
           continue;
         }
 
-        // 1. Déplacement physique en avant dans l'espace 3D
+        // 1. Déplacement physique en avant et plongée vers le sol dans l'espace 3D
         p.mesh.position.z += p.speedZ * delta;
         p.mesh.position.x += (p.velX || 0) * delta;
+        if (p.velY) {
+          p.mesh.position.y = Math.max(0.2, p.mesh.position.y + p.velY * delta);
+          p.mesh.rotation.x = 0.28; // Tête pointée vers le bitume
+        }
 
         // Animation rotationnelle de l'obus / missile sur son axe
         p.mesh.rotation.z += delta * 15;
@@ -275,6 +281,11 @@ export class ProjectileManager {
 
         let hitOccurred = false;
 
+        // 2b. Détection d'impact direct sur la chaussée pour les tirs plongeants
+        if (p.velY && p.mesh.position.y <= 0.35) {
+          hitOccurred = true;
+        }
+
         // 3. Test d'impact sur les véhicules de circulation
         if (traffic && traffic.vehicles) {
           for (let v of traffic.vehicles) {
@@ -288,20 +299,19 @@ export class ProjectileManager {
               if (this.particles?.spawnComicBurst) this.particles.spawnComicBurst(v.position, p.points, gameState?.combo || 1);
               if (this.soundManager?.playCrash) this.soundManager.playCrash();
               hitOccurred = true;
-              break;
             }
           }
         }
 
-        // 4. Test d'impact sur les piétons
+        // 4. Test d'impact et fauchage de zone sur les piétons au sol
         const pedList = characters?.characters || characters?.pedestrians;
-        if (!hitOccurred && pedList && Array.isArray(pedList)) {
+        if (pedList && Array.isArray(pedList)) {
           for (let char of pedList) {
             if (!char.group || !char.group.visible || char.isFlying) continue;
             const distZ = Math.abs(char.group.position.z - pPos.z);
             const distX = Math.abs(char.group.position.x - pPos.x);
 
-            if (distZ < 2.5 && distX < p.damageRadius) {
+            if (distZ < (p.damageRadius || 4.5) && distX < (p.damageRadius || 4.5)) {
               if (characters.triggerSlapstickFlight) characters.triggerSlapstickFlight(char, pPos.x, 52);
               if (this.particles?.spawnBloodBurst) this.particles.spawnBloodBurst(char.group.position);
               if (ui?.triggerPedestrianCarnageFlash) ui.triggerPedestrianCarnageFlash();
@@ -309,7 +319,6 @@ export class ProjectileManager {
                 gameState.recordKill(850, 'PROJECTILE_' + p.type.toUpperCase(), char.typeDef?.category || 'default');
               }
               hitOccurred = true;
-              break;
             }
           }
         }

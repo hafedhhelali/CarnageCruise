@@ -1721,6 +1721,7 @@ html, body {
   border-radius: 22px;
   padding: 16px;
   margin-top: 12px;
+  margin-bottom: 24px;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -1730,6 +1731,7 @@ html, body {
   margin-right: auto;
   box-sizing: border-box;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+  flex-shrink: 0;
 }
 
 .city-target-rank-pill {
@@ -2836,6 +2838,7 @@ html, body {
   max-width: 600px;
   margin: 0 auto 10px auto;
   box-sizing: border-box;
+  flex-shrink: 0;
 }
 
 .map-top-bar {
@@ -2844,6 +2847,7 @@ html, body {
   justify-content: space-between;
   gap: 8px;
   width: 100%;
+  flex-wrap: nowrap;
 }
 
 .map-top-btn {

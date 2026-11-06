@@ -1133,7 +1133,8 @@ export class GameState {
   constructor() {
     this.currentMode = 'SPLASH';
     this.selectedCity = CITIES[0];
-    this.selectedBike = BIKES[0];
+    const savedBikeId = storage.getEquippedBike() || 'tank';
+    this.selectedBike = BIKES.find(b => b.id === savedBikeId) || BIKES[0];
 
     this.score = 0;
     this.drivingScoreAccumulator = 0;
