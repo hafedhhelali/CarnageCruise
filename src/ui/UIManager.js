@@ -488,6 +488,7 @@ export class UIManager {
                 <div class="city-pin-label">
                   ${city.name}
                 </div>
+                ${isSelected ? '<div class="city-pin-enter-pill">▶ ENTRER</div>' : ''}
               </div>
             `;
           }).join('')}
@@ -652,12 +653,13 @@ export class UIManager {
           }
           lastTapTime = now;
           isPinching = false;
-          isDragging = true;
+          isDragging = false;
           lastTouchX = e.touches[0].clientX;
           lastTouchY = e.touches[0].clientY;
         }
       }, { passive: false });
 
+      let touchMoveDistance = 0;
       viewportEl.addEventListener('touchmove', (e) => {
         if (isPinching && e.touches.length >= 2) {
           e.preventDefault();
@@ -669,17 +671,22 @@ export class UIManager {
             const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top;
             zoomAtPoint(startZoom * factor, midX, midY, false);
           }
-        } else if (isDragging && e.touches.length === 1) {
-          e.preventDefault();
+        } else if (e.touches.length === 1) {
           const dx = e.touches[0].clientX - lastTouchX;
           const dy = e.touches[0].clientY - lastTouchY;
-          lastTouchX = e.touches[0].clientX;
-          lastTouchY = e.touches[0].clientY;
+          touchMoveDistance += Math.hypot(dx, dy);
 
-          const clamped = clampPan(panX + dx, panY + dy, this.mapZoom);
-          panX = clamped.x;
-          panY = clamped.y;
-          applyTransform(false);
+          if (touchMoveDistance > 8) {
+            isDragging = true;
+            e.preventDefault(); // N'empêche le tap sur les pins que si l'utilisateur glisse vraiment la carte !
+            lastTouchX = e.touches[0].clientX;
+            lastTouchY = e.touches[0].clientY;
+
+            const clamped = clampPan(panX + dx, panY + dy, this.mapZoom);
+            panX = clamped.x;
+            panY = clamped.y;
+            applyTransform(false);
+          }
         }
       }, { passive: false });
 
@@ -692,6 +699,7 @@ export class UIManager {
             lastTouchY = e.touches[0].clientY;
           } else {
             isDragging = false;
+            touchMoveDistance = 0;
           }
         }
       };
@@ -773,7 +781,19 @@ export class UIManager {
       }
 
       this.selectedMapCity = city;
-      pins.forEach(p => p.classList.toggle('selected', p.getAttribute('data-city-id') === cityId));
+      pins.forEach(p => {
+        const isCurrent = p.getAttribute('data-city-id') === cityId;
+        p.classList.toggle('selected', isCurrent);
+        const existingPill = p.querySelector('.city-pin-enter-pill');
+        if (isCurrent && !existingPill) {
+          const pill = document.createElement('div');
+          pill.className = 'city-pin-enter-pill';
+          pill.textContent = '▶ ENTRER';
+          p.appendChild(pill);
+        } else if (!isCurrent && existingPill) {
+          existingPill.remove();
+        }
+      });
 
       // Centrer automatiquement et fluidement sur la ville sélectionnée
       centerOnCity(city, true);
@@ -786,9 +806,55 @@ export class UIManager {
       this.updateCityDetail(mapScreen.querySelector('#city-detail'));
     };
 
+    const handleCityAction = (cityId) => {
+      const city = CITIES.find(c => c.id === cityId);
+      if (!city) return;
+
+      const isAlreadySelected = (this.selectedMapCity && this.selectedMapCity.id === cityId);
+
+      if (isAlreadySelected) {
+        // Clic sur ville déjà sélectionnée : ENTRÉE DIRECTE DANS LA COURSE !
+        soundManager.playClick();
+        gameState.selectCity(city.id);
+        this.triggerCityEntryCinematic(city);
+      } else {
+        // Première sélection de la ville
+        updateSelection(cityId);
+      }
+    };
+
     pins.forEach(pin => {
+      let pinTouchStartX = 0;
+      let pinTouchStartY = 0;
+      let pinTouchMoved = false;
+
+      pin.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 1) {
+          pinTouchStartX = e.touches[0].clientX;
+          pinTouchStartY = e.touches[0].clientY;
+          pinTouchMoved = false;
+        }
+      }, { passive: true });
+
+      pin.addEventListener('touchmove', (e) => {
+        if (e.touches.length === 1) {
+          const dx = e.touches[0].clientX - pinTouchStartX;
+          const dy = e.touches[0].clientY - pinTouchStartY;
+          if (Math.hypot(dx, dy) > 10) {
+            pinTouchMoved = true;
+          }
+        }
+      }, { passive: true });
+
+      pin.addEventListener('touchend', (e) => {
+        if (!pinTouchMoved) {
+          e.preventDefault();
+          handleCityAction(pin.getAttribute('data-city-id'));
+        }
+      }, { passive: false });
+
       pin.addEventListener('click', () => {
-        updateSelection(pin.getAttribute('data-city-id'));
+        handleCityAction(pin.getAttribute('data-city-id'));
       });
     });
 
@@ -844,7 +910,7 @@ export class UIManager {
     const starsHtml = '★'.repeat(cityData.stars) + '☆'.repeat(3 - cityData.stars);
 
     detailCard.innerHTML = `
-      <div class="city-detail-header">
+      <div class="city-detail-header clickable" id="btn-detail-header-launch" style="cursor: pointer;" title="Appuyez pour lancer la course">
         <div>
           <span class="city-detail-name">${city.countryFlag || ''} ${city.name}</span>
           <span class="city-tag">ÉTAPE ${stageIndex} / ${CITIES.length} • ${city.country || 'Europe'}</span>
@@ -853,7 +919,10 @@ export class UIManager {
           </div>
           <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 2px;">${city.subtitle}</div>
         </div>
-        <div class="city-stars">${starsHtml}</div>
+        <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+          <div class="city-stars">${starsHtml}</div>
+          ${unlocked ? '<span style="font-size: 0.72rem; color: #2ed573; font-weight: 800; background: rgba(46, 213, 115, 0.15); padding: 2px 6px; border-radius: 6px;">▶ JOUER</span>' : ''}
+        </div>
       </div>
 
       <p class="city-description">${city.description}</p>
@@ -866,7 +935,7 @@ export class UIManager {
       <div class="city-detail-actions">
         ${unlocked ? `
           <button id="btn-launch-city" class="btn-arcade btn-play-pulse btn-action-launch">
-            <span>🚀 EXTERMINER • ÉTAPE ${stageIndex} : ${city.name.toUpperCase()}</span>
+            <span>▶ ENTRER DANS ${city.name.toUpperCase()} (LANCER LA COURSE)</span>
           </button>
           <button id="btn-city-ad-coins" class="btn-ad-gift" title="Cadeau Sponsor : Obtenir +20 Pièces d'or">
             <span class="ad-gift-top">🎁 🪙</span>
@@ -894,14 +963,17 @@ export class UIManager {
     }
 
     if (unlocked) {
+      const launchRun = () => {
+        soundManager.playClick();
+        gameState.selectCity(city.id);
+        this.triggerCityEntryCinematic(city);
+      };
+
       const launchBtn = detailCard.querySelector('#btn-launch-city');
-      if (launchBtn) {
-        launchBtn.addEventListener('click', () => {
-          soundManager.playClick();
-          gameState.selectCity(city.id);
-          this.triggerCityEntryCinematic(city);
-        });
-      }
+      if (launchBtn) launchBtn.addEventListener('click', launchRun);
+
+      const headerBtn = detailCard.querySelector('#btn-detail-header-launch');
+      if (headerBtn) headerBtn.addEventListener('click', launchRun);
     }
   }
 
