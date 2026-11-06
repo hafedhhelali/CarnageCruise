@@ -101,6 +101,11 @@ export class UIManager {
       return;
     }
     if (this.currentScreen === 'HUD') {
+      // Si la course est terminée ou en mode résultats, retour direct à la carte
+      if (gameState.isGameOver || gameState.currentMode === 'RESULTS') {
+        this.setScreen('MAP');
+        return;
+      }
       // En jeu : afficher le menu de pause
       this.showPauseModal();
       return;
@@ -117,6 +122,18 @@ export class UIManager {
       this.previousScreen = this.currentScreen;
     }
     this.currentScreen = screenName;
+
+    // Synchronisation du mode de jeu global
+    if (screenName === 'MAP') {
+      gameState.currentMode = 'MAP';
+      gameState.isGameOver = false;
+    } else if (screenName === 'SPLASH') {
+      gameState.currentMode = 'SPLASH';
+      gameState.isGameOver = false;
+    } else if (screenName === 'GARAGE') {
+      gameState.currentMode = 'GARAGE';
+      gameState.isGameOver = false;
+    }
 
     // Transition musicale dynamique selon l'écran
     if (screenName === 'SPLASH' || screenName === 'MAP' || screenName === 'GARAGE') {
@@ -465,7 +482,7 @@ export class UIManager {
           </svg>
 
           <!-- Jeton Motard Voyageur Animé se déplaçant d'une ville à une autre -->
-          <div class="moto-traveler" id="moto-traveler" style="left: 44.8%; top: 40.2%;">
+          <div class="moto-traveler" id="moto-traveler" style="left: ${this.selectedMapCity ? this.selectedMapCity.mapCoords.x : 44.8}%; top: ${this.selectedMapCity ? this.selectedMapCity.mapCoords.y : 40.2}%;">
             <div class="moto-traveler-icon">🏍️</div>
             <div class="moto-traveler-exhaust">💨</div>
           </div>
@@ -1299,6 +1316,11 @@ export class UIManager {
       actionLabel = 'CANON';
       actionTitle = 'Tirer un obus 120mm destructeur !';
       isWeapon = true;
+    } else if (equippedBikeId === 'aero_jet') {
+      actionIcon = '🚀';
+      actionLabel = 'MISSILE';
+      actionTitle = 'Tirer une salve de missiles plasma / frappe aérienne !';
+      isWeapon = true;
     }
 
     hud.innerHTML = `
@@ -1617,6 +1639,7 @@ export class UIManager {
       if (cityName) cityName.innerHTML = `<span style="color: #ff4757; font-weight: 900;">🚨 ÉVACUEZ !</span>`;
       if (targetPts) targetPts.innerHTML = `<span style="color: #ffd32a; font-weight: 900;">⏱️ ${data.nuclearEscapeTimer.toFixed(1)}s</span>`;
     } else if (data.nuclearPhase === 'APPROACH') {
+      if (cityName) cityName.innerHTML = `<span style="color: #2ed573; font-weight: 900;">🎯 DÉTRUIRE CENTRALE</span>`;
       if (targetPts) {
         const distToCore = Math.max(0, 600 - data.distance);
         targetPts.innerHTML = `<span style="color: #2ed573;">☢️ ${distToCore}m</span>`;
@@ -1830,6 +1853,10 @@ export class UIManager {
     this.activeModals.push(overlay);
 
     const starsHtml = '★'.repeat(data.stars) + '☆'.repeat(3 - data.stars);
+    const currentCityId = (data.city ? data.city.id : gameState.selectedCity?.id);
+    const currentIndex = CITIES.findIndex(c => c.id === currentCityId);
+    const nextCity = (currentIndex >= 0 && currentIndex < CITIES.length - 1) ? CITIES[currentIndex + 1] : null;
+    const isNextUnlocked = nextCity && (storage.isCityUnlocked(nextCity.id) || (data.newlyUnlockedCity && data.newlyUnlockedCity.id === nextCity.id));
 
     overlay.innerHTML = `
       <div class="modal-card">
@@ -1870,6 +1897,11 @@ export class UIManager {
         ` : ''}
 
         <div class="modal-actions">
+          ${nextCity && isNextUnlocked ? `
+            <button id="btn-results-next" class="btn-arcade" style="background: linear-gradient(135deg, #2ed573, #10ac84); font-size: 1.05rem; box-shadow: 0 4px 16px rgba(46, 213, 115, 0.4); border: 2px solid #7bed9f;">
+              ▶ ÉTAPE SUIVANTE : ${nextCity.name.toUpperCase()}
+            </button>
+          ` : ''}
           <button id="btn-results-retry" class="btn-arcade">
             🔄 REJOUER CETTE ÉTAPE
           </button>
@@ -1883,6 +1915,18 @@ export class UIManager {
       </div>
     `;
 
+    const btnNext = overlay.querySelector('#btn-results-next');
+    if (btnNext && nextCity) {
+      btnNext.addEventListener('click', () => {
+        soundManager.playClick();
+        overlay.remove();
+        this.activeModals = this.activeModals.filter(m => m !== overlay);
+        gameState.selectCity(nextCity.id);
+        this.selectedMapCity = nextCity;
+        if (this.onAction) this.onAction('START_RUN', nextCity);
+      });
+    }
+
     overlay.querySelector('#btn-results-retry').addEventListener('click', () => {
       soundManager.playClick();
       overlay.remove();
@@ -1894,6 +1938,13 @@ export class UIManager {
       soundManager.playClick();
       overlay.remove();
       this.activeModals = this.activeModals.filter(m => m !== overlay);
+      if (data.newlyUnlockedCity) {
+        this.selectedMapCity = data.newlyUnlockedCity;
+        gameState.selectCity(data.newlyUnlockedCity.id);
+      } else if (nextCity && isNextUnlocked) {
+        this.selectedMapCity = nextCity;
+        gameState.selectCity(nextCity.id);
+      }
       this.setScreen('MAP');
     });
 
@@ -1901,6 +1952,13 @@ export class UIManager {
       soundManager.playClick();
       overlay.remove();
       this.activeModals = this.activeModals.filter(m => m !== overlay);
+      if (data.newlyUnlockedCity) {
+        this.selectedMapCity = data.newlyUnlockedCity;
+        gameState.selectCity(data.newlyUnlockedCity.id);
+      } else if (nextCity && isNextUnlocked) {
+        this.selectedMapCity = nextCity;
+        gameState.selectCity(nextCity.id);
+      }
       this.previousScreen = 'MAP';
       this.setScreen('GARAGE');
     });

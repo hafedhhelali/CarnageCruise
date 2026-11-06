@@ -297,6 +297,84 @@ class GameApp {
       return;
     }
 
+    if (attack.type === 'missile') {
+      const bikeZ = this.bike.z;
+      const bikeX = this.bike.mesh.position.x;
+      const bikeY = this.bike.mesh.position.y;
+      const launchPosL = new THREE.Vector3(bikeX - 2.0, bikeY - 0.5, bikeZ + 3.0);
+      const launchPosR = new THREE.Vector3(bikeX + 2.0, bikeY - 0.5, bikeZ + 3.0);
+
+      // Traînées plasma et onde de choc de frappe aérienne
+      this.particles.spawnShockwave(launchPosL, 0x00f2fe);
+      this.particles.spawnShockwave(launchPosR, 0x4facfe);
+      this.engine.triggerCameraShake(0.65);
+
+      let hits = 0;
+
+      // 1. Détection de véhicules au sol dans le rayon d'impact
+      if (this.traffic) {
+        this.traffic.vehicles.forEach(v => {
+          if (v.userData.active && !v.userData.isCrashed) {
+            const vZ = v.position.z - bikeZ;
+            const vX = Math.abs(v.position.x - bikeX);
+            if (vZ > 4.0 && vZ < attack.range && vX < attack.radius) {
+              this.traffic.blowUpVehicle(v, new THREE.Vector3(bikeX, 0, bikeZ + 10));
+              this.particles.spawnCannonBlast(v.position);
+              const carPts = 1800;
+              gameState.score += carPts;
+              this.particles.spawnComicBurst(v.position, carPts, gameState.combo);
+              soundManager.playCrash();
+              hits++;
+            }
+          }
+        });
+      }
+
+      // 2. Frappe plasma sur les piétons au sol
+      this.characters.characters.forEach(char => {
+        if (!char.group.visible || char.isFlying) return;
+        const dZ = char.group.position.z - bikeZ;
+        const dX = Math.abs(char.group.position.x - bikeX);
+        if (dZ > 4.0 && dZ < attack.range && dX < attack.radius) {
+          this.characters.triggerSlapstickFlight(char, bikeX, 55);
+          this.particles.spawnCannonBlast(char.group.position);
+          this.particles.spawnBloodBurst(char.group.position);
+          this.ui.triggerPedestrianCarnageFlash();
+          gameState.recordKill(900, 'WEAPON_MISSILE', char.typeDef.category);
+          hits++;
+        }
+      });
+
+      // 3. Déflagration sur le mobilier urbain
+      this.environment.chunks.forEach(chunk => {
+        if (chunk.userData && chunk.userData.props) {
+          chunk.userData.props.forEach(prop => {
+            if (prop.userData.isHit) return;
+            const worldZ = chunk.position.z + prop.position.z;
+            const worldX = chunk.position.x + prop.position.x;
+            const pZ = worldZ - bikeZ;
+            const pX = Math.abs(worldX - bikeX);
+            if (pZ > 4.0 && pZ < attack.range && pX < attack.radius) {
+              prop.userData.isHit = true;
+              prop.rotation.z = (prop.position.x > 0 ? 1 : -1) * 1.3;
+              this.particles.spawnCannonBlast(new THREE.Vector3(worldX, 1.0, worldZ));
+              soundManager.playPropSmash();
+            }
+          });
+        }
+      });
+
+      if (hits > 0) {
+        soundManager.playCoin();
+      }
+
+      // 4. Frappe longue portée sur la centrale nucléaire pour pulvériser le réacteur
+      if (gameState.selectedCity?.isNuclearMission && !gameState.nuclearDetonated && this.bike.z >= 380) {
+        this.triggerNuclearCataclysm();
+      }
+      return;
+    }
+
     // Détection d'impact sur les piétons situés dans l'arc d'attaque
     const bikeZ = this.bike.z;
     const bikeX = this.bike.mesh.position.x;
@@ -332,6 +410,9 @@ class GameApp {
     soundManager.playNuclearAlarm();
     soundManager.switchMusicTrack('NUCLEAR');
     this.particles.spawnNuclearBlast(new THREE.Vector3(0, 10, 615));
+    if (this.environment) {
+      this.environment.destroyNuclearPlant();
+    }
     if (this.ui) {
       this.ui.showToastUnlock({ name: '⚠️ CŒUR ATOMIQUE EN EXPLOSION ! FUIS IMMÉDIATEMENT !' });
     }
@@ -349,6 +430,8 @@ class GameApp {
     else if (this.keys.right) currentSteer = 1.0;
 
     if (gameState.currentMode === 'PLAYING') {
+      const isFlyingCraft = this.bike.currentBikeId === 'aero_jet' || this.bike.isFlyingEscape;
+
       // 1. Calcul de la vitesse effective avec gestion de l'accident et du freinage
       let currentSpeed = gameState.speed;
       if (this.bike.isCrashed) {
@@ -389,8 +472,8 @@ class GameApp {
         this.bike.mesh.position.x,
         currentSpeed,
         (hitChar) => {
-          // Suite à un accident, quand le bolide clignote (invulnérable), impossible de heurter qui que ce soit !
-          if (this.bike.isInvulnerable()) return;
+          // Si le joueur est en vol (Aero-Jet à 38m) ou invulnérable, aucun choc direct au sol
+          if (isFlyingCraft || this.bike.isInvulnerable()) return;
 
           // Calcul des bonus de position (Trottoir ou Passage piéton)
           let bonusPts = hitChar.typeDef.points;
@@ -417,8 +500,8 @@ class GameApp {
         },
         (z) => this.environment.getRoadCenterX(z),
         (nearChar) => {
-          // Frôlement / Near-Miss à pleine vitesse !
-          if (this.bike.isInvulnerable()) return;
+          // Frôlement / Near-Miss à pleine vitesse (ignoré en plein vol dans le ciel)
+          if (isFlyingCraft || this.bike.isInvulnerable()) return;
           gameState.addNearMiss();
           this.particles.spawnComicBurst(nearChar.group.position, 75, gameState.combo);
         },
@@ -434,7 +517,8 @@ class GameApp {
           currentSpeed,
           (z) => this.environment.getRoadCenterX(z),
           (car, isPlayerInvuln) => {
-            if (isPlayerInvuln || gameState.isNitroActive || this.bike.currentBikeId === 'rouleau' || this.bike.currentBikeId === 'tank' || this.bike.currentBikeId === 'aero_jet') {
+            if (isFlyingCraft) return; // En vol dans les airs, la circulation au sol ne heurte pas le jet
+            if (isPlayerInvuln || gameState.isNitroActive || this.bike.currentBikeId === 'rouleau' || this.bike.currentBikeId === 'tank') {
               // Carambolage royal ! La voiture vole en éclats
               this.engine.triggerCameraShake(0.65);
               soundManager.playCrash();
@@ -499,7 +583,7 @@ class GameApp {
       }
 
       // 8d. Collisions avec le mobilier urbain (Poteaux, Arbres, Terrasses) sur trottoir
-      if (this.environment.chunks) {
+      if (!isFlyingCraft && this.environment.chunks) {
         this.environment.chunks.forEach(chunk => {
           if (chunk.userData && chunk.userData.props) {
             chunk.userData.props.forEach(prop => {
@@ -539,55 +623,59 @@ class GameApp {
         });
       }
 
-      // 9. Gestion des carrefours réalistes, feux et trafic transversal
-      this.intersections.update(
-        delta,
-        this.bike.z,
-        this.bike.mesh.position.x,
-        currentSpeed,
-        (crossingCar) => {
-          // Suite à un accident, quand le bolide clignote (invulnérable), impossible d'être heurté !
-          if (this.bike.isInvulnerable()) return;
+      // 9. Gestion des carrefours réalistes, feux et trafic transversal (désactivés en plein vol)
+      if (!isFlyingCraft) {
+        this.intersections.update(
+          delta,
+          this.bike.z,
+          this.bike.mesh.position.x,
+          currentSpeed,
+          (crossingCar) => {
+            // Suite à un accident, quand le bolide clignote (invulnérable), impossible d'être heurté !
+            if (this.bike.isInvulnerable()) return;
 
-          const crashed = this.bike.triggerCrash();
-          if (crashed) {
-            this.engine.triggerCameraShake(0.75);
-            soundManager.playCrash();
-            soundManager.playPenaltyBuzzer();
-            this.particles.spawnCrashBurst(this.bike.mesh.position);
-            gameState.applyVehicleCrashPenalty(350);
-            storage.recordRedLightRun();
-            if (this.ui) this.ui.triggerCrashPenaltyUI(350);
+            const crashed = this.bike.triggerCrash();
+            if (crashed) {
+              this.engine.triggerCameraShake(0.75);
+              soundManager.playCrash();
+              soundManager.playPenaltyBuzzer();
+              this.particles.spawnCrashBurst(this.bike.mesh.position);
+              gameState.applyVehicleCrashPenalty(350);
+              storage.recordRedLightRun();
+              if (this.ui) this.ui.triggerCrashPenaltyUI(350);
+            }
+          },
+          (streetName) => {
+            // Bonus de civisme : Arrêt parfait au feu rouge avant de repartir !
+            gameState.score += 250;
+            soundManager.playCoin();
+          },
+          (z) => this.environment.getRoadCenterX(z),
+          (z) => this.environment.getRoadAngle(z),
+          (streetName) => {
+            if (this.ui) this.ui.showTrafficLightWarning(streetName);
           }
-        },
-        (streetName) => {
-          // Bonus de civisme : Arrêt parfait au feu rouge avant de repartir !
-          gameState.score += 250;
-          soundManager.playCoin();
-        },
-        (z) => this.environment.getRoadCenterX(z),
-        (z) => this.environment.getRoadAngle(z),
-        (streetName) => {
-          if (this.ui) this.ui.showTrafficLightWarning(streetName);
-        }
-      );
+        );
+      }
 
       // 10. Particules, étoiles et lignes de vitesse
       this.particles.update(delta, this.bike.z, currentSpeed);
 
       // 10b. Pigeons parisiens vivants : Picorent et s'envolent au passage de la moto
-      this.pigeons.update(
-        delta,
-        this.bike.z,
-        this.bike.mesh.position,
-        currentSpeed,
-        (z) => this.environment.getRoadCenterX(z),
-        (pigeon) => {
-          soundManager.playPigeonFlutter();
-          this.particles.spawnComicBurst(pigeon.position, 150, gameState.combo);
-          gameState.score += 150;
-        }
-      );
+      if (!isFlyingCraft) {
+        this.pigeons.update(
+          delta,
+          this.bike.z,
+          this.bike.mesh.position,
+          currentSpeed,
+          (z) => this.environment.getRoadCenterX(z),
+          (pigeon) => {
+            soundManager.playPigeonFlutter();
+            this.particles.spawnComicBurst(pigeon.position, 150, gameState.combo);
+            gameState.score += 150;
+          }
+        );
+      }
 
       // 10c. Détection Épreuve Nucléaire : Aller vers la centrale, exploser, s'enfuir
       if (gameState.selectedCity?.isNuclearMission) {

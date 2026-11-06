@@ -2158,7 +2158,7 @@ export class Bike {
         }
       }
       if (this.tankTurret) {
-        this.tankTurret.rotation.y = -lateralInput * 0.12;
+        this.tankTurret.rotation.y = -this.smoothedSteer * 0.12;
       }
     }
 
@@ -2320,6 +2320,12 @@ export class Bike {
       this.tankRecoil = 1.0;
       soundManager.playTankCannon();
       return { type: 'cannon', range: 85.0, radius: 5.2, isExplosive: true };
+    } else if (this.currentBikeId === 'aero_jet') {
+      this.isAttacking = true;
+      this.attackTimer = 0.5;
+      this.attackType = 'missile';
+      soundManager.playRocketMissile();
+      return { type: 'missile', range: 110.0, radius: 8.5, isExplosive: true };
     } else if (this.currentBikeId === 'rouleau') {
       soundManager.playSteamrollerHorn();
       return { type: 'horn', range: 25.0, radius: 5.5 };

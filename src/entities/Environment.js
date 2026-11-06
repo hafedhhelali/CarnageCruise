@@ -127,6 +127,7 @@ export class Environment {
 
   setCity(cityDef, finishDistance = null) {
     this.cityTheme = cityDef;
+    this.isNuclearMission = !!cityDef.isNuclearMission;
     if (finishDistance) {
       this.finishDistance = finishDistance;
     } else if (cityDef.isNuclearMission) {
@@ -252,6 +253,9 @@ export class Environment {
       domeGroup.add(radCore);
 
       nucGroup.add(domeGroup);
+      this.nuclearTowers = [tower1, tower2];
+      this.nuclearSteam = [steam1, steam2];
+      this.nuclearGate = gateGroup;
       this.nuclearReactorGroup = domeGroup;
       this.nuclearCoreMesh = coreMesh;
       lmGroup.add(nucGroup);
@@ -1370,8 +1374,45 @@ export class Environment {
       }
     });
 
-    if (this.landmark) {
+    if (this.landmark && !this.isNuclearMission) {
       this.landmark.position.z = playerZ + 180;
+    }
+  }
+
+  destroyNuclearPlant() {
+    if (this.nuclearTowers) {
+      if (this.nuclearTowers[0]) {
+        this.nuclearTowers[0].rotation.z = -0.35;
+        this.nuclearTowers[0].rotation.x = 0.2;
+        this.nuclearTowers[0].position.y = 15;
+      }
+      if (this.nuclearTowers[1]) {
+        this.nuclearTowers[1].rotation.z = 0.35;
+        this.nuclearTowers[1].rotation.x = -0.2;
+        this.nuclearTowers[1].position.y = 15;
+      }
+    }
+    if (this.nuclearSteam) {
+      this.nuclearSteam.forEach(s => {
+        if (s) {
+          s.scale.set(3.5, 4.5, 3.5);
+          if (s.material && s.material.color) s.material.color.setHex(0xff4757);
+        }
+      });
+    }
+    if (this.nuclearGate) {
+      this.nuclearGate.rotation.y = 1.4;
+      this.nuclearGate.position.y = -0.5;
+    }
+    if (this.nuclearReactorGroup) {
+      this.nuclearReactorGroup.scale.set(1.2, 0.4, 1.2);
+      this.nuclearReactorGroup.position.y = -2;
+    }
+    if (this.nuclearCoreMesh) {
+      this.nuclearCoreMesh.scale.set(4, 4, 4);
+      if (this.nuclearCoreMesh.material && this.nuclearCoreMesh.material.color) {
+        this.nuclearCoreMesh.material.color.setHex(0xff3838);
+      }
     }
   }
 }
