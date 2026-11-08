@@ -15,6 +15,8 @@ import { adManager } from '../services/AdManager.js';
 import { cookieConsentManager } from '../services/CookieConsentManager.js';
 import { tycoonManager, TYCOON_BUILDINGS, RESEARCH_NODES } from '../core/TycoonManager.js';
 import { Haptic } from '../services/HapticFeedback.js';
+import gsap from 'gsap';
+import { WmdPixiRenderer } from './WmdPixiRenderer.js';
 
 export class UIManager {
   constructor(rootElement, onActionCallback) {
@@ -904,7 +906,7 @@ export class UIManager {
       this.updateCityDetail(mapScreen.querySelector('#city-detail'));
     };
 
-    // Navigation séquentielle fluide entre les villes (◀ / ▶)
+    // Navigation séquentielle fluide entre les villes (◀ / ▶) avec GSAP
     const navigateCity = (direction) => {
       soundManager.playClick();
       Haptic.tap();
@@ -912,13 +914,15 @@ export class UIManager {
       let idx = CITIES.findIndex(c => c.id === currentId);
       if (idx === -1) idx = 0;
       const nextIdx = (idx + direction + CITIES.length) % CITIES.length;
+      updateSelection(CITIES[nextIdx].id);
+
       const detailCard = mapScreen.querySelector('#city-detail');
       if (detailCard) {
-        detailCard.classList.remove('slide-left', 'slide-right');
-        void detailCard.offsetWidth;
-        detailCard.classList.add(direction > 0 ? 'slide-left' : 'slide-right');
+        gsap.fromTo(detailCard,
+          { x: direction > 0 ? 45 : -45, opacity: 0.25, scale: 0.94 },
+          { x: 0, opacity: 1, scale: 1.0, duration: 0.32, ease: "power2.out" }
+        );
       }
-      updateSelection(CITIES[nextIdx].id);
     };
     this.navigateMapCity = navigateCity;
 
@@ -1600,6 +1604,14 @@ export class UIManager {
 
     this.root.appendChild(overlay);
 
+    // Reveal cinématique GSAP des éléments de télémétrie militaire
+    const satHeader = overlay.querySelector('.wmd-sat-header');
+    const telemetryCard = overlay.querySelector('.wmd-telemetry-card');
+    const bannerEl = overlay.querySelector('#wmd-impact-banner');
+    if (satHeader) gsap.from(satHeader, { y: -40, opacity: 0, duration: 0.45, ease: "power2.out" });
+    if (telemetryCard) gsap.from(telemetryCard, { y: 40, opacity: 0, duration: 0.45, ease: "power2.out", delay: 0.1 });
+    if (bannerEl) gsap.from(bannerEl, { scale: 0.6, opacity: 0, duration: 0.35, ease: "back.out(2)" });
+
     // Initialisation et boucle de rendu du Canvas Tactique Plein Écran (60 FPS Constant)
     const canvas = overlay.querySelector('#wmd-tactical-canvas');
     if (!canvas) return;
@@ -1617,6 +1629,13 @@ export class UIManager {
     const h = window.innerHeight;
     const centerX = w / 2;
     const centerY = h / 2;
+
+    // Initialisation du Moteur PixiJS v8 Accéléré GPU (WebGL2 / WebGPU)
+    const pixiRenderer = new WmdPixiRenderer();
+    let usePixi = false;
+    pixiRenderer.init(overlay, w, h).then(ok => {
+      usePixi = ok;
+    });
 
     // 1. GÉNÉRATION DE LA TOPOGRAPHIE URBAINE SATELLITE
     const riverPoints = [];
@@ -1923,6 +1942,11 @@ export class UIManager {
 
       // 1. DESSIN INSTANTANÉ DU FOND SATELLITE PRÉ-CALCULÉ (BLIT 0.1ms)
       ctx.drawImage(staticBgCanvas, 0, 0, w, h);
+
+      // Rendu PixiJS v8 Accéléré GPU (si disponible)
+      if (usePixi) {
+        pixiRenderer.renderFrame(simPhase, weaponType, progress, shockwaveRadius, w, h);
+      }
 
       // 2. Balayage radar tournant
       const sweepAngle = elapsed * 1.8;
@@ -2393,6 +2417,7 @@ export class UIManager {
     // Handler de clôture définitive
     const handleClose = () => {
       if (animFrameId) cancelAnimationFrame(animFrameId);
+      pixiRenderer.destroy();
       storage.markCityExterminated(city.id, victimPop);
       soundManager.playClick();
       overlay.remove();
@@ -2961,36 +2986,33 @@ export class UIManager {
     if (scoreVal) {
       const targetScore = data.score;
       if (this.currentScoreAnimated === undefined) this.currentScoreAnimated = 0;
-      
-      const startScore = this.currentScoreAnimated;
-      const diff = targetScore - startScore;
-      const startTime = performance.now();
-      const duration = 280;
 
-      if (this.scoreTickerAnimId) cancelAnimationFrame(this.scoreTickerAnimId);
-
-      const tickScore = (now) => {
-        const progress = Math.min(1.0, (now - startTime) / duration);
-        const ease = 1 - Math.pow(1 - progress, 3);
-        this.currentScoreAnimated = Math.round(startScore + diff * ease);
-        scoreVal.textContent = this.currentScoreAnimated.toLocaleString('fr-FR');
-        if (progress < 1.0) {
-          this.scoreTickerAnimId = requestAnimationFrame(tickScore);
-        } else {
-          this.currentScoreAnimated = targetScore;
-          scoreVal.textContent = targetScore.toLocaleString('fr-FR');
+      // Animation fluide du score numérique avec GSAP
+      const scoreObj = { val: this.currentScoreAnimated };
+      gsap.to(scoreObj, {
+        val: targetScore,
+        duration: 0.35,
+        ease: "power2.out",
+        onUpdate: () => {
+          this.currentScoreAnimated = Math.round(scoreObj.val);
+          scoreVal.textContent = this.currentScoreAnimated.toLocaleString('fr-FR');
         }
-      };
-      this.scoreTickerAnimId = requestAnimationFrame(tickScore);
+      });
 
-      scoreVal.style.transform = 'scale(1.22)';
-      setTimeout(() => { if (scoreVal) scoreVal.style.transform = 'scale(1)'; }, 140);
+      gsap.fromTo(scoreVal,
+        { scale: 1.25, filter: "brightness(1.4)" },
+        { scale: 1.0, filter: "brightness(1.0)", duration: 0.22, ease: "back.out(2)" }
+      );
     }
 
     if (comboBadge && comboText) {
       if (data.combo > 1) {
         comboBadge.classList.add('active');
         comboText.textContent = `${data.comboTitle} x${data.combo}`;
+        gsap.fromTo(comboBadge,
+          { scale: 1.35, rotation: (Math.random() - 0.5) * 8 },
+          { scale: 1.0, rotation: 0, duration: 0.32, ease: "elastic.out(1.2, 0.4)" }
+        );
       } else {
         comboBadge.classList.remove('active');
       }
@@ -3007,15 +3029,42 @@ export class UIManager {
 
     const fct = document.createElement('div');
     fct.className = 'fct-popup';
-    fct.style.left = `${xPct + (Math.random() - 0.5) * 16}%`;
-    fct.style.top = `${yPct + (Math.random() - 0.5) * 8}%`;
+    fct.style.left = `${xPct + (Math.random() - 0.5) * 14}%`;
+    fct.style.top = `${yPct + (Math.random() - 0.5) * 6}%`;
     fct.style.color = color;
     fct.innerHTML = `<span>${text}</span>${subtext ? `<small style="display:block;font-size:0.58em;color:#ffffff;letter-spacing:0.5px;text-shadow:0 2px 4px #000;">${subtext}</small>` : ''}`;
 
     container.appendChild(fct);
-    setTimeout(() => {
-      try { fct.remove(); } catch (e) {}
-    }, 750);
+
+    const randomRot = (Math.random() - 0.5) * 16;
+    const driftX = (Math.random() - 0.5) * 30;
+
+    gsap.fromTo(fct,
+      { scale: 0.2, opacity: 0, y: 15, rotation: randomRot * 1.5 },
+      {
+        scale: 1.35,
+        opacity: 1,
+        y: -32,
+        x: driftX * 0.4,
+        rotation: randomRot,
+        duration: 0.22,
+        ease: "back.out(3.0)",
+        onComplete: () => {
+          gsap.to(fct, {
+            scale: 0.85,
+            opacity: 0,
+            y: -75,
+            x: driftX,
+            rotation: randomRot * 0.6,
+            duration: 0.55,
+            ease: "power2.in",
+            onComplete: () => {
+              try { fct.remove(); } catch (e) {}
+            }
+          });
+        }
+      }
+    );
   }
 
   triggerCrashPenaltyUI(penalty) {
@@ -3293,6 +3342,14 @@ export class UIManager {
     });
 
     this.root.appendChild(overlay);
+
+    const pauseCard = overlay.querySelector('.modal-card');
+    if (pauseCard) {
+      gsap.fromTo(pauseCard,
+        { scale: 0.8, opacity: 0, y: 30 },
+        { scale: 1.0, opacity: 1, y: 0, duration: 0.35, ease: "back.out(1.8)" }
+      );
+    }
   }
 
   // --- 6. MODALE DE CONFIRMATION DE QUITTER ---
@@ -3339,6 +3396,14 @@ export class UIManager {
     });
 
     this.root.appendChild(overlay);
+
+    const pauseCard = overlay.querySelector('.modal-card');
+    if (pauseCard) {
+      gsap.fromTo(pauseCard,
+        { scale: 0.8, opacity: 0, y: 30 },
+        { scale: 1.0, opacity: 1, y: 0, duration: 0.35, ease: "back.out(1.8)" }
+      );
+    }
   }
 
   // --- 7. MODALE DE RÉSULTATS ---
@@ -3484,6 +3549,32 @@ export class UIManager {
     });
 
     this.root.appendChild(overlay);
+
+    const modalCard = overlay.querySelector('.modal-card');
+    if (modalCard) {
+      gsap.fromTo(modalCard,
+        { scale: 0.72, opacity: 0, y: 35 },
+        { scale: 1.0, opacity: 1, y: 0, duration: 0.42, ease: "back.out(1.8)" }
+      );
+      gsap.from(modalCard.querySelectorAll('.result-row'), {
+        x: -25,
+        opacity: 0,
+        stagger: 0.05,
+        duration: 0.28,
+        ease: "power2.out",
+        delay: 0.12
+      });
+      const starsEl = modalCard.querySelector('.stars-awarded');
+      if (starsEl) {
+        gsap.from(starsEl, {
+          scale: 0.2,
+          opacity: 0,
+          duration: 0.45,
+          ease: "elastic.out(1.2, 0.4)",
+          delay: 0.1
+        });
+      }
+    }
   }
 
   // --- 8. MODALE DE PAUSE ---
@@ -3534,6 +3625,14 @@ export class UIManager {
     });
 
     this.root.appendChild(overlay);
+
+    const pauseCard = overlay.querySelector('.modal-card');
+    if (pauseCard) {
+      gsap.fromTo(pauseCard,
+        { scale: 0.8, opacity: 0, y: 30 },
+        { scale: 1.0, opacity: 1, y: 0, duration: 0.35, ease: "back.out(1.8)" }
+      );
+    }
   }
 
   // --- 9. MODALE DE PARAMÈTRES ---
@@ -3626,6 +3725,14 @@ export class UIManager {
     });
 
     this.root.appendChild(overlay);
+
+    const pauseCard = overlay.querySelector('.modal-card');
+    if (pauseCard) {
+      gsap.fromTo(pauseCard,
+        { scale: 0.8, opacity: 0, y: 30 },
+        { scale: 1.0, opacity: 1, y: 0, duration: 0.35, ease: "back.out(1.8)" }
+      );
+    }
   }
 
   // --- 10. MODALE MENTIONS LÉGALES & COPYRIGHT EOMEDIA 2026 ---
@@ -3684,6 +3791,14 @@ export class UIManager {
     });
 
     this.root.appendChild(overlay);
+
+    const pauseCard = overlay.querySelector('.modal-card');
+    if (pauseCard) {
+      gsap.fromTo(pauseCard,
+        { scale: 0.8, opacity: 0, y: 30 },
+        { scale: 1.0, opacity: 1, y: 0, duration: 0.35, ease: "back.out(1.8)" }
+      );
+    }
   }
 
   // --- 11. DOSSIER D'EXTERMINATION MONDIALE (WORLDMAGEDDON) ---
@@ -3785,6 +3900,14 @@ export class UIManager {
     });
 
     this.root.appendChild(overlay);
+
+    const pauseCard = overlay.querySelector('.modal-card');
+    if (pauseCard) {
+      gsap.fromTo(pauseCard,
+        { scale: 0.8, opacity: 0, y: 30 },
+        { scale: 1.0, opacity: 1, y: 0, duration: 0.35, ease: "back.out(1.8)" }
+      );
+    }
   }
 
   // --- 12. MODALE COMPTE GOOGLE & SAUVEGARDE CLOUD (GOOGLE PLAY GAMES) ---
@@ -3926,6 +4049,14 @@ export class UIManager {
     });
 
     this.root.appendChild(overlay);
+
+    const pauseCard = overlay.querySelector('.modal-card');
+    if (pauseCard) {
+      gsap.fromTo(pauseCard,
+        { scale: 0.8, opacity: 0, y: 30 },
+        { scale: 1.0, opacity: 1, y: 0, duration: 0.35, ease: "back.out(1.8)" }
+      );
+    }
   }
 
   // --- QG EMPIRE TYCOON WORLDMAGEDDON (IDLE ARCADE TYCOON) ---
@@ -4081,6 +4212,14 @@ export class UIManager {
 
     renderTycoonContent();
     this.root.appendChild(overlay);
+
+    const pauseCard = overlay.querySelector('.modal-card');
+    if (pauseCard) {
+      gsap.fromTo(pauseCard,
+        { scale: 0.8, opacity: 0, y: 30 },
+        { scale: 1.0, opacity: 1, y: 0, duration: 0.35, ease: "back.out(1.8)" }
+      );
+    }
   }
 
   showResearchModal() {
@@ -4159,6 +4298,14 @@ export class UIManager {
 
     renderResearch();
     this.root.appendChild(overlay);
+
+    const pauseCard = overlay.querySelector('.modal-card');
+    if (pauseCard) {
+      gsap.fromTo(pauseCard,
+        { scale: 0.8, opacity: 0, y: 30 },
+        { scale: 1.0, opacity: 1, y: 0, duration: 0.35, ease: "back.out(1.8)" }
+      );
+    }
   }
 
   showOfflineReportModal(earnings) {
@@ -4222,26 +4369,61 @@ export class UIManager {
     });
 
     this.root.appendChild(overlay);
+
+    const pauseCard = overlay.querySelector('.modal-card');
+    if (pauseCard) {
+      gsap.fromTo(pauseCard,
+        { scale: 0.8, opacity: 0, y: 30 },
+        { scale: 1.0, opacity: 1, y: 0, duration: 0.35, ease: "back.out(1.8)" }
+      );
+    }
   }
 
   showToastUnlock(data) {
     const toast = document.createElement('div');
     toast.style.cssText = `
       position: absolute;
-      top: 30px;
+      top: 32px;
       left: 50%;
-      transform: translateX(-50%);
       background: linear-gradient(135deg, #2ed573, #1e90ff);
       color: #fff;
-      padding: 12px 24px;
-      border-radius: 30px;
-      font-weight: 800;
-      box-shadow: 0 8px 25px rgba(46, 213, 115, 0.5);
-      z-index: 100;
-      animation: modalPop 0.4s ease;
+      padding: 13px 28px;
+      border-radius: 35px;
+      font-weight: 900;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      box-shadow: 0 10px 30px rgba(46, 213, 115, 0.55), 0 0 20px rgba(30, 144, 255, 0.45);
+      border: 1.5px solid rgba(255, 255, 255, 0.65);
+      z-index: 1000;
+      pointer-events: none;
+      white-space: nowrap;
     `;
     toast.innerHTML = `✨ ${data.name || 'Débloqué'} !`;
     this.root.appendChild(toast);
-    setTimeout(() => toast.remove(), 3000);
+
+    gsap.fromTo(toast,
+      { y: -75, scale: 0.7, opacity: 0, xPercent: -50 },
+      {
+        y: 0,
+        scale: 1.0,
+        opacity: 1,
+        xPercent: -50,
+        duration: 0.45,
+        ease: "back.out(2.2)",
+        onComplete: () => {
+          gsap.to(toast, {
+            y: -50,
+            scale: 0.88,
+            opacity: 0,
+            delay: 2.2,
+            duration: 0.35,
+            ease: "power2.in",
+            onComplete: () => {
+              try { toast.remove(); } catch (e) {}
+            }
+          });
+        }
+      }
+    );
   }
 }

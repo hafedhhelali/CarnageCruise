@@ -52,6 +52,26 @@ export class PostProcessingManager {
     this.composer.addPass(outputPass);
   }
 
+  triggerBloomFlash(peakStrength = 1.25, duration = 0.4) {
+    if (!this.bloomPass || !this.enabled) return;
+    const baseStrength = 0.35;
+    this.bloomPass.strength = peakStrength;
+    const start = performance.now();
+    const durMs = duration * 1000;
+
+    const animateBloom = (now) => {
+      const progress = Math.min(1.0, (now - start) / durMs);
+      const ease = 1.0 - Math.pow(progress, 2);
+      this.bloomPass.strength = baseStrength + (peakStrength - baseStrength) * ease;
+      if (progress < 1.0) {
+        requestAnimationFrame(animateBloom);
+      } else {
+        this.bloomPass.strength = baseStrength;
+      }
+    };
+    requestAnimationFrame(animateBloom);
+  }
+
   setSize(width, height) {
     if (this.composer) {
       this.composer.setSize(width, height);

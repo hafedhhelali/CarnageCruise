@@ -130,6 +130,11 @@ export class Engine {
     item.duration = duration;
     item.timer = duration;
     item.active = true;
+
+    // Flash de Bloom Arcade sur fortes détonations lumineuses
+    if (this.postProcessing && intensity >= 4.0) {
+      this.postProcessing.triggerBloomFlash(Math.min(1.45, 0.5 + intensity * 0.15), duration);
+    }
   }
 
   updateDynamicLights(delta) {
