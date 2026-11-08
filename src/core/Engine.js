@@ -24,7 +24,7 @@ export class Engine {
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.05;
+    this.renderer.toneMappingExposure = 1.15; // Légère sur-exposition arcade énergique
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
@@ -36,6 +36,15 @@ export class Engine {
       500
     );
     this.baseFov = 60;
+
+    // Pool de PointLights dynamiques pour flashs d'armes et d'explosions (Zéro lag mobile)
+    this.dynamicLights = [];
+    for (let i = 0; i < 4; i++) {
+      const pl = new THREE.PointLight(0xffa502, 0, 22, 2.0);
+      pl.castShadow = false; // Ombres désactivées sur PointLights pour garantir 60 FPS constants
+      this.scene.add(pl);
+      this.dynamicLights.push({ light: pl, active: false, timer: 0, duration: 0, peakIntensity: 0 });
+    }
 
     // Éclairage naturel, doux et équilibré avec lumière d'ambiance et hémisphérique de ciel
     this.ambientLight = new THREE.AmbientLight(0xffffff, 0.75);
@@ -110,7 +119,37 @@ export class Engine {
     this.shakeIntensity = Math.min(this.shakeIntensity + intensity, 0.8);
   }
 
+  triggerDynamicLight(position, colorHex = 0xffa502, intensity = 4.8, duration = 0.25) {
+    if (!this.dynamicLights) return;
+    const item = this.dynamicLights.find(l => !l.active) || this.dynamicLights[0];
+    item.light.color.setHex(colorHex);
+    item.light.position.copy(position);
+    item.light.position.y += 0.8;
+    item.light.intensity = intensity;
+    item.peakIntensity = intensity;
+    item.duration = duration;
+    item.timer = duration;
+    item.active = true;
+  }
+
+  updateDynamicLights(delta) {
+    if (!this.dynamicLights) return;
+    for (let l of this.dynamicLights) {
+      if (!l.active) continue;
+      l.timer -= delta;
+      if (l.timer <= 0) {
+        l.light.intensity = 0;
+        l.active = false;
+      } else {
+        const prog = l.timer / l.duration;
+        l.light.intensity = l.peakIntensity * Math.pow(prog, 2.2);
+      }
+    }
+  }
+
   updateCameraGameplay(delta, bikePosition, bikeSpeed) {
+    this.updateDynamicLights(delta);
+
     // Mise à jour du dôme céleste
     if (this.skyDome) {
       this.skyDome.update(delta, bikePosition.z);

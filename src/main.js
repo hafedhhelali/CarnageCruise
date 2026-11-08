@@ -19,6 +19,7 @@ import { Traffic } from './entities/Traffic.js';
 import { PigeonSystem } from './entities/Pigeons.js';
 import { UIManager } from './ui/UIManager.js';
 import { tycoonManager } from './core/TycoonManager.js';
+import { Haptic } from './services/HapticFeedback.js';
 import * as TWEEN from '@tweenjs/tween.js';
 
 class GameApp {
@@ -295,6 +296,8 @@ class GameApp {
               this.traffic.blowUpVehicle(v, this.bike.mesh.position);
               gameState.score += 1200;
               this.particles.spawnComicBurst(v.position, 1200, gameState.combo);
+              if (this.ui) this.ui.spawnFloatingCombatText('+1200', 'INFERNO !', '#ff9f43', 50, 38);
+              Haptic.impactHeavy();
             }
           }
         });
@@ -308,7 +311,9 @@ class GameApp {
           this.characters.triggerSlapstickFlight(char, bikeX, 45);
           this.particles.spawnBloodBurst(char.group.position);
           this.ui.triggerPedestrianCarnageFlash();
+          if (this.ui) this.ui.spawnFloatingCombatText('+800', 'TORCHÉ !', '#ff5252', 50, 42);
           gameState.recordKill(800, 'WEAPON_FLAMETHROWER', char.typeDef.category);
+          Haptic.carnage();
         }
       });
       return;
@@ -330,6 +335,8 @@ class GameApp {
               gameState.score += 1100;
               this.particles.spawnComicBurst(v.position, 1100, gameState.combo);
               soundManager.playCrash();
+              if (this.ui) this.ui.spawnFloatingCombatText('+1100', 'BLAST !', '#ffd32a', 50, 38);
+              Haptic.impactHeavy();
             }
           }
         });
@@ -343,7 +350,9 @@ class GameApp {
           this.characters.triggerSlapstickFlight(char, bikeX, 48);
           this.particles.spawnBloodBurst(char.group.position);
           this.ui.triggerPedestrianCarnageFlash();
+          if (this.ui) this.ui.spawnFloatingCombatText('+750', 'HEADSHOT !', '#ff5252', 50, 42);
           gameState.recordKill(750, 'WEAPON_SHOTGUN', char.typeDef.category);
+          Haptic.carnage();
         }
       });
       return;
@@ -365,6 +374,8 @@ class GameApp {
               gameState.score += 1600;
               this.particles.spawnComicBurst(v.position, 1600, gameState.combo);
               soundManager.playCrash();
+              if (this.ui) this.ui.spawnFloatingCombatText('+1600', 'ÉCRASÉ !', '#f368e0', 50, 38);
+              Haptic.impactHeavy();
             }
           }
         });
@@ -510,7 +521,12 @@ class GameApp {
           this.engine.triggerCameraShake(0.38);
           this.particles.spawnComicBurst(hitChar.group.position, bonusPts, gameState.combo);
           this.particles.spawnBloodBurst(hitChar.group.position);
-          if (this.ui) this.ui.triggerPedestrianCarnageFlash();
+          if (this.ui) {
+            this.ui.triggerPedestrianCarnageFlash();
+            const subLabel = hitChar.isOnSidewalk ? 'TROTTOIR !' : (hitChar.isCrossing ? 'PASSAGE CLOUTÉ !' : 'STRIKE !');
+            this.ui.spawnFloatingCombatText(`+${bonusPts}`, subLabel, '#ff4757', 50, 42);
+          }
+          Haptic.impactLight();
           gameState.recordKill(bonusPts, categoryLabel, hitChar.typeDef.category);
 
           // Si série de carnages ou choc sur piéton, dépêcher l'ambulance d'urgence !
@@ -524,6 +540,8 @@ class GameApp {
           if (isFlyingCraft || this.bike.isInvulnerable()) return;
           gameState.addNearMiss();
           this.particles.spawnComicBurst(nearChar.group.position, 75, gameState.combo);
+          if (this.ui) this.ui.spawnFloatingCombatText('+75', 'FRÔLEMENT !', '#ffd32a', 45, 55);
+          Haptic.tap();
         },
         this.bike.isInvulnerable()
       );
@@ -546,6 +564,8 @@ class GameApp {
               gameState.score += 500;
               gameState.recordKill(500, 'CARAMBOLAGE', 'car');
               this.particles.spawnComicBurst(car.position, 500, gameState.combo);
+              if (this.ui) this.ui.spawnFloatingCombatText('+500', 'WRECKAGE !', '#ffa502', 50, 40);
+              Haptic.impactHeavy();
             } else {
               // Collision avec un véhicule de circulation
               const crashed = this.bike.triggerCrash();
@@ -555,7 +575,11 @@ class GameApp {
                 soundManager.playPenaltyBuzzer();
                 this.particles.spawnCrashBurst(this.bike.mesh.position);
                 gameState.applyVehicleCrashPenalty(300);
-                if (this.ui) this.ui.triggerCrashPenaltyUI(300);
+                if (this.ui) {
+                  this.ui.triggerCrashPenaltyUI(300);
+                  this.ui.spawnFloatingCombatText('-300', 'CRASH !', '#eb4d4b', 50, 35);
+                }
+                Haptic.impactHeavy();
               }
             }
           },
@@ -694,6 +718,8 @@ class GameApp {
                   gameState.combo
                 );
                 this.engine.triggerCameraShake(Math.min(0.55, 0.25 + (currentSpeed / 60)));
+                if (this.ui) this.ui.spawnFloatingCombatText(`+${airPts}`, 'AIR TIME !', '#00cec9', 50, 45);
+                Haptic.tap();
               }
             }
           }

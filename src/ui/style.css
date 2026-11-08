@@ -4294,6 +4294,133 @@ html, body {
   filter: brightness(1.2);
 }
 
+/* ==========================================================================
+   MOBILE 60 FPS ARCADE POLISH & SPRING PHYSICS (v0.9.23-beta)
+   ========================================================================== */
+
+/* --- FLOATING COMBAT TEXT (FCT) ARCADE LAYER --- */
+.hud-fct-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 105;
+  overflow: hidden;
+}
+
+.fct-popup {
+  position: absolute;
+  font-family: var(--font-family);
+  font-weight: 900;
+  font-size: 1.7rem;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  text-align: center;
+  transform: translate(-50%, -50%) rotate(-3deg);
+  text-shadow:
+    -2px -2px 0 #000,
+    2px -2px 0 #000,
+    -2px 2px 0 #000,
+    2px 2px 0 #000,
+    0 4px 10px rgba(0, 0, 0, 0.85);
+  animation: fctFloat 0.95s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
+  will-change: transform, opacity;
+  pointer-events: none;
+}
+
+@keyframes fctFloat {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 0) scale(0.4) rotate(-8deg);
+  }
+  15% {
+    opacity: 1;
+    transform: translate(-50%, -20px) scale(1.25) rotate(-2deg);
+  }
+  45% {
+    opacity: 1;
+    transform: translate(-50%, -35px) scale(1.0) rotate(1deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -75px) scale(0.85) rotate(4deg);
+  }
+}
+
+/* --- TOUCH SPRING PHYSICS & HAPTIC RESPONSIVENESS --- */
+.btn-arcade,
+.btn-round-action,
+.btn-pedal-brake,
+.btn-nitro-pedal,
+.btn-attack-pedal,
+.city-card-nav-btn,
+.btn-action-primary,
+.btn-action-secondary,
+.btn-wmd-strike,
+.btn-wmd-strike-secondary,
+.btn-ad-coins-secondary {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  will-change: transform;
+  transform: translateZ(0);
+  transition: transform 0.28s cubic-bezier(0.34, 1.8, 0.64, 1), filter 0.15s ease, box-shadow 0.18s ease;
+}
+
+.btn-arcade:active,
+.btn-arcade.is-pressed,
+.btn-round-action:active,
+.btn-round-action.is-pressed,
+.btn-pedal-brake:active,
+.btn-pedal-brake.active,
+.btn-nitro-pedal:active,
+.btn-nitro-pedal.active,
+.btn-attack-pedal:active,
+.btn-attack-pedal.active,
+.city-card-nav-btn:active,
+.btn-action-primary:active,
+.btn-action-secondary:active,
+.btn-wmd-strike:active,
+.btn-wmd-strike-secondary:active,
+.btn-ad-coins-secondary:active {
+  transform: scale3d(0.92, 0.92, 1) translateY(3px) !important;
+  filter: brightness(0.92) contrast(1.08);
+  transition: transform 0.04s ease-out !important;
+}
+
+/* --- CITY DETAIL CARD SLIDE TRANSITIONS --- */
+.city-detail-card.slide-left {
+  animation: cardSlideLeft 0.32s cubic-bezier(0.2, 0.9, 0.3, 1.1) forwards;
+}
+
+.city-detail-card.slide-right {
+  animation: cardSlideRight 0.32s cubic-bezier(0.2, 0.9, 0.3, 1.1) forwards;
+}
+
+@keyframes cardSlideLeft {
+  0% {
+    opacity: 0;
+    transform: translateX(45px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes cardSlideRight {
+  0% {
+    opacity: 0;
+    transform: translateX(-45px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+
 
 
 

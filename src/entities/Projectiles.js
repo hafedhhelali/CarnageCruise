@@ -174,6 +174,7 @@ export class ProjectileManager {
     this.particles.spawnShockwave(muzzlePos, 0xff793f);
     this.particles.spawnCannonBlast(muzzlePos);
     this.engine.triggerCameraShake(0.65);
+    this.engine.triggerDynamicLight(muzzlePos, 0xffa502, 5.5, 0.24);
     this.soundManager.playTankCannon();
   }
 
@@ -204,6 +205,7 @@ export class ProjectileManager {
     });
 
     this.engine.triggerCameraShake(0.5);
+    this.engine.triggerDynamicLight(posL, 0xffd32a, 4.2, 0.20);
     this.soundManager.playRocketMissile();
   }
 
@@ -257,6 +259,9 @@ export class ProjectileManager {
     }
     if (this.engine?.triggerCameraShake) {
       this.engine.triggerCameraShake(0.68);
+    }
+    if (this.engine?.triggerDynamicLight) {
+      this.engine.triggerDynamicLight(hitPos, themeColor, 6.8, 0.36);
     }
 
     // 3. Fauchage de zone (AoE) sur TOUS les véhicules de circulation à portée
@@ -340,8 +345,12 @@ export class ProjectileManager {
           p.mesh.rotation.x = 0.28; // Tête pointée vers le bitume
         }
 
-        // Animation rotationnelle de l'obus / missile sur son axe
+        // Animation rotationnelle de l'obus / missile sur son axe & pulsation de flamme
         p.mesh.rotation.z += delta * 15;
+        if (p.mesh.userData.flame) {
+          const flameFlicker = 1.0 + Math.sin(Date.now() * 0.045) * 0.25;
+          p.mesh.userData.flame.scale.set(flameFlicker, flameFlicker, flameFlicker);
+        }
 
         // 2. Particules de traînée de fumée et feu
         p.trailTimer = (p.trailTimer || 0) + delta;
@@ -352,10 +361,10 @@ export class ProjectileManager {
           if (this.particles) {
             if (p.type === '120mm_shell') {
               if (this.particles.spawnSparks) this.particles.spawnSparks(trailPos, 2, 0xff793f);
-              else if (this.particles.spawnExhaustSmoke) this.particles.spawnExhaustSmoke(trailPos, 1.0);
+              if (this.particles.spawnExhaustSmoke) this.particles.spawnExhaustSmoke(trailPos, 1.0);
             } else if (p.type === 'missile') {
-              if (this.particles.spawnSparks) this.particles.spawnSparks(trailPos, 2, 0xffffff);
-              else if (this.particles.spawnExhaustSmoke) this.particles.spawnExhaustSmoke(trailPos, 1.0);
+              if (this.particles.spawnExhaustSmoke) this.particles.spawnExhaustSmoke(trailPos, 1.2);
+              if (this.particles.spawnSparks) this.particles.spawnSparks(trailPos, 2, 0xffd32a);
             } else if (p.type === 'plasma_emp') {
               if (this.particles.spawnShockwave) this.particles.spawnShockwave(trailPos, 0x00cec9);
             }
