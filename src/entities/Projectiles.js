@@ -360,11 +360,11 @@ export class ProjectileManager {
           trailPos.z -= 0.6;
           if (this.particles) {
             if (p.type === '120mm_shell') {
-              if (this.particles.spawnSparks) this.particles.spawnSparks(trailPos, 2, 0xff793f);
-              if (this.particles.spawnExhaustSmoke) this.particles.spawnExhaustSmoke(trailPos, 1.0);
+              if (this.particles.spawnSparks) this.particles.spawnSparks(trailPos, 4, 0xff793f);
+              if (this.particles.spawnExhaustSmoke) this.particles.spawnExhaustSmoke(trailPos, 0.35);
             } else if (p.type === 'missile') {
-              if (this.particles.spawnExhaustSmoke) this.particles.spawnExhaustSmoke(trailPos, 1.2);
-              if (this.particles.spawnSparks) this.particles.spawnSparks(trailPos, 2, 0xffd32a);
+              if (this.particles.spawnSparks) this.particles.spawnSparks(trailPos, 4, 0xffd32a);
+              if (this.particles.spawnExhaustSmoke) this.particles.spawnExhaustSmoke(trailPos, 0.4);
             } else if (p.type === 'plasma_emp') {
               if (this.particles.spawnShockwave) this.particles.spawnShockwave(trailPos, 0x00cec9);
             }

@@ -143,6 +143,9 @@ export class SoundManager {
     if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
     this.resumeContext();
 
+    // Cri sadique d'effroi procédural (Horreur FM, Comique ou Burlesque)
+    this.playSadisticScream();
+
     const now = this.ctx.currentTime;
 
     // 1. Choc physique réaliste (Bruit sourd d'impact corporel)
@@ -1792,7 +1795,7 @@ export class SoundManager {
     } else if (track === 'NUCLEAR') {
       this.playNuclearDarksynthTheme();
     } else {
-      this.playGameplayArcadeTheme();
+      this.playSadisticCarnageTheme(this.musicIntensity || 'TENSION');
     }
   }
 
@@ -2096,6 +2099,432 @@ export class SoundManager {
     noise.start(time);
   }
 
+  // ============================================================================
+  // COMPOSITION MUSICALE SADIQUE & DIABOLIQUE (138 BPM, PHRYGIEN & TRITON)
+  // ============================================================================
+
+  makeDistortionCurve(amount = 75) {
+    const k = typeof amount === 'number' ? amount : 75;
+    const n_samples = 44100;
+    const curve = new Float32Array(n_samples);
+    const deg = Math.PI / 180;
+    for (let i = 0; i < n_samples; ++i) {
+      const x = (i * 2) / n_samples - 1;
+      curve[i] = ((3 + k) * x * 20 * deg) / (Math.PI + k * Math.abs(x));
+    }
+    return curve;
+  }
+
+  playSadisticCarnageTheme(intensity = 'TENSION') {
+    if (this.isMutedMusic || !this.ctx || this.isDestroyed) return;
+    this.resumeContext();
+
+    this.stopMusic();
+    this.musicPlaying = true;
+    this.currentTrack = 'SADISTIC_CARNAGE';
+    this.musicIntensity = intensity;
+
+    const tempo = 138;
+    const beatDuration = 60 / tempo;
+    const stepDuration = beatDuration / 4; // Double-croches
+    let step = 0;
+
+    // Basse 303 en Ré Phrygien avec le Triton du Diable (D2, Eb2, Ab2, A2)
+    const acidBassline = [
+      73.42, 73.42, 0, 77.78,
+      73.42, 0, 103.83, 73.42,
+      73.42, 73.42, 110.00, 0,
+      77.78, 103.83, 73.42, 65.41
+    ];
+
+    // Arpeggiator agressif dissonant
+    const sadisticArp = [
+      293.66, 311.13, 369.99, 415.30,
+      587.33, 415.30, 369.99, 311.13,
+      293.66, 415.30, 311.13, 369.99,
+      622.25, 587.33, 415.30, 311.13
+    ];
+
+    const distortionCurve = this.makeDistortionCurve(75);
+
+    const playStep = () => {
+      if (!this.musicPlaying || this.currentTrack !== 'SADISTIC_CARNAGE' || !this.ctx || this.isDestroyed) return;
+      const now = this.ctx.currentTime;
+      const dest = this.getMasterOutput();
+      const currentIntensity = this.musicIntensity || 'TENSION';
+
+      // 1. Basse Acide 303 Distordue
+      const bassFreq = acidBassline[step % acidBassline.length];
+      if (bassFreq > 0 && (currentIntensity !== 'CALM' || step % 2 === 0)) {
+        const osc = this.ctx.createOscillator();
+        const filter = this.ctx.createBiquadFilter();
+        const shaper = this.ctx.createWaveShaper();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(bassFreq, now);
+
+        filter.type = 'lowpass';
+        const cutoffStart = currentIntensity === 'COMBO' ? 2400 : 1200;
+        const cutoffEnd = currentIntensity === 'CALM' ? 120 : 180;
+        filter.frequency.setValueAtTime(cutoffStart, now);
+        filter.frequency.exponentialRampToValueAtTime(cutoffEnd, now + stepDuration * 0.85);
+        filter.Q.value = currentIntensity === 'COMBO' ? 9.5 : 6.5;
+
+        shaper.curve = distortionCurve;
+        shaper.oversample = '2x';
+
+        const bassVol = currentIntensity === 'COMBO' ? 0.26 : (currentIntensity === 'CALM' ? 0.14 : 0.20);
+        gain.gain.setValueAtTime(bassVol, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + stepDuration * 0.9);
+
+        osc.connect(filter);
+        filter.connect(shaper);
+        shaper.connect(gain);
+        gain.connect(dest);
+
+        osc.onended = () => this.cleanupNodes(osc, filter, shaper, gain);
+        osc.start(now);
+        osc.stop(now + stepDuration * 0.9);
+      }
+
+      // 2. Arpeggiator Dissonant
+      if (currentIntensity !== 'CALM') {
+        const arpFreq = sadisticArp[step % sadisticArp.length];
+        const arpOsc = this.ctx.createOscillator();
+        const arpFilter = this.ctx.createBiquadFilter();
+        const arpGain = this.ctx.createGain();
+
+        arpOsc.type = 'sawtooth';
+        arpOsc.frequency.setValueAtTime(arpFreq, now);
+
+        arpFilter.type = 'bandpass';
+        arpFilter.frequency.setValueAtTime(1600, now);
+        arpFilter.Q.value = 4.0;
+
+        const arpVol = currentIntensity === 'COMBO' ? 0.08 : 0.05;
+        arpGain.gain.setValueAtTime(arpVol, now);
+        arpGain.gain.exponentialRampToValueAtTime(0.001, now + stepDuration * 0.7);
+
+        arpOsc.connect(arpFilter);
+        arpFilter.connect(arpGain);
+        arpGain.connect(dest);
+
+        arpOsc.onended = () => this.cleanupNodes(arpOsc, arpFilter, arpGain);
+        arpOsc.start(now);
+        arpOsc.stop(now + stepDuration * 0.7);
+      }
+
+      // 3. Rythmique Industrielle
+      if (step % 4 === 0) {
+        if (currentIntensity !== 'CALM' || (step % 8 === 0)) {
+          this.playHeavyIndustrialKick(now, currentIntensity === 'COMBO');
+        }
+      }
+
+      if (step % 8 === 4 && currentIntensity !== 'CALM') {
+        this.playRazorIndustrialSnare(now, currentIntensity === 'COMBO');
+      }
+
+      if (step % 2 === 1 && currentIntensity !== 'CALM') {
+        this.playHiHat(now);
+      }
+
+      if (currentIntensity === 'COMBO' && step % 2 === 0) {
+        this.playHiHat(now);
+      }
+
+      step++;
+      this.musicTimer = setTimeout(playStep, stepDuration * 1000);
+    };
+
+    playStep();
+  }
+
+  setSadisticIntensity(level) {
+    this.musicIntensity = level;
+  }
+
+  playHeavyIndustrialKick(time, isOverdrive = false) {
+    if (!this.ctx || this.isDestroyed) return;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(isOverdrive ? 185 : 155, time);
+    osc.frequency.exponentialRampToValueAtTime(32, time + 0.16);
+
+    gain.gain.setValueAtTime(isOverdrive ? 0.48 : 0.38, time);
+    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.18);
+
+    osc.connect(gain);
+    gain.connect(this.getMasterOutput());
+
+    osc.onended = () => this.cleanupNodes(osc, gain);
+    osc.start(time);
+    osc.stop(time + 0.18);
+  }
+
+  playRazorIndustrialSnare(time, isOverdrive = false) {
+    if (!this.ctx || this.isDestroyed) return;
+    const bufferSize = Math.floor(this.ctx.sampleRate * 0.16);
+    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.28));
+    }
+
+    const noise = this.ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(isOverdrive ? 2200 : 1600, time);
+    filter.Q.value = 3.2;
+
+    const bodyOsc = this.ctx.createOscillator();
+    const bodyGain = this.ctx.createGain();
+    bodyOsc.type = 'triangle';
+    bodyOsc.frequency.setValueAtTime(210, time);
+    bodyOsc.frequency.exponentialRampToValueAtTime(80, time + 0.08);
+
+    const gain = this.ctx.createGain();
+    gain.gain.setValueAtTime(isOverdrive ? 0.32 : 0.24, time);
+    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.16);
+
+    noise.connect(filter);
+    filter.connect(gain);
+    bodyOsc.connect(bodyGain);
+    bodyGain.connect(gain);
+    gain.connect(this.getMasterOutput());
+
+    noise.onended = () => this.cleanupNodes(noise, filter, bodyOsc, bodyGain, gain);
+    noise.start(time);
+    bodyOsc.start(time);
+    bodyOsc.stop(time + 0.08);
+  }
+
+  // ============================================================================
+  // CRIS SADIQUES PROCÉDURAUX DE PIÉTONS
+  // ============================================================================
+
+  playSadisticScreamHorror() {
+    if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
+    this.resumeContext();
+    const now = this.ctx.currentTime;
+    const dest = this.getMasterOutput();
+
+    const modOsc = this.ctx.createOscillator();
+    const modGain = this.ctx.createGain();
+    modOsc.type = 'sine';
+    modOsc.frequency.setValueAtTime(22, now);
+    modGain.gain.setValueAtTime(140, now);
+
+    const carrierOsc = this.ctx.createOscillator();
+    carrierOsc.type = 'sawtooth';
+    carrierOsc.frequency.setValueAtTime(920, now);
+    carrierOsc.frequency.exponentialRampToValueAtTime(190, now + 0.45);
+
+    modOsc.connect(carrierOsc.frequency);
+
+    const formantFilter = this.ctx.createBiquadFilter();
+    formantFilter.type = 'bandpass';
+    formantFilter.frequency.setValueAtTime(1850, now);
+    formantFilter.frequency.linearRampToValueAtTime(850, now + 0.45);
+    formantFilter.Q.value = 4.5;
+
+    const gain = this.ctx.createGain();
+    gain.gain.setValueAtTime(0.48, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.48);
+
+    carrierOsc.connect(formantFilter);
+    formantFilter.connect(gain);
+    gain.connect(dest);
+
+    carrierOsc.onended = () => this.cleanupNodes(carrierOsc, modOsc, modGain, formantFilter, gain);
+    modOsc.start(now);
+    carrierOsc.start(now);
+    modOsc.stop(now + 0.48);
+    carrierOsc.stop(now + 0.48);
+  }
+
+  playSadisticScreamComic() {
+    if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
+    this.resumeContext();
+    const now = this.ctx.currentTime;
+    const dest = this.getMasterOutput();
+
+    const osc = this.ctx.createOscillator();
+    const filter = this.ctx.createBiquadFilter();
+    const gain = this.ctx.createGain();
+
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(950, now);
+    osc.frequency.linearRampToValueAtTime(1750, now + 0.09);
+    osc.frequency.exponentialRampToValueAtTime(520, now + 0.32);
+
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(2400, now);
+    filter.Q.value = 5.0;
+
+    gain.gain.setValueAtTime(0.42, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.32);
+
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(dest);
+
+    osc.onended = () => this.cleanupNodes(osc, filter, gain);
+    osc.start(now);
+    osc.stop(now + 0.32);
+  }
+
+  playSadisticScreamBurlesque() {
+    if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
+    this.resumeContext();
+    const now = this.ctx.currentTime;
+    const dest = this.getMasterOutput();
+
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(380, now);
+    osc.frequency.linearRampToValueAtTime(1250, now + 0.07);
+    osc.frequency.linearRampToValueAtTime(950, now + 0.16);
+    osc.frequency.exponentialRampToValueAtTime(110, now + 0.42);
+
+    gain.gain.setValueAtTime(0.45, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.42);
+
+    osc.connect(gain);
+    gain.connect(dest);
+
+    osc.onended = () => this.cleanupNodes(osc, gain);
+    osc.start(now);
+    osc.stop(now + 0.42);
+  }
+
+  playSadisticScream() {
+    const r = Math.random();
+    if (r < 0.4) {
+      this.playSadisticScreamHorror();
+    } else if (r < 0.72) {
+      this.playSadisticScreamComic();
+    } else {
+      this.playSadisticScreamBurlesque();
+    }
+  }
+
+  // ============================================================================
+  // EFFET DOS D'ÂNE CARTOON : "BOING-FWUMP"
+  // ============================================================================
+
+  playSpeedBumpBoingFwump(intensity = 1.0) {
+    if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
+    this.resumeContext();
+    const now = this.ctx.currentTime;
+    const dest = this.getMasterOutput();
+
+    // 1. Ressort Cartoon BOING
+    const springOsc = this.ctx.createOscillator();
+    const springGain = this.ctx.createGain();
+    const springFilter = this.ctx.createBiquadFilter();
+
+    springOsc.type = 'sine';
+    springOsc.frequency.setValueAtTime(130, now);
+    springOsc.frequency.exponentialRampToValueAtTime(540, now + 0.14);
+    springOsc.frequency.exponentialRampToValueAtTime(260, now + 0.32);
+
+    springFilter.type = 'bandpass';
+    springFilter.frequency.setValueAtTime(420, now);
+    springFilter.Q.value = 6.0;
+
+    springGain.gain.setValueAtTime(0.45 * intensity, now);
+    springGain.gain.exponentialRampToValueAtTime(0.001, now + 0.34);
+
+    springOsc.connect(springFilter);
+    springFilter.connect(springGain);
+    springGain.connect(dest);
+
+    springOsc.onended = () => this.cleanupNodes(springOsc, springFilter, springGain);
+    springOsc.start(now);
+    springOsc.stop(now + 0.34);
+
+    // 2. Écrasement Châssis FWUMP
+    const fwumpTime = now + 0.04;
+    const fwumpOsc = this.ctx.createOscillator();
+    const fwumpGain = this.ctx.createGain();
+
+    fwumpOsc.type = 'triangle';
+    fwumpOsc.frequency.setValueAtTime(95, fwumpTime);
+    fwumpOsc.frequency.exponentialRampToValueAtTime(26, fwumpTime + 0.22);
+
+    fwumpGain.gain.setValueAtTime(0.55 * intensity, fwumpTime);
+    fwumpGain.gain.exponentialRampToValueAtTime(0.001, fwumpTime + 0.24);
+
+    fwumpOsc.connect(fwumpGain);
+    fwumpGain.connect(dest);
+
+    fwumpOsc.onended = () => this.cleanupNodes(fwumpOsc, fwumpGain);
+    fwumpOsc.start(fwumpTime);
+    fwumpOsc.stop(fwumpTime + 0.24);
+  }
+
+  // ============================================================================
+  // ALERTE DE VERBALISATION FEU ROUGE
+  // ============================================================================
+
+  playRedLightViolation() {
+    if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
+    this.resumeContext();
+    const now = this.ctx.currentTime;
+    const dest = this.getMasterOutput();
+
+    // 1. Buzz strident d'infraction routière
+    const oscA = this.ctx.createOscillator();
+    const oscB = this.ctx.createOscillator();
+    const buzzGain = this.ctx.createGain();
+
+    oscA.type = 'sawtooth';
+    oscB.type = 'sawtooth';
+    oscA.frequency.setValueAtTime(440, now);
+    oscB.frequency.setValueAtTime(466.16, now);
+
+    buzzGain.gain.setValueAtTime(0.35, now);
+    buzzGain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+
+    oscA.connect(buzzGain);
+    oscB.connect(buzzGain);
+    buzzGain.connect(dest);
+
+    oscA.onended = () => this.cleanupNodes(oscA, oscB, buzzGain);
+    oscA.start(now);
+    oscB.start(now);
+    oscA.stop(now + 0.22);
+    oscB.stop(now + 0.22);
+
+    // 2. Double tut-tut de contravention
+    for (let i = 0; i < 2; i++) {
+      const beepTime = now + 0.24 + (i * 0.11);
+      const tutOsc = this.ctx.createOscillator();
+      const tutGain = this.ctx.createGain();
+
+      tutOsc.type = 'square';
+      tutOsc.frequency.setValueAtTime(1046.50, beepTime);
+
+      tutGain.gain.setValueAtTime(0.28, beepTime);
+      tutGain.gain.exponentialRampToValueAtTime(0.001, beepTime + 0.08);
+
+      tutOsc.connect(tutGain);
+      tutGain.connect(dest);
+
+      tutOsc.onended = () => this.cleanupNodes(tutOsc, tutGain);
+      tutOsc.start(beepTime);
+      tutOsc.stop(beepTime + 0.08);
+    }
+  }
+
   // Caisse enregistreuse dorée "Cha-Ching !" pour les pièces et bonus
   playCashRegister() {
     if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
@@ -2183,6 +2612,432 @@ export class SoundManager {
     noise.start(time);
   }
 
+  // ============================================================================
+  // COMPOSITION MUSICALE SADIQUE & DIABOLIQUE (138 BPM, PHRYGIEN & TRITON)
+  // ============================================================================
+
+  makeDistortionCurve(amount = 75) {
+    const k = typeof amount === 'number' ? amount : 75;
+    const n_samples = 44100;
+    const curve = new Float32Array(n_samples);
+    const deg = Math.PI / 180;
+    for (let i = 0; i < n_samples; ++i) {
+      const x = (i * 2) / n_samples - 1;
+      curve[i] = ((3 + k) * x * 20 * deg) / (Math.PI + k * Math.abs(x));
+    }
+    return curve;
+  }
+
+  playSadisticCarnageTheme(intensity = 'TENSION') {
+    if (this.isMutedMusic || !this.ctx || this.isDestroyed) return;
+    this.resumeContext();
+
+    this.stopMusic();
+    this.musicPlaying = true;
+    this.currentTrack = 'SADISTIC_CARNAGE';
+    this.musicIntensity = intensity;
+
+    const tempo = 138;
+    const beatDuration = 60 / tempo;
+    const stepDuration = beatDuration / 4; // Double-croches
+    let step = 0;
+
+    // Basse 303 en Ré Phrygien avec le Triton du Diable (D2, Eb2, Ab2, A2)
+    const acidBassline = [
+      73.42, 73.42, 0, 77.78,
+      73.42, 0, 103.83, 73.42,
+      73.42, 73.42, 110.00, 0,
+      77.78, 103.83, 73.42, 65.41
+    ];
+
+    // Arpeggiator agressif dissonant
+    const sadisticArp = [
+      293.66, 311.13, 369.99, 415.30,
+      587.33, 415.30, 369.99, 311.13,
+      293.66, 415.30, 311.13, 369.99,
+      622.25, 587.33, 415.30, 311.13
+    ];
+
+    const distortionCurve = this.makeDistortionCurve(75);
+
+    const playStep = () => {
+      if (!this.musicPlaying || this.currentTrack !== 'SADISTIC_CARNAGE' || !this.ctx || this.isDestroyed) return;
+      const now = this.ctx.currentTime;
+      const dest = this.getMasterOutput();
+      const currentIntensity = this.musicIntensity || 'TENSION';
+
+      // 1. Basse Acide 303 Distordue
+      const bassFreq = acidBassline[step % acidBassline.length];
+      if (bassFreq > 0 && (currentIntensity !== 'CALM' || step % 2 === 0)) {
+        const osc = this.ctx.createOscillator();
+        const filter = this.ctx.createBiquadFilter();
+        const shaper = this.ctx.createWaveShaper();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(bassFreq, now);
+
+        filter.type = 'lowpass';
+        const cutoffStart = currentIntensity === 'COMBO' ? 2400 : 1200;
+        const cutoffEnd = currentIntensity === 'CALM' ? 120 : 180;
+        filter.frequency.setValueAtTime(cutoffStart, now);
+        filter.frequency.exponentialRampToValueAtTime(cutoffEnd, now + stepDuration * 0.85);
+        filter.Q.value = currentIntensity === 'COMBO' ? 9.5 : 6.5;
+
+        shaper.curve = distortionCurve;
+        shaper.oversample = '2x';
+
+        const bassVol = currentIntensity === 'COMBO' ? 0.26 : (currentIntensity === 'CALM' ? 0.14 : 0.20);
+        gain.gain.setValueAtTime(bassVol, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + stepDuration * 0.9);
+
+        osc.connect(filter);
+        filter.connect(shaper);
+        shaper.connect(gain);
+        gain.connect(dest);
+
+        osc.onended = () => this.cleanupNodes(osc, filter, shaper, gain);
+        osc.start(now);
+        osc.stop(now + stepDuration * 0.9);
+      }
+
+      // 2. Arpeggiator Dissonant
+      if (currentIntensity !== 'CALM') {
+        const arpFreq = sadisticArp[step % sadisticArp.length];
+        const arpOsc = this.ctx.createOscillator();
+        const arpFilter = this.ctx.createBiquadFilter();
+        const arpGain = this.ctx.createGain();
+
+        arpOsc.type = 'sawtooth';
+        arpOsc.frequency.setValueAtTime(arpFreq, now);
+
+        arpFilter.type = 'bandpass';
+        arpFilter.frequency.setValueAtTime(1600, now);
+        arpFilter.Q.value = 4.0;
+
+        const arpVol = currentIntensity === 'COMBO' ? 0.08 : 0.05;
+        arpGain.gain.setValueAtTime(arpVol, now);
+        arpGain.gain.exponentialRampToValueAtTime(0.001, now + stepDuration * 0.7);
+
+        arpOsc.connect(arpFilter);
+        arpFilter.connect(arpGain);
+        arpGain.connect(dest);
+
+        arpOsc.onended = () => this.cleanupNodes(arpOsc, arpFilter, arpGain);
+        arpOsc.start(now);
+        arpOsc.stop(now + stepDuration * 0.7);
+      }
+
+      // 3. Rythmique Industrielle
+      if (step % 4 === 0) {
+        if (currentIntensity !== 'CALM' || (step % 8 === 0)) {
+          this.playHeavyIndustrialKick(now, currentIntensity === 'COMBO');
+        }
+      }
+
+      if (step % 8 === 4 && currentIntensity !== 'CALM') {
+        this.playRazorIndustrialSnare(now, currentIntensity === 'COMBO');
+      }
+
+      if (step % 2 === 1 && currentIntensity !== 'CALM') {
+        this.playHiHat(now);
+      }
+
+      if (currentIntensity === 'COMBO' && step % 2 === 0) {
+        this.playHiHat(now);
+      }
+
+      step++;
+      this.musicTimer = setTimeout(playStep, stepDuration * 1000);
+    };
+
+    playStep();
+  }
+
+  setSadisticIntensity(level) {
+    this.musicIntensity = level;
+  }
+
+  playHeavyIndustrialKick(time, isOverdrive = false) {
+    if (!this.ctx || this.isDestroyed) return;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(isOverdrive ? 185 : 155, time);
+    osc.frequency.exponentialRampToValueAtTime(32, time + 0.16);
+
+    gain.gain.setValueAtTime(isOverdrive ? 0.48 : 0.38, time);
+    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.18);
+
+    osc.connect(gain);
+    gain.connect(this.getMasterOutput());
+
+    osc.onended = () => this.cleanupNodes(osc, gain);
+    osc.start(time);
+    osc.stop(time + 0.18);
+  }
+
+  playRazorIndustrialSnare(time, isOverdrive = false) {
+    if (!this.ctx || this.isDestroyed) return;
+    const bufferSize = Math.floor(this.ctx.sampleRate * 0.16);
+    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.28));
+    }
+
+    const noise = this.ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(isOverdrive ? 2200 : 1600, time);
+    filter.Q.value = 3.2;
+
+    const bodyOsc = this.ctx.createOscillator();
+    const bodyGain = this.ctx.createGain();
+    bodyOsc.type = 'triangle';
+    bodyOsc.frequency.setValueAtTime(210, time);
+    bodyOsc.frequency.exponentialRampToValueAtTime(80, time + 0.08);
+
+    const gain = this.ctx.createGain();
+    gain.gain.setValueAtTime(isOverdrive ? 0.32 : 0.24, time);
+    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.16);
+
+    noise.connect(filter);
+    filter.connect(gain);
+    bodyOsc.connect(bodyGain);
+    bodyGain.connect(gain);
+    gain.connect(this.getMasterOutput());
+
+    noise.onended = () => this.cleanupNodes(noise, filter, bodyOsc, bodyGain, gain);
+    noise.start(time);
+    bodyOsc.start(time);
+    bodyOsc.stop(time + 0.08);
+  }
+
+  // ============================================================================
+  // CRIS SADIQUES PROCÉDURAUX DE PIÉTONS
+  // ============================================================================
+
+  playSadisticScreamHorror() {
+    if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
+    this.resumeContext();
+    const now = this.ctx.currentTime;
+    const dest = this.getMasterOutput();
+
+    const modOsc = this.ctx.createOscillator();
+    const modGain = this.ctx.createGain();
+    modOsc.type = 'sine';
+    modOsc.frequency.setValueAtTime(22, now);
+    modGain.gain.setValueAtTime(140, now);
+
+    const carrierOsc = this.ctx.createOscillator();
+    carrierOsc.type = 'sawtooth';
+    carrierOsc.frequency.setValueAtTime(920, now);
+    carrierOsc.frequency.exponentialRampToValueAtTime(190, now + 0.45);
+
+    modOsc.connect(carrierOsc.frequency);
+
+    const formantFilter = this.ctx.createBiquadFilter();
+    formantFilter.type = 'bandpass';
+    formantFilter.frequency.setValueAtTime(1850, now);
+    formantFilter.frequency.linearRampToValueAtTime(850, now + 0.45);
+    formantFilter.Q.value = 4.5;
+
+    const gain = this.ctx.createGain();
+    gain.gain.setValueAtTime(0.48, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.48);
+
+    carrierOsc.connect(formantFilter);
+    formantFilter.connect(gain);
+    gain.connect(dest);
+
+    carrierOsc.onended = () => this.cleanupNodes(carrierOsc, modOsc, modGain, formantFilter, gain);
+    modOsc.start(now);
+    carrierOsc.start(now);
+    modOsc.stop(now + 0.48);
+    carrierOsc.stop(now + 0.48);
+  }
+
+  playSadisticScreamComic() {
+    if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
+    this.resumeContext();
+    const now = this.ctx.currentTime;
+    const dest = this.getMasterOutput();
+
+    const osc = this.ctx.createOscillator();
+    const filter = this.ctx.createBiquadFilter();
+    const gain = this.ctx.createGain();
+
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(950, now);
+    osc.frequency.linearRampToValueAtTime(1750, now + 0.09);
+    osc.frequency.exponentialRampToValueAtTime(520, now + 0.32);
+
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(2400, now);
+    filter.Q.value = 5.0;
+
+    gain.gain.setValueAtTime(0.42, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.32);
+
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(dest);
+
+    osc.onended = () => this.cleanupNodes(osc, filter, gain);
+    osc.start(now);
+    osc.stop(now + 0.32);
+  }
+
+  playSadisticScreamBurlesque() {
+    if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
+    this.resumeContext();
+    const now = this.ctx.currentTime;
+    const dest = this.getMasterOutput();
+
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(380, now);
+    osc.frequency.linearRampToValueAtTime(1250, now + 0.07);
+    osc.frequency.linearRampToValueAtTime(950, now + 0.16);
+    osc.frequency.exponentialRampToValueAtTime(110, now + 0.42);
+
+    gain.gain.setValueAtTime(0.45, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.42);
+
+    osc.connect(gain);
+    gain.connect(dest);
+
+    osc.onended = () => this.cleanupNodes(osc, gain);
+    osc.start(now);
+    osc.stop(now + 0.42);
+  }
+
+  playSadisticScream() {
+    const r = Math.random();
+    if (r < 0.4) {
+      this.playSadisticScreamHorror();
+    } else if (r < 0.72) {
+      this.playSadisticScreamComic();
+    } else {
+      this.playSadisticScreamBurlesque();
+    }
+  }
+
+  // ============================================================================
+  // EFFET DOS D'ÂNE CARTOON : "BOING-FWUMP"
+  // ============================================================================
+
+  playSpeedBumpBoingFwump(intensity = 1.0) {
+    if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
+    this.resumeContext();
+    const now = this.ctx.currentTime;
+    const dest = this.getMasterOutput();
+
+    // 1. Ressort Cartoon BOING
+    const springOsc = this.ctx.createOscillator();
+    const springGain = this.ctx.createGain();
+    const springFilter = this.ctx.createBiquadFilter();
+
+    springOsc.type = 'sine';
+    springOsc.frequency.setValueAtTime(130, now);
+    springOsc.frequency.exponentialRampToValueAtTime(540, now + 0.14);
+    springOsc.frequency.exponentialRampToValueAtTime(260, now + 0.32);
+
+    springFilter.type = 'bandpass';
+    springFilter.frequency.setValueAtTime(420, now);
+    springFilter.Q.value = 6.0;
+
+    springGain.gain.setValueAtTime(0.45 * intensity, now);
+    springGain.gain.exponentialRampToValueAtTime(0.001, now + 0.34);
+
+    springOsc.connect(springFilter);
+    springFilter.connect(springGain);
+    springGain.connect(dest);
+
+    springOsc.onended = () => this.cleanupNodes(springOsc, springFilter, springGain);
+    springOsc.start(now);
+    springOsc.stop(now + 0.34);
+
+    // 2. Écrasement Châssis FWUMP
+    const fwumpTime = now + 0.04;
+    const fwumpOsc = this.ctx.createOscillator();
+    const fwumpGain = this.ctx.createGain();
+
+    fwumpOsc.type = 'triangle';
+    fwumpOsc.frequency.setValueAtTime(95, fwumpTime);
+    fwumpOsc.frequency.exponentialRampToValueAtTime(26, fwumpTime + 0.22);
+
+    fwumpGain.gain.setValueAtTime(0.55 * intensity, fwumpTime);
+    fwumpGain.gain.exponentialRampToValueAtTime(0.001, fwumpTime + 0.24);
+
+    fwumpOsc.connect(fwumpGain);
+    fwumpGain.connect(dest);
+
+    fwumpOsc.onended = () => this.cleanupNodes(fwumpOsc, fwumpGain);
+    fwumpOsc.start(fwumpTime);
+    fwumpOsc.stop(fwumpTime + 0.24);
+  }
+
+  // ============================================================================
+  // ALERTE DE VERBALISATION FEU ROUGE
+  // ============================================================================
+
+  playRedLightViolation() {
+    if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
+    this.resumeContext();
+    const now = this.ctx.currentTime;
+    const dest = this.getMasterOutput();
+
+    // 1. Buzz strident d'infraction routière
+    const oscA = this.ctx.createOscillator();
+    const oscB = this.ctx.createOscillator();
+    const buzzGain = this.ctx.createGain();
+
+    oscA.type = 'sawtooth';
+    oscB.type = 'sawtooth';
+    oscA.frequency.setValueAtTime(440, now);
+    oscB.frequency.setValueAtTime(466.16, now);
+
+    buzzGain.gain.setValueAtTime(0.35, now);
+    buzzGain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+
+    oscA.connect(buzzGain);
+    oscB.connect(buzzGain);
+    buzzGain.connect(dest);
+
+    oscA.onended = () => this.cleanupNodes(oscA, oscB, buzzGain);
+    oscA.start(now);
+    oscB.start(now);
+    oscA.stop(now + 0.22);
+    oscB.stop(now + 0.22);
+
+    // 2. Double tut-tut de contravention
+    for (let i = 0; i < 2; i++) {
+      const beepTime = now + 0.24 + (i * 0.11);
+      const tutOsc = this.ctx.createOscillator();
+      const tutGain = this.ctx.createGain();
+
+      tutOsc.type = 'square';
+      tutOsc.frequency.setValueAtTime(1046.50, beepTime);
+
+      tutGain.gain.setValueAtTime(0.28, beepTime);
+      tutGain.gain.exponentialRampToValueAtTime(0.001, beepTime + 0.08);
+
+      tutOsc.connect(tutGain);
+      tutGain.connect(dest);
+
+      tutOsc.onended = () => this.cleanupNodes(tutOsc, tutGain);
+      tutOsc.start(beepTime);
+      tutOsc.stop(beepTime + 0.08);
+    }
+  }
+
   // Rire démoniaque et sadique lors des massacres
   playEvilLaugh() {
     if (!this.ctx || this.isMutedSfx || this.isDestroyed) return;
@@ -2262,6 +3117,432 @@ export class SoundManager {
 
     noise.onended = () => this.cleanupNodes(noise, filter, gain);
     noise.start(time);
+  }
+
+  // ============================================================================
+  // COMPOSITION MUSICALE SADIQUE & DIABOLIQUE (138 BPM, PHRYGIEN & TRITON)
+  // ============================================================================
+
+  makeDistortionCurve(amount = 75) {
+    const k = typeof amount === 'number' ? amount : 75;
+    const n_samples = 44100;
+    const curve = new Float32Array(n_samples);
+    const deg = Math.PI / 180;
+    for (let i = 0; i < n_samples; ++i) {
+      const x = (i * 2) / n_samples - 1;
+      curve[i] = ((3 + k) * x * 20 * deg) / (Math.PI + k * Math.abs(x));
+    }
+    return curve;
+  }
+
+  playSadisticCarnageTheme(intensity = 'TENSION') {
+    if (this.isMutedMusic || !this.ctx || this.isDestroyed) return;
+    this.resumeContext();
+
+    this.stopMusic();
+    this.musicPlaying = true;
+    this.currentTrack = 'SADISTIC_CARNAGE';
+    this.musicIntensity = intensity;
+
+    const tempo = 138;
+    const beatDuration = 60 / tempo;
+    const stepDuration = beatDuration / 4; // Double-croches
+    let step = 0;
+
+    // Basse 303 en Ré Phrygien avec le Triton du Diable (D2, Eb2, Ab2, A2)
+    const acidBassline = [
+      73.42, 73.42, 0, 77.78,
+      73.42, 0, 103.83, 73.42,
+      73.42, 73.42, 110.00, 0,
+      77.78, 103.83, 73.42, 65.41
+    ];
+
+    // Arpeggiator agressif dissonant
+    const sadisticArp = [
+      293.66, 311.13, 369.99, 415.30,
+      587.33, 415.30, 369.99, 311.13,
+      293.66, 415.30, 311.13, 369.99,
+      622.25, 587.33, 415.30, 311.13
+    ];
+
+    const distortionCurve = this.makeDistortionCurve(75);
+
+    const playStep = () => {
+      if (!this.musicPlaying || this.currentTrack !== 'SADISTIC_CARNAGE' || !this.ctx || this.isDestroyed) return;
+      const now = this.ctx.currentTime;
+      const dest = this.getMasterOutput();
+      const currentIntensity = this.musicIntensity || 'TENSION';
+
+      // 1. Basse Acide 303 Distordue
+      const bassFreq = acidBassline[step % acidBassline.length];
+      if (bassFreq > 0 && (currentIntensity !== 'CALM' || step % 2 === 0)) {
+        const osc = this.ctx.createOscillator();
+        const filter = this.ctx.createBiquadFilter();
+        const shaper = this.ctx.createWaveShaper();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(bassFreq, now);
+
+        filter.type = 'lowpass';
+        const cutoffStart = currentIntensity === 'COMBO' ? 2400 : 1200;
+        const cutoffEnd = currentIntensity === 'CALM' ? 120 : 180;
+        filter.frequency.setValueAtTime(cutoffStart, now);
+        filter.frequency.exponentialRampToValueAtTime(cutoffEnd, now + stepDuration * 0.85);
+        filter.Q.value = currentIntensity === 'COMBO' ? 9.5 : 6.5;
+
+        shaper.curve = distortionCurve;
+        shaper.oversample = '2x';
+
+        const bassVol = currentIntensity === 'COMBO' ? 0.26 : (currentIntensity === 'CALM' ? 0.14 : 0.20);
+        gain.gain.setValueAtTime(bassVol, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + stepDuration * 0.9);
+
+        osc.connect(filter);
+        filter.connect(shaper);
+        shaper.connect(gain);
+        gain.connect(dest);
+
+        osc.onended = () => this.cleanupNodes(osc, filter, shaper, gain);
+        osc.start(now);
+        osc.stop(now + stepDuration * 0.9);
+      }
+
+      // 2. Arpeggiator Dissonant
+      if (currentIntensity !== 'CALM') {
+        const arpFreq = sadisticArp[step % sadisticArp.length];
+        const arpOsc = this.ctx.createOscillator();
+        const arpFilter = this.ctx.createBiquadFilter();
+        const arpGain = this.ctx.createGain();
+
+        arpOsc.type = 'sawtooth';
+        arpOsc.frequency.setValueAtTime(arpFreq, now);
+
+        arpFilter.type = 'bandpass';
+        arpFilter.frequency.setValueAtTime(1600, now);
+        arpFilter.Q.value = 4.0;
+
+        const arpVol = currentIntensity === 'COMBO' ? 0.08 : 0.05;
+        arpGain.gain.setValueAtTime(arpVol, now);
+        arpGain.gain.exponentialRampToValueAtTime(0.001, now + stepDuration * 0.7);
+
+        arpOsc.connect(arpFilter);
+        arpFilter.connect(arpGain);
+        arpGain.connect(dest);
+
+        arpOsc.onended = () => this.cleanupNodes(arpOsc, arpFilter, arpGain);
+        arpOsc.start(now);
+        arpOsc.stop(now + stepDuration * 0.7);
+      }
+
+      // 3. Rythmique Industrielle
+      if (step % 4 === 0) {
+        if (currentIntensity !== 'CALM' || (step % 8 === 0)) {
+          this.playHeavyIndustrialKick(now, currentIntensity === 'COMBO');
+        }
+      }
+
+      if (step % 8 === 4 && currentIntensity !== 'CALM') {
+        this.playRazorIndustrialSnare(now, currentIntensity === 'COMBO');
+      }
+
+      if (step % 2 === 1 && currentIntensity !== 'CALM') {
+        this.playHiHat(now);
+      }
+
+      if (currentIntensity === 'COMBO' && step % 2 === 0) {
+        this.playHiHat(now);
+      }
+
+      step++;
+      this.musicTimer = setTimeout(playStep, stepDuration * 1000);
+    };
+
+    playStep();
+  }
+
+  setSadisticIntensity(level) {
+    this.musicIntensity = level;
+  }
+
+  playHeavyIndustrialKick(time, isOverdrive = false) {
+    if (!this.ctx || this.isDestroyed) return;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(isOverdrive ? 185 : 155, time);
+    osc.frequency.exponentialRampToValueAtTime(32, time + 0.16);
+
+    gain.gain.setValueAtTime(isOverdrive ? 0.48 : 0.38, time);
+    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.18);
+
+    osc.connect(gain);
+    gain.connect(this.getMasterOutput());
+
+    osc.onended = () => this.cleanupNodes(osc, gain);
+    osc.start(time);
+    osc.stop(time + 0.18);
+  }
+
+  playRazorIndustrialSnare(time, isOverdrive = false) {
+    if (!this.ctx || this.isDestroyed) return;
+    const bufferSize = Math.floor(this.ctx.sampleRate * 0.16);
+    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.28));
+    }
+
+    const noise = this.ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(isOverdrive ? 2200 : 1600, time);
+    filter.Q.value = 3.2;
+
+    const bodyOsc = this.ctx.createOscillator();
+    const bodyGain = this.ctx.createGain();
+    bodyOsc.type = 'triangle';
+    bodyOsc.frequency.setValueAtTime(210, time);
+    bodyOsc.frequency.exponentialRampToValueAtTime(80, time + 0.08);
+
+    const gain = this.ctx.createGain();
+    gain.gain.setValueAtTime(isOverdrive ? 0.32 : 0.24, time);
+    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.16);
+
+    noise.connect(filter);
+    filter.connect(gain);
+    bodyOsc.connect(bodyGain);
+    bodyGain.connect(gain);
+    gain.connect(this.getMasterOutput());
+
+    noise.onended = () => this.cleanupNodes(noise, filter, bodyOsc, bodyGain, gain);
+    noise.start(time);
+    bodyOsc.start(time);
+    bodyOsc.stop(time + 0.08);
+  }
+
+  // ============================================================================
+  // CRIS SADIQUES PROCÉDURAUX DE PIÉTONS
+  // ============================================================================
+
+  playSadisticScreamHorror() {
+    if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
+    this.resumeContext();
+    const now = this.ctx.currentTime;
+    const dest = this.getMasterOutput();
+
+    const modOsc = this.ctx.createOscillator();
+    const modGain = this.ctx.createGain();
+    modOsc.type = 'sine';
+    modOsc.frequency.setValueAtTime(22, now);
+    modGain.gain.setValueAtTime(140, now);
+
+    const carrierOsc = this.ctx.createOscillator();
+    carrierOsc.type = 'sawtooth';
+    carrierOsc.frequency.setValueAtTime(920, now);
+    carrierOsc.frequency.exponentialRampToValueAtTime(190, now + 0.45);
+
+    modOsc.connect(carrierOsc.frequency);
+
+    const formantFilter = this.ctx.createBiquadFilter();
+    formantFilter.type = 'bandpass';
+    formantFilter.frequency.setValueAtTime(1850, now);
+    formantFilter.frequency.linearRampToValueAtTime(850, now + 0.45);
+    formantFilter.Q.value = 4.5;
+
+    const gain = this.ctx.createGain();
+    gain.gain.setValueAtTime(0.48, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.48);
+
+    carrierOsc.connect(formantFilter);
+    formantFilter.connect(gain);
+    gain.connect(dest);
+
+    carrierOsc.onended = () => this.cleanupNodes(carrierOsc, modOsc, modGain, formantFilter, gain);
+    modOsc.start(now);
+    carrierOsc.start(now);
+    modOsc.stop(now + 0.48);
+    carrierOsc.stop(now + 0.48);
+  }
+
+  playSadisticScreamComic() {
+    if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
+    this.resumeContext();
+    const now = this.ctx.currentTime;
+    const dest = this.getMasterOutput();
+
+    const osc = this.ctx.createOscillator();
+    const filter = this.ctx.createBiquadFilter();
+    const gain = this.ctx.createGain();
+
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(950, now);
+    osc.frequency.linearRampToValueAtTime(1750, now + 0.09);
+    osc.frequency.exponentialRampToValueAtTime(520, now + 0.32);
+
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(2400, now);
+    filter.Q.value = 5.0;
+
+    gain.gain.setValueAtTime(0.42, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.32);
+
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(dest);
+
+    osc.onended = () => this.cleanupNodes(osc, filter, gain);
+    osc.start(now);
+    osc.stop(now + 0.32);
+  }
+
+  playSadisticScreamBurlesque() {
+    if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
+    this.resumeContext();
+    const now = this.ctx.currentTime;
+    const dest = this.getMasterOutput();
+
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(380, now);
+    osc.frequency.linearRampToValueAtTime(1250, now + 0.07);
+    osc.frequency.linearRampToValueAtTime(950, now + 0.16);
+    osc.frequency.exponentialRampToValueAtTime(110, now + 0.42);
+
+    gain.gain.setValueAtTime(0.45, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.42);
+
+    osc.connect(gain);
+    gain.connect(dest);
+
+    osc.onended = () => this.cleanupNodes(osc, gain);
+    osc.start(now);
+    osc.stop(now + 0.42);
+  }
+
+  playSadisticScream() {
+    const r = Math.random();
+    if (r < 0.4) {
+      this.playSadisticScreamHorror();
+    } else if (r < 0.72) {
+      this.playSadisticScreamComic();
+    } else {
+      this.playSadisticScreamBurlesque();
+    }
+  }
+
+  // ============================================================================
+  // EFFET DOS D'ÂNE CARTOON : "BOING-FWUMP"
+  // ============================================================================
+
+  playSpeedBumpBoingFwump(intensity = 1.0) {
+    if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
+    this.resumeContext();
+    const now = this.ctx.currentTime;
+    const dest = this.getMasterOutput();
+
+    // 1. Ressort Cartoon BOING
+    const springOsc = this.ctx.createOscillator();
+    const springGain = this.ctx.createGain();
+    const springFilter = this.ctx.createBiquadFilter();
+
+    springOsc.type = 'sine';
+    springOsc.frequency.setValueAtTime(130, now);
+    springOsc.frequency.exponentialRampToValueAtTime(540, now + 0.14);
+    springOsc.frequency.exponentialRampToValueAtTime(260, now + 0.32);
+
+    springFilter.type = 'bandpass';
+    springFilter.frequency.setValueAtTime(420, now);
+    springFilter.Q.value = 6.0;
+
+    springGain.gain.setValueAtTime(0.45 * intensity, now);
+    springGain.gain.exponentialRampToValueAtTime(0.001, now + 0.34);
+
+    springOsc.connect(springFilter);
+    springFilter.connect(springGain);
+    springGain.connect(dest);
+
+    springOsc.onended = () => this.cleanupNodes(springOsc, springFilter, springGain);
+    springOsc.start(now);
+    springOsc.stop(now + 0.34);
+
+    // 2. Écrasement Châssis FWUMP
+    const fwumpTime = now + 0.04;
+    const fwumpOsc = this.ctx.createOscillator();
+    const fwumpGain = this.ctx.createGain();
+
+    fwumpOsc.type = 'triangle';
+    fwumpOsc.frequency.setValueAtTime(95, fwumpTime);
+    fwumpOsc.frequency.exponentialRampToValueAtTime(26, fwumpTime + 0.22);
+
+    fwumpGain.gain.setValueAtTime(0.55 * intensity, fwumpTime);
+    fwumpGain.gain.exponentialRampToValueAtTime(0.001, fwumpTime + 0.24);
+
+    fwumpOsc.connect(fwumpGain);
+    fwumpGain.connect(dest);
+
+    fwumpOsc.onended = () => this.cleanupNodes(fwumpOsc, fwumpGain);
+    fwumpOsc.start(fwumpTime);
+    fwumpOsc.stop(fwumpTime + 0.24);
+  }
+
+  // ============================================================================
+  // ALERTE DE VERBALISATION FEU ROUGE
+  // ============================================================================
+
+  playRedLightViolation() {
+    if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
+    this.resumeContext();
+    const now = this.ctx.currentTime;
+    const dest = this.getMasterOutput();
+
+    // 1. Buzz strident d'infraction routière
+    const oscA = this.ctx.createOscillator();
+    const oscB = this.ctx.createOscillator();
+    const buzzGain = this.ctx.createGain();
+
+    oscA.type = 'sawtooth';
+    oscB.type = 'sawtooth';
+    oscA.frequency.setValueAtTime(440, now);
+    oscB.frequency.setValueAtTime(466.16, now);
+
+    buzzGain.gain.setValueAtTime(0.35, now);
+    buzzGain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+
+    oscA.connect(buzzGain);
+    oscB.connect(buzzGain);
+    buzzGain.connect(dest);
+
+    oscA.onended = () => this.cleanupNodes(oscA, oscB, buzzGain);
+    oscA.start(now);
+    oscB.start(now);
+    oscA.stop(now + 0.22);
+    oscB.stop(now + 0.22);
+
+    // 2. Double tut-tut de contravention
+    for (let i = 0; i < 2; i++) {
+      const beepTime = now + 0.24 + (i * 0.11);
+      const tutOsc = this.ctx.createOscillator();
+      const tutGain = this.ctx.createGain();
+
+      tutOsc.type = 'square';
+      tutOsc.frequency.setValueAtTime(1046.50, beepTime);
+
+      tutGain.gain.setValueAtTime(0.28, beepTime);
+      tutGain.gain.exponentialRampToValueAtTime(0.001, beepTime + 0.08);
+
+      tutOsc.connect(tutGain);
+      tutGain.connect(dest);
+
+      tutOsc.onended = () => this.cleanupNodes(tutOsc, tutGain);
+      tutOsc.start(beepTime);
+      tutOsc.stop(beepTime + 0.08);
+    }
   }
 
   stopMusic() {

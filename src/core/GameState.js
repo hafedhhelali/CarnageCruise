@@ -1406,7 +1406,8 @@ export class GameState {
     const totalAdded = basePoints * this.combo;
     this.score += totalAdded;
 
-    const coinsFromHit = Math.floor(totalAdded / 35) + 1;
+    // Barème équilibré et gratifiant : 1 pièce par cible, 2 pièces si multi-kill / combo >= 3
+    const coinsFromHit = (this.combo >= 3 ? 2 : 1);
     this.coinsEarned += coinsFromHit;
 
     // Chaque interaction réussie booste la jauge de Nitro (+12%)

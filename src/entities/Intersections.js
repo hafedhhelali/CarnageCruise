@@ -594,7 +594,7 @@ export class IntersectionManager {
     }
   }
 
-  update(delta, playerZ, bikeX, bikeSpeed, onCollisionWithCar, onStopAtRedLightBonus, roadCurveFunc = null, roadAngleFunc = null, onApproachingRedLight = null) {
+  update(delta, playerZ, bikeX, bikeSpeed, onRedLightViolation, onStopAtRedLightBonus, roadCurveFunc = null, roadAngleFunc = null, onApproachingRedLight = null) {
     // Génération continue des carrefours réalistes
     if (this.nextSpawnZ < playerZ + 260) {
       this.spawnIntersection(this.nextSpawnZ, roadCurveFunc, roadAngleFunc);
@@ -667,16 +667,21 @@ export class IntersectionManager {
         this.setLightState(inter, 'GREEN');
       }
 
+      // Si le joueur franchit le feu rouge sans arrêt complet préalable : VERBALISATION & RÉDUCTION DU SCORE !
+      if (inter.state === 'RED' && !inter.stoppedProperly && !inter.ticketIssued && distToPlayer < -1.0 && distToPlayer > -18.0) {
+        inter.ticketIssued = true;
+        if (onRedLightViolation) {
+          onRedLightViolation(inter.streetName);
+        }
+      }
+
       // Nettoyage des carrefours dépassés
       if (inter.z < playerZ - 90) {
         this.container.remove(inter.group);
       }
     });
 
-    // 4. Déplacement des véhicules transversaux et détection de collision
-    const COLLISION_RADIUS_Z = 2.4;
-    const COLLISION_RADIUS_X = 2.3;
-
+    // 4. Déplacement des véhicules transversaux pour l'ambiance urbaine (SANS ACCIDENT AU CROISEMENT)
     for (let i = this.crossingCars.length - 1; i >= 0; i--) {
       const car = this.crossingCars[i];
       if (!car.active) continue;
@@ -690,16 +695,8 @@ export class IntersectionManager {
         });
       }
 
-      const distX = Math.abs(car.mesh.position.x - bikeX);
-      const distZ = Math.abs(car.z - playerZ);
-
-      // Collision burlesque percutante si le joueur a grillé le feu rouge !
-      if (distZ < COLLISION_RADIUS_Z && distX < COLLISION_RADIUS_X) {
-        car.active = false;
-        if (onCollisionWithCar) {
-          onCollisionWithCar(car);
-        }
-      }
+      // Remarque : Collision de croisement supprimée conformément à la directive ("Enlève l'accident croisement")
+      // Les voitures traversent pour l'animation sans jamais percuter ni bloquer le joueur.
 
       // Supprimer quand la voiture sort du champ
       if (Math.abs(car.mesh.position.x) > 42) {

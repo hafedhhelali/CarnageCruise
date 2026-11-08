@@ -317,8 +317,7 @@ export class UIManager {
 
     splash.querySelector('#splash-gift-coins')?.addEventListener('click', () => {
       adManager.showRewardedAd('COINS', () => {
-        storage.addCoins(20);
-        soundManager.playCashRegister();
+        this.showCoinsCollectedNotification(20, 'CADEAU SPONSOR GOOGLE ADS', '+20 Pièces d\'or offertes !');
         this.render();
       });
     });
@@ -1018,6 +1017,7 @@ export class UIManager {
     if (headerAdBtn) {
       headerAdBtn.addEventListener('click', () => {
         adManager.showRewardedAd('COINS', () => {
+          this.showCoinsCollectedNotification(20, 'BONUS SPONSOR GOOGLE ADS', '+20 Pièces d\'or offertes !');
           this.render();
         });
       });
@@ -1222,6 +1222,7 @@ export class UIManager {
     if (cityAdBtn) {
       cityAdBtn.addEventListener('click', () => {
         adManager.showRewardedAd('COINS', () => {
+          this.showCoinsCollectedNotification(20, 'BONUS SPONSOR GOOGLE ADS', '+20 Pièces d\'or offertes !');
           this.render();
         });
       });
@@ -2561,6 +2562,7 @@ export class UIManager {
     if (garageAdBtn) {
       garageAdBtn.addEventListener('click', () => {
         adManager.showRewardedAd('COINS', () => {
+          this.showCoinsCollectedNotification(20, 'BONUS GARAGE GOOGLE ADS', '+20 Pièces d\'or offertes !');
           this.render();
         });
       });
@@ -4354,7 +4356,7 @@ export class UIManager {
       tycoonManager.collectOfflineEarnings(earnings, false);
       overlay.remove();
       this.activeModals = this.activeModals.filter(m => m !== overlay);
-      this.showToastUnlock({ name: `💰 +${earnings.cashEarned} Pièces encaissées !` });
+      this.showCoinsCollectedNotification(earnings.cashEarned, 'CRÉDITS NOIRS ENCAISSÉS !', `+${earnings.killsEarned} cibles sabotées`);
     });
 
     overlay.querySelector('#btn-offline-double')?.addEventListener('click', () => {
@@ -4364,7 +4366,7 @@ export class UIManager {
         tycoonManager.collectOfflineEarnings(earnings, true);
         overlay.remove();
         this.activeModals = this.activeModals.filter(m => m !== overlay);
-        this.showToastUnlock({ name: `🔥 DOUBLÉ : +${earnings.cashEarned * 2} Pièces & +${earnings.killsEarned * 2} Cibles !` });
+        this.showCoinsCollectedNotification(earnings.cashEarned * 2, '🔥 BUTIN DOUBLÉ PAR SPONSOR !', `+${earnings.killsEarned * 2} cibles sabotées`);
       });
     });
 
@@ -4377,6 +4379,72 @@ export class UIManager {
         { scale: 1.0, opacity: 1, y: 0, duration: 0.35, ease: "back.out(1.8)" }
       );
     }
+  }
+
+  showCoinsCollectedNotification(coins, title = 'BUTIN ENCAISSÉ !', subtext = '') {
+    soundManager.playCoin();
+    Haptic.success();
+
+    const banner = document.createElement('div');
+    banner.className = 'golden-coin-collect-banner';
+    banner.style.cssText = `
+      position: absolute;
+      top: 36px;
+      left: 50%;
+      background: linear-gradient(135deg, #ffd700 0%, #ff9f43 55%, #ee5253 100%);
+      color: #1e272e;
+      padding: 14px 30px;
+      border-radius: 40px;
+      box-shadow: 0 12px 40px rgba(255, 177, 66, 0.75), 0 0 25px rgba(255, 215, 0, 0.5);
+      border: 2.5px solid #ffffff;
+      z-index: 10000;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+      white-space: nowrap;
+    `;
+
+    banner.innerHTML = `
+      <span style="font-size: 2.1rem; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.35));">🪙</span>
+      <div>
+        <div style="font-size: 0.72rem; font-weight: 950; letter-spacing: 1px; color: #574b90; text-transform: uppercase;">
+          ${title}
+        </div>
+        <div style="font-size: 1.35rem; font-weight: 950; color: #2f3542; font-family: monospace; letter-spacing: 0.5px;">
+          +${coins.toLocaleString('fr-FR')} PIÈCES D'OR
+        </div>
+        ${subtext ? `<div style="font-size: 0.68rem; font-weight: 850; color: #ffffff; text-shadow: 0 1px 3px #000;">${subtext}</div>` : ''}
+      </div>
+    `;
+
+    this.root.appendChild(banner);
+
+    gsap.fromTo(banner,
+      { y: -90, scale: 0.6, opacity: 0, xPercent: -50 },
+      {
+        y: 0,
+        scale: 1.0,
+        opacity: 1,
+        xPercent: -50,
+        duration: 0.45,
+        ease: "back.out(2.4)",
+        onComplete: () => {
+          gsap.to(banner, {
+            y: -60,
+            scale: 0.85,
+            opacity: 0,
+            delay: 2.4,
+            duration: 0.35,
+            ease: "power2.in",
+            onComplete: () => {
+              try { banner.remove(); } catch (e) {}
+            }
+          });
+        }
+      }
+    );
   }
 
   showToastUnlock(data) {

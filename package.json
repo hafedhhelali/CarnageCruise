@@ -1,6 +1,6 @@
 {
   "name": "motormageddon",
-  "version": "0.9.24-beta",
+  "version": "0.9.25-beta",
   "type": "module",
   "main": "index.js",
   "scripts": {

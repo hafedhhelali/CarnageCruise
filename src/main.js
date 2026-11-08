@@ -485,6 +485,15 @@ class GameApp {
       // 5. Son moteur réactif (ronronnement ralenti à l'arrêt, accélération dynamique)
       soundManager.updateEngine(currentSpeed / 20.0);
 
+      // Modulation d'intensité dynamique de la musique sadique (CALM, TENSION, COMBO)
+      if (gameState.isNitroActive || gameState.combo >= 3 || currentSpeed > 24) {
+        soundManager.setSadisticIntensity('COMBO');
+      } else if (currentSpeed > 7) {
+        soundManager.setSadisticIntensity('TENSION');
+      } else {
+        soundManager.setSadisticIntensity('CALM');
+      }
+
       // 6. Fumée d'échappement et fumée de dérapage au freinage
       if (currentSpeed > 1.0) {
         this.particles.spawnExhaustSmoke(this.bike.getExhaustPosition(), currentSpeed / 20.0);
@@ -639,27 +648,31 @@ class GameApp {
 
               if (dZ < 1.8 && dX < 1.35) {
                 prop.userData.isHit = true;
-                this.engine.triggerCameraShake(0.5);
+                this.engine.triggerCameraShake(0.52);
+                soundManager.playPropSmash();
+                Haptic.impactLight();
+
+                const propPos = new THREE.Vector3(worldX, 1.2, worldZ);
+                this.particles.spawnPropShatter(propPos, prop.userData.type || 'lamp');
+
+                // Animation physique d'éjection et fracas de l'objet
+                prop.position.y += 2.2;
+                prop.rotation.x = Math.PI * 0.85;
+                prop.rotation.z = (prop.position.x > 0 ? 1 : -1) * 1.2;
+                setTimeout(() => { prop.visible = false; }, 550);
 
                 if (prop.userData.type === 'lamp') {
-                  soundManager.playPropSmash();
-                  prop.rotation.z = (prop.position.x > 0 ? 1 : -1) * 0.9;
-                  this.particles.spawnCrashBurst(new THREE.Vector3(worldX, 2.0, worldZ));
                   gameState.score += 180;
-                  this.particles.spawnComicBurst(new THREE.Vector3(worldX, 2.0, worldZ), 180, gameState.combo);
+                  this.particles.spawnComicBurst(propPos, 180, gameState.combo);
+                  if (this.ui) this.ui.spawnFloatingCombatText('+180', 'LAMPADAIRE BROYÉ !', '#fffa65', 50, 40);
                 } else if (prop.userData.type === 'tree') {
-                  soundManager.playPropSmash();
-                  prop.rotation.z = (Math.random() - 0.5) * 0.35;
-                  this.particles.spawnExhaustSmoke(new THREE.Vector3(worldX, 3.0, worldZ), 3.0);
                   gameState.score += 200;
-                  this.particles.spawnComicBurst(new THREE.Vector3(worldX, 2.5, worldZ), 200, gameState.combo);
+                  this.particles.spawnComicBurst(propPos, 200, gameState.combo);
+                  if (this.ui) this.ui.spawnFloatingCombatText('+200', 'ARBRE DÉRACINÉ !', '#2ed573', 50, 40);
                 } else if (prop.userData.type === 'terrace') {
-                  soundManager.playPropSmash();
-                  prop.position.y += 2.2;
-                  prop.rotation.x = Math.PI * 0.8;
-                  this.particles.spawnCrashBurst(new THREE.Vector3(worldX, 1.0, worldZ));
                   gameState.score += 300;
-                  this.particles.spawnComicBurst(new THREE.Vector3(worldX, 1.5, worldZ), 300, gameState.combo);
+                  this.particles.spawnComicBurst(propPos, 300, gameState.combo);
+                  if (this.ui) this.ui.spawnFloatingCombatText('+300', 'TERRASSE PULVÉRISÉE !', '#ff9f43', 50, 40);
                 }
               }
             });
@@ -667,26 +680,24 @@ class GameApp {
         });
       }
 
-      // 9. Gestion des carrefours réalistes, feux et trafic transversal (désactivés en plein vol)
+      // 9. Gestion des carrefours réalistes, feux et verbalisations (désactivés en plein vol)
       if (!isFlyingCraft) {
         this.intersections.update(
           delta,
           this.bike.z,
           this.bike.mesh.position.x,
           currentSpeed,
-          (crossingCar) => {
-            // Suite à un accident, quand le bolide clignote (invulnérable), impossible d'être heurté !
-            if (this.bike.isInvulnerable()) return;
-
-            const crashed = this.bike.triggerCrash();
-            if (crashed) {
-              this.engine.triggerCameraShake(0.75);
-              soundManager.playCrash();
-              soundManager.playPenaltyBuzzer();
-              this.particles.spawnCrashBurst(this.bike.mesh.position);
-              gameState.applyVehicleCrashPenalty(350);
-              storage.recordRedLightRun();
-              if (this.ui) this.ui.triggerCrashPenaltyUI(350);
+          (streetName) => {
+            // Verbalisation immédiate pour feu rouge grillé : Réduction du score !
+            const penalty = 450;
+            gameState.score = Math.max(0, gameState.score - penalty);
+            storage.recordRedLightRun();
+            soundManager.playRedLightViolation();
+            this.engine.triggerCameraShake(0.4);
+            Haptic.impactHeavy();
+            if (this.ui) {
+              this.ui.triggerCrashPenaltyUI(penalty);
+              this.ui.spawnFloatingCombatText(`-${penalty} PTS`, `PV DRESSÉ ! 🚨 (${streetName || 'FEU ROUGE'})`, '#ff3838', 50, 36);
             }
           },
           (streetName) => {
@@ -709,7 +720,15 @@ class GameApp {
               bump.hit = true;
               this.bike.triggerSpeedBumpJump(currentSpeed);
 
-              if (currentSpeed > 10.0) {
+              // Effet sonore dynamique cartoon à ressort "BOING-FWUMP"
+              soundManager.playSpeedBumpBoingFwump(Math.min(1.4, 0.6 + currentSpeed / 30));
+
+              // Effet visuel 3D : gerbe d'étincelles et poussière sous le châssis
+              const bumpPos = new THREE.Vector3(this.bike.mesh.position.x, 0.15, this.bike.z);
+              if (this.particles.spawnSparks) this.particles.spawnSparks(bumpPos, 14, 0x00cec9);
+              if (this.particles.spawnExhaustSmoke) this.particles.spawnExhaustSmoke(bumpPos, 1.2);
+
+              if (currentSpeed > 8.0) {
                 const airPts = Math.round(150 + (currentSpeed * 8));
                 gameState.score += airPts;
                 this.particles.spawnComicBurst(
@@ -717,9 +736,9 @@ class GameApp {
                   airPts,
                   gameState.combo
                 );
-                this.engine.triggerCameraShake(Math.min(0.55, 0.25 + (currentSpeed / 60)));
-                if (this.ui) this.ui.spawnFloatingCombatText(`+${airPts}`, 'AIR TIME !', '#00cec9', 50, 45);
-                Haptic.tap();
+                this.engine.triggerCameraShake(Math.min(0.65, 0.35 + (currentSpeed / 45)));
+                if (this.ui) this.ui.spawnFloatingCombatText(`+${airPts}`, 'AIR TIME ! 🚀', '#00cec9', 50, 42);
+                Haptic.impactLight();
               }
             }
           }

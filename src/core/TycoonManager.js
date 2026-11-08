@@ -21,7 +21,7 @@ export const TYCOON_BUILDINGS = [
     icon: '🏭',
     tag: 'Production de Munitions & Béliers',
     baseCost: 100,
-    baseCash: 2,
+    baseCash: 0.04,
     baseKills: 0.5,
     lore: "Fabrication clandestine de munitions perforantes, éperons en acier trempé et renforts de châssis."
   },
@@ -31,7 +31,7 @@ export const TYCOON_BUILDINGS = [
     icon: '📡',
     tag: 'Corruption & Sabotage d’Urgence',
     baseCost: 1200,
-    baseCash: 18,
+    baseCash: 0.14,
     baseKills: 5,
     lore: "Piratage des lignes d'urgence, coupure des sirènes d'alerte urbaine et détournement de fonds."
   },
@@ -41,7 +41,7 @@ export const TYCOON_BUILDINGS = [
     icon: '🧪',
     tag: 'Aérosols Incapacitants Urbains',
     baseCost: 15000,
-    baseCash: 160,
+    baseCash: 0.45,
     baseKills: 45,
     lore: "Synthèse d'agents chimiques diffusés dans la climatisation et les métros des capitales."
   },
@@ -51,7 +51,7 @@ export const TYCOON_BUILDINGS = [
     icon: '🛸',
     tag: 'Essaims IA à Basse Altitude',
     baseCost: 180000,
-    baseCash: 1500,
+    baseCash: 1.2,
     baseKills: 420,
     lore: "Micro-drones tueurs guidés par algorithmes prédictifs pour traquer les fugitifs."
   },
@@ -61,7 +61,7 @@ export const TYCOON_BUILDINGS = [
     icon: '🚀',
     tag: 'Frappes de Croisière Mach 8',
     baseCost: 2500000,
-    baseCash: 16000,
+    baseCash: 3.2,
     baseKills: 4800,
     lore: "Batteries de missiles hypersoniques balayant des corridors urbains entiers en quelques secondes."
   },
@@ -71,7 +71,7 @@ export const TYCOON_BUILDINGS = [
     icon: '⚛️',
     tag: 'Faisceau d’Énergie Cinétique',
     baseCost: 40000000,
-    baseCash: 210000,
+    baseCash: 8.5,
     baseKills: 65000,
     lore: "Satellite orbital concentrant des frappes cinétiques rasant des provinces pour achever les 8 milliards."
   }

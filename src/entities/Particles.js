@@ -47,6 +47,9 @@ export class ParticleSystem {
       starRed: new THREE.MeshBasicMaterial({ color: 0xff3838 }),
       sparkAmber: new THREE.MeshBasicMaterial({ color: 0xffa502 }),
       bloodDrop: new THREE.MeshBasicMaterial({ color: 0x990000 }),
+      woodBrown: new THREE.MeshBasicMaterial({ color: 0x8b572a }),
+      metalGray: new THREE.MeshBasicMaterial({ color: 0x7f8c8d }),
+      glassCyan: new THREE.MeshBasicMaterial({ color: 0x74b9ff, transparent: true, opacity: 0.85 }),
       waterBlue: new THREE.MeshBasicMaterial({ color: 0x00d2d3, transparent: true, opacity: 0.85 }),
       rockGray: new THREE.MeshBasicMaterial({ color: 0x57606f }),
       speedLine: new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.4 })
@@ -362,18 +365,68 @@ export class ParticleSystem {
       });
     }
 
-    // Épaisses volutes de fumée noire de poudre
-    for (let j = 0; j < 8; j++) {
+    // Volutes discrètes de fumée de départ (réduites pour ne pas obstruer la vue du joueur)
+    for (let j = 0; j < 2; j++) {
       const smoke = new THREE.Mesh(this.sharedGeos.smokeSphere, this.sharedMats.smokeDark);
-      smoke.position.set(pos.x + (Math.random() - 0.5) * 1.5, pos.y + 0.4 + Math.random() * 1.2, pos.z + (Math.random() - 0.5) * 1.5);
-      smoke.scale.setScalar(1.2 + Math.random() * 1.4);
+      smoke.position.set(pos.x + (Math.random() - 0.5) * 0.4, pos.y + 0.3 + Math.random() * 0.4, pos.z + (Math.random() - 0.5) * 0.4);
+      smoke.scale.setScalar(0.35 + Math.random() * 0.25);
       this.scene.add(smoke);
       this.smokePuffs.push({
         mesh: smoke,
-        velY: 1.8 + Math.random() * 1.6,
-        growRate: 2.2,
-        life: 1.1,
-        maxLife: 1.1
+        velY: 1.2 + Math.random() * 0.8,
+        growRate: 0.8,
+        life: 0.45,
+        maxLife: 0.45
+      });
+    }
+  }
+
+  // Animation de destruction physique complète du mobilier urbain (poteaux, arbres, terrasses)
+  spawnPropShatter(pos, propType = 'lamp') {
+    this.spawnShockwave(pos, propType === 'lamp' ? 0xfffa65 : 0xa4b0be);
+
+    const mat = propType === 'tree' ? (this.sharedMats.woodBrown || this.sharedMats.rockGray) :
+                (propType === 'terrace' ? this.sharedMats.woodBrown : this.sharedMats.metalGray);
+
+    // 16 fragments physiques projetés dans les airs avec gravité et rebonds
+    for (let i = 0; i < 16; i++) {
+      const mesh = new THREE.Mesh(this.sharedGeos.cubeDebris, mat);
+      mesh.scale.set(
+        0.18 + Math.random() * 0.24,
+        0.22 + Math.random() * 0.38,
+        0.18 + Math.random() * 0.24
+      );
+      mesh.position.copy(pos);
+      mesh.position.y += 0.8 + Math.random() * 1.2;
+
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 4.5 + Math.random() * 8.5;
+
+      this.scene.add(mesh);
+      this.debris.push({
+        mesh,
+        velX: Math.cos(angle) * speed,
+        velY: 5.5 + Math.random() * 7.0,
+        velZ: Math.sin(angle) * speed + 6.0,
+        rotVelX: (Math.random() - 0.5) * 26,
+        rotVelY: (Math.random() - 0.5) * 26,
+        life: 1.2,
+        maxLife: 1.2
+      });
+    }
+
+    // Poussière d'impact
+    for (let j = 0; j < 3; j++) {
+      const smoke = new THREE.Mesh(this.sharedGeos.smokeSphere, this.sharedMats.skidSmoke);
+      smoke.position.set(pos.x + (Math.random() - 0.5) * 0.8, pos.y + 0.3, pos.z + (Math.random() - 0.5) * 0.8);
+      smoke.scale.setScalar(0.4 + Math.random() * 0.35);
+      this.scene.add(smoke);
+      this.smokePuffs.push({
+        mesh: smoke,
+        velY: 1.0 + Math.random() * 0.8,
+        growRate: 0.9,
+        life: 0.65,
+        maxLife: 0.65
       });
     }
   }
