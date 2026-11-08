@@ -1557,9 +1557,12 @@ export class UIManager {
               <div style="font-size: 0.95rem; font-weight: 950; color: #ffffff; letter-spacing: 0.5px;">${city.countryFlag || '🌍'} ${city.name.toUpperCase()} (CIBLE PRIORITAIRE)</div>
             </div>
           </div>
-          <div style="text-align: right;">
-            <div style="font-size: 0.68rem; color: ${weaponColor}; font-weight: 950; letter-spacing: 0.8px;" id="wmd-status-phase">T-03 : ACQUISITION</div>
-            <div style="font-size: 0.78rem; font-family: monospace; color: #fffa65; font-weight: 900;">POP : ${(victimPop).toLocaleString('fr-FR')}</div>
+          <div style="text-align: right; display: flex; align-items: center; gap: 10px;">
+            <div>
+              <div style="font-size: 0.68rem; color: ${weaponColor}; font-weight: 950; letter-spacing: 0.8px;" id="wmd-status-phase">T-03 : ACQUISITION</div>
+              <div style="font-size: 0.78rem; font-family: monospace; color: #fffa65; font-weight: 900;">POP : ${(victimPop).toLocaleString('fr-FR')}</div>
+            </div>
+            <button id="btn-wmd-skip" style="background: rgba(255,255,255,0.14); border: 1.5px solid rgba(255,255,255,0.3); color: #fffa65; border-radius: 8px; padding: 5px 10px; font-size: 0.72rem; font-weight: 950; cursor: pointer; letter-spacing: 0.5px;">PASSER ⏩</button>
           </div>
         </div>
 
@@ -1944,9 +1947,23 @@ export class UIManager {
       // 1. DESSIN INSTANTANÉ DU FOND SATELLITE PRÉ-CALCULÉ (BLIT 0.1ms)
       ctx.drawImage(staticBgCanvas, 0, 0, w, h);
 
+      // Calcul de la progression globale (0.0 -> 1.0)
+      let currentProgress = 0;
+      if (elapsed < 1.8) {
+        currentProgress = Math.min(1.0, elapsed / 1.8);
+      } else if (hasCompleted) {
+        currentProgress = 1.0;
+      } else {
+        currentProgress = Math.min(1.0, (elapsed - 1.8) / 2.8);
+      }
+
       // Rendu PixiJS v8 Accéléré GPU (si disponible)
       if (usePixi) {
-        pixiRenderer.renderFrame(simPhase, weaponType, progress, shockwaveRadius, w, h);
+        try {
+          pixiRenderer.renderFrame(simPhase, weaponType, currentProgress, shockwaveRadius, w, h);
+        } catch (pixiErr) {
+          // Fallback silencieux vers le rendu 2D haute définition
+        }
       }
 
       // 2. Balayage radar tournant
@@ -2426,6 +2443,16 @@ export class UIManager {
       this.render();
       this.showToastUnlock({ name: `☠️ ${city.name.toUpperCase()} EST DÉSORMAIS EXTERMINÉE ET FERMÉE DÉFINITIVEMENT !` });
     };
+
+    // Bouton Passer (Accélérer l'extermination pour l'utilisateur pressé)
+    const skipBtn = overlay.querySelector('#btn-wmd-skip');
+    if (skipBtn) {
+      skipBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        soundManager.playClick();
+        startTime = performance.now() - 5200; // Propulse immédiatement la simulation à son terme
+      });
+    }
 
     confirmBtn?.addEventListener('click', handleClose);
   }
