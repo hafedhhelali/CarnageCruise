@@ -411,6 +411,17 @@ export class Storage {
     };
   }
 
+  resetScores() {
+    this.data.cityScores = {};
+    if (this.data.stats) {
+      this.data.stats.totalScore = 0;
+      this.data.stats.totalRuns = 0;
+      this.data.stats.maxCombo = 1;
+    }
+    this.save();
+    return true;
+  }
+
   resetWorldmageddonProgression() {
     this.data.exterminatedCities = [];
     this.data.cityScores = {};

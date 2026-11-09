@@ -786,15 +786,31 @@ class GameApp {
       // 12. Mise à jour de l'état de course (accélération, décélération, combo, vitesse arrêtée lors d'un crash)
       gameState.update(delta, this.bike.isCrashed);
 
-      // 13. Franchissement de la ligne d'arrivée
+      // 13. Franchissement triomphal de la ligne d'arrivée
       if (!this.hasCrossedFinish && this.bike.z >= this.environment.finishDistance) {
         this.hasCrossedFinish = true;
         soundManager.playVictory();
+        Haptic.success();
         this.particles.spawnVictoryConfetti(this.bike.mesh.position);
 
-        setTimeout(() => {
-          gameState.endRun();
-        }, 1200);
+        if (this.ui) {
+          this.ui.triggerRaceFinishCelebration(gameState.selectedCity, gameState.score);
+        }
+
+        // Décélération progressive arcade avec pluie continue de confettis pendant 2.6s
+        let finishTimer = 0;
+        const finishInterval = setInterval(() => {
+          finishTimer += 0.2;
+          this.bike.speed = Math.max(10, this.bike.speed * 0.93);
+          soundManager.updateEngine(Math.max(0.08, this.bike.speed / this.bike.maxSpeed));
+          if (Math.random() < 0.45) {
+            this.particles.spawnVictoryConfetti(this.bike.mesh.position);
+          }
+          if (finishTimer >= 2.6) {
+            clearInterval(finishInterval);
+            gameState.endRun();
+          }
+        }, 200);
       }
     } else if (gameState.currentMode === 'COUNTDOWN') {
       // MODE COMPTE À REBOURS : Moto strictement à l'arrêt sur la ligne de départ

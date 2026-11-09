@@ -904,6 +904,7 @@ export class UIManager {
 
       this.updateCityDetail(mapScreen.querySelector('#city-detail'));
     };
+    this.selectCityById = updateSelection;
 
     // Navigation séquentielle fluide entre les villes (◀ / ▶) avec GSAP
     const navigateCity = (direction) => {
@@ -1052,156 +1053,105 @@ export class UIManager {
     const currentBike = BIKES.find(b => b.id === currentBikeId) || BIKES[0];
 
     const stageIndex = CITIES.findIndex(c => c.id === city.id) + 1;
+    const prevIdx = (stageIndex - 2 + CITIES.length) % CITIES.length;
+    const nextIdx = stageIndex % CITIES.length;
+    const prevCity = CITIES[prevIdx];
+    const nextCity = CITIES[nextIdx];
+
     const unlocked = storage.isCityUnlocked(city.id);
     const isExterminated = storage.isCityExterminated(city.id);
     const cityData = storage.getCityData(city.id);
-
     const starsHtml = isExterminated ? '★★★' : ('★'.repeat(cityData.stars) + '☆'.repeat(3 - cityData.stars));
 
-    if (isExterminated) {
-      detailCard.innerHTML = `
-        <!-- BARRE DE NAVIGATION FLUIDE ENTRE LES ÉTAPES DU GRAND TOUR -->
-        <div class="city-nav-bar">
-          <button id="btn-card-prev-city" class="btn-city-nav" title="Étape précédente">
-            ◀ <span class="nav-btn-text">PRÉCÉDENTE</span>
-          </button>
-          <div class="city-nav-info">
-            <span class="city-nav-step">CIBLE #${stageIndex} / ${CITIES.length}</span>
-            <span class="city-nav-title">${city.countryFlag || '🌍'} ${city.name.toUpperCase()}</span>
-          </div>
-          <button id="btn-card-next-city" class="btn-city-nav" title="Étape suivante">
-            <span class="nav-btn-text">SUIVANTE</span> ▶
-          </button>
+    detailCard.innerHTML = `
+      <!-- 1. BARRE DE NAVIGATION PRÉCISE : AFFICHE DIRECTEMENT LE NOM DES VILLES ◀ ET ▶ -->
+      <div class="city-nav-bar">
+        <button id="btn-card-prev-city" class="btn-city-nav" title="Aller à ${prevCity.name}">
+          ◀ <span class="nav-btn-text">#${prevIdx + 1} ${prevCity.name.toUpperCase()}</span>
+        </button>
+        <div class="city-nav-info">
+          <span class="city-nav-step">ÉTAPE ${stageIndex} / ${CITIES.length}</span>
+          <span class="city-nav-title">${city.countryFlag || '🌍'} ${city.name.toUpperCase()}</span>
         </div>
+        <button id="btn-card-next-city" class="btn-city-nav" title="Aller à ${nextCity.name}">
+          <span class="nav-btn-text">#${nextIdx + 1} ${nextCity.name.toUpperCase()}</span> ▶
+        </button>
+      </div>
 
-        <div class="city-detail-header">
-          <div>
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <span class="city-detail-name" style="color: #ff4757;">☠️ ${city.countryFlag || '🌍'} ${city.name.toUpperCase()}</span>
-              <span class="city-target-rank-pill pill-rank-closed">ZONE ANÉANTIE</span>
+      <!-- 2. RUBAN HORIZONTAL FLUIDE DE SÉLECTION DIRECTE (ACCÈS INSTANTANÉ AUX 47 VILLES) -->
+      <div class="city-quick-carousel-track" id="city-carousel-strip">
+        ${CITIES.map((c, i) => {
+          const isCur = c.id === city.id;
+          const isUnl = storage.isCityUnlocked(c.id);
+          const isExt = storage.isCityExterminated(c.id);
+          return `
+            <div class="city-carousel-pill ${isCur ? 'active' : ''} ${isUnl ? 'unlocked' : 'locked'} ${isExt ? 'exterminated' : ''}" data-nav-city-id="${c.id}">
+              <span class="cpill-flag">${c.countryFlag || '🌍'}</span>
+              <span class="cpill-name">${c.name}</span>
+              <span class="cpill-badge">${isExt ? '☠️' : (isUnl ? `#${i+1}` : '🔒')}</span>
             </div>
-            <span class="city-tag tag-closed">☠️ Ville Exterminée & Scellée</span>
-            <div style="font-size: 0.82rem; color: #ff7675; font-weight: 800; margin-top: 3px;">
-              🏛️ Ruines : <strong>${city.monument || 'Zone Urbaine'} (Pulvérisé)</strong>
+          `;
+        }).join('')}
+      </div>
+
+      <!-- 3. RANGÉE DE STATS ARCADE ÉPURÉE (SANS PARAGRAPHES INUTILES) -->
+      <div class="city-compact-stats-row">
+        <div class="cstat-item">
+          <span class="cstat-label">RECORD</span>
+          <span class="cstat-val">${cityData.bestScore ? cityData.bestScore.toLocaleString('fr-FR') + ' pts' : '0 pt'}</span>
+        </div>
+        <div class="cstat-item">
+          <span class="cstat-label">OBJECTIF</span>
+          <span class="cstat-val" style="color: #ffd32a;">${city.targetScore.toLocaleString('fr-FR')} pts</span>
+        </div>
+        <div class="cstat-item">
+          <span class="cstat-label">ÉTOILES</span>
+          <span class="cstat-val" style="color: #f1c40f;">${starsHtml}</span>
+        </div>
+        <div class="cstat-item">
+          <span class="cstat-label">ENGIN D'ASSAUT</span>
+          <button id="btn-city-vehicle-shortcut" class="cstat-veh-btn" title="Changer d'engin">
+            <span>${currentBike.icon || '🪖'} ${currentBike.shortName || currentBike.name} ▾</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 4. DOCK D'ACTIONS PRINCIPAL ERGONOMIQUE -->
+      <div class="city-main-actions-dock">
+        ${isExterminated ? `
+          <button class="btn-arcade btn-enter-city-hero btn-city-closed" disabled>
+            <span class="btn-enter-hero-icon">☠️</span>
+            <div class="btn-enter-hero-texts">
+              <span class="btn-enter-hero-title">VILLE CONDAMNÉE & SCELLÉE</span>
+              <span class="btn-enter-hero-desc">ANÉANTISSEMENT TOTAL PAR FRAPPE STRATÉGIQUE</span>
             </div>
-          </div>
-          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0;">
-            <div class="city-stars" style="color: #ff4757;">★★★</div>
-            <span class="badge-status-closed">FERMÉE</span>
-          </div>
-        </div>
-
-        <p class="city-description desc-closed">
-          Cette métropole a été entièrement anéantie par une frappe d'extermination massive. Tout signe de vie a été balayé. Périmètre scellé militairement et accès terrestre définitivement condamné.
-        </p>
-
-        <div class="city-target-info target-info-closed">
-          <span>💀 Bilan Fatal : <strong style="color: #ff4757;">+${(city.population || city.exterminationTarget || 500000).toLocaleString('fr-FR')} victimes</strong></span>
-          <span style="color: #2ed573;">Statut : <strong>CONQUIS & DÉTRUIT</strong></span>
-        </div>
-
-        <div class="city-detail-actions-vertical">
-          <button class="btn-arcade btn-action-locked" disabled style="width: 100%; padding: 13px; background: #1e272e; color: #ff7675; border-color: #ff4757; font-weight: 900; white-space: nowrap; letter-spacing: 0.5px;">
-            <span>☠️ VILLE FERMÉE (ACCÈS CONDAMNÉ)</span>
           </button>
-          <button id="btn-city-ad-coins" class="btn-ad-strip" title="Cadeau Sponsor : Obtenir +20 Pièces d'or">
-            <span class="ad-strip-left">🎁 <strong>BONUS GOOGLE ADS : +20 PIÈCES D'OR</strong></span>
-            <span class="ad-strip-action">RÉCUPÉRER ▶</span>
-          </button>
-        </div>
-      `;
-    } else {
-      detailCard.innerHTML = `
-        <!-- BARRE DE NAVIGATION FLUIDE ENTRE LES ÉTAPES DU GRAND TOUR -->
-        <div class="city-nav-bar">
-          <button id="btn-card-prev-city" class="btn-city-nav" title="Étape précédente">
-            ◀ <span class="nav-btn-text">PRÉCÉDENTE</span>
-          </button>
-          <div class="city-nav-info">
-            <span class="city-nav-step">CIBLE #${stageIndex} / ${CITIES.length}</span>
-            <span class="city-nav-title">${city.countryFlag || '🌍'} ${city.name.toUpperCase()}</span>
-          </div>
-          <button id="btn-card-next-city" class="btn-city-nav" title="Étape suivante">
-            <span class="nav-btn-text">SUIVANTE</span> ▶
-          </button>
-        </div>
-
-        <div class="city-detail-header">
-          <div>
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <span class="city-detail-name">${city.countryFlag || '🌍'} ${city.name.toUpperCase()}</span>
-              <span class="city-target-rank-pill">CIBLE #${stageIndex}</span>
+        ` : (unlocked ? `
+          <button id="btn-enter-city-race" class="btn-arcade btn-enter-city-hero" title="Lancer la course">
+            <span class="btn-enter-hero-icon">🏁</span>
+            <div class="btn-enter-hero-texts">
+              <span class="btn-enter-hero-title">▶ LANCER LA COURSE : ${city.name.toUpperCase()}</span>
+              <span class="btn-enter-hero-desc">OBJECTIF : ${city.targetScore.toLocaleString('fr-FR')} PTS • TOUCHE ENTRÉE</span>
             </div>
-            <span class="city-tag">${city.country || 'Europe'} • ${city.typeTag || 'Métropole Européenne'}</span>
-            <div style="font-size: 0.82rem; color: #fffa65; font-weight: 800; margin-top: 3px;">
-              🏛️ Monument : <strong>${city.monument || 'Monument Historique'}</strong>
-            </div>
-            <div style="font-size: 0.78rem; color: #ced6e0; margin-top: 2px;">${city.subtitle}</div>
-          </div>
-          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0;">
-            <div class="city-stars">${starsHtml}</div>
-            ${unlocked ? '<span class="badge-status-active">▶ ACTIVE</span>' : '<span class="badge-status-locked">🔒 VERROUILLÉ</span>'}
-          </div>
-        </div>
-
-        <p class="city-description">${city.description}</p>
-
-        <div class="city-target-info">
-          <span>🏆 Record : <strong>${cityData.bestScore} pts</strong></span>
-          <span>💀 Population Cible : <strong style="color: #fffa65;">+${(city.population || city.exterminationTarget || 500000).toLocaleString('fr-FR')} âmes</strong></span>
-        </div>
-
-        <div class="city-detail-actions-vertical">
-          <!-- RACCOURCI ENGIN HYPER VISIBLE SUR LA FICHE VILLE -->
-          <button id="btn-city-vehicle-shortcut" class="btn-city-vehicle-banner" title="Changer d'engin ou d'arsenal">
-            <span class="veh-banner-left">
-              <span class="veh-banner-icon">${currentBike.icon || '🪖'}</span>
-              <span class="veh-banner-text">
-                <small style="color: #ffd32a; font-size: 0.62rem; font-weight: 900; letter-spacing: 0.5px;">VÉHICULE ACTIF</small>
-                <strong style="color: #fff; font-size: 0.85rem;">${currentBike.shortName || currentBike.name}</strong>
-              </span>
-            </span>
-            <span class="veh-banner-action">CHANGER ▾</span>
+            <span class="btn-enter-hero-badge">JOUER ▶</span>
           </button>
-
-          <!-- BOUTON ENTRÉE PRINCIPAL HYPER VISIBLE ET NON AMBIGU -->
-          ${unlocked ? `
-            <button id="btn-enter-city-race" class="btn-arcade btn-enter-city-hero" title="Entrer dans ${city.name} et lancer la course">
-              <span class="btn-enter-hero-icon">🏁</span>
-              <div class="btn-enter-hero-texts">
-                <span class="btn-enter-hero-title">▶ ENTRER DANS LA VILLE : ${city.name.toUpperCase()}</span>
-                <span class="btn-enter-hero-desc">DÉMARRER LA COURSE AU SOL • OBJECTIF : ${city.targetScore.toLocaleString('fr-FR')} PTS</span>
-              </div>
-              <span class="btn-enter-hero-badge">JOUER ▶</span>
-            </button>
-
-            <div class="city-secondary-actions-row">
-              <button id="btn-wmd-city" class="btn-arcade btn-wmd-strike-secondary" title="Exterminer avec armes de destruction massive">
-                <span>💀 EXTERMINER (ADM)</span>
-              </button>
-              <button id="btn-city-ad-coins" class="btn-arcade btn-ad-coins-secondary" title="Bonus Google Ads : +20 Pièces d'or">
-                <span>🎁 GOOGLE ADS (+20 🪙)</span>
-              </button>
+          <button id="btn-wmd-city" class="btn-arcade btn-wmd-dock" title="Exterminer avec ADM">
+            <span>💀 ADM</span>
+          </button>
+        ` : `
+          <button class="btn-arcade btn-enter-city-hero btn-enter-city-locked" disabled>
+            <span class="btn-enter-hero-icon">🔒</span>
+            <div class="btn-enter-hero-texts">
+              <span class="btn-enter-hero-title">ÉTAPE VERROUILLÉE</span>
+              <span class="btn-enter-hero-desc">${city.unlockScoreRequired.toLocaleString('fr-FR')} POINTS REQUIS SUR LE TOUR</span>
             </div>
-          ` : `
-            <button class="btn-arcade btn-enter-city-locked" disabled>
-              <span class="btn-enter-hero-icon">🔒</span>
-              <div class="btn-enter-hero-texts">
-                <span class="btn-enter-hero-title">🔒 VILLE VERROUILLÉE</span>
-                <span class="btn-enter-hero-desc">${city.unlockScoreRequired.toLocaleString('fr-FR')} POINTS REQUIS POUR DÉBLOQUER CETTE CITÉ</span>
-              </div>
-              <span class="btn-enter-hero-badge">BLOQUÉ</span>
-            </button>
-            <button id="btn-city-ad-coins" class="btn-ad-strip" title="Cadeau Sponsor : Obtenir +20 Pièces d'or">
-              <span class="ad-strip-left">🎁 <strong>BONUS GOOGLE ADS : +20 PIÈCES D'OR</strong></span>
-              <span class="ad-strip-action">RÉCUPÉRER ▶</span>
-            </button>
-          `}
-        </div>
-      `;
-    }
+            <span class="btn-enter-hero-badge">BLOQUÉ</span>
+          </button>
+        `)}
+      </div>
+    `;
 
-    // Gestionnaires de navigation de carrousel de ville
+    // Événements boutons Précédente / Suivante
     detailCard.querySelector('#btn-card-prev-city')?.addEventListener('click', (e) => {
       e?.stopPropagation();
       if (this.navigateMapCity) this.navigateMapCity(-1);
@@ -1211,20 +1161,30 @@ export class UIManager {
       if (this.navigateMapCity) this.navigateMapCity(1);
     });
 
+    // Événements clic sur les pilules de villes du ruban
+    detailCard.querySelectorAll('.city-carousel-pill').forEach(pill => {
+      pill.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const targetId = pill.getAttribute('data-nav-city-id');
+        if (targetId && this.selectCityById) {
+          this.selectCityById(targetId);
+        }
+      });
+    });
+
+    // Défilement automatique pour centrer la pilule active
+    const activePill = detailCard.querySelector('.city-carousel-pill.active');
+    if (activePill) {
+      setTimeout(() => {
+        activePill.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      }, 50);
+    }
+
+    // Raccourci engin actif
     const cityVehBtn = detailCard.querySelector('#btn-city-vehicle-shortcut');
     if (cityVehBtn) {
       cityVehBtn.addEventListener('click', () => {
         this.showQuickVehicleModal();
-      });
-    }
-
-    const cityAdBtn = detailCard.querySelector('#btn-city-ad-coins');
-    if (cityAdBtn) {
-      cityAdBtn.addEventListener('click', () => {
-        adManager.showRewardedAd('COINS', () => {
-          this.showCoinsCollectedNotification(20, 'BONUS SPONSOR GOOGLE ADS', '+20 Pièces d\'or offertes !');
-          this.render();
-        });
       });
     }
 
@@ -1235,11 +1195,8 @@ export class UIManager {
         this.triggerCityEntryCinematic(city);
       };
 
-      const launchBtn = detailCard.querySelector('#btn-enter-city-race') || detailCard.querySelector('#btn-launch-city');
+      const launchBtn = detailCard.querySelector('#btn-enter-city-race');
       if (launchBtn) launchBtn.addEventListener('click', launchRun);
-
-      const headerBtn = detailCard.querySelector('#btn-detail-header-launch');
-      if (headerBtn) headerBtn.addEventListener('click', launchRun);
 
       const wmdBtn = detailCard.querySelector('#btn-wmd-city');
       if (wmdBtn) {
@@ -3048,6 +3005,84 @@ export class UIManager {
     }
   }
 
+  // --- CÉLÉBRATION DE FIN D'ÉPREUVE ARCADE GRANDIOSE (VICTOIRE) ---
+  triggerRaceFinishCelebration(city, score) {
+    const overlay = document.createElement('div');
+    overlay.className = 'finish-celebration-overlay';
+    overlay.innerHTML = `
+      <div class="finish-celebration-card">
+        <div class="finish-flag-banner">
+          <span class="flag-icon left">🏁</span>
+          <span class="flag-icon center">🏆</span>
+          <span class="flag-icon right">🏁</span>
+        </div>
+        <div class="finish-title">VICTOIRE !</div>
+        <div class="finish-subtitle">COURSE TERMINÉE • ÉTAPE CONQUISE</div>
+        <div class="finish-city-name">${city.countryFlag || '🌍'} ${city.name.toUpperCase()}</div>
+        <div class="finish-score-pill">SCORE : ${score.toLocaleString('fr-FR')} PTS</div>
+      </div>
+    `;
+
+    this.root.appendChild(overlay);
+
+    const card = overlay.querySelector('.finish-celebration-card');
+    if (card) {
+      gsap.fromTo(card,
+        { scale: 0.2, opacity: 0, rotation: -6 },
+        { scale: 1.05, opacity: 1, rotation: 0, duration: 0.45, ease: "back.out(2.2)", onComplete: () => {
+          gsap.to(card, { scale: 1.0, duration: 0.2 });
+        }}
+      );
+    }
+
+    this.spawnConfettiShower();
+
+    setTimeout(() => {
+      gsap.to(overlay, {
+        opacity: 0,
+        scale: 1.1,
+        duration: 0.4,
+        ease: "power2.in",
+        onComplete: () => overlay.remove()
+      });
+    }, 2400);
+  }
+
+  // Pluie de confettis et d'étoiles dorées arcade plein écran
+  spawnConfettiShower() {
+    const colors = ['#ffd700', '#ff4757', '#2ed573', '#00cec9', '#ffffff', '#ffa502'];
+    const container = document.createElement('div');
+    container.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:9999;overflow:hidden;';
+    this.root.appendChild(container);
+
+    for (let i = 0; i < 45; i++) {
+      const p = document.createElement('div');
+      const size = 6 + Math.random() * 8;
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      p.style.cssText = `
+        position: absolute;
+        width: ${size}px; height: ${size * 1.4}px;
+        background: ${color};
+        left: ${10 + Math.random() * 80}%;
+        top: -20px;
+        border-radius: ${Math.random() > 0.5 ? '2px' : '50%'};
+        box-shadow: 0 0 6px ${color};
+      `;
+      container.appendChild(p);
+
+      gsap.to(p, {
+        y: window.innerHeight + 40,
+        x: (Math.random() - 0.5) * 160,
+        rotation: (Math.random() - 0.5) * 720,
+        duration: 1.4 + Math.random() * 1.2,
+        delay: Math.random() * 0.5,
+        ease: "power1.out"
+      });
+    }
+
+    setTimeout(() => container.remove(), 3200);
+  }
+
   spawnFloatingCombatText(text, subtext = '', color = '#ffd32a', xPct = 50, yPct = 42) {
     let container = this.root.querySelector('.hud-fct-container');
     if (!container) {
@@ -3058,34 +3093,37 @@ export class UIManager {
 
     const fct = document.createElement('div');
     fct.className = 'fct-popup';
-    fct.style.left = `${xPct + (Math.random() - 0.5) * 14}%`;
+    fct.style.left = `${xPct + (Math.random() - 0.5) * 12}%`;
     fct.style.top = `${yPct + (Math.random() - 0.5) * 6}%`;
-    fct.style.color = color;
-    fct.innerHTML = `<span>${text}</span>${subtext ? `<small style="display:block;font-size:0.58em;color:#ffffff;letter-spacing:0.5px;text-shadow:0 2px 4px #000;">${subtext}</small>` : ''}`;
+    fct.style.borderColor = color;
+    fct.innerHTML = `
+      <div class="fct-main-text" style="color: ${color}; text-shadow: 0 0 14px ${color}, 0 2px 4px #000;">${text}</div>
+      ${subtext ? `<div class="fct-sub-badge" style="background: ${color}; color: #000;">${subtext}</div>` : ''}
+    `;
 
     container.appendChild(fct);
 
-    const randomRot = (Math.random() - 0.5) * 16;
-    const driftX = (Math.random() - 0.5) * 30;
+    const randomRot = (Math.random() - 0.5) * 14;
+    const driftX = (Math.random() - 0.5) * 24;
 
     gsap.fromTo(fct,
-      { scale: 0.2, opacity: 0, y: 15, rotation: randomRot * 1.5 },
+      { scale: 0.25, opacity: 0, y: 15, rotation: randomRot * 1.5 },
       {
-        scale: 1.35,
+        scale: 1.25,
         opacity: 1,
-        y: -32,
+        y: -24,
         x: driftX * 0.4,
         rotation: randomRot,
         duration: 0.22,
-        ease: "back.out(3.0)",
+        ease: "back.out(3.2)",
         onComplete: () => {
           gsap.to(fct, {
-            scale: 0.85,
+            scale: 0.88,
             opacity: 0,
-            y: -75,
+            y: -65,
             x: driftX,
-            rotation: randomRot * 0.6,
-            duration: 0.55,
+            rotation: randomRot * 0.5,
+            duration: 0.5,
             ease: "power2.in",
             onComplete: () => {
               try { fct.remove(); } catch (e) {}
@@ -3094,6 +3132,15 @@ export class UIManager {
         }
       }
     );
+
+    // Effet d'impulsion visuelle sur le badge de score
+    const scoreVal = this.root.querySelector('#hud-score-val');
+    if (scoreVal) {
+      gsap.fromTo(scoreVal,
+        { scale: 1.18, color: color },
+        { scale: 1.0, color: '#fffa65', duration: 0.25, ease: "back.out(2)" }
+      );
+    }
   }
 
   triggerCrashPenaltyUI(penalty) {
@@ -3495,26 +3542,31 @@ export class UIManager {
           </div>
         ` : ''}
 
-        <div class="modal-actions">
-          ${!isAlreadyExterminated ? `
-            <button id="btn-results-wmd-exterminate" class="btn-arcade btn-wmd-results" style="background: linear-gradient(135deg, #eb4d4b, #b71540); border: 2px solid #ff4757; box-shadow: 0 4px 18px rgba(235, 77, 75, 0.55); font-weight: 900; color: #fff; padding: 12px;">
-              💀 EXTERMINER ${currentCityObj.name.toUpperCase()} (ARME DE DESTRUCTION MASSIVE)
-            </button>
-          ` : ''}
+        <div class="results-actions-primary-dock" style="display: flex; flex-direction: column; gap: 8px; width: 100%; margin-top: 14px;">
           ${nextCity && isNextUnlocked ? `
-            <button id="btn-results-next" class="btn-arcade" style="background: linear-gradient(135deg, #2ed573, #10ac84); font-size: 1.05rem; box-shadow: 0 4px 16px rgba(46, 213, 115, 0.4); border: 2px solid #7bed9f;">
-              ▶ ÉTAPE SUIVANTE : ${nextCity.name.toUpperCase()}
+            <button id="btn-results-next" class="btn-arcade" style="width: 100%; padding: 14px; background: linear-gradient(135deg, #2ed573, #10ac84); font-size: 1.05rem; font-weight: 950; box-shadow: 0 4px 18px rgba(46, 213, 115, 0.5); border: 2px solid #7bed9f; display: flex; align-items: center; justify-content: center; gap: 8px;">
+              <span>▶ ÉTAPE SUIVANTE : ${nextCity.name.toUpperCase()}</span>
             </button>
           ` : ''}
-          <button id="btn-results-retry" class="btn-arcade">
-            🔄 REJOUER CETTE ÉTAPE
+
+          <!-- BOUTON RETOUR À LA CARTE : HÉROS PRIORITAIRE, ULTRA LISIBLE ET MIS EN VALEUR -->
+          <button id="btn-results-map" class="btn-arcade" style="width: 100%; padding: 13px; background: linear-gradient(135deg, #3742fa, #2f3542); font-size: 1.02rem; font-weight: 950; border: 2px solid #70a1ff; box-shadow: 0 4px 18px rgba(55, 66, 250, 0.45); display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <span>🗺️ RETOUR À LA CARTE DU TOUR</span>
           </button>
-          <button id="btn-results-map" class="btn-arcade btn-secondary">
-            🗺️ RETOUR À LA CARTE
+        </div>
+
+        <div class="results-actions-secondary-row" style="display: flex; gap: 8px; width: 100%; margin-top: 8px;">
+          <button id="btn-results-retry" class="btn-arcade btn-ghost" style="flex: 1; padding: 10px; font-size: 0.85rem;">
+            <span>🔄 REJOUER</span>
           </button>
-          <button id="btn-results-garage" class="btn-arcade btn-accent">
-            🏍️ PASSER AU GARAGE
+          <button id="btn-results-garage" class="btn-arcade btn-accent" style="flex: 1; padding: 10px; font-size: 0.85rem;">
+            <span>🪖 GARAGE</span>
           </button>
+          ${!isAlreadyExterminated ? `
+            <button id="btn-results-wmd-exterminate" class="btn-arcade" style="flex: 1.2; padding: 10px; font-size: 0.82rem; background: rgba(235, 77, 75, 0.25); border: 1.5px solid #ff7675; color: #ff7675;">
+              <span>💀 ADM</span>
+            </button>
+          ` : ''}
         </div>
       </div>
     `;
@@ -3710,11 +3762,23 @@ export class UIManager {
           </div>
         </div>
 
+        <!-- Section Réinitialisation des Scores demandée par le joueur -->
+        <div style="margin-top: 14px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.12);">
+          <button id="btn-settings-reset-scores" class="btn-arcade" style="width: 100%; background: rgba(235, 77, 75, 0.2); border: 1.5px solid #ff7675; color: #ff7675; font-size: 0.85rem; font-weight: 900; padding: 11px;">
+            <span>🔄 RÉINITIALISER LES SCORES DES ÉTAPES</span>
+          </button>
+        </div>
+
         <button id="btn-settings-close" class="btn-arcade" style="margin-top: 14px;">
           VALIDER
         </button>
       </div>
     `;
+
+    overlay.querySelector('#btn-settings-reset-scores')?.addEventListener('click', () => {
+      soundManager.playClick();
+      this.showResetScoresConfirmationModal();
+    });
 
     overlay.querySelector('#toggle-sfx').addEventListener('click', (e) => {
       const next = !storage.data.settings.sfx;
@@ -3762,6 +3826,52 @@ export class UIManager {
         { scale: 1.0, opacity: 1, y: 0, duration: 0.35, ease: "back.out(1.8)" }
       );
     }
+  }
+
+  // --- MODALE CONFIRMATION RESET SCORES ---
+  showResetScoresConfirmationModal() {
+    soundManager.playClick();
+    const existing = document.getElementById('modal-reset-scores-confirm');
+    if (existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'modal-reset-scores-confirm';
+    modal.className = 'tactical-modal-overlay';
+    modal.innerHTML = `
+      <div class="tactical-modal-card" style="max-width: 440px; text-align: center; border-color: #ff7675;">
+        <div style="font-size: 2.6rem; margin-bottom: 8px;">🔄</div>
+        <h3 style="color: #fffa65; font-size: 1.25rem; font-weight: 950; margin: 0 0 10px 0;">RÉINITIALISER LES SCORES ?</h3>
+        <p style="font-size: 0.85rem; color: #ced6e0; line-height: 1.5; margin: 0 0 18px 0;">
+          Cette action remettra à zéro les records de points et étoiles de toutes les villes.<br>
+          <strong style="color: #2ed573;">Vos bolides, améliorations et pièces d'or restent conservés.</strong>
+        </p>
+        <div style="display: flex; gap: 10px;">
+          <button id="btn-cancel-reset-scores" class="btn-arcade btn-secondary" style="flex: 1; padding: 12px;">
+            <span>ANNULER</span>
+          </button>
+          <button id="btn-confirm-reset-scores" class="btn-arcade" style="flex: 1.2; padding: 12px; background: linear-gradient(135deg, #eb4d4b, #c0392b); border-color: #ff7675; color: #fff; font-weight: 950;">
+            <span>💥 CONFIRMER LE RESET</span>
+          </button>
+        </div>
+      </div>
+    `;
+
+    this.root.appendChild(modal);
+
+    modal.querySelector('#btn-cancel-reset-scores').addEventListener('click', () => {
+      soundManager.playClick();
+      modal.remove();
+    });
+
+    modal.querySelector('#btn-confirm-reset-scores').addEventListener('click', () => {
+      storage.resetScores();
+      soundManager.playExplosion();
+      Haptic.warning();
+      modal.remove();
+      this.closeActiveModals();
+      this.showToastUnlock({ name: '🔄 Scores des étapes réinitialisés avec succès !' });
+      this.render();
+    });
   }
 
   // --- 10. MODALE MENTIONS LÉGALES & COPYRIGHT EOMEDIA 2026 ---
