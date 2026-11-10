@@ -2725,6 +2725,11 @@ export class UIManager {
           </div>
         </div>
 
+        <!-- Bouton Rapide Retour Carte dès 100% atteint -->
+        <button id="btn-hud-return-map-100" class="hud-btn-return-map-100" title="Objectif 100% accompli ! Retourner à la carte">
+          <span>🗺️ RETOUR CARTE</span>
+        </button>
+
         <!-- Bouton Pause Chrome -->
         <button class="btn-icon-pause" id="btn-hud-pause" title="Mettre en pause">
           ⏸️
@@ -2817,6 +2822,30 @@ export class UIManager {
         const ok = gameState.activateNitro();
         if (ok) {
           if (this.onAction) this.onAction('NITRO');
+        }
+      });
+    }
+
+    const returnMap100 = hud.querySelector('#btn-hud-return-map-100');
+    if (returnMap100) {
+      const handleReturnToMap = (e) => {
+        if (e && e.type === 'touchstart') e.preventDefault();
+        soundManager.playClick();
+        gameState.endRun();
+        this.triggerReturnToMapCinematic(gameState.selectedCity);
+      };
+      returnMap100.addEventListener('touchstart', handleReturnToMap, { passive: false });
+      returnMap100.addEventListener('click', handleReturnToMap);
+    }
+
+    const objectiveCard = hud.querySelector('#hud-objective-card');
+    if (objectiveCard) {
+      objectiveCard.addEventListener('click', () => {
+        const pctEl = hud.querySelector('#hud-progress-pct');
+        if (pctEl && pctEl.textContent.includes('100%')) {
+          soundManager.playClick();
+          gameState.endRun();
+          this.triggerReturnToMapCinematic(gameState.selectedCity);
         }
       });
     }
@@ -2967,10 +2996,28 @@ export class UIManager {
           <div class="fmetric-pill"><span class="fmetric-icon">⚡</span> <strong>${score.toLocaleString('fr-FR')}</strong> PTS</div>
         </div>
         <div class="finish-hazard-stripe bottom"></div>
+        <button id="btn-assault-return-map" class="btn-arcade btn-assault-return-cta">
+          <span>🛰️ RETOUR SATELLITE À LA CARTE</span>
+        </button>
       </div>
     `;
 
     this.root.appendChild(overlay);
+
+    let fadeTimer = null;
+
+    const assaultReturnBtn = overlay.querySelector('#btn-assault-return-map');
+    if (assaultReturnBtn) {
+      const onReturn = (e) => {
+        if (e && e.type === 'touchstart') e.preventDefault();
+        soundManager.playClick();
+        if (fadeTimer) clearTimeout(fadeTimer);
+        overlay.remove();
+        this.triggerReturnToMapCinematic(city);
+      };
+      assaultReturnBtn.addEventListener('touchstart', onReturn, { passive: false });
+      assaultReturnBtn.addEventListener('click', onReturn);
+    }
 
     const card = overlay.querySelector('.finish-assault-card');
     if (card) {
@@ -2984,7 +3031,7 @@ export class UIManager {
 
     this.spawnCarnageEmbersShower();
 
-    setTimeout(() => {
+    fadeTimer = setTimeout(() => {
       gsap.to(overlay, {
         opacity: 0,
         scale: 1.08,
@@ -2992,7 +3039,7 @@ export class UIManager {
         ease: "power2.in",
         onComplete: () => overlay.remove()
       });
-    }, 2400);
+    }, 2800);
   }
 
   // Pluie de braises ardentes, de cendres incandescentes et d'étincelles de guerre
@@ -3226,6 +3273,32 @@ export class UIManager {
       const pct = Math.min(100, Math.floor(data.progressRatio * 100));
       progressFill.style.width = `${pct}%`;
       if (progressPct) progressPct.textContent = `${pct}%`;
+
+      // Dès que 100% est atteint : afficher le bouton d'extraction immédiate vers la carte
+      const returnMapBtn = this.root.querySelector('#btn-hud-return-map-100');
+      if (pct >= 100 || data.progressRatio >= 1.0) {
+        progressFill.style.background = 'linear-gradient(90deg, #2ed573, #10ac84, #fffa65)';
+        progressFill.style.boxShadow = '0 0 12px rgba(46, 213, 115, 0.7)';
+        if (progressPct) {
+          progressPct.textContent = '100% ✔';
+          progressPct.style.color = '#fffa65';
+          progressPct.style.fontWeight = '950';
+        }
+        if (returnMapBtn && returnMapBtn.style.display === 'none') {
+          returnMapBtn.style.display = 'inline-flex';
+          gsap.fromTo(returnMapBtn,
+            { scale: 0.2, opacity: 0, x: 20 },
+            { scale: 1.0, opacity: 1, x: 0, duration: 0.45, ease: "back.out(2.2)" }
+          );
+          soundManager.playVictory();
+          Haptic.success();
+        }
+        const objCard = this.root.querySelector('#hud-objective-card');
+        if (objCard) {
+          objCard.classList.add('objective-100-complete');
+          objCard.title = 'Objectif 100% atteint ! Cliquez pour retourner à la carte';
+        }
+      }
     }
     // Score dynamique au volant
     if (scoreVal) {

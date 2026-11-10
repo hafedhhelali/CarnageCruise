@@ -4708,7 +4708,7 @@ html, body {
   justify-content: center;
   background: radial-gradient(circle at center, rgba(30, 5, 10, 0.85) 0%, rgba(5, 5, 10, 0.95) 100%);
   backdrop-filter: blur(8px);
-  pointer-events: none;
+  pointer-events: auto;
 }
 
 .finish-assault-card {
@@ -4973,6 +4973,63 @@ html, body {
   font-weight: 850;
   color: #c8d6e5;
   letter-spacing: 1px;
+}
+
+/* ==========================================================================
+   BOUTONS DE RETOUR CARTE QUAND 100% EST ATTEINT
+   ========================================================================== */
+.hud-btn-return-map-100 {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #2ed573 0%, #10ac84 100%);
+  color: #ffffff;
+  border: 2px solid #7bed9f;
+  border-radius: 12px;
+  padding: 6px 14px;
+  font-weight: 950;
+  font-size: 0.82rem;
+  letter-spacing: 0.6px;
+  box-shadow: 0 0 18px rgba(46, 213, 115, 0.75), 0 4px 12px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  animation: pulse-ret-btn 1.2s infinite ease-in-out alternate;
+  z-index: 100;
+  white-space: nowrap;
+}
+
+@keyframes pulse-ret-btn {
+  0% { transform: scale(0.95); box-shadow: 0 0 10px rgba(46, 213, 115, 0.5); }
+  100% { transform: scale(1.05); box-shadow: 0 0 22px rgba(46, 213, 115, 0.95); }
+}
+
+.objective-100-complete {
+  border-color: #2ed573 !important;
+  box-shadow: 0 0 16px rgba(46, 213, 115, 0.6) !important;
+  cursor: pointer !important;
+}
+
+.btn-assault-return-cta {
+  margin-top: 14px;
+  width: 100%;
+  padding: 13px 18px;
+  background: linear-gradient(135deg, #3742fa 0%, #1e272e 100%);
+  border: 2px solid #70a1ff;
+  border-radius: 14px;
+  box-shadow: 0 4px 20px rgba(55, 66, 250, 0.55);
+  font-weight: 950;
+  font-size: 0.98rem;
+  color: #ffffff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  animation: pulse-assault-btn 1.4s infinite ease-in-out alternate;
+}
+
+@keyframes pulse-assault-btn {
+  0% { transform: scale(0.98); box-shadow: 0 4px 14px rgba(55, 66, 250, 0.4); }
+  100% { transform: scale(1.02); box-shadow: 0 6px 26px rgba(55, 66, 250, 0.85); }
 }
 
 
