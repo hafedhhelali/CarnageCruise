@@ -1221,22 +1221,58 @@ html, body {
   box-shadow: 0 0 10px rgba(46, 213, 115, 0.35);
 }
 
-/* CONTRÔLES DE ZOOM FLOTTANTS EN BAS À DROITE */
-.map-zoom-controls-floating {
+/* CONTRÔLES DE ZOOM COMPACTS EN PILULE DOCKÉE EN HAUT À DROITE (ZÉRO CONFLIT) */
+.map-zoom-controls-pill {
   position: absolute;
-  bottom: 18px;
-  right: 14px;
+  top: 12px;
+  right: 12px;
   display: flex;
-  flex-direction: column;
   align-items: center;
   gap: 5px;
-  z-index: 35;
-  background: rgba(15, 23, 42, 0.88);
-  border: 1px solid rgba(0, 206, 201, 0.45);
-  border-radius: 14px;
-  padding: 6px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(10px);
+  z-index: 40;
+  background: rgba(15, 23, 42, 0.92);
+  border: 1.5px solid rgba(0, 206, 201, 0.55);
+  border-radius: 999px;
+  padding: 4px 8px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.75), 0 0 12px rgba(0, 206, 201, 0.25);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.btn-zoom-pill {
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.1s, background 0.15s, border-color 0.15s;
+  user-select: none;
+  padding: 0;
+  line-height: 1;
+}
+
+.btn-zoom-pill:active {
+  transform: scale(0.9);
+  background: rgba(0, 206, 201, 0.4);
+  border-color: #00cec9;
+}
+
+.zoom-pill-badge {
+  font-family: var(--font-header);
+  font-size: 0.8rem;
+  font-weight: 900;
+  color: #00cec9;
+  min-width: 44px;
+  text-align: center;
+  padding: 0 4px;
+  letter-spacing: 0.5px;
 }
 
 /* CONTRÔLES DE ZOOM FLOTTANTS DE LA CARTE (DOCKÉS EN HAUT À DROITE DANS LE VIEWPORT, NE COUVRENT PAS LE TITRE) */
@@ -4012,38 +4048,28 @@ html, body {
    NAVIGATION RAPIDE ENTRE LES CIBLES DU GRAND TOUR (CARROUSEL & FLOTTANTS)
    ========================================================================== */
 
-.map-city-nav-floating {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
+.btn-nav-arrow {
   width: 44px;
-  height: 52px;
-  background: rgba(15, 23, 42, 0.88);
-  backdrop-filter: blur(10px);
+  height: 44px;
+  min-width: 44px;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.9);
   border: 1.5px solid rgba(0, 206, 201, 0.65);
-  border-radius: 14px;
   color: #00cec9;
-  font-size: 1.35rem;
+  font-size: 1.15rem;
   font-weight: 900;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  z-index: 35;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.65), 0 0 12px rgba(0, 206, 201, 0.3);
-  transition: transform 0.15s, background 0.15s, border-color 0.15s, color 0.15s;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
+  transition: transform 0.12s, background 0.15s, border-color 0.15s, color 0.15s;
+  flex-shrink: 0;
+  padding: 0;
 }
 
-.map-city-nav-floating.left {
-  left: 10px;
-}
-
-.map-city-nav-floating.right {
-  right: 10px;
-}
-
-.map-city-nav-floating:active {
-  transform: translateY(-50%) scale(0.92);
+.btn-nav-arrow:active {
+  transform: scale(0.92);
   background: rgba(0, 206, 201, 0.35);
   border-color: #ffd700;
   color: #ffd700;
@@ -4061,52 +4087,87 @@ html, body {
   box-sizing: border-box;
 }
 
-.btn-city-nav {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 12px;
-  padding: 6px 11px;
-  color: #74b9ff;
-  font-size: 0.76rem;
-  font-weight: 850;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  transition: transform 0.12s, background 0.12s;
-  flex-shrink: 0;
-}
-
-.btn-city-nav:active {
-  transform: scale(0.94);
-  background: rgba(116, 185, 255, 0.25);
-  color: #ffffff;
-}
-
 .city-nav-info {
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   text-align: center;
   min-width: 0;
+  padding: 0 6px;
+  overflow: hidden;
 }
 
-.city-nav-step {
+.city-nav-top-meta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 2px;
+  width: 100%;
+}
+
+.city-nav-step-badge {
+  font-family: var(--font-header);
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: #a4b0be;
+  letter-spacing: 1px;
+}
+
+.city-status-pill {
   font-size: 0.62rem;
   font-weight: 900;
-  color: #ffd32a;
-  letter-spacing: 0.8px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  letter-spacing: 0.5px;
   text-transform: uppercase;
 }
 
+.city-status-pill.status-unl {
+  background: rgba(46, 213, 115, 0.2);
+  border: 1px solid #2ed573;
+  color: #2ed573;
+}
+
+.city-status-pill.status-loc {
+  background: rgba(164, 176, 190, 0.2);
+  border: 1px solid #a4b0be;
+  color: #a4b0be;
+}
+
+.city-status-pill.status-ext {
+  background: rgba(255, 71, 87, 0.25);
+  border: 1px solid #ff4757;
+  color: #ff4757;
+}
+
+.city-nav-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  min-width: 0;
+}
+
+.city-nav-flag {
+  font-size: 1.15rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
 .city-nav-title {
-  font-size: 0.95rem;
-  font-weight: 900;
+  font-family: var(--font-header);
+  font-size: 1.12rem;
+  font-weight: 950;
   color: #ffffff;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   letter-spacing: 0.5px;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
 }
 
 .city-pin-selected-pill {
@@ -4567,51 +4628,130 @@ html, body {
 }
 
 /* ==========================================================================
-   RANGÉE DE STATS COMPACTES & DOCK D'ACTIONS DÉCLUTTÉRÉ
+   TÉLÉMÉTRIE 3 PILIERS, SÉLECTEUR D'ENGIN DÉDIÉ & ACTIONS DE VILLE
    ========================================================================== */
 
-.city-compact-stats-row {
+.city-stats-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 6px;
-  background: rgba(8, 14, 26, 0.6);
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  background: rgba(8, 14, 26, 0.65);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 14px;
   padding: 8px 10px;
   box-sizing: border-box;
 }
 
-.cstat-item {
+.cstat-col {
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
   gap: 2px;
+  min-width: 0;
 }
 
 .cstat-label {
-  font-size: 0.60rem;
-  font-weight: 900;
+  font-family: var(--font-header);
+  font-size: 0.62rem;
+  font-weight: 800;
   color: #a4b0be;
-  letter-spacing: 0.6px;
+  letter-spacing: 0.5px;
 }
 
 .cstat-val {
-  font-size: 0.82rem;
+  font-family: var(--font-header);
+  font-size: 0.88rem;
   font-weight: 950;
-  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
-.cstat-veh-btn {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 211, 42, 0.5);
-  color: #fffa65;
-  border-radius: 8px;
+.cstat-target {
+  color: #ffd32a;
+}
+
+.cstat-record {
+  color: #00cec9;
+}
+
+.cstat-stars {
+  color: #f1c40f;
+  letter-spacing: 2px;
+}
+
+.city-vehicle-dock-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: rgba(15, 23, 42, 0.72);
+  border: 1.5px solid rgba(0, 206, 201, 0.4);
+  border-radius: 14px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: transform 0.12s, border-color 0.15s, background 0.15s;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.city-vehicle-dock-btn:active {
+  transform: scale(0.98);
+  border-color: #00cec9;
+  background: rgba(0, 206, 201, 0.18);
+}
+
+.veh-dock-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+
+.veh-dock-icon {
+  font-size: 1.4rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.veh-dock-texts {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.veh-dock-sub {
+  font-size: 0.58rem;
+  font-weight: 800;
+  color: #a4b0be;
+  letter-spacing: 0.5px;
+}
+
+.veh-dock-name {
+  font-family: var(--font-header);
+  font-size: 0.86rem;
+  font-weight: 950;
+  color: #00cec9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.veh-dock-action {
+  font-family: var(--font-header);
   font-size: 0.68rem;
   font-weight: 900;
-  padding: 3px 6px;
-  cursor: pointer;
-  white-space: nowrap;
+  color: #ffd700;
+  background: rgba(255, 215, 0, 0.15);
+  border: 1px solid rgba(255, 215, 0, 0.4);
+  padding: 4px 8px;
+  border-radius: 8px;
+  flex-shrink: 0;
 }
 
 .city-main-actions-dock {
@@ -4649,34 +4789,67 @@ html, body {
 }
 
 /* ==========================================================================
-   ERGONOMIE COCKPIT DU HUD DE JEU MOBILE (COMMANDES DU BAS)
+   ERGONOMIE COCKPIT DU HUD DE JEU MOBILE (COMMANDES DU BAS HAUTE RÉACTIVITÉ)
    ========================================================================== */
 
+.hud-bottom-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  width: 100%;
+  padding: 0 14px max(14px, env(safe-area-inset-bottom, 14px)) 14px;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+
 .btn-pedal-brake {
-  width: 92px;
-  height: 74px;
-  border-radius: 24px;
+  width: 90px;
+  height: 72px;
+  border-radius: 22px;
   background: linear-gradient(145deg, #1f080b, #4a0e14);
   border: 2px solid #ff4757;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  cursor: pointer;
+  pointer-events: auto;
   box-shadow: 0 6px 24px rgba(255, 71, 87, 0.5), inset 0 2px 4px rgba(255, 255, 255, 0.25);
   position: relative;
   overflow: hidden;
   transition: transform 0.08s ease;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
-.btn-pedal-brake:active {
+.btn-pedal-brake:active, .btn-pedal-brake.active {
   transform: scale(0.90) translateY(4px) !important;
+  background: linear-gradient(145deg, #e74c3c, #c0392b) !important;
+  border-color: #ff7675 !important;
   box-shadow: 0 0 30px #ff4757, inset 0 4px 8px rgba(0, 0, 0, 0.6) !important;
 }
 
 .btn-nitro-pedal {
   width: 86px;
-  height: 74px;
-  border-radius: 24px;
+  height: 72px;
+  border-radius: 22px;
   background: linear-gradient(145deg, #091a24, #123d47);
   border: 2px solid #00cec9;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   box-shadow: 0 6px 24px rgba(0, 206, 201, 0.45), inset 0 2px 4px rgba(255, 255, 255, 0.25);
-  transition: transform 0.08s ease;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: all 0.12s ease;
+  position: relative;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .btn-nitro-pedal:active {
@@ -4684,12 +4857,78 @@ html, body {
   box-shadow: 0 0 30px #00cec9, inset 0 4px 8px rgba(0, 0, 0, 0.6) !important;
 }
 
+/* VARIATION BOISSON ÉNERGISANTE (CHEVAL / À PIED) */
+.btn-nitro-pedal.btn-energy-drink {
+  background: linear-gradient(145deg, #0d2818, #164e28, #1b7a3e) !important;
+  border: 2px solid #2ed573 !important;
+  box-shadow: 0 6px 24px rgba(46, 213, 115, 0.5), inset 0 2px 4px rgba(255, 255, 255, 0.25) !important;
+}
+
+.btn-nitro-pedal.btn-energy-drink .nitro-sub {
+  color: #2ed573 !important;
+}
+
+.energy-fill-bar {
+  background: linear-gradient(90deg, #2ed573, #7bed9f, #fffa65) !important;
+  box-shadow: 0 0 8px #2ed573 !important;
+}
+
+.btn-nitro-pedal.btn-energy-drink.ready {
+  border-color: #7bed9f !important;
+  box-shadow: 0 0 28px rgba(46, 213, 115, 0.95), inset 0 0 15px rgba(123, 237, 159, 0.6) !important;
+  animation: energyPulseReady 0.8s infinite alternate !important;
+}
+
+@keyframes energyPulseReady {
+  0% { transform: scale(1); filter: brightness(1); }
+  100% { transform: scale(1.06); filter: brightness(1.25); box-shadow: 0 0 35px #2ed573; }
+}
+
+.btn-nitro-pedal.btn-energy-drink.active {
+  background: linear-gradient(145deg, #2ed573, #10ac84) !important;
+  border-color: #fff !important;
+  box-shadow: 0 0 40px #2ed573, inset 0 0 20px #fff !important;
+}
+
+.btn-horn-pedal {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ffa502, #ff7f50);
+  border: 2px solid #ffbe76;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 20px rgba(255, 127, 80, 0.5);
+  cursor: pointer;
+  pointer-events: auto;
+  transition: transform 0.08s ease;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.btn-horn-pedal:active {
+  transform: scale(0.88) !important;
+  filter: brightness(1.2);
+  box-shadow: 0 0 25px #ffa502 !important;
+}
+
+.btn-attack-pedal {
+  background: linear-gradient(135deg, #ff4757, #ff1744) !important;
+  border: 2px solid #ff6b81 !important;
+  box-shadow: 0 4px 20px rgba(255, 23, 68, 0.6), 0 0 14px rgba(255, 71, 87, 0.45) !important;
+  animation: attackPedalPulse 1.8s infinite ease-in-out !important;
+}
+
 .speedometer-center {
-  background: rgba(10, 16, 30, 0.88);
+  background: rgba(10, 16, 30, 0.9);
   border: 1.5px solid rgba(255, 255, 255, 0.22);
   border-radius: 22px;
   padding: 8px 18px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
 }
 
 .touch-hint {
@@ -4833,6 +5072,74 @@ html, body {
 
 .fmetric-icon {
   font-size: 1.15rem;
+}
+
+.finish-assault-actions-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  margin-top: 14px;
+}
+
+.btn-assault-hero-next {
+  width: 100%;
+  padding: 13px 14px;
+  background: linear-gradient(135deg, #2ed573, #10ac84);
+  font-size: 1.02rem;
+  font-weight: 950;
+  box-shadow: 0 4px 18px rgba(46, 213, 115, 0.5);
+  border: 2px solid #7bed9f;
+  border-radius: 14px;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  text-transform: uppercase;
+}
+
+.btn-assault-return-cta {
+  width: 100%;
+  padding: 13px 14px;
+  background: linear-gradient(135deg, #3742fa, #2f3542);
+  font-size: 1.02rem;
+  font-weight: 950;
+  border: 2px solid #70a1ff;
+  border-radius: 14px;
+  box-shadow: 0 4px 18px rgba(55, 66, 250, 0.45);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.finish-assault-secondary-row {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.finish-assault-secondary-row button {
+  flex: 1;
+  padding: 10px 6px;
+  font-size: 0.82rem;
+  font-weight: 900;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.btn-danger-wmd {
+  background: rgba(235, 77, 75, 0.25) !important;
+  border: 1.5px solid #ff7675 !important;
+  color: #ff7675 !important;
 }
 
 /* ==========================================================================

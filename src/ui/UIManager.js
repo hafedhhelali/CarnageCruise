@@ -391,17 +391,13 @@ export class UIManager {
 
       <!-- CARTE D'EUROPE ET BASSIN MÉDITERRANÉEN HAUTE-FIDÉLITÉ AVEC ZOOM INTERACTIF -->
       <div class="europe-map-scroll-viewport" id="europe-viewport">
-        <!-- CONTRÔLES DE ZOOM FLOTTANTS (EN BAS À DROITE, SANS AUCUNE SUPERPOSITION) -->
-        <div class="map-zoom-controls-floating">
-          <button id="btn-zoom-in" class="btn-zoom" title="Agrandir (Zoom +)">➕</button>
-          <span class="zoom-level-badge" id="zoom-badge">${Math.round(this.mapZoom * 100)}%</span>
-          <button id="btn-zoom-out" class="btn-zoom" title="Réduire (Zoom -)">➖</button>
-          <button id="btn-zoom-reset" class="btn-zoom" title="Recentrer">🎯</button>
+        <!-- CONTRÔLES DE ZOOM COMPACTS EN PILULE DOCKÉE EN HAUT À DROITE (ZÉRO CONFLIT ERGONOMIQUE) -->
+        <div class="map-zoom-controls-pill">
+          <button id="btn-zoom-out" class="btn-zoom-pill" title="Réduire (Zoom -)">➖</button>
+          <span class="zoom-pill-badge" id="zoom-badge">${Math.round(this.mapZoom * 100)}%</span>
+          <button id="btn-zoom-in" class="btn-zoom-pill" title="Agrandir (Zoom +)">➕</button>
+          <button id="btn-zoom-reset" class="btn-zoom-pill" title="Recentrer la carte">🎯</button>
         </div>
-
-        <!-- BOUTONS FLOTTANTS DE NAVIGATION RAPIDE ENTRE LES CIBLES DU GRAND TOUR -->
-        <button id="map-float-prev-city" class="map-city-nav-floating left" title="Cité précédente (◀)">◀</button>
-        <button id="map-float-next-city" class="map-city-nav-floating right" title="Cité suivante (▶)">▶</button>
 
         <div class="europe-map-canvas-container" id="europe-canvas">
           <svg class="europe-svg" viewBox="0 -320 1060 1480" preserveAspectRatio="none">
@@ -649,7 +645,7 @@ export class UIManager {
     };
 
     // Empêcher les gestes sur les boutons de zoom de parasiter le pan de la carte
-    const zoomControls = mapScreen.querySelector('.map-zoom-controls-floating');
+    const zoomControls = mapScreen.querySelector('.map-zoom-controls-pill');
     if (zoomControls) {
       zoomControls.addEventListener('touchstart', (e) => e.stopPropagation(), { passive: true });
       zoomControls.addEventListener('touchmove', (e) => e.stopPropagation(), { passive: true });
@@ -919,15 +915,6 @@ export class UIManager {
     };
     this.navigateMapCity = navigateCity;
 
-    mapScreen.querySelector('#map-float-prev-city')?.addEventListener('click', (e) => {
-      e?.stopPropagation();
-      navigateCity(-1);
-    });
-    mapScreen.querySelector('#map-float-next-city')?.addEventListener('click', (e) => {
-      e?.stopPropagation();
-      navigateCity(1);
-    });
-
     const handleCityAction = (cityId) => {
       const city = CITIES.find(c => c.id === cityId);
       if (!city) return;
@@ -1047,17 +1034,25 @@ export class UIManager {
     const starsHtml = isExterminated ? '★★★' : ('★'.repeat(cityData.stars) + '☆'.repeat(3 - cityData.stars));
 
     detailCard.innerHTML = `
-      <!-- 1. BARRE DE NAVIGATION PRÉCISE : AFFICHE DIRECTEMENT LE NOM DES VILLES ◀ ET ▶ -->
+      <!-- 1. BARRE DE NAVIGATION PRÉCISE : CHEVRONS ERGONOMIQUES 44x44 & TITRE PLEINE LARGEUR (ZÉRO TEXTE COUPÉ) -->
       <div class="city-nav-bar">
-        <button id="btn-card-prev-city" class="btn-city-nav" title="Aller à ${prevCity.name}">
-          ◀ <span class="nav-btn-text">#${prevIdx + 1} ${prevCity.name.toUpperCase()}</span>
+        <button id="btn-card-prev-city" class="btn-nav-arrow" title="Étape précédente (${prevCity.name})" aria-label="Précédente">
+          <span>◀</span>
         </button>
         <div class="city-nav-info">
-          <span class="city-nav-step">ÉTAPE ${stageIndex} / ${CITIES.length}</span>
-          <span class="city-nav-title">${city.countryFlag || '🌍'} ${city.name.toUpperCase()}</span>
+          <div class="city-nav-top-meta">
+            <span class="city-nav-step-badge">ÉTAPE ${stageIndex} / ${CITIES.length}</span>
+            <span class="city-status-pill ${isExterminated ? 'status-ext' : (unlocked ? 'status-unl' : 'status-loc')}">
+              ${isExterminated ? '☠️ SCELLÉE' : (unlocked ? '⚡ LIBRE' : '🔒 VERR.')}
+            </span>
+          </div>
+          <div class="city-nav-title-row">
+            <span class="city-nav-flag">${city.countryFlag || '🌍'}</span>
+            <span class="city-nav-title" title="${city.name}">${city.name.toUpperCase()}</span>
+          </div>
         </div>
-        <button id="btn-card-next-city" class="btn-city-nav" title="Aller à ${nextCity.name}">
-          <span class="nav-btn-text">#${nextIdx + 1} ${nextCity.name.toUpperCase()}</span> ▶
+        <button id="btn-card-next-city" class="btn-nav-arrow" title="Étape suivante (${nextCity.name})" aria-label="Suivante">
+          <span>▶</span>
         </button>
       </div>
 
@@ -1077,29 +1072,35 @@ export class UIManager {
         }).join('')}
       </div>
 
-      <!-- 3. RANGÉE DE STATS ARCADE ÉPURÉE (SANS PARAGRAPHES INUTILES) -->
-      <div class="city-compact-stats-row">
-        <div class="cstat-item">
-          <span class="cstat-label">RECORD</span>
-          <span class="cstat-val">${cityData.bestScore ? cityData.bestScore.toLocaleString('fr-FR') + ' pts' : '0 pt'}</span>
+      <!-- 3. TÉLÉMÉTRIE ARCADE 3 PILIERS HAUTE LISIBILITÉ (AUCUN CHIFFRE COMPRESSÉ) -->
+      <div class="city-stats-grid">
+        <div class="cstat-col">
+          <span class="cstat-label">🎯 OBJECTIF</span>
+          <span class="cstat-val cstat-target">${city.targetScore.toLocaleString('fr-FR')} <small>pts</small></span>
         </div>
-        <div class="cstat-item">
-          <span class="cstat-label">OBJECTIF</span>
-          <span class="cstat-val" style="color: #ffd32a;">${city.targetScore.toLocaleString('fr-FR')} pts</span>
+        <div class="cstat-col">
+          <span class="cstat-label">🏆 RECORD</span>
+          <span class="cstat-val cstat-record">${cityData.bestScore ? cityData.bestScore.toLocaleString('fr-FR') + ' pts' : '0 pt'}</span>
         </div>
-        <div class="cstat-item">
-          <span class="cstat-label">ÉTOILES</span>
-          <span class="cstat-val" style="color: #f1c40f;">${starsHtml}</span>
-        </div>
-        <div class="cstat-item">
-          <span class="cstat-label">ENGIN D'ASSAUT</span>
-          <button id="btn-city-vehicle-shortcut" class="cstat-veh-btn" title="Changer d'engin">
-            <span>${currentBike.icon || '🪖'} ${currentBike.shortName || currentBike.name} ▾</span>
-          </button>
+        <div class="cstat-col">
+          <span class="cstat-label">⭐ ÉTOILES</span>
+          <span class="cstat-val cstat-stars">${starsHtml}</span>
         </div>
       </div>
 
-      <!-- 4. DOCK D'ACTIONS PRINCIPAL ERGONOMIQUE -->
+      <!-- 4. BANNIÈRE SÉLECTEUR D'ENGIN D'ASSAUT DÉDIÉE (PLEINE LARGEUR ET CLAIRE) -->
+      <button id="btn-city-vehicle-shortcut" class="city-vehicle-dock-btn" title="Modifier votre bolide dans le Garage">
+        <div class="veh-dock-left">
+          <span class="veh-dock-icon">${currentBike.icon || '🪖'}</span>
+          <div class="veh-dock-texts">
+            <span class="veh-dock-sub">BOLIDE SÉLECTIONNÉ POUR L'ASSAUT</span>
+            <span class="veh-dock-name">${currentBike.name.toUpperCase()}</span>
+          </div>
+        </div>
+        <span class="veh-dock-action">GARAGE ▾</span>
+      </button>
+
+      <!-- 5. DOCK D'ACTIONS PRINCIPAL ERGONOMIQUE HAUTE VISIBILITÉ -->
       <div class="city-main-actions-dock">
         ${isExterminated ? `
           <button class="btn-arcade btn-enter-city-hero btn-city-closed" disabled>
@@ -1113,10 +1114,9 @@ export class UIManager {
           <button id="btn-enter-city-race" class="btn-arcade btn-enter-city-hero" title="Lancer l'assaut">
             <span class="btn-enter-hero-icon">⚡</span>
             <div class="btn-enter-hero-texts">
-              <span class="btn-enter-hero-title">▶ LANCER L'ASSAUT : ${city.name.toUpperCase()}</span>
-              <span class="btn-enter-hero-desc">OBJECTIF : ${city.targetScore.toLocaleString('fr-FR')} PTS • TOUCHE ENTRÉE</span>
+              <span class="btn-enter-hero-title">LANCER L'ASSAUT ▶</span>
+              <span class="btn-enter-hero-desc">OBJECTIF : ${city.targetScore.toLocaleString('fr-FR')} PTS</span>
             </div>
-            <span class="btn-enter-hero-badge">ATTAQUER ▶</span>
           </button>
           <button id="btn-wmd-city" class="btn-arcade btn-wmd-dock" title="Exterminer avec ADM">
             <span>💀 ADM</span>
@@ -1126,9 +1126,8 @@ export class UIManager {
             <span class="btn-enter-hero-icon">🔒</span>
             <div class="btn-enter-hero-texts">
               <span class="btn-enter-hero-title">ÉTAPE VERROUILLÉE</span>
-              <span class="btn-enter-hero-desc">${city.unlockScoreRequired.toLocaleString('fr-FR')} POINTS REQUIS SUR LE TOUR</span>
+              <span class="btn-enter-hero-desc">${city.unlockScoreRequired.toLocaleString('fr-FR')} PTS REQUIS SUR LE TOUR</span>
             </div>
-            <span class="btn-enter-hero-badge">BLOQUÉ</span>
           </button>
         `)}
       </div>
@@ -2660,7 +2659,12 @@ export class UIManager {
     const hud = document.createElement('div');
     hud.className = 'screen-hud';
 
-    const equippedBikeId = storage.getEquippedBike();
+    const equippedBikeId = storage.getEquippedBike() || gameState.selectedBike?.id || 'tank';
+    const isFootOrHorse = (equippedBikeId === 'cheval' || equippedBikeId === 'run_ak47' || equippedBikeId === 'run_chainsaw');
+    const boostIcon = isFootOrHorse ? '🥫' : '⚡';
+    const boostLabel = isFootOrHorse ? 'ENERGY' : 'NITRO';
+    const boostTitle = isFootOrHorse ? 'Boire une Energy Drink pour sprinter à pleine vitesse !' : 'Activer le Nitro Boost 5s (Touche Espace / Shift)';
+
     let actionIcon = '📢';
     let actionLabel = 'KLAXON';
     let actionTitle = 'Klaxonner !';
@@ -2761,15 +2765,15 @@ export class UIManager {
           </div>
         </div>
 
-        <!-- Groupe de commandes droit ergonomique (Nitro + Pub + Arme/Klaxon) -->
+        <!-- Groupe de commandes droit ergonomique (Nitro / Energy Drink + Arme/Klaxon) -->
         <div class="hud-right-cluster">
           <div class="hud-nitro-group">
-            <button class="btn-nitro-pedal" id="btn-hud-nitro" title="Activer le Nitro Boost 5s (Touche Espace / Shift)">
+            <button class="btn-nitro-pedal ${isFootOrHorse ? 'btn-energy-drink' : ''}" id="btn-hud-nitro" title="${boostTitle}">
               <div class="nitro-fill-track">
-                <div class="nitro-fill-bar" id="hud-nitro-fill" style="width: 0%;"></div>
+                <div class="nitro-fill-bar ${isFootOrHorse ? 'energy-fill-bar' : ''}" id="hud-nitro-fill" style="width: 0%;"></div>
               </div>
-              <span class="nitro-icon">⚡</span>
-              <span class="nitro-label" id="hud-nitro-label">NITRO</span>
+              <span class="nitro-icon" id="hud-nitro-icon">${boostIcon}</span>
+              <span class="nitro-label" id="hud-nitro-label">${boostLabel}</span>
               <span class="nitro-sub" id="hud-nitro-sub">0%</span>
             </button>
           </div>
@@ -2815,15 +2819,18 @@ export class UIManager {
     brakeBtn.addEventListener('pointerleave', stopBraking);
     brakeBtn.addEventListener('pointercancel', stopBraking);
 
-    // Gestion du bouton Nitro 5 secondes
+    // Gestion du bouton Nitro / Energy Drink 5 secondes
     const nitroBtn = hud.querySelector('#btn-hud-nitro');
     if (nitroBtn) {
-      nitroBtn.addEventListener('click', () => {
+      const handleNitro = (e) => {
+        if (e && e.type === 'touchstart') e.preventDefault();
         const ok = gameState.activateNitro();
         if (ok) {
           if (this.onAction) this.onAction('NITRO');
         }
-      });
+      };
+      nitroBtn.addEventListener('touchstart', handleNitro, { passive: false });
+      nitroBtn.addEventListener('click', handleNitro);
     }
 
     const returnMap100 = hud.querySelector('#btn-hud-return-map-100');
@@ -2831,8 +2838,8 @@ export class UIManager {
       const handleReturnToMap = (e) => {
         if (e && e.type === 'touchstart') e.preventDefault();
         soundManager.playClick();
-        gameState.endRun();
         this.triggerReturnToMapCinematic(gameState.selectedCity);
+        gameState.endRun();
       };
       returnMap100.addEventListener('touchstart', handleReturnToMap, { passive: false });
       returnMap100.addEventListener('click', handleReturnToMap);
@@ -2844,8 +2851,8 @@ export class UIManager {
         const pctEl = hud.querySelector('#hud-progress-pct');
         if (pctEl && pctEl.textContent.includes('100%')) {
           soundManager.playClick();
-          gameState.endRun();
           this.triggerReturnToMapCinematic(gameState.selectedCity);
+          gameState.endRun();
         }
       });
     }
@@ -2977,12 +2984,25 @@ export class UIManager {
 
   // --- CONQUÊTE D'ASSAUT URBAIN APOCALYPTIQUE (MOTORMAGEDDON CARNAGE) ---
   triggerCarnageAssaultFinish(city, score, victims = 35) {
+    if (this.assaultOverlay) {
+      this.assaultOverlay.remove();
+      this.assaultOverlay = null;
+    }
+
+    const currentIndex = CITIES.findIndex(c => c.id === city.id);
+    const nextCity = (currentIndex >= 0 && currentIndex < CITIES.length - 1) ? CITIES[currentIndex + 1] : null;
+    const isNextUnlocked = nextCity ? storage.isCityUnlocked(nextCity.id) : false;
+    const isExterminated = storage.isCityExterminated(city.id);
+
     const overlay = document.createElement('div');
     overlay.className = 'finish-assault-overlay';
+    this.assaultOverlay = overlay;
+    this.activeModals.push(overlay);
+
     overlay.innerHTML = `
       <div class="finish-assault-card">
         <div class="finish-hazard-stripe top"></div>
-        <div class="finish-assault-badge">⚠️ ASSAUT SECTORIEL VALIDÉ ⚠️</div>
+        <div class="finish-assault-badge">⚠️ ASSAUT SECTORIEL TRIOMPHAL ⚠️</div>
         <div class="finish-assault-skull-row">
           <span class="skull-glow">💀</span>
           <span class="fire-glow">🔥</span>
@@ -2992,54 +3012,124 @@ export class UIManager {
         <div class="finish-assault-sub">SECTEUR METROPOLITAIN ÉPURÉ AU FEU</div>
         <div class="finish-assault-city">${city.countryFlag || '🌍'} ${city.name.toUpperCase()} (ASSERVIE)</div>
         <div class="finish-assault-metrics">
-          <div class="fmetric-pill"><span class="fmetric-icon">💀</span> <strong>+${victims}</strong> NEUTRALISÉS</div>
+          <div class="fmetric-pill"><span class="fmetric-icon">💀</span> <strong>+${victims.toLocaleString('fr-FR')}</strong> NEUTRALISÉS</div>
           <div class="fmetric-pill"><span class="fmetric-icon">⚡</span> <strong>${score.toLocaleString('fr-FR')}</strong> PTS</div>
+          <div class="fmetric-pill" id="assault-stars-pill"><span class="fmetric-icon">⭐</span> <strong id="assault-stars-text">★★★</strong></div>
         </div>
         <div class="finish-hazard-stripe bottom"></div>
-        <button id="btn-assault-return-map" class="btn-arcade btn-assault-return-cta">
-          <span>🛰️ RETOUR SATELLITE À LA CARTE</span>
-        </button>
+
+        <!-- ACTIONS PERMANENTES HAUTE ERGONOMIE (NE DISPARAISSENT JAMAIS SEULES) -->
+        <div class="finish-assault-actions-stack">
+          ${nextCity && isNextUnlocked ? `
+            <button id="btn-assault-next-raid" class="btn-arcade btn-assault-hero-next">
+              <span>💥 RAID SUIVANT : ${nextCity.name.toUpperCase()} ▶</span>
+            </button>
+          ` : ''}
+
+          <button id="btn-assault-return-map" class="btn-arcade btn-assault-return-cta">
+            <span>🛰️ RETOUR SATELLITE À LA CARTE</span>
+          </button>
+
+          <div class="finish-assault-secondary-row">
+            <button id="btn-assault-retry" class="btn-arcade btn-ghost">
+              <span>🔄 REJOUER</span>
+            </button>
+            <button id="btn-assault-garage" class="btn-arcade btn-accent">
+              <span>🪖 GARAGE</span>
+            </button>
+            ${!isExterminated ? `
+              <button id="btn-assault-wmd" class="btn-arcade btn-danger-wmd">
+                <span>💀 ADM</span>
+              </button>
+            ` : ''}
+          </div>
+        </div>
       </div>
     `;
 
     this.root.appendChild(overlay);
 
-    let fadeTimer = null;
+    const onFinishAction = (actionFn) => {
+      soundManager.playClick();
+      overlay.remove();
+      this.assaultOverlay = null;
+      this.activeModals = this.activeModals.filter(m => m !== overlay);
+      actionFn();
+    };
 
     const assaultReturnBtn = overlay.querySelector('#btn-assault-return-map');
     if (assaultReturnBtn) {
-      const onReturn = (e) => {
+      const handleReturn = (e) => {
         if (e && e.type === 'touchstart') e.preventDefault();
-        soundManager.playClick();
-        if (fadeTimer) clearTimeout(fadeTimer);
-        overlay.remove();
-        this.triggerReturnToMapCinematic(city);
+        onFinishAction(() => this.triggerReturnToMapCinematic(city));
       };
-      assaultReturnBtn.addEventListener('touchstart', onReturn, { passive: false });
-      assaultReturnBtn.addEventListener('click', onReturn);
+      assaultReturnBtn.addEventListener('touchstart', handleReturn, { passive: false });
+      assaultReturnBtn.addEventListener('click', handleReturn);
+    }
+
+    const assaultNextBtn = overlay.querySelector('#btn-assault-next-raid');
+    if (assaultNextBtn && nextCity) {
+      const handleNext = (e) => {
+        if (e && e.type === 'touchstart') e.preventDefault();
+        onFinishAction(() => {
+          gameState.selectCity(nextCity.id);
+          this.selectedMapCity = nextCity;
+          if (this.onAction) this.onAction('START_RUN', nextCity);
+        });
+      };
+      assaultNextBtn.addEventListener('touchstart', handleNext, { passive: false });
+      assaultNextBtn.addEventListener('click', handleNext);
+    }
+
+    const assaultRetryBtn = overlay.querySelector('#btn-assault-retry');
+    if (assaultRetryBtn) {
+      const handleRetry = (e) => {
+        if (e && e.type === 'touchstart') e.preventDefault();
+        onFinishAction(() => {
+          if (this.onAction) this.onAction('START_RUN', city);
+        });
+      };
+      assaultRetryBtn.addEventListener('touchstart', handleRetry, { passive: false });
+      assaultRetryBtn.addEventListener('click', handleRetry);
+    }
+
+    const assaultGarageBtn = overlay.querySelector('#btn-assault-garage');
+    if (assaultGarageBtn) {
+      const handleGarage = (e) => {
+        if (e && e.type === 'touchstart') e.preventDefault();
+        onFinishAction(() => {
+          this.previousScreen = 'MAP';
+          this.setScreen('GARAGE');
+        });
+      };
+      assaultGarageBtn.addEventListener('touchstart', handleGarage, { passive: false });
+      assaultGarageBtn.addEventListener('click', handleGarage);
+    }
+
+    const assaultWmdBtn = overlay.querySelector('#btn-assault-wmd');
+    if (assaultWmdBtn) {
+      const handleWmd = (e) => {
+        if (e && e.type === 'touchstart') e.preventDefault();
+        onFinishAction(() => {
+          this.showWmdStrikeModal(city);
+        });
+      };
+      assaultWmdBtn.addEventListener('touchstart', handleWmd, { passive: false });
+      assaultWmdBtn.addEventListener('click', handleWmd);
     }
 
     const card = overlay.querySelector('.finish-assault-card');
     if (card) {
       gsap.fromTo(card,
-        { scale: 0.25, opacity: 0, rotation: -4 },
-        { scale: 1.05, opacity: 1, rotation: 0, duration: 0.42, ease: "back.out(2.4)", onComplete: () => {
-          gsap.to(card, { scale: 1.0, duration: 0.18 });
+        { scale: 0.25, opacity: 0, rotation: -3 },
+        { scale: 1.04, opacity: 1, rotation: 0, duration: 0.44, ease: "back.out(2.2)", onComplete: () => {
+          gsap.to(card, { scale: 1.0, duration: 0.16 });
         }}
       );
     }
 
     this.spawnCarnageEmbersShower();
-
-    fadeTimer = setTimeout(() => {
-      gsap.to(overlay, {
-        opacity: 0,
-        scale: 1.08,
-        duration: 0.38,
-        ease: "power2.in",
-        onComplete: () => overlay.remove()
-      });
-    }, 2800);
+    // AUCUN TIMEOUT DE DISPARITION : LA CARTE RESTE VISIBLE JUSQU'À CE QUE LE JOUEUR CLIQUE UN BOUTON !
   }
 
   // Pluie de braises ardentes, de cendres incandescentes et d'étincelles de guerre
@@ -3079,6 +3169,11 @@ export class UIManager {
 
   // --- TRANSITION CINÉMATIQUE SATELLITE FLUIDE VERS LA CARTE DU MONDE (KH-12 ORBITAL) ---
   triggerReturnToMapCinematic(targetCity) {
+    this.isReturningToMap = true;
+    if (this.assaultOverlay) {
+      this.assaultOverlay.remove();
+      this.assaultOverlay = null;
+    }
     this.closeActiveModals();
 
     const overlay = document.createElement('div');
@@ -3121,6 +3216,7 @@ export class UIManager {
     }
 
     setTimeout(() => {
+      this.isReturningToMap = false;
       gameState.currentMode = 'MAP';
       soundManager.stopEngine();
       this.currentScreen = 'MAP';
@@ -3361,11 +3457,21 @@ export class UIManager {
     if (quotaVal && data.killQuota !== undefined) {
       quotaVal.textContent = data.killQuota;
     }
-    // Mise à jour de la jauge et du bouton Nitro 5 secondes
+    // Mise à jour de la jauge et du bouton Nitro / Energy Drink 5 secondes
     const nitroFill = this.root.querySelector('#hud-nitro-fill');
     const nitroSub = this.root.querySelector('#hud-nitro-sub');
     const nitroBtn = this.root.querySelector('#btn-hud-nitro');
     const nitroLabel = this.root.querySelector('#hud-nitro-label');
+    const nitroIcon = this.root.querySelector('#hud-nitro-icon');
+
+    const equippedBikeId = storage.getEquippedBike() || gameState.selectedBike?.id || 'tank';
+    const isFootOrHorse = (equippedBikeId === 'cheval' || equippedBikeId === 'run_ak47' || equippedBikeId === 'run_chainsaw');
+    const defaultLabel = isFootOrHorse ? 'ENERGY' : 'NITRO';
+    const readyLabel = isFootOrHorse ? 'ENERGY !' : 'NITRO (5s)';
+
+    if (nitroIcon) {
+      nitroIcon.textContent = isFootOrHorse ? '🥫' : '⚡';
+    }
 
     if (nitroFill && data.nitroGauge !== undefined) {
       nitroFill.style.width = `${data.nitroGauge}%`;
@@ -3375,17 +3481,17 @@ export class UIManager {
           nitroBtn.classList.remove('ready');
         }
         if (nitroSub) nitroSub.textContent = `${data.nitroTimer.toFixed(1)}s`;
-        if (nitroLabel) nitroLabel.textContent = 'BOOST !';
+        if (nitroLabel) nitroLabel.textContent = isFootOrHorse ? 'ENERGY !' : 'BOOST !';
       } else {
         if (nitroBtn) nitroBtn.classList.remove('active');
         if (data.nitroGauge >= 100) {
           if (nitroBtn) nitroBtn.classList.add('ready');
           if (nitroSub) nitroSub.textContent = 'PRÊT !';
-          if (nitroLabel) nitroLabel.textContent = 'NITRO (5s)';
+          if (nitroLabel) nitroLabel.textContent = readyLabel;
         } else {
           if (nitroBtn) nitroBtn.classList.remove('ready');
           if (nitroSub) nitroSub.textContent = `${data.nitroGauge}%`;
-          if (nitroLabel) nitroLabel.textContent = 'NITRO';
+          if (nitroLabel) nitroLabel.textContent = defaultLabel;
         }
       }
     }
@@ -3576,6 +3682,17 @@ export class UIManager {
 
   // --- 7. MODALE DE RÉSULTATS ---
   showResultsModal(data) {
+    if (this.isReturningToMap) return;
+
+    if (this.assaultOverlay && document.body.contains(this.assaultOverlay)) {
+      // Si la carte triomphale d'assaut est active, on met à jour ses métriques au lieu d'ouvrir une modale doublon
+      const starsText = this.assaultOverlay.querySelector('#assault-stars-text');
+      if (starsText) {
+        starsText.textContent = '★'.repeat(data.stars || 1) + '☆'.repeat(3 - (data.stars || 1));
+      }
+      return;
+    }
+
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay';
     this.activeModals.push(overlay);
