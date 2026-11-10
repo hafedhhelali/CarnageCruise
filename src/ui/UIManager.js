@@ -2768,13 +2768,13 @@ export class UIManager {
         <!-- Groupe de commandes droit ergonomique (Nitro / Energy Drink + Arme/Klaxon) -->
         <div class="hud-right-cluster">
           <div class="hud-nitro-group">
-            <button class="btn-nitro-pedal ${isFootOrHorse ? 'btn-energy-drink' : ''}" id="btn-hud-nitro" title="${boostTitle}">
+            <button class="btn-nitro-pedal ${isFootOrHorse ? 'btn-energy-drink' : ''} ${isFootOrHorse && gameState.energyDrinkCans > 0 ? 'ready' : ''}" id="btn-hud-nitro" title="${boostTitle}">
               <div class="nitro-fill-track">
-                <div class="nitro-fill-bar ${isFootOrHorse ? 'energy-fill-bar' : ''}" id="hud-nitro-fill" style="width: 0%;"></div>
+                <div class="nitro-fill-bar ${isFootOrHorse ? 'energy-fill-bar' : ''}" id="hud-nitro-fill" style="width: ${isFootOrHorse ? (gameState.energyDrinkCans > 0 ? '100%' : '0%') : '0%'};"></div>
               </div>
               <span class="nitro-icon" id="hud-nitro-icon">${boostIcon}</span>
               <span class="nitro-label" id="hud-nitro-label">${boostLabel}</span>
-              <span class="nitro-sub" id="hud-nitro-sub">0%</span>
+              <span class="nitro-sub" id="hud-nitro-sub">${isFootOrHorse ? `${gameState.energyDrinkCans} DISPO` : '0%'}</span>
             </button>
           </div>
 
@@ -3018,7 +3018,18 @@ export class UIManager {
         </div>
         <div class="finish-hazard-stripe bottom"></div>
 
-        <!-- ACTIONS PERMANENTES HAUTE ERGONOMIE (NE DISPARAISSENT JAMAIS SEULES) -->
+        <!-- BANNIÈRE DE RETOUR AUTOMATIQUE CARTE (FORCÉ ET INSTANTANÉ) -->
+        <div class="finish-auto-return-banner">
+          <div class="auto-return-info-row">
+            <span class="auto-return-sat-icon">🛰️</span>
+            <span>RETOUR AUTOMATIQUE CARTE : <strong id="auto-return-sec" style="color: #00d2d3;">2.5s</strong></span>
+          </div>
+          <div class="auto-return-progress-track">
+            <div class="auto-return-progress-fill" id="auto-return-progress"></div>
+          </div>
+        </div>
+
+        <!-- ACTIONS HAUTE ERGONOMIE (RETOUR IMMÉDIAT OU CHOIX TACTIQUE) -->
         <div class="finish-assault-actions-stack">
           ${nextCity && isNextUnlocked ? `
             <button id="btn-assault-next-raid" class="btn-arcade btn-assault-hero-next">
@@ -3027,7 +3038,7 @@ export class UIManager {
           ` : ''}
 
           <button id="btn-assault-return-map" class="btn-arcade btn-assault-return-cta">
-            <span>🛰️ RETOUR SATELLITE À LA CARTE</span>
+            <span>🛰️ RETOUR IMMÉDIAT À LA CARTE</span>
           </button>
 
           <div class="finish-assault-secondary-row">
@@ -3049,7 +3060,34 @@ export class UIManager {
 
     this.root.appendChild(overlay);
 
+    let autoReturnRemainingMs = 2500;
+    const autoReturnIntervalMs = 50;
+    const autoReturnSecEl = overlay.querySelector('#auto-return-sec');
+    const autoReturnProgressEl = overlay.querySelector('#auto-return-progress');
+
+    let autoReturnTimer = setInterval(() => {
+      autoReturnRemainingMs -= autoReturnIntervalMs;
+      if (autoReturnSecEl) {
+        autoReturnSecEl.textContent = `${Math.max(0, (autoReturnRemainingMs / 1000)).toFixed(1)}s`;
+      }
+      if (autoReturnProgressEl) {
+        const pct = Math.max(0, Math.min(100, (autoReturnRemainingMs / 2500) * 100));
+        autoReturnProgressEl.style.width = `${pct}%`;
+      }
+      if (autoReturnRemainingMs <= 0) {
+        if (autoReturnTimer) {
+          clearInterval(autoReturnTimer);
+          autoReturnTimer = null;
+        }
+        onFinishAction(() => this.triggerReturnToMapCinematic(city));
+      }
+    }, autoReturnIntervalMs);
+
     const onFinishAction = (actionFn) => {
+      if (autoReturnTimer) {
+        clearInterval(autoReturnTimer);
+        autoReturnTimer = null;
+      }
       soundManager.playClick();
       overlay.remove();
       this.assaultOverlay = null;
@@ -3176,6 +3214,9 @@ export class UIManager {
     }
     this.closeActiveModals();
 
+    // Arrêt strict et complet de tous les sons de gameplay persistants
+    soundManager.stopAllGameplaySounds();
+
     const overlay = document.createElement('div');
     overlay.className = 'return-map-cinematic';
     overlay.innerHTML = `
@@ -3218,9 +3259,10 @@ export class UIManager {
     setTimeout(() => {
       this.isReturningToMap = false;
       gameState.currentMode = 'MAP';
-      soundManager.stopEngine();
+      soundManager.stopAllGameplaySounds();
       this.currentScreen = 'MAP';
       this.render();
+      soundManager.switchMusicTrack('MENU');
 
       const mapEl = this.root.querySelector('.screen-map');
       if (mapEl) {
@@ -3473,7 +3515,31 @@ export class UIManager {
       nitroIcon.textContent = isFootOrHorse ? '🥫' : '⚡';
     }
 
-    if (nitroFill && data.nitroGauge !== undefined) {
+    if (isFootOrHorse) {
+      const cans = (data.energyCans !== undefined) ? data.energyCans : (gameState.energyDrinkCans || 0);
+      if (data.isNitroActive) {
+        if (nitroBtn) {
+          nitroBtn.classList.add('active');
+          nitroBtn.classList.remove('ready');
+        }
+        if (nitroSub) nitroSub.textContent = `${data.nitroTimer.toFixed(1)}s`;
+        if (nitroLabel) nitroLabel.textContent = 'BOOST 🥫 !';
+        if (nitroFill) nitroFill.style.width = `${Math.round((data.nitroTimer / 5.0) * 100)}%`;
+      } else {
+        if (nitroBtn) nitroBtn.classList.remove('active');
+        if (cans > 0) {
+          if (nitroBtn) nitroBtn.classList.add('ready');
+          if (nitroSub) nitroSub.textContent = `${cans} DISPO`;
+          if (nitroLabel) nitroLabel.textContent = 'ENERGY 🥫';
+          if (nitroFill) nitroFill.style.width = '100%';
+        } else {
+          if (nitroBtn) nitroBtn.classList.remove('ready');
+          if (nitroSub) nitroSub.textContent = '0 (ÉPUISÉ)';
+          if (nitroLabel) nitroLabel.textContent = 'ENERGY';
+          if (nitroFill) nitroFill.style.width = '0%';
+        }
+      }
+    } else if (nitroFill && data.nitroGauge !== undefined) {
       nitroFill.style.width = `${data.nitroGauge}%`;
       if (data.isNitroActive) {
         if (nitroBtn) {
@@ -3481,7 +3547,7 @@ export class UIManager {
           nitroBtn.classList.remove('ready');
         }
         if (nitroSub) nitroSub.textContent = `${data.nitroTimer.toFixed(1)}s`;
-        if (nitroLabel) nitroLabel.textContent = isFootOrHorse ? 'ENERGY !' : 'BOOST !';
+        if (nitroLabel) nitroLabel.textContent = 'BOOST !';
       } else {
         if (nitroBtn) nitroBtn.classList.remove('active');
         if (data.nitroGauge >= 100) {

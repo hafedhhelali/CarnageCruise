@@ -1153,7 +1153,9 @@ export class GameState {
     this.nitroGauge = 0;
     this.isNitroActive = false;
     this.nitroTimer = 0;
+    this.energyDrinkCans = 2; // Stock limité de 2 canettes pour la course (cheval / à pied)
     this.nitroDuration = 5.0;
+    this.energyDrinkCans = 2; // Stock de canettes Energy Drink (cheval / à pied) : pas dispo tout le temps
 
     // Mission Nucléaire : Approche Centrale, Explosion & Fuite Éperdue
     this.nuclearPhase = null; // 'APPROACH', 'ESCAPE', 'ESCAPED'
@@ -1219,6 +1221,7 @@ export class GameState {
     this.nitroGauge = 0;
     this.isNitroActive = false;
     this.nitroTimer = 0;
+    this.energyDrinkCans = 2; // Stock limité de 2 canettes pour la course (cheval / à pied)
 
     // Gestion des Cataclysmes & Modes d'Extermination Worldmageddon
     this.disasterType = this.selectedCity?.disasterType || (this.selectedCity?.isNuclearMission ? 'NUCLEAR' : (this.selectedCity?.isDamMission ? 'DAM' : (this.selectedCity?.isMountainMission ? 'MOUNTAIN' : 'STREET')));
@@ -1335,6 +1338,12 @@ export class GameState {
 
   chargeNitro(amount) {
     if (this.currentMode !== 'PLAYING') return;
+    const equippedBikeId = storage.getEquippedBike() || this.selectedBike?.id || 'tank';
+    const isFootOrHorse = (equippedBikeId === 'cheval' || equippedBikeId === 'run_ak47' || equippedBikeId === 'run_chainsaw');
+    if (isFootOrHorse) {
+      // Pour cheval ou à pied : la boisson énergétique a un stock fini et n'est pas disponible tout le temps
+      return;
+    }
     const oldGauge = this.nitroGauge;
     this.nitroGauge = Math.min(100, this.nitroGauge + amount);
     if (oldGauge < 100 && this.nitroGauge >= 100) {
@@ -1351,6 +1360,21 @@ export class GameState {
   activateNitro() {
     if (this.currentMode !== 'PLAYING') return false;
     if (this.isNitroActive) return false;
+
+    const currentBikeId = storage.getEquippedBike() || this.selectedBike?.id || 'tank';
+    const isFootOrHorse = (currentBikeId === 'cheval' || currentBikeId === 'run_ak47' || currentBikeId === 'run_chainsaw');
+
+    if (isFootOrHorse) {
+      // Pour cheval ou à pied : la boisson énergétique n'est pas disponible tout le temps (stock limité de canettes)
+      if (this.energyDrinkCans <= 0) return false;
+      this.energyDrinkCans--;
+      this.isNitroActive = true;
+      this.nitroTimer = this.nitroDuration;
+      soundManager.playNitroBoost();
+      this.notify('nitro_activated', { duration: this.nitroDuration, energyCans: this.energyDrinkCans });
+      return true;
+    }
+
     if (this.nitroGauge < 100) return false;
 
     this.nitroGauge = 0;
@@ -1592,6 +1616,7 @@ export class GameState {
       nitroGauge: Math.round(this.nitroGauge),
       isNitroActive: this.isNitroActive,
       nitroTimer: Math.max(0, this.nitroTimer),
+      energyCans: this.energyDrinkCans,
       kills: this.killsCount,
       killQuota: this.selectedCity.killQuota || 30,
       worldTotal: this.worldPopulationEliminated,
@@ -1608,8 +1633,7 @@ export class GameState {
 
     this.currentMode = 'RESULTS';
     this.isGameOver = true;
-    soundManager.stopEngine();
-    soundManager.switchMusicTrack('MENU');
+    soundManager.stopAllGameplaySounds(); // Coupe immédiatement tous les sons persistants de l'épreuve
 
     // Extermination proportionnelle à la vraie population de la métropole
     const cityPop = this.selectedCity.population || this.selectedCity.exterminationTarget || 500000;

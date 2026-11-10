@@ -5074,6 +5074,57 @@ html, body {
   font-size: 1.15rem;
 }
 
+/* Bannière de compte à rebours de retour forcé automatique à la carte satellite */
+.finish-auto-return-banner {
+  background: rgba(0, 210, 211, 0.12);
+  border: 1px solid rgba(0, 210, 211, 0.45);
+  border-radius: 12px;
+  padding: 8px 12px;
+  margin: 10px 0 4px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-shadow: 0 0 16px rgba(0, 210, 211, 0.2);
+}
+
+.auto-return-info-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  font-weight: 850;
+  color: #c8d6e5;
+  letter-spacing: 0.5px;
+}
+
+.auto-return-sat-icon {
+  font-size: 1.15rem;
+  display: inline-block;
+  animation: satPulse 1.4s ease-in-out infinite alternate;
+}
+
+@keyframes satPulse {
+  0% { transform: scale(1.0) rotate(0deg); filter: drop-shadow(0 0 2px #00d2d3); }
+  100% { transform: scale(1.18) rotate(12deg); filter: drop-shadow(0 0 8px #00d2d3); }
+}
+
+.auto-return-progress-track {
+  width: 100%;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.auto-return-progress-fill {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, #00d2d3, #fffa65);
+  box-shadow: 0 0 8px rgba(0, 210, 211, 0.8);
+  transition: width 0.05s linear;
+}
+
 .finish-assault-actions-stack {
   display: flex;
   flex-direction: column;

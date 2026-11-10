@@ -490,15 +490,17 @@ class GameApp {
       this.bike.mesh.rotation.y = roadAngle;
 
       // 5. Son moteur réactif (ronronnement ralenti à l'arrêt, accélération dynamique)
-      soundManager.updateEngine(currentSpeed / 20.0);
+      if (!this.hasCrossedFinish) {
+        soundManager.updateEngine(currentSpeed / 20.0);
 
-      // Modulation d'intensité dynamique de la musique sadique (CALM, TENSION, COMBO)
-      if (gameState.isNitroActive || gameState.combo >= 3 || currentSpeed > 24) {
-        soundManager.setSadisticIntensity('COMBO');
-      } else if (currentSpeed > 7) {
-        soundManager.setSadisticIntensity('TENSION');
-      } else {
-        soundManager.setSadisticIntensity('CALM');
+        // Modulation d'intensité dynamique de la musique sadique (CALM, TENSION, COMBO)
+        if (gameState.isNitroActive || gameState.combo >= 3 || currentSpeed > 24) {
+          soundManager.setSadisticIntensity('COMBO');
+        } else if (currentSpeed > 7) {
+          soundManager.setSadisticIntensity('TENSION');
+        } else {
+          soundManager.setSadisticIntensity('CALM');
+        }
       }
 
       // 6. Fumée d'échappement et fumée de dérapage au freinage
@@ -793,36 +795,25 @@ class GameApp {
       // 12. Mise à jour de l'état de course (accélération, décélération, combo, vitesse arrêtée lors d'un crash)
       gameState.update(delta, this.bike.isCrashed);
 
-      // 13. Conquête de la zone d'assaut urbain (Périmètre purgé au feu)
-      if (!this.hasCrossedFinish && this.bike.z >= this.environment.finishDistance) {
+      // 13. Conquête de la zone d'assaut urbain (Périmètre purgé au feu - Fin de l'épreuve)
+      if (!this.hasCrossedFinish && (this.bike.z >= this.environment.finishDistance || (this.bike.z / this.environment.finishDistance) >= 1.0)) {
         this.hasCrossedFinish = true;
-        soundManager.playCrash();
-        soundManager.playEvilLaugh();
+        this.bike.speed = 0; // Arrêt net du bolide
+
+        // Arrêt immédiat et définitif de tous les sons de gameplay persistants
+        soundManager.stopAllGameplaySounds();
+        soundManager.playVictory();
         Haptic.carnage();
         this.particles.spawnCannonBlast(this.bike.mesh.position, 8);
         this.engine.triggerDynamicLight(this.bike.mesh.position, 0xff3838, 30, 0.9);
 
+        // Clôture visuelle et triomphale de la zone (Assaut sectoriel d'abord pour éviter tout doublon de modale)
         if (this.ui) {
           this.ui.triggerCarnageAssaultFinish(gameState.selectedCity, gameState.score, gameState.killsCount || 35);
         }
 
-        // Décélération du bolide d'assaut avec gerbes d'étincelles et braises pendant 2.6s
-        let finishTimer = 0;
-        const finishInterval = setInterval(() => {
-          finishTimer += 0.2;
-          this.bike.speed = Math.max(8, this.bike.speed * 0.92);
-          soundManager.updateEngine(Math.max(0.08, this.bike.speed / this.bike.maxSpeed));
-          if (Math.random() < 0.6) {
-            // Gerbe d'étincelles de freinage d'assaut (API spawnSparks : pos + nombre + couleur)
-            const sparkPos = this.bike.mesh.position.clone();
-            sparkPos.y += 0.4;
-            this.particles.spawnSparks(sparkPos, 3, 0xff6b00);
-          }
-          if (finishTimer >= 2.6) {
-            clearInterval(finishInterval);
-            gameState.endRun();
-          }
-        }, 200);
+        // Clôture officielle de l'épreuve
+        gameState.endRun();
       }
     } else if (gameState.currentMode === 'COUNTDOWN') {
       // MODE COMPTE À REBOURS : Moto strictement à l'arrêt sur la ligne de départ

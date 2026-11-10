@@ -1703,17 +1703,38 @@ export class SoundManager {
   }
 
   stopEngine() {
+    if (this.engineGain && this.ctx) {
+      try {
+        this.engineGain.gain.setValueAtTime(0, this.ctx.currentTime);
+      } catch (e) {}
+    }
     if (this.engineOsc) {
       try {
         this.engineOsc.stop();
-        if (this.engineSubOsc) this.engineSubOsc.stop();
-        this.cleanupNodes(this.engineOsc, this.engineSubOsc, this.engineFilter, this.engineGain);
       } catch (e) {}
-      this.engineOsc = null;
-      this.engineSubOsc = null;
-      this.engineGain = null;
-      this.engineFilter = null;
     }
+    if (this.engineSubOsc) {
+      try {
+        this.engineSubOsc.stop();
+      } catch (e) {}
+    }
+    this.cleanupNodes(this.engineOsc, this.engineSubOsc, this.engineFilter, this.engineGain);
+    this.engineOsc = null;
+    this.engineSubOsc = null;
+    this.engineGain = null;
+    this.engineFilter = null;
+  }
+
+  // Coupe net et définitivement tous les sons de gameplay (moteur, musique de course, boucles)
+  stopAllGameplaySounds() {
+    this.stopEngine();
+    this.stopMusic();
+    if (this.musicTimer) {
+      clearTimeout(this.musicTimer);
+      this.musicTimer = null;
+    }
+    this.musicPlaying = false;
+    this.currentTrack = null;
   }
 
   // Crépitement / Retour de flamme d'échappement (Pop & Crackle) à la décélération
