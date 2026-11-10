@@ -194,9 +194,9 @@ export class UIManager {
           <span class="badge-version-text">${FULL_VERSION}</span>
         </div>
         <div class="splash-header-right">
-          <div class="currency-pill clickable" id="splash-gift-coins" title="Cadeau Sponsor : +20 Pièces d'or">
+          <!-- Pilule de monnaie simple (aucun appel publicitaire) -->
+          <div class="currency-pill" title="Pièces d'or">
             <span>🪙 ${coins}</span>
-            <span class="currency-ad-gift-tag">🎁 +20</span>
           </div>
           <div class="stars-pill" title="Total d'étoiles gagnées">
             <span>★ ${totalStars}</span>
@@ -315,13 +315,6 @@ export class UIManager {
       this.showLegalModal();
     });
 
-    splash.querySelector('#splash-gift-coins')?.addEventListener('click', () => {
-      adManager.showRewardedAd('COINS', () => {
-        this.showCoinsCollectedNotification(20, 'CADEAU SPONSOR GOOGLE ADS', '+20 Pièces d\'or offertes !');
-        this.render();
-      });
-    });
-
     splash.querySelector('#btn-splash-audio')?.addEventListener('click', () => {
       const nextMusicState = !storage.data.settings.music;
       soundManager.toggleMusic(nextMusicState);
@@ -363,9 +356,9 @@ export class UIManager {
             </div>
           </button>
 
-          <div class="currency-pill clickable" id="btn-header-ad-coins" title="Google Ads : +20 Pièces d'or">
+          <!-- Pilule de monnaie simple (aucun appel publicitaire) -->
+          <div class="currency-pill" title="Pièces d'or">
             <span>🪙 ${coins}</span>
-            <span class="currency-ad-gift-tag">🎁 +20</span>
           </div>
         </div>
 
@@ -1011,16 +1004,6 @@ export class UIManager {
         soundManager.playClick();
         this.previousScreen = 'MAP';
         this.setScreen('GARAGE');
-      });
-    }
-
-    const headerAdBtn = mapScreen.querySelector('#btn-header-ad-coins');
-    if (headerAdBtn) {
-      headerAdBtn.addEventListener('click', () => {
-        adManager.showRewardedAd('COINS', () => {
-          this.showCoinsCollectedNotification(20, 'BONUS SPONSOR GOOGLE ADS', '+20 Pièces d\'or offertes !');
-          this.render();
-        });
       });
     }
 
@@ -2493,9 +2476,6 @@ export class UIManager {
           <div class="currency-badge currency-pill">
             <span>🪙 ${coins}</span>
           </div>
-          <button id="btn-garage-ad-coins" class="currency-ad-tag" title="Regarder un spot pour +20 Pièces">
-            <span>📺 +20 🪙</span>
-          </button>
         </div>
       </div>
 
@@ -2540,17 +2520,6 @@ export class UIManager {
       if (this.onAction) this.onAction('PREVIEW_BIKE', equippedBike);
       this.setScreen(this.previousScreen || 'MAP');
     });
-
-    // Bouton de publicité dans le header du garage pour +20 pièces
-    const garageAdBtn = garage.querySelector('#btn-garage-ad-coins');
-    if (garageAdBtn) {
-      garageAdBtn.addEventListener('click', () => {
-        adManager.showRewardedAd('COINS', () => {
-          this.showCoinsCollectedNotification(20, 'BONUS GARAGE GOOGLE ADS', '+20 Pièces d\'or offertes !');
-          this.render();
-        });
-      });
-    }
 
     this.root.appendChild(garage);
     this.updateGarageBikeInfo(garage.querySelector('#garage-bike-info'));
@@ -2631,9 +2600,6 @@ export class UIManager {
           <button id="btn-buy-bike" class="btn-arcade btn-accent" style="width: 100%; padding: 13px; font-size: 1rem;">
             DÉBLOQUER CE VÉHICULE (🪙 ${bike.cost})
           </button>
-          <button id="btn-garage-ad-quick" class="btn-arcade btn-ad-coins" style="width: 100%; margin-top: 8px; padding: 10px; font-size: 0.92rem;">
-            📺 PIÈCES INSUFFISANTES ? REGARDER PUB (+20 🪙)
-          </button>
         `}
       </div>
     `;
@@ -2684,15 +2650,6 @@ export class UIManager {
             soundManager.playBoing();
             alert(res.reason);
           }
-        });
-      }
-
-      const quickAdBtn = container.querySelector('#btn-garage-ad-quick');
-      if (quickAdBtn) {
-        quickAdBtn.addEventListener('click', () => {
-          adManager.showRewardedAd('COINS', () => {
-            this.render();
-          });
         });
       }
     }
@@ -2810,9 +2767,6 @@ export class UIManager {
               <span class="nitro-label" id="hud-nitro-label">NITRO</span>
               <span class="nitro-sub" id="hud-nitro-sub">0%</span>
             </button>
-            <button class="btn-nitro-ad-refill" id="btn-hud-nitro-ad" title="Recharger immédiatement le Nitro avec un spot publicitaire">
-              <span>📺 RECHARGE</span>
-            </button>
           </div>
 
           ${isWeapon ? `
@@ -2864,19 +2818,6 @@ export class UIManager {
         if (ok) {
           if (this.onAction) this.onAction('NITRO');
         }
-      });
-    }
-
-    // Gestion de la recharge instantanée Nitro par publicité
-    const nitroAdBtn = hud.querySelector('#btn-hud-nitro-ad');
-    if (nitroAdBtn) {
-      nitroAdBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        adManager.showRewardedAd('NITRO', () => {
-          gameState.refillNitro();
-          soundManager.playPowerUp();
-          this.showToastUnlock({ name: '⚡ NITRO RECHARGÉ À 100% !' });
-        });
       });
     }
 
@@ -3175,7 +3116,7 @@ export class UIManager {
     fct.style.top = `${yPct + (Math.random() - 0.5) * 6}%`;
     fct.style.borderColor = color;
     fct.innerHTML = `
-      <div class="fct-main-text" style="color: ${color}; text-shadow: 0 0 14px ${color}, 0 2px 4px #000;">${text}</div>
+      <div class="fct-main-text" style="color: ${color}; text-shadow: 0 0 6px ${color}88, 0 2px 4px #000;">${text}</div>
       ${subtext ? `<div class="fct-sub-badge" style="background: ${color}; color: #000;">${subtext}</div>` : ''}
     `;
 
@@ -3187,13 +3128,13 @@ export class UIManager {
     gsap.fromTo(fct,
       { scale: 0.25, opacity: 0, y: 15, rotation: randomRot * 1.5 },
       {
-        scale: 1.25,
+        scale: 1.05,
         opacity: 1,
-        y: -24,
+        y: -20,
         x: driftX * 0.4,
         rotation: randomRot,
         duration: 0.22,
-        ease: "back.out(3.2)",
+        ease: "back.out(2.2)",
         onComplete: () => {
           gsap.to(fct, {
             scale: 0.88,
@@ -4550,8 +4491,8 @@ export class UIManager {
     const overlay = document.createElement('div');
     overlay.className = 'modal-backdrop interactive';
     overlay.style.cssText = `
-      position: fixed; inset: 0; background: rgba(8, 10, 15, 0.95);
-      backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center;
+      position: fixed; inset: 0; background: rgba(8, 10, 15, 0.92);
+      backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center;
       z-index: 10001; padding: 14px;
     `;
     this.activeModals.push(overlay);
@@ -4576,11 +4517,8 @@ export class UIManager {
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 10px;">
-          <button id="btn-offline-double" class="btn-arcade double-btn-pulse" style="width: 100%; padding: 12px; font-size: 0.92rem; background: linear-gradient(135deg, #ffd32a, #ff9f43); color: #1e272e; font-weight: 900;">
-            🎬 DOUBLER X2 LE BUTIN (SPONSOR)
-          </button>
-          <button id="btn-offline-collect" class="btn-arcade" style="width: 100%; padding: 10px; font-size: 0.82rem; background: #2ed573; color: #fff;">
-            💰 RÉCOLTER (1X)
+          <button id="btn-offline-collect" class="btn-arcade" style="width: 100%; padding: 13px; font-size: 0.95rem; background: #2ed573; color: #fff;">
+            💰 RÉCOLTER LE BUTIN
           </button>
         </div>
       </div>
@@ -4594,16 +4532,9 @@ export class UIManager {
       this.showCoinsCollectedNotification(earnings.cashEarned, 'CRÉDITS NOIRS ENCAISSÉS !', `+${earnings.killsEarned} cibles sabotées`);
     });
 
-    overlay.querySelector('#btn-offline-double')?.addEventListener('click', () => {
-      soundManager.playClick();
-      adManager.showRewardedAd(() => {
-        soundManager.playCoin();
-        tycoonManager.collectOfflineEarnings(earnings, true);
-        overlay.remove();
-        this.activeModals = this.activeModals.filter(m => m !== overlay);
-        this.showCoinsCollectedNotification(earnings.cashEarned * 2, '🔥 BUTIN DOUBLÉ PAR SPONSOR !', `+${earnings.killsEarned * 2} cibles sabotées`);
-      });
-    });
+    // NOTE architecture monétisation : le bouton sponsor « doubler le butin » est
+    // volontairement désactivé (ADS_ENABLED). Il se réactivera via AdManager.showRewardedAd
+    // quand la chaîne Google Ads sera branchée.
 
     this.root.appendChild(overlay);
 
@@ -4642,15 +4573,15 @@ export class UIManager {
     `;
 
     banner.innerHTML = `
-      <span style="font-size: 2.1rem; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.35));">🪙</span>
+      <span style="font-size: 1.8rem; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.35));">🪙</span>
       <div>
-        <div style="font-size: 0.72rem; font-weight: 950; letter-spacing: 1px; color: #574b90; text-transform: uppercase;">
+        <div style="font-size: 0.68rem; font-weight: 900; letter-spacing: 1.2px; color: rgba(30, 39, 46, 0.75); text-transform: uppercase;">
           ${title}
         </div>
-        <div style="font-size: 1.35rem; font-weight: 950; color: #2f3542; font-family: monospace; letter-spacing: 0.5px;">
+        <div style="font-size: 1.2rem; font-weight: 900; color: #1e272e; font-family: monospace; letter-spacing: 0.5px;">
           +${coins.toLocaleString('fr-FR')} PIÈCES D'OR
         </div>
-        ${subtext ? `<div style="font-size: 0.68rem; font-weight: 850; color: #ffffff; text-shadow: 0 1px 3px #000;">${subtext}</div>` : ''}
+        ${subtext ? `<div style="font-size: 0.66rem; font-weight: 850; color: rgba(30, 39, 46, 0.85);">${subtext}</div>` : ''}
       </div>
     `;
 

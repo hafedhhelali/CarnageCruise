@@ -6,6 +6,7 @@
 
 import { storage } from '../core/Storage.js';
 import { App } from '@capacitor/app';
+import { SampleBank } from './SampleBank.js';
 
 export class SoundManager {
   constructor() {
@@ -23,6 +24,16 @@ export class SoundManager {
 
     this.initContext();
     this.bindLifecycleEvents();
+
+    // Échantillons audio réels (CC0) avec repli procédural automatique
+    this.samples = new SampleBank(this);
+    this.samples.preload();
+  }
+
+  /** Tente de jouer un échantillon réel ; false = la synthèse procédurale prend le relais */
+  trySample(key, opts) {
+    if (!this.samples) return false;
+    return this.samples.play(key, opts);
   }
 
   initContext() {
@@ -483,6 +494,7 @@ export class SoundManager {
   playCountdownBeep(isGo = false) {
     if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
     this.resumeContext();
+    if (this.trySample(isGo ? 'confirm' : 'tick', isGo ? { rateMul: 1.15, volMul: 1.4 } : { rateMul: 1.1 })) return;
 
     const now = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
@@ -542,6 +554,7 @@ export class SoundManager {
   playCoin() {
     if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
     this.resumeContext();
+    if (this.trySample('coin')) return;
 
     const now = this.ctx.currentTime;
     const osc1 = this.ctx.createOscillator();
@@ -574,6 +587,7 @@ export class SoundManager {
   playCrash() {
     if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
     this.resumeContext();
+    if (this.trySample('crash')) return;
 
     const now = this.ctx.currentTime;
 
@@ -624,6 +638,7 @@ export class SoundManager {
   playPenaltyBuzzer() {
     if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
     this.resumeContext();
+    if (this.trySample('error')) return;
 
     const now = this.ctx.currentTime;
     const osc1 = this.ctx.createOscillator();
@@ -772,6 +787,7 @@ export class SoundManager {
   playNitroBoost() {
     if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
     this.resumeContext();
+    if (this.trySample('thruster')) return;
 
     const now = this.ctx.currentTime;
 
@@ -901,6 +917,7 @@ export class SoundManager {
   playTankCannon() {
     if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
     this.resumeContext();
+    if (this.trySample('cannon')) return;
 
     const now = this.ctx.currentTime;
 
@@ -963,6 +980,7 @@ export class SoundManager {
   playExplosion() {
     if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
     this.resumeContext();
+    if (this.trySample('explosion')) return;
 
     const now = this.ctx.currentTime;
     const boomOsc = this.ctx.createOscillator();
@@ -1009,6 +1027,7 @@ export class SoundManager {
   playSuspensionThud() {
     if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
     this.resumeContext();
+    if (this.trySample('thud')) return;
 
     const now = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
@@ -1069,6 +1088,7 @@ export class SoundManager {
   playCurbMount() {
     if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
     this.resumeContext();
+    if (this.trySample('curb')) return;
 
     const now = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
@@ -1121,6 +1141,7 @@ export class SoundManager {
   playPropSmash() {
     if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
     this.resumeContext();
+    if (this.trySample('smash')) return;
 
     const now = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
@@ -1253,6 +1274,7 @@ export class SoundManager {
   playComboFanfare(multiplier) {
     if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
     this.resumeContext();
+    if (this.trySample('confirm', { rateMul: 1 + Math.min(multiplier || 1, 5) * 0.04 })) return;
 
     const baseFreq = Math.min(440 + multiplier * 50, 1100);
     const now = this.ctx.currentTime;
@@ -1281,6 +1303,8 @@ export class SoundManager {
   playClick(type = 'default') {
     if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
     this.resumeContext();
+    const sampleKey = type === 'garage' ? 'clickGarage' : (type === 'hero' || type === 'play') ? 'clickHero' : (Math.random() < 0.5 ? 'click' : 'clickAlt');
+    if (this.trySample(sampleKey)) return;
 
     const now = this.ctx.currentTime;
     const dest = this.getMasterOutput();
@@ -1337,6 +1361,7 @@ export class SoundManager {
   playVictory() {
     if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
     this.resumeContext();
+    if (this.trySample('victory')) return;
 
     const chords = [523.25, 659.25, 783.99, 1046.50];
     const now = this.ctx.currentTime;
@@ -1366,6 +1391,7 @@ export class SoundManager {
   playGeigerClick() {
     if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
     this.resumeContext();
+    if (this.trySample('tick', { rateMul: 1.8, volMul: 0.4, noVariation: false })) return;
     const now = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
@@ -1569,6 +1595,7 @@ export class SoundManager {
   playMountainExplosion() {
     if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
     this.resumeContext();
+    if (this.trySample('explosion', { rateMul: 0.75, volMul: 1.3 })) return;
     const now = this.ctx.currentTime;
 
     // 1. Détonation sismique sourde basse fréquence
@@ -1590,6 +1617,7 @@ export class SoundManager {
   playRockAvalanche() {
     if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
     this.resumeContext();
+    if (this.trySample('avalanche')) return;
     const now = this.ctx.currentTime;
 
     // 2. Grondement prolongé d'avalanche rocheuse et chocs de blocs de granit

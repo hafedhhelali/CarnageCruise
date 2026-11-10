@@ -68,7 +68,9 @@ export class Bike {
     // Flammes Nitro (propulseurs NOS bleus éclatants)
     this.nitroFlames = new THREE.Group();
     const flameMat = new THREE.MeshBasicMaterial({ color: 0x00d2d3, transparent: true, opacity: 0.9 });
+    flameMat.color.setRGB(0.2, 2.3, 2.3); // Cyan HDR > 1.0 : déclenche le halo UnrealBloom
     const flameCoreMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.95 });
+    this.nitroFlameMat = flameMat; // Référence pour le scintillement d'opacité avant/post
 
     const createFlameJet = (xOffset) => {
       const jet = new THREE.Group();
@@ -143,13 +145,15 @@ export class Bike {
     const bodyMaterial = new THREE.MeshStandardMaterial({
       color: bodyColorHex,
       roughness: 0.18,
-      metalness: 0.82
+      metalness: 0.82,
+      envMapIntensity: 1.4 // Peinture métallisée qui épouse l'environnement IBL
     });
 
     const chromeMaterial = new THREE.MeshStandardMaterial({
       color: 0xf5f6fa,
       metalness: 0.96,
-      roughness: 0.08
+      roughness: 0.08,
+      envMapIntensity: 1.5 // Chrome miroir : reflets réels via l'IBL PMREM
     });
 
     const rubberMaterial = new THREE.MeshStandardMaterial({
@@ -662,6 +666,7 @@ export class Bike {
 
     // 4. Échappements Zoomies latéraux relevés à 45° cracheurs de feu
     const flameMat = new THREE.MeshBasicMaterial({ color: 0xff6b00 });
+    flameMat.color.setRGB(3.2, 1.35, 0.45); // Orange HDR incandescent : halo bloom actif
     for (let s of [-1, 1]) {
       const zoomie = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.05, 0.65, 8), chromeMat);
       zoomie.position.set(s * 0.34, 0.72, -0.25);
@@ -1447,6 +1452,7 @@ export class Bike {
     // 4. Double Réacteur à Fusion Nucléaire avec flammes permanentes
     const nozzleMat = new THREE.MeshStandardMaterial({ color: 0x2d3436, metalness: 0.9, roughness: 0.2 });
     const thrusterFlameMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff, transparent: true, opacity: 0.9 });
+    thrusterFlameMat.color.setRGB(0.2, 2.6, 2.6); // Plume à fusion HDR : lueur persistante au bloom
     const thrusterCoreMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
 
     for (let s of [-0.28, 0.28]) {
@@ -1732,7 +1738,7 @@ export class Bike {
     this.runnerLegR = null;
 
     const isNuclear = gameState.selectedCity?.isNuclearMission || this.currentBikeId === 'aero_jet';
-    const hazmatYellowMat = new THREE.MeshToonMaterial({ color: 0xffe600, roughness: 0.3 });
+    const hazmatYellowMat = new THREE.MeshToonMaterial({ color: 0xffe600, gradientMap: textureFactory.getToonGradientMap() });
     const hazmatVisorMat = new THREE.MeshStandardMaterial({ color: 0x81ecec, transparent: true, opacity: 0.8, metalness: 0.9, roughness: 0.1 });
     const hazmatBlackMat = new THREE.MeshLambertMaterial({ color: 0x111111 });
 
@@ -2489,6 +2495,10 @@ export class Bike {
       const jitterX = 1.0 + Math.random() * 0.25;
       this.flameL.scale.set(jitterX, jitterX, jitterZ);
       this.flameR.scale.set(jitterX, jitterX, jitterZ);
+      // Scintillement chaud de la flamme (importance du boost ressenti)
+      if (this.nitroFlameMat) {
+        this.nitroFlameMat.opacity = 0.75 + Math.random() * 0.25;
+      }
     } else {
       this.nitroFlames.visible = false;
     }

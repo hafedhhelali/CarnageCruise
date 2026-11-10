@@ -11,6 +11,21 @@ import * as THREE from 'three';
 class TextureFactoryService {
   constructor() {
     this.cache = new Map();
+    this.toonGradient = null;
+  }
+
+  // Palette cel-shading 4 bandes partagée par tous les MeshToonMaterial
+  // (~1 seul fetch de texture 4x1, coût nul, modelé cartoon concerté)
+  getToonGradientMap() {
+    if (!this.toonGradient) {
+      const data = new Uint8Array([42, 104, 178, 255]);
+      const grad = new THREE.DataTexture(data, data.length, 1, THREE.RedFormat);
+      grad.minFilter = THREE.NearestFilter;
+      grad.magFilter = THREE.NearestFilter;
+      grad.needsUpdate = true;
+      this.toonGradient = grad;
+    }
+    return this.toonGradient;
   }
 
   // Utilitaire interne de mise en cache
@@ -27,6 +42,9 @@ class TextureFactoryService {
     texture.generateMipmaps = true;
     texture.minFilter = THREE.LinearMipmapLinearFilter;
     texture.magFilter = THREE.LinearFilter;
+    // Filtrage anisotrope : l'asphalte, les pavés et les façades restent nets
+    // dans les angles rasants propres à la caméra arcade basse (GPU clamp auto)
+    texture.anisotropy = 8;
     
     this.cache.set(key, texture);
     return texture;

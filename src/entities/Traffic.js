@@ -32,31 +32,31 @@ export class Traffic {
     // Matériaux PBR de qualité supérieure (vernis automobile & chrome miroir)
     this.sharedMats = {
       rubber: new THREE.MeshStandardMaterial({ color: 0x181818, roughness: 0.85, metalness: 0.1 }),
-      rim: new THREE.MeshStandardMaterial({ color: 0xecf0f1, metalness: 0.95, roughness: 0.12 }),
+      rim: new THREE.MeshStandardMaterial({ color: 0xecf0f1, metalness: 0.85, roughness: 0.3, envMapIntensity: 0.7 }),
       brakeCaliper: new THREE.MeshStandardMaterial({ color: 0xff3838, roughness: 0.3, metalness: 0.6 }),
       tintedGlass: new THREE.MeshStandardMaterial({
-        color: 0x111927,
-        roughness: 0.05,
-        metalness: 0.9,
-        transparent: true,
-        opacity: 0.82
+        color: 0x0b1220,
+        roughness: 0.14,
+        metalness: 1.0,
+        envMapIntensity: 0.6 // Reflet crédible et calme : plus de blob blanc « bizarre »
       }),
       headlightLED: new THREE.MeshStandardMaterial({
         color: 0xfffa65,
         emissive: 0xfffa65,
-        emissiveIntensity: 1.2,
+        emissiveIntensity: 0.9,
         roughness: 0.1
       }),
       taillightLED: new THREE.MeshStandardMaterial({
         color: 0xff1744,
         emissive: 0xff1744,
-        emissiveIntensity: 1.0,
+        emissiveIntensity: 0.9,
         roughness: 0.1
       }),
       chromeTrim: new THREE.MeshStandardMaterial({
         color: 0xf5f6fa,
-        metalness: 0.96,
-        roughness: 0.08
+        metalness: 0.9,
+        roughness: 0.22,
+        envMapIntensity: 0.6 // Chrome doux : reflet réel sans bloc lumineux parasite
       }),
       beam: new THREE.MeshBasicMaterial({
         color: 0xfffa65,
@@ -113,14 +113,16 @@ export class Traffic {
 
     const carPaint = new THREE.MeshStandardMaterial({
       color: carColor,
-      metalness: 0.88,
-      roughness: 0.16
+      metalness: 0.6,
+      roughness: 0.32,
+      envMapIntensity: 0.55 // Vernis nacré contenu : teinte lisibilité avant reflets
     });
 
     const roofMat = new THREE.MeshStandardMaterial({
       color: (type === 'taxi_luxe' || type === 'supercar') ? 0x111620 : carColor,
-      metalness: 0.90,
-      roughness: 0.12
+      metalness: 0.45,
+      roughness: 0.35,
+      envMapIntensity: 0.45 // Toit mat : finit l'effet blob lumineux sur carrosserie sombre
     });
 
     const darkTrimMat = new THREE.MeshStandardMaterial({

@@ -77,6 +77,14 @@ const REAL_GOOGLE_ADS = [
 export class AdManager {
   constructor() {
     this.adIndex = 0;
+    /**
+     * INTERRUPTEUR MAÎTRE DE MONÉTISATION.
+     * false (état actuel) : AUCUNE publicité n'est affichée ni chargée —
+     * les appels sont des no-ops silencieux qui n'écrasent pas l'UI.
+     * true (futur) : réactive la chaîne Google Ads (récompenses, interstitiels,
+     * consentement RGPD). Le pipeline complet est conservé ci-dessous.
+     */
+    this.ADS_ENABLED = false;
   }
 
   getNextAd() {
@@ -86,10 +94,20 @@ export class AdManager {
   }
 
   /**
-   * Lance une vraie publicité récompensée Google Ads (+20 pièces ou Nitro plein)
-   * Conforme RGPD, AdMob et Google Mobile Ads Standards
+   * Lance une publicité récompensée Google Ads (+20 pièces ou Nitro plein).
+   * ADS_ENABLED = false : pas de publicité — résolution immédiate et discrète,
+   * sans overlay, sans badge « Annonce », sans compte à rebours.
+   * Conforme RGPD, AdMob et Google Mobile Ads Standards quand réactivé.
    */
   showRewardedAd(type = 'COINS', onRewardCallback = null) {
+    if (!this.ADS_ENABLED) {
+      // Mode sans publicité : pas d'UI, pas de réseau, pas de consentement requis
+      if (onRewardCallback) {
+        onRewardCallback({ type, amount: type === 'COINS' ? 20 : 100, source: 'no-ad' });
+      }
+      return;
+    }
+
     if (!cookieConsentManager.hasAnswered()) {
       cookieConsentManager.showConsentModal(false, () => {
         this.executeRewardedAd(type, onRewardCallback);
@@ -101,6 +119,13 @@ export class AdManager {
   }
 
   executeRewardedAd(type = 'COINS', onRewardCallback = null) {
+    if (!this.ADS_ENABLED) {
+      // Garde-fou : ce chemin n'est atteignable que si ADS_ENABLED est réactivé
+      if (onRewardCallback) {
+        onRewardCallback({ type, amount: type === 'COINS' ? 20 : 100, source: 'no-ad' });
+      }
+      return;
+    }
     const ad = this.getNextAd();
     const isCoins = type === 'COINS';
     const rewardTitle = isCoins ? '+20 PIÈCES 🪙' : 'NITRO PLEIN ⚡';
@@ -204,9 +229,15 @@ export class AdManager {
   }
 
   /**
-   * Lance une vraie publicité interstitielle Google Ads lors du passage d'étape
+   * Lance une publicité interstitielle Google Ads lors du passage d'étape.
+   * ADS_ENABLED = false : transition directe sans aucun interstitiel.
    */
   showCityTransitionAd(city, onCompleteCallback) {
+    if (!this.ADS_ENABLED) {
+      // Mode sans publicité : entrée directe dans la ville
+      if (onCompleteCallback) onCompleteCallback();
+      return;
+    }
     const ad = this.getNextAd();
     const overlay = document.createElement('div');
     overlay.className = 'ad-modal-overlay ad-transition-overlay';

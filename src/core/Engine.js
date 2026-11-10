@@ -24,9 +24,61 @@ export class Engine {
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.15; // Légère sur-exposition arcade énergique
+    this.renderer.toneMappingExposure = 1.0; // Calibrage validé : exposition fidèle sans voile
     this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    // PCFSoftShadowMap a été retiré de Three.js r0.187 : PCF filtré natif
+    // (le normalBias calibré anti-acné fait déjà le travail soft)
+    this.renderer.shadowMap.type = THREE.PCFShadowMap;
+
+    // Éclairage d'image (IBL) : environnement procédural « ciel dégradé » PMREM.
+    // Fini le RoomEnvironment blanc cassé : ses gros rectangles lumineux se
+    // reflétaient en taches bizarres sur les carrosseries. Un dôme bleu ciel /
+    // sol taupe + un soleil compact donnent des reflets colorés et crédibles.
+    try {
+      const pmrem = new THREE.PMREMGenerator(this.renderer);
+
+      const envScene = new THREE.Scene();
+      const domeGeo = new THREE.SphereGeometry(60, 24, 16);
+      const domeMat = new THREE.ShaderMaterial({
+        side: THREE.BackSide,
+        uniforms: {
+          topColor: { value: new THREE.Color(0x8ec5f0) },
+          bottomColor: { value: new THREE.Color(0x535c68) }
+        },
+        vertexShader: `
+          varying vec3 vDir;
+          void main() {
+            vDir = normalize(position);
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          }
+        `,
+        fragmentShader: `
+          varying vec3 vDir;
+          uniform vec3 topColor;
+          uniform vec3 bottomColor;
+          void main() {
+            float h = vDir.y * 0.5 + 0.5;
+            gl_FragColor = vec4(mix(bottomColor, topColor, smoothstep(0.35, 0.75, h)), 1.0);
+          }
+        `
+      });
+      envScene.add(new THREE.Mesh(domeGeo, domeMat));
+
+      // Soleil : point compact et chaud (reflet ponctuel, pas de patch géant)
+      const sun = new THREE.Mesh(
+        new THREE.SphereGeometry(5, 12, 8),
+        new THREE.MeshBasicMaterial({ color: new THREE.Color(5.5, 5.0, 4.2) })
+      );
+      sun.position.set(20, 34, 18); // Cohérent avec la direction de la dirLight
+      envScene.add(sun);
+
+      this.scene.environment = pmrem.fromScene(envScene, 0.04).texture;
+      pmrem.dispose();
+      this.scene.environmentIntensity = 0.6; // Environnement plus sombre => marge de remontée
+    } catch (err) {
+      console.warn('IBL PMREM indisponible, rendu standard conservé :', err);
+      this.scene.environment = null;
+    }
 
     // Caméra
     this.camera = new THREE.PerspectiveCamera(
@@ -46,42 +98,57 @@ export class Engine {
       this.dynamicLights.push({ light: pl, active: false, timer: 0, duration: 0, peakIntensity: 0 });
     }
 
-    // Éclairage naturel, doux et équilibré avec lumière d'ambiance et hémisphérique de ciel
-    this.ambientLight = new THREE.AmbientLight(0xffffff, 0.75);
+    // Éclairage naturel rééquilibré : l'ambiance ne lave plus le volume du modelé,
+    // la lumière clé (soleil) affirme les ombres portées et le contraste arcade
+    this.ambientLight = new THREE.AmbientLight(0xcfe8ff, 0.3);
     this.scene.add(this.ambientLight);
 
     // Lumière hémisphérique pour des reflets de ciel et sol riches sur les modèles 3D
-    this.hemiLight = new THREE.HemisphereLight(0xdff9fb, 0x535c68, 0.55);
+    this.hemiLight = new THREE.HemisphereLight(0xdff9fb, 0x535c68, 0.6);
     this.scene.add(this.hemiLight);
 
     // Lumière solaire principale naturelle avec ombres douces
-    this.dirLight = new THREE.DirectionalLight(0xfffdf7, 1.25);
+    this.dirLight = new THREE.DirectionalLight(0xfffdf7, 1.15);
     this.dirLight.position.set(22, 42, 22);
     this.dirLight.castShadow = true;
     this.dirLight.shadow.mapSize.width = 1024;
     this.dirLight.shadow.mapSize.height = 1024;
-    this.dirLight.shadow.camera.near = 0.5;
-    this.dirLight.shadow.camera.far = 130;
-    this.dirLight.shadow.camera.left = -16;
-    this.dirLight.shadow.camera.right = 16;
-    this.dirLight.shadow.camera.top = 22;
-    this.dirLight.shadow.camera.bottom = -16;
-    this.dirLight.shadow.bias = -0.0004;
-    this.dirLight.shadow.normalBias = 0.02;
+    this.dirLight.shadow.camera.near = 1.0;
+    this.dirLight.shadow.camera.far = 110;
+    this.dirLight.shadow.camera.left = -14;
+    this.dirLight.shadow.camera.right = 14;
+    this.dirLight.shadow.camera.top = 18;
+    this.dirLight.shadow.camera.bottom = -14;
+    this.dirLight.shadow.bias = -0.0005;
+    this.dirLight.shadow.normalBias = 0.035;
     this.scene.add(this.dirLight);
     this.scene.add(this.dirLight.target);
 
     // Lumière rasante de silhouette (Rim Light / Kicker) style studio AAA
-    this.rimLight = new THREE.DirectionalLight(0x00d2d3, 0.45);
+    this.rimLight = new THREE.DirectionalLight(0x00d2d3, 0.55);
     this.rimLight.position.set(0, 6, 25);
     this.scene.add(this.rimLight);
     this.scene.add(this.rimLight.target);
 
-    // Brouillard atmosphérique doux et naturel
-    this.scene.fog = new THREE.Fog(0xd8e8f8, 50, 240);
+    // Brouillard atmosphérique exponentiel : profondeur cinématique douce,
+    // brume au loin qui masque le streaming des chunks sans laver la ville proche
+    this.scene.fog = new THREE.FogExp2(0xd8e8f8, 0.0008); // Brume très discrète : profondeur aérienne sans voile
 
     // Dôme Céleste & Nuages Cartoon Dérivants
     this.skyDome = new SkyDome(this.scene);
+
+    // Post-Processing Arcade (UnrealBloom) : halo néon sur phares, gyrophares,
+    // détonations, flammes nitro, émissifs et piéces d'or. Dégradé doux sur GPU limité.
+    const isTouchDevice = navigator.maxTouchPoints > 0 && window.innerWidth < 900;
+    try {
+      this.postProcessing = new PostProcessingManager(this.renderer, this.scene, this.camera);
+      if (isTouchDevice && this.postProcessing.bloomPass) {
+        this.postProcessing.setBaseStrength(0.3); // Budget thermique mobile
+      }
+    } catch (err) {
+      console.warn('Bloom arcade indisponible sur ce périphérique :', err);
+      this.postProcessing = null;
+    }
 
     // Propriétés de caméra dynamique
     this.cameraTarget = new THREE.Vector3(0, 1.2, 0);
@@ -200,11 +267,6 @@ export class Engine {
     const targetFov = this.baseFov + speedBonusFov;
     this.camera.fov += (targetFov - this.camera.fov) * delta * 4.0;
     this.camera.updateProjectionMatrix();
-
-    // La lumière directionnelle suit le joueur pour un rendu d'ombres parfait
-    this.dirLight.position.set(bikePosition.x + 15, 35, bikePosition.z + 20);
-    this.dirLight.target.position.set(bikePosition.x, 0, bikePosition.z);
-    this.dirLight.target.updateMatrixWorld();
   }
 
   updateCameraCinematic(delta, bikePosition) {

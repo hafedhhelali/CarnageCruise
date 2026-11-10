@@ -170,11 +170,11 @@ export class ProjectileManager {
       isExplosive: true
     });
 
-    // Éclair et onde de choc au départ du coup
+    // Éclair et onde de choc au départ du coup (discrets : flash contenu)
     this.particles.spawnShockwave(muzzlePos, 0xff793f);
     this.particles.spawnCannonBlast(muzzlePos);
-    this.engine.triggerCameraShake(0.65);
-    this.engine.triggerDynamicLight(muzzlePos, 0xffa502, 5.5, 0.24);
+    this.engine.triggerCameraShake(0.38);
+    this.engine.triggerDynamicLight(muzzlePos, 0xffa502, 2.4, 0.15);
     this.soundManager.playTankCannon();
   }
 
@@ -204,8 +204,8 @@ export class ProjectileManager {
       });
     });
 
-    this.engine.triggerCameraShake(0.5);
-    this.engine.triggerDynamicLight(posL, 0xffd32a, 4.2, 0.20);
+    this.engine.triggerCameraShake(0.3);
+    this.engine.triggerDynamicLight(posL, 0xffd32a, 2.0, 0.14);
     this.soundManager.playRocketMissile();
   }
 
@@ -232,7 +232,7 @@ export class ProjectileManager {
     });
 
     this.particles.spawnShockwave(muzzlePos, 0x00d2d3);
-    this.engine.triggerCameraShake(0.4);
+    this.engine.triggerCameraShake(0.3);
     this.soundManager.playGeigerClick();
   }
 
@@ -261,7 +261,7 @@ export class ProjectileManager {
       this.engine.triggerCameraShake(0.68);
     }
     if (this.engine?.triggerDynamicLight) {
-      this.engine.triggerDynamicLight(hitPos, themeColor, 6.8, 0.36);
+      this.engine.triggerDynamicLight(hitPos, themeColor, 4.6, 0.3);
     }
 
     // 3. Fauchage de zone (AoE) sur TOUS les véhicules de circulation à portée

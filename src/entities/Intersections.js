@@ -19,6 +19,27 @@ const STREET_NAMES = [
   'QUAI DES ORFÈVRES'
 ];
 
+// Couleurs des optiques de feu tricolore : teintes saturées mais SOUS le seuil
+// de bloom (1.25) — un feu crédible visible, sans halo parasite sur le passage piéton.
+let RED_ON_CACHE = null, RED_OFF_CACHE = null;
+let ORANGE_ON_CACHE = null, ORANGE_OFF_CACHE = null;
+let GREEN_ON_CACHE = null, GREEN_OFF_CACHE = null;
+function getLampColors() {
+  if (!RED_ON_CACHE) {
+    RED_ON_CACHE = new THREE.Color(1.0, 0.12, 0.18);
+    RED_OFF_CACHE = new THREE.Color(0.27, 0.07, 0.07);
+    ORANGE_ON_CACHE = new THREE.Color(1.0, 0.55, 0.08);
+    ORANGE_OFF_CACHE = new THREE.Color(0.27, 0.13, 0.0);
+    GREEN_ON_CACHE = new THREE.Color(0.18, 1.0, 0.24);
+    GREEN_OFF_CACHE = new THREE.Color(0.02, 0.23, 0.03);
+  }
+  return {
+    RED_ON: RED_ON_CACHE, RED_OFF: RED_OFF_CACHE,
+    ORANGE_ON: ORANGE_ON_CACHE, ORANGE_OFF: ORANGE_OFF_CACHE,
+    GREEN_ON: GREEN_ON_CACHE, GREEN_OFF: GREEN_OFF_CACHE
+  };
+}
+
 export class IntersectionManager {
   constructor(scene) {
     this.scene = scene;
@@ -67,11 +88,14 @@ export class IntersectionManager {
       group.add(visor);
     });
 
-    // 4. Optiques principales (Rouge, Orange, Vert)
+    // 4. Optiques principales (Rouge, Orange, Vert) — couleurs HDR > 1.0
+    // pour déclencher le halo UnrealBloom quand le feu est actif
     const lampGeo = new THREE.SphereGeometry(0.13, 10, 8);
-    const redMat = new THREE.MeshBasicMaterial({ color: 0xff2d55 });
+    const redMat = new THREE.MeshBasicMaterial({ color: 0x441111 });
     const orangeMat = new THREE.MeshBasicMaterial({ color: 0x442200 });
-    const greenMat = new THREE.MeshBasicMaterial({ color: 0x004400 });
+    const greenMat = new THREE.MeshBasicMaterial({ color: 0x243b2a });
+    // État initial verts HDR
+    greenMat.color.setRGB(0.5, 2.4, 0.6);
 
     const lampRed = new THREE.Mesh(lampGeo, redMat);
     lampRed.position.set(isLeft ? 1.7 : -1.7, 4.75, 0.22);
@@ -271,10 +295,11 @@ export class IntersectionManager {
   createCrossingCarMesh(type = 'taxi') {
     const carGroup = new THREE.Group();
 
-    const chromeMat = new THREE.MeshStandardMaterial({ color: 0xf5f6fa, metalness: 0.95, roughness: 0.08 });
-    const glassMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.92, roughness: 0.04 });
+    // Matières contenues : finit les blobs de reflets lumineux sur les carrosseries
+    const chromeMat = new THREE.MeshStandardMaterial({ color: 0xf5f6fa, metalness: 0.9, roughness: 0.25 });
+    const glassMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.9, roughness: 0.16 });
     const rubberMat = new THREE.MeshStandardMaterial({ color: 0x141414, roughness: 0.9 });
-    const rimMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.96, roughness: 0.1 });
+    const rimMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.85, roughness: 0.3 });
     const caliperMat = new THREE.MeshStandardMaterial({ color: 0xff3838, roughness: 0.25, metalness: 0.6 });
 
     let bodyColor = 0xf39c12; // Jaune ambré taxi
@@ -284,8 +309,8 @@ export class IntersectionManager {
 
     const bodyMat = new THREE.MeshStandardMaterial({
       color: bodyColor,
-      metalness: 0.86,
-      roughness: 0.14
+      metalness: 0.55,
+      roughness: 0.32
     });
 
     // 1. Châssis principal sculpté selon le type
@@ -573,21 +598,26 @@ export class IntersectionManager {
     const isOrange = state === 'ORANGE';
     const isGreen = state === 'GREEN';
 
+    // Couleurs HDR (> 1.0) pour les optiques actives : le bloom arcade
+    // déclenche un halo néon authentique ; les optiques inactives restent éteintes.
+    // Constantes de module : zéro allocation par transition d'état.
+    const { RED_ON, RED_OFF, ORANGE_ON, ORANGE_OFF, GREEN_ON, GREEN_OFF } = getLampColors();
+
     [inter.tlLeft, inter.tlRight].forEach(tl => {
       if (!tl) return;
-      tl.lampRed.material.color.setHex(isRed ? 0xff2d55 : 0x441111);
-      tl.lampOrange.material.color.setHex(isOrange ? 0xff9f1a : 0x442200);
-      tl.lampGreen.material.color.setHex(isGreen ? 0x2ed573 : 0x004400);
+      tl.lampRed.material.color.copy(isRed ? RED_ON : RED_OFF);
+      tl.lampOrange.material.color.copy(isOrange ? ORANGE_ON : ORANGE_OFF);
+      tl.lampGreen.material.color.copy(isGreen ? GREEN_ON : GREEN_OFF);
 
-      tl.repRed.material.color.setHex(isRed ? 0xff2d55 : 0x441111);
-      tl.repOrange.material.color.setHex(isOrange ? 0xff9f1a : 0x442200);
-      tl.repGreen.material.color.setHex(isGreen ? 0x2ed573 : 0x004400);
+      tl.repRed.material.color.copy(isRed ? RED_ON : RED_OFF);
+      tl.repOrange.material.color.copy(isOrange ? ORANGE_ON : ORANGE_OFF);
+      tl.repGreen.material.color.copy(isGreen ? GREEN_ON : GREEN_OFF);
     });
 
     if (inter.overheadGantry) {
-      inter.overheadGantry.lampRed.material.color.setHex(isRed ? 0xff2d55 : 0x441111);
-      inter.overheadGantry.lampOrange.material.color.setHex(isOrange ? 0xff9f1a : 0x442200);
-      inter.overheadGantry.lampGreen.material.color.setHex(isGreen ? 0x2ed573 : 0x004400);
+      inter.overheadGantry.lampRed.material.color.copy(isRed ? RED_ON : RED_OFF);
+      inter.overheadGantry.lampOrange.material.color.copy(isOrange ? ORANGE_ON : ORANGE_OFF);
+      inter.overheadGantry.lampGreen.material.color.copy(isGreen ? GREEN_ON : GREEN_OFF);
       if (inter.overheadGantry.beacon) {
         inter.overheadGantry.beacon.visible = isRed || isOrange;
       }
@@ -625,7 +655,11 @@ export class IntersectionManager {
       if (distToPlayer < 35 && distToPlayer > -18 && !inter.triggeredCrossingCars) {
         inter.triggeredCrossingCars = true;
 
-        // Générer 2 à 3 véhicules transversaux en cascade
+        // Générer 2 véhicules transversaux en cascade
+        // ACCIDENT DE CROISEMENT REMIS (spectacle T-bone au centre ~45%) :
+        // deux véhicules en sens opposés convergent sur la même file et se percutent.
+        const willCrash = Math.random() < 0.45;
+        const crashPair = [];
         const count = 2;
         for (let c = 0; c < count; c++) {
           const carTypes = ['taxi', 'van', 'compact', 'berline'];
@@ -633,21 +667,35 @@ export class IntersectionManager {
           const carMesh = this.createCrossingCarMesh(type);
 
           const fromLeft = c % 2 === 0;
-          const startX = fromLeft ? -32 - (c * 14) : 32 + (c * 14);
-          const speedX = fromLeft ? (22.0 + Math.random() * 6.0) : -(22.0 + Math.random() * 6.0);
-          const zOffset = (c === 0 ? -2.2 : 2.2);
+          const startX = willCrash ? (fromLeft ? -30 : 30) : (fromLeft ? -32 - (c * 14) : 32 + (c * 14));
+          const speedMag = willCrash ? 26 : (22.0 + Math.random() * 6.0);
+          const speedX = fromLeft ? speedMag : -speedMag;
+          const zOffset = willCrash ? -1.6 : (c === 0 ? -2.2 : 2.2);
 
           const curveX = roadCurveFunc ? roadCurveFunc(inter.z) : 0;
           carMesh.position.set(curveX + startX, 0, inter.z + zOffset);
           carMesh.rotation.y = fromLeft ? 0 : Math.PI;
 
           this.container.add(carMesh);
-          this.crossingCars.push({
+          const carEntry = {
             mesh: carMesh,
             velX: speedX,
             z: inter.z + zOffset,
-            active: true
-          });
+            active: true,
+            fromLeft,
+            willCrash,
+            crashed: false,
+            partner: null,
+            spinV: 0,
+            vy: 0,
+            curveX
+          };
+          if (willCrash) crashPair.push(carEntry);
+          this.crossingCars.push(carEntry);
+        }
+        if (crashPair.length === 2) {
+          crashPair[0].partner = crashPair[1];
+          crashPair[1].partner = crashPair[0];
         }
       }
 
@@ -681,22 +729,52 @@ export class IntersectionManager {
       }
     });
 
-    // 4. Déplacement des véhicules transversaux pour l'ambiance urbaine (SANS ACCIDENT AU CROISEMENT)
+    // 4. Déplacement des véhicules transversaux + ACCIDENT DE CROISEMENT (T-bone)
+    // Deux véhicules convergent sur la même file : impact, rebond, retournement,
+    // feu et explosion (effets délégués à this.onAccident branché côté main.js).
     for (let i = this.crossingCars.length - 1; i >= 0; i--) {
       const car = this.crossingCars[i];
       if (!car.active) continue;
 
-      car.mesh.position.x += car.velX * delta;
+      if (!car.crashed) {
+        car.mesh.position.x += car.velX * delta;
 
-      // Faire tourner les roues des voitures transversales
-      if (car.mesh.userData && car.mesh.userData.wheels) {
-        car.mesh.userData.wheels.forEach(w => {
-          w.children[0].rotation.y += delta * 18;
-        });
+        // Faire tourner les roues des voitures transversales
+        if (car.mesh.userData && car.mesh.userData.wheels) {
+          car.mesh.userData.wheels.forEach(w => {
+            w.children[0].rotation.y += delta * 18;
+          });
+        }
+
+        // Impact : le véhicule allant vers la droite atteint le centre du carrefour
+        if (car.willCrash && car.fromLeft && car.partner && !car.partner.crashed &&
+            car.mesh.position.x - car.curveX > -0.5) {
+          car.crashed = true;
+          car.partner.crashed = true;
+          car.velX *= 0.07;
+          car.partner.velX *= 0.07;
+          car.spinV = 3.2 + Math.random() * 3.5;
+          car.partner.spinV = -(3.2 + Math.random() * 3.5);
+          car.vy = 5.5 + Math.random() * 3.0;
+          car.partner.vy = 4.0 + Math.random() * 3.0;
+          const impactPos = new THREE.Vector3(car.curveX, 1.0, car.mesh.position.z);
+          if (this.onAccident) this.onAccident(impactPos);
+        }
+      } else {
+        // Véhicule mitraillé : rebond vertical amorti + rotation sur soi
+        car.vy -= 18 * delta;
+        car.y = (car.y || 0) + car.vy * delta;
+        if (car.mesh.position.y + car.vy * delta < 0) {
+          car.vy = Math.abs(car.vy) > 0.9 ? -car.vy * 0.35 : 0;
+          car.mesh.position.y = 0;
+        } else {
+          car.mesh.position.y += car.vy * delta;
+        }
+        car.mesh.rotation.y += car.spinV * delta;
+        car.spinV *= Math.max(0, 1 - 1.4 * delta);
+        car.velX *= Math.max(0, 1 - 2.6 * delta);
+        car.mesh.position.x += car.velX * delta;
       }
-
-      // Remarque : Collision de croisement supprimée conformément à la directive ("Enlève l'accident croisement")
-      // Les voitures traversent pour l'animation sans jamais percuter ni bloquer le joueur.
 
       // Supprimer quand la voiture sort du champ
       if (Math.abs(car.mesh.position.x) > 42) {

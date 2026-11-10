@@ -5,6 +5,7 @@
  */
 
 import * as THREE from 'three';
+import { textureFactory } from './TextureFactory.js';
 
 export class SkyDome {
   constructor(scene) {
@@ -59,9 +60,10 @@ export class SkyDome {
   }
 
   initClouds() {
+    // Cel-shading 4 bandes partagé : crêtes d'ombre cartoon cohérentes avec le reste du jeu
     const cloudMat = new THREE.MeshToonMaterial({
       color: 0xffffff,
-      roughness: 0.2
+      gradientMap: textureFactory.getToonGradientMap()
     });
 
     const cloudCount = 14;

@@ -208,6 +208,8 @@ export class CharacterSystem {
     this.poolSize = 50; // Foule dense pour l'épreuve d'extermination de la population mondiale
     this.characters = [];
     this.materialsCache = {};
+    // Palette cel-shading partagée (crêtes d'ombre cartoon concertées)
+    this.toonGradient = textureFactory.getToonGradientMap();
 
     this.initPool();
   }
@@ -215,9 +217,11 @@ export class CharacterSystem {
   getMaterial(color, roughness = 0.35) {
     const key = `${color}_${roughness}`;
     if (!this.materialsCache[key]) {
+      // NB : MeshToonMaterial ignore 'roughness' — on la conserve pour la clé de cache,
+      // et on garantit une couleur valide (cel-shading 4 bandes partagé)
       this.materialsCache[key] = new THREE.MeshToonMaterial({
-        color,
-        roughness
+        color: color === undefined || color === null ? 0xf5f6fa : color,
+        gradientMap: this.toonGradient
       });
     }
     return this.materialsCache[key];

@@ -28,6 +28,10 @@ export class ParticleSystem {
       scorchCircle: new THREE.CircleGeometry(1.0, 14),
       starCone: new THREE.ConeGeometry(0.12, 0.26, 4),
       sparkBox: new THREE.BoxGeometry(0.09, 0.09, 0.09),
+      // Fragments de mobilier urbain & gouttes du déluge (géométries partagées,
+      // fix : utilisées par spawnPropShatter / spawnDamBlast mais longtemps absentes)
+      cubeDebris: new THREE.BoxGeometry(0.22, 0.22, 0.22),
+      bloodSphere: new THREE.SphereGeometry(0.16, 6, 5),
       ring: new THREE.RingGeometry(0.4, 0.6, 20),
       confetti: new THREE.PlaneGeometry(0.18, 0.28),
       splatCircle: new THREE.CircleGeometry(0.3, 8),
@@ -35,22 +39,40 @@ export class ParticleSystem {
     };
 
     // --- MATÉRIAUX PARTAGÉS & CACHE ---
+    // Éléments incandescents calibrés juste au-dessus du seuil de bloom (1.25) :
+    // lueur discrète et élégante, pas de débordement « bizarrement lumineux »
+    const hdrOrange = new THREE.Color(1.5, 0.8, 0.35);   // carcasse de feu mandarine
+    const hdrGold = new THREE.Color(1.45, 1.25, 0.5);   // coeur incandescent doré
+    const hdrAmber = new THREE.Color(1.3, 0.8, 0.3);    // étincelle ambre
+    const hdrSkyBlue = new THREE.Color(0.25, 1.1, 1.1); // gerbes d'eau turquoises
     this.sharedMats = {
       smoke: new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.65 }),
       smokeDark: new THREE.MeshBasicMaterial({ color: 0x2d3436, transparent: true, opacity: 0.78 }),
-      fireballOrange: new THREE.MeshBasicMaterial({ color: 0xff6b00, transparent: true, opacity: 0.92 }),
-      fireballCore: new THREE.MeshBasicMaterial({ color: 0xfffa65, transparent: true, opacity: 0.98 }),
+      fireballOrange: (() => {
+        const m = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.92 });
+        m.color.copy(hdrOrange);
+        return m;
+      })(),
+      fireballCore: (() => {
+        const m = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.98 });
+        m.color.copy(hdrGold);
+        return m;
+      })(),
       scorchMark: new THREE.MeshBasicMaterial({ color: 0x111417, transparent: true, opacity: 0.88, depthWrite: false }),
       skidSmoke: new THREE.MeshBasicMaterial({ color: 0xecf0f1, transparent: true, opacity: 0.75 }),
-      starOrange: new THREE.MeshBasicMaterial({ color: 0xff6b00 }),
-      starGold: new THREE.MeshBasicMaterial({ color: 0xffd32a }),
+      starOrange: (() => { const m = new THREE.MeshBasicMaterial(); m.color.copy(hdrOrange); return m; })(),
+      starGold: (() => { const m = new THREE.MeshBasicMaterial(); m.color.copy(hdrGold); return m; })(),
       starRed: new THREE.MeshBasicMaterial({ color: 0xff3838 }),
-      sparkAmber: new THREE.MeshBasicMaterial({ color: 0xffa502 }),
+      sparkAmber: (() => { const m = new THREE.MeshBasicMaterial(); m.color.copy(hdrAmber); return m; })(),
       bloodDrop: new THREE.MeshBasicMaterial({ color: 0x990000 }),
       woodBrown: new THREE.MeshBasicMaterial({ color: 0x8b572a }),
       metalGray: new THREE.MeshBasicMaterial({ color: 0x7f8c8d }),
       glassCyan: new THREE.MeshBasicMaterial({ color: 0x74b9ff, transparent: true, opacity: 0.85 }),
-      waterBlue: new THREE.MeshBasicMaterial({ color: 0x00d2d3, transparent: true, opacity: 0.85 }),
+      waterBlue: (() => {
+        const m = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.85 });
+        m.color.copy(hdrSkyBlue);
+        return m;
+      })(),
       rockGray: new THREE.MeshBasicMaterial({ color: 0x57606f }),
       speedLine: new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.4 })
     };
@@ -340,13 +362,14 @@ export class ParticleSystem {
     }
   }
 
-  // Déflagration d'obus 120mm de char d'assaut (Onde de choc, gerbe de feu et fumée noire)
+  // Déflagration d'obus 120mm de char d'assaut (gerbe de feu et fumée noire)
+  // Édition allégée : 1 onde de choc, gerbe d'étincelles réduite — le coup reste
+  // percutant sans remplir la moitié de l'écran
   spawnCannonBlast(pos) {
     this.spawnShockwave(pos, 0xff793f);
-    this.spawnShockwave(pos, 0xffb142);
 
     // Gerbe de flammes et étincelles incandescentes
-    for (let i = 0; i < 24; i++) {
+    for (let i = 0; i < 11; i++) {
       const spark = new THREE.Mesh(this.sharedGeos.starCone, this.sharedMats.starOrange);
       spark.position.copy(pos);
       spark.position.y += 0.8;

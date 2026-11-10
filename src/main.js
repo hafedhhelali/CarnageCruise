@@ -38,6 +38,15 @@ class GameApp {
     this.traffic = new Traffic(this.engine.scene, this.particles);
     this.pigeons = new PigeonSystem(this.engine.scene);
     this.intersections = new IntersectionManager(this.engine.scene);
+    // Effets d'accident de croisement (remis) : explosion + lumière + secousse
+    this.intersections.onAccident = (pos) => {
+      this.particles.spawnCannonBlast(pos);
+      this.engine.triggerDynamicLight(pos, 0xff5040, 3.4, 0.35);
+      this.engine.triggerCameraShake(0.35);
+      soundManager.playCrash();
+      setTimeout(() => soundManager.playExplosion(), 110);
+      Haptic.impactHeavy();
+    };
     this.projectiles = new ProjectileManager(this.engine.scene, this.particles, soundManager, this.engine);
 
     // 3. État des contrôles et de la course
@@ -69,6 +78,9 @@ class GameApp {
 
     // Démarrer la boucle principale à 60 FPS
     requestAnimationFrame((t) => this.loop(t));
+
+    // Poignée de débogage (dev) : inspection du pipeline de rendu dans la console
+    window.__mm = { app: this, engine: this.engine, sound: soundManager };
   }
 
   setupCity(cityDef) {
@@ -810,7 +822,10 @@ class GameApp {
           this.bike.speed = Math.max(8, this.bike.speed * 0.92);
           soundManager.updateEngine(Math.max(0.08, this.bike.speed / this.bike.maxSpeed));
           if (Math.random() < 0.6) {
-            this.particles.spawnSpark(this.bike.mesh.position.x, this.bike.mesh.position.y + 0.4, this.bike.mesh.position.z);
+            // Gerbe d'étincelles de freinage d'assaut (API spawnSparks : pos + nombre + couleur)
+            const sparkPos = this.bike.mesh.position.clone();
+            sparkPos.y += 0.4;
+            this.particles.spawnSparks(sparkPos, 3, 0xff6b00);
           }
           if (finishTimer >= 2.6) {
             clearInterval(finishInterval);

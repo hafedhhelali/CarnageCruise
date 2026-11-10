@@ -36,7 +36,18 @@ export class Environment {
       parasol: new THREE.ConeGeometry(1.2, 0.45, 8),
       parasolPole: new THREE.CylinderGeometry(0.04, 0.04, 2.0, 6),
       treeTrunk: new THREE.CylinderGeometry(0.16, 0.22, 1.8, 6),
-      treeFoliage: new THREE.SphereGeometry(1.2, 7, 6),
+      // Feuillage organique : icosphère perturbée (silhouette touffue crédible
+      // au lieu d'une sphère facettée « ampoule »)
+      treeFoliage: (() => {
+        const g = new THREE.IcosahedronGeometry(1.2, 1);
+        const pos = g.attributes.position;
+        for (let i = 0; i < pos.count; i++) {
+          const n = 0.82 + Math.random() * 0.38;
+          pos.setXYZ(i, pos.getX(i) * n, pos.getY(i) * n * 0.9, pos.getZ(i) * n);
+        }
+        g.computeVertexNormals();
+        return g;
+      })(),
       palmTrunk: new THREE.CylinderGeometry(0.18, 0.26, 4.0, 6),
       palmLeaf: new THREE.BoxGeometry(0.3, 0.05, 2.2),
       lampPost: new THREE.CylinderGeometry(0.06, 0.08, 4.2, 6),
@@ -78,7 +89,10 @@ export class Environment {
       metalness: 0.05
     });
     curbMat = new THREE.MeshStandardMaterial({ color: 0x7f8c8d, roughness: 0.7 });
-    stripeMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    // Marquage routier ÉCLAIRÉ : un blanc non éclairé (MeshBasic) devient un patch
+    // lumineux flottant sur le bitume. Un standard matériau reçoit lumière, ombres
+    // et brume comme le reste de la chaussée (calibrage anti « lumière bizarre »).
+    stripeMat = new THREE.MeshStandardMaterial({ color: 0xf1f3f5, roughness: 0.85, metalness: 0.0 });
 
     const hexColorStr = '#' + (cityDef.buildingColors?.[0] || 0xdfe4ea).toString(16).padStart(6, '0');
     const roofColorStr = '#' + (cityDef.roofColor || 0x576574).toString(16).padStart(6, '0');
@@ -96,10 +110,10 @@ export class Environment {
       amberLight: new THREE.MeshBasicMaterial({ color: 0x57606f }),
       greenLight: new THREE.MeshBasicMaterial({ color: 0x2f3542 }),
       mast: new THREE.MeshStandardMaterial({ color: 0x2d3436, roughness: 0.5, metalness: 0.2 }),
-      trafficBox: new THREE.MeshToonMaterial({ color: 0x1e272e }),
-      roof: new THREE.MeshToonMaterial({ color: cityDef.roofColor || 0x576574 }),
+      trafficBox: new THREE.MeshToonMaterial({ color: 0x1e272e, gradientMap: textureFactory.getToonGradientMap() }),
+      roof: new THREE.MeshToonMaterial({ color: cityDef.roofColor || 0x576574, gradientMap: textureFactory.getToonGradientMap() }),
       buildingPalette: (cityDef.buildingColors || [0xdfe4ea, 0xced6e0]).map(c =>
-        new THREE.MeshToonMaterial({ color: c })
+        new THREE.MeshToonMaterial({ color: c, gradientMap: textureFactory.getToonGradientMap() })
       ),
       facade: new THREE.MeshStandardMaterial({
         map: facadeTex,
@@ -125,11 +139,14 @@ export class Environment {
         emissiveIntensity: 0.35,
         roughness: 0.4
       }),
-      foliage1: new THREE.MeshToonMaterial({ color: 0x27ae60 }),
-      foliage2: new THREE.MeshToonMaterial({ color: 0x1e8449 }),
-      wood: new THREE.MeshToonMaterial({ color: 0x5d4037 }),
-      lamp: new THREE.MeshToonMaterial({ color: 0x263238 }),
-      lampBulb: new THREE.MeshBasicMaterial({ color: 0xfffae6 })
+      foliage1: new THREE.MeshToonMaterial({ color: 0x27ae60, gradientMap: textureFactory.getToonGradientMap() }),
+      foliage2: new THREE.MeshToonMaterial({ color: 0x1e8449, gradientMap: textureFactory.getToonGradientMap() }),
+      wood: new THREE.MeshToonMaterial({ color: 0x5d4037, gradientMap: textureFactory.getToonGradientMap() }),
+      lamp: new THREE.MeshToonMaterial({ color: 0x2d3740, gradientMap: textureFactory.getToonGradientMap() }),
+      lampBulb: new THREE.MeshBasicMaterial({ color: 0xfffae6 }),
+      yellow: new THREE.MeshToonMaterial({ color: 0xf1c40f, gradientMap: textureFactory.getToonGradientMap() }),
+      marble: new THREE.MeshToonMaterial({ color: 0xf5f6fa, gradientMap: textureFactory.getToonGradientMap() }),
+      terracotta: new THREE.MeshToonMaterial({ color: 0xd35400, gradientMap: textureFactory.getToonGradientMap() })
     };
   }
 
@@ -1173,7 +1190,7 @@ export class Environment {
     const roadMat = this.sharedMats?.road || new THREE.MeshStandardMaterial({ roughness: 0.85, metalness: 0.05 });
     const sidewalkMat = this.sharedMats?.sidewalk || new THREE.MeshStandardMaterial({ roughness: 0.7, metalness: 0.05 });
     const curbMat = this.sharedMats?.curb || new THREE.MeshStandardMaterial({ color: 0x7f8c8d, roughness: 0.6 });
-    const stripeMat = this.sharedMats?.stripe || new THREE.MeshBasicMaterial({ color: 0xffffff });
+    const stripeMat = this.sharedMats?.stripe || new THREE.MeshStandardMaterial({ color: 0xf1f3f5, roughness: 0.85 });
 
     // Chaussée
     const road = new THREE.Mesh(this.sharedGeos.road, roadMat);
@@ -1247,8 +1264,6 @@ export class Environment {
     const curbL = new THREE.Mesh(this.sharedGeos.curb, curbMat);
     curbL.position.set(-4.25, 0.15, 0);
     chunk.add(curbL);
-    curbL.position.set(-4.25, 0.15, 0);
-    chunk.add(curbL);
 
     const sidewalkR = new THREE.Mesh(this.sharedGeos.sidewalk, sidewalkMat);
     sidewalkR.position.set(5.95, 0.125, 0);
@@ -1287,8 +1302,8 @@ export class Environment {
     bumpMesh.receiveShadow = true;
     bumpGroup.add(bumpMesh);
 
-    // 2. Bandes blanches réfléchissantes plates au sol (marquage officiel discret)
-    const stripeMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.85 });
+    // 2. Bandes blanches plates au sol (marquage officiel discret, ИclairИ comme le bitume)
+    const stripeMat = new THREE.MeshStandardMaterial({ color: 0xf1f3f5, transparent: true, opacity: 0.85, roughness: 0.85 });
     for (let x = -3.6; x <= 3.6; x += 1.2) {
       const stripeMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.32, 1.8), stripeMat);
       stripeMesh.rotation.x = -Math.PI / 2;
@@ -1484,14 +1499,16 @@ export class Environment {
     const isIberia = (this.cityTheme.id === 'barcelone' || this.cityTheme.id === 'madrid' || this.cityTheme.id === 'lisbonne');
     const isMaghreb = (this.cityTheme.id === 'tunis' || this.cityTheme.id === 'alger' || this.cityTheme.id === 'annaba');
 
-    const foliageMat1 = new THREE.MeshToonMaterial({ color: (isRiviera || isMed) ? 0x27ae60 : 0x2ecc71 });
-    const foliageMat2 = new THREE.MeshToonMaterial({ color: (isRiviera || isMed) ? 0x1e8449 : 0x27ae60 });
-    const woodMat = new THREE.MeshToonMaterial({ color: 0x5d4037 });
-    const lampMat = new THREE.MeshToonMaterial({ color: 0x263238 });
-    const glowMat = new THREE.MeshBasicMaterial({ color: 0xfffae6 });
-    const yellowMat = new THREE.MeshToonMaterial({ color: 0xf1c40f });
-    const marbleMat = new THREE.MeshToonMaterial({ color: 0xf5f6fa });
-    const terracottaMat = new THREE.MeshToonMaterial({ color: 0xd35400 });
+    // Réemploi strict du pool de matériaux partagés (zéro instanciation par chunk,
+    // zéro compilation shader redondante, zéro fuite progressive sur setCity)
+    const foliageMat1 = this.sharedMats.foliage1;
+    const foliageMat2 = this.sharedMats.foliage2;
+    const woodMat = this.sharedMats.wood;
+    const lampMat = this.sharedMats.lamp;
+    const glowMat = this.sharedMats.lampBulb;
+    const yellowMat = this.sharedMats.yellow || (this.sharedMats.yellow = new THREE.MeshToonMaterial({ color: 0xf1c40f, gradientMap: textureFactory.getToonGradientMap() }));
+    const marbleMat = this.sharedMats.marble || (this.sharedMats.marble = new THREE.MeshToonMaterial({ color: 0xf5f6fa, gradientMap: textureFactory.getToonGradientMap() }));
+    const terracottaMat = this.sharedMats.terracotta || (this.sharedMats.terracotta = new THREE.MeshToonMaterial({ color: 0xd35400, gradientMap: textureFactory.getToonGradientMap() }));
 
     const propPositionsZ = [-22, -11, 4, 18];
 
@@ -1549,7 +1566,11 @@ export class Environment {
           const fol2 = new THREE.Mesh(this.sharedGeos.treeFoliage, foliageMat2);
           fol2.scale.set(0.85, 0.85, 0.85);
           fol2.position.set(0.3, 2.8, -0.2);
-          tree.add(fol1, fol2);
+          // 3è touffe décentrée pour un couvert feuillu plein
+          const fol3 = new THREE.Mesh(this.sharedGeos.treeFoliage, foliageMat1);
+          fol3.scale.setScalar(0.62);
+          fol3.position.set(-0.35, 2.6, 0.25);
+          tree.add(fol1, fol2, fol3);
 
           chunk.add(tree);
           chunk.userData.props.push(tree);
