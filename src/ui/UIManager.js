@@ -211,7 +211,7 @@ export class UIManager {
       <div class="logo-container">
         <div class="logo-glow-ring"></div>
         <h1 class="game-title">MOTORMAGEDDON</h1>
-        <div class="game-subtitle">⚡ CARNAGE URBAIN & COURSES D'ASSAUT ⚡</div>
+        <div class="game-subtitle">⚡ CARNAGE URBAIN & ASSAUT TOTAL ⚡</div>
       </div>
 
       <!-- Carte d'Aperçu du Véhicule Équipé (Accès Rapide Garage) -->
@@ -232,7 +232,7 @@ export class UIManager {
         <!-- Bouton Héros Principal de Lancement -->
         <button id="btn-splash-play" class="btn-arcade btn-play-pulse hero-play-btn">
           <span class="hero-play-icon">🚀</span>
-          <span class="hero-play-label">LANCER LA COURSE</span>
+          <span class="hero-play-label">LANCER L'ASSAUT</span>
           <span class="hero-play-arrow">▶</span>
         </button>
 
@@ -1127,13 +1127,13 @@ export class UIManager {
             </div>
           </button>
         ` : (unlocked ? `
-          <button id="btn-enter-city-race" class="btn-arcade btn-enter-city-hero" title="Lancer la course">
-            <span class="btn-enter-hero-icon">🏁</span>
+          <button id="btn-enter-city-race" class="btn-arcade btn-enter-city-hero" title="Lancer l'assaut">
+            <span class="btn-enter-hero-icon">⚡</span>
             <div class="btn-enter-hero-texts">
-              <span class="btn-enter-hero-title">▶ LANCER LA COURSE : ${city.name.toUpperCase()}</span>
+              <span class="btn-enter-hero-title">▶ LANCER L'ASSAUT : ${city.name.toUpperCase()}</span>
               <span class="btn-enter-hero-desc">OBJECTIF : ${city.targetScore.toLocaleString('fr-FR')} PTS • TOUCHE ENTRÉE</span>
             </div>
-            <span class="btn-enter-hero-badge">JOUER ▶</span>
+            <span class="btn-enter-hero-badge">ATTAQUER ▶</span>
           </button>
           <button id="btn-wmd-city" class="btn-arcade btn-wmd-dock" title="Exterminer avec ADM">
             <span>💀 ADM</span>
@@ -3005,82 +3005,160 @@ export class UIManager {
     }
   }
 
-  // --- CÉLÉBRATION DE FIN D'ÉPREUVE ARCADE GRANDIOSE (VICTOIRE) ---
-  triggerRaceFinishCelebration(city, score) {
+  // --- CONQUÊTE D'ASSAUT URBAIN APOCALYPTIQUE (MOTORMAGEDDON CARNAGE) ---
+  triggerCarnageAssaultFinish(city, score, victims = 35) {
     const overlay = document.createElement('div');
-    overlay.className = 'finish-celebration-overlay';
+    overlay.className = 'finish-assault-overlay';
     overlay.innerHTML = `
-      <div class="finish-celebration-card">
-        <div class="finish-flag-banner">
-          <span class="flag-icon left">🏁</span>
-          <span class="flag-icon center">🏆</span>
-          <span class="flag-icon right">🏁</span>
+      <div class="finish-assault-card">
+        <div class="finish-hazard-stripe top"></div>
+        <div class="finish-assault-badge">⚠️ ASSAUT SECTORIEL VALIDÉ ⚠️</div>
+        <div class="finish-assault-skull-row">
+          <span class="skull-glow">💀</span>
+          <span class="fire-glow">🔥</span>
+          <span class="skull-glow">💀</span>
         </div>
-        <div class="finish-title">VICTOIRE !</div>
-        <div class="finish-subtitle">COURSE TERMINÉE • ÉTAPE CONQUISE</div>
-        <div class="finish-city-name">${city.countryFlag || '🌍'} ${city.name.toUpperCase()}</div>
-        <div class="finish-score-pill">SCORE : ${score.toLocaleString('fr-FR')} PTS</div>
+        <div class="finish-assault-title">ZONE PURGÉE !</div>
+        <div class="finish-assault-sub">SECTEUR METROPOLITAIN ÉPURÉ AU FEU</div>
+        <div class="finish-assault-city">${city.countryFlag || '🌍'} ${city.name.toUpperCase()} (ASSERVIE)</div>
+        <div class="finish-assault-metrics">
+          <div class="fmetric-pill"><span class="fmetric-icon">💀</span> <strong>+${victims}</strong> NEUTRALISÉS</div>
+          <div class="fmetric-pill"><span class="fmetric-icon">⚡</span> <strong>${score.toLocaleString('fr-FR')}</strong> PTS</div>
+        </div>
+        <div class="finish-hazard-stripe bottom"></div>
       </div>
     `;
 
     this.root.appendChild(overlay);
 
-    const card = overlay.querySelector('.finish-celebration-card');
+    const card = overlay.querySelector('.finish-assault-card');
     if (card) {
       gsap.fromTo(card,
-        { scale: 0.2, opacity: 0, rotation: -6 },
-        { scale: 1.05, opacity: 1, rotation: 0, duration: 0.45, ease: "back.out(2.2)", onComplete: () => {
-          gsap.to(card, { scale: 1.0, duration: 0.2 });
+        { scale: 0.25, opacity: 0, rotation: -4 },
+        { scale: 1.05, opacity: 1, rotation: 0, duration: 0.42, ease: "back.out(2.4)", onComplete: () => {
+          gsap.to(card, { scale: 1.0, duration: 0.18 });
         }}
       );
     }
 
-    this.spawnConfettiShower();
+    this.spawnCarnageEmbersShower();
 
     setTimeout(() => {
       gsap.to(overlay, {
         opacity: 0,
-        scale: 1.1,
-        duration: 0.4,
+        scale: 1.08,
+        duration: 0.38,
         ease: "power2.in",
         onComplete: () => overlay.remove()
       });
     }, 2400);
   }
 
-  // Pluie de confettis et d'étoiles dorées arcade plein écran
-  spawnConfettiShower() {
-    const colors = ['#ffd700', '#ff4757', '#2ed573', '#00cec9', '#ffffff', '#ffa502'];
+  // Pluie de braises ardentes, de cendres incandescentes et d'étincelles de guerre
+  spawnCarnageEmbersShower() {
+    const colors = ['#ff4757', '#ffa502', '#fffa65', '#ff3838', '#eb4d4b', '#ffffff'];
     const container = document.createElement('div');
     container.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:9999;overflow:hidden;';
     this.root.appendChild(container);
 
-    for (let i = 0; i < 45; i++) {
+    for (let i = 0; i < 55; i++) {
       const p = document.createElement('div');
-      const size = 6 + Math.random() * 8;
+      const size = 5 + Math.random() * 8;
       const color = colors[Math.floor(Math.random() * colors.length)];
       p.style.cssText = `
         position: absolute;
-        width: ${size}px; height: ${size * 1.4}px;
-        background: ${color};
-        left: ${10 + Math.random() * 80}%;
-        top: -20px;
-        border-radius: ${Math.random() > 0.5 ? '2px' : '50%'};
-        box-shadow: 0 0 6px ${color};
+        width: ${size}px; height: ${size}px;
+        background: radial-gradient(circle, ${color} 0%, transparent 80%);
+        left: ${5 + Math.random() * 90}%;
+        top: -15px;
+        border-radius: 50%;
+        box-shadow: 0 0 10px ${color};
       `;
       container.appendChild(p);
 
       gsap.to(p, {
-        y: window.innerHeight + 40,
-        x: (Math.random() - 0.5) * 160,
-        rotation: (Math.random() - 0.5) * 720,
-        duration: 1.4 + Math.random() * 1.2,
-        delay: Math.random() * 0.5,
+        y: window.innerHeight + 30,
+        x: (Math.random() - 0.5) * 180,
+        rotation: (Math.random() - 0.5) * 540,
+        duration: 1.2 + Math.random() * 1.1,
+        delay: Math.random() * 0.45,
         ease: "power1.out"
       });
     }
 
-    setTimeout(() => container.remove(), 3200);
+    setTimeout(() => container.remove(), 3000);
+  }
+
+  // --- TRANSITION CINÉMATIQUE SATELLITE FLUIDE VERS LA CARTE DU MONDE (KH-12 ORBITAL) ---
+  triggerReturnToMapCinematic(targetCity) {
+    this.closeActiveModals();
+
+    const overlay = document.createElement('div');
+    overlay.className = 'return-map-cinematic';
+    overlay.innerHTML = `
+      <div class="return-map-hud">
+        <div class="return-map-recon-header">
+          <span class="recon-sat-icon">🛰️</span>
+          <div>
+            <div class="recon-sub">SATELLITE RECON KH-12 CRYSTAL • ALT 380 KM</div>
+            <div class="recon-title">RETOUR AU QUARTIER GÉNÉRAL STRATÉGIQUE</div>
+          </div>
+        </div>
+        <div class="return-map-target-card">
+          <div class="target-flag-large">${targetCity?.countryFlag || '🌍'}</div>
+          <div class="target-details">
+            <span class="target-label">LOCALISATION TACTIQUE</span>
+            <span class="target-city-name">${targetCity ? targetCity.name.toUpperCase() : 'EUROPE CENTRALE'}</span>
+            <span class="target-coords">${targetCity ? `${targetCity.mapCoords.x}°E / ${targetCity.mapCoords.y}°N` : 'COORDS SATELLITE'}</span>
+          </div>
+        </div>
+        <div class="recon-radar-scan">
+          <div class="recon-radar-sweep"></div>
+          <span class="recon-status-text">🛰️ SYNCHRONISATION GÉO-SPATIALE EN COURS...</span>
+        </div>
+      </div>
+    `;
+
+    this.root.appendChild(overlay);
+
+    soundManager.playCountdownBeep(true);
+    Haptic.tap();
+
+    const hudCard = overlay.querySelector('.return-map-hud');
+    if (hudCard) {
+      gsap.fromTo(hudCard,
+        { scale: 0.8, opacity: 0 },
+        { scale: 1.0, opacity: 1, duration: 0.35, ease: "power2.out" }
+      );
+    }
+
+    setTimeout(() => {
+      gameState.currentMode = 'MAP';
+      soundManager.stopEngine();
+      this.currentScreen = 'MAP';
+      this.render();
+
+      const mapEl = this.root.querySelector('.screen-map');
+      if (mapEl) {
+        gsap.fromTo(mapEl,
+          { scale: 1.15, opacity: 0.2, filter: 'blur(8px)' },
+          { scale: 1.0, opacity: 1.0, filter: 'blur(0px)', duration: 0.45, ease: "power2.out" }
+        );
+      }
+
+      gsap.to(overlay, {
+        opacity: 0,
+        duration: 0.35,
+        ease: "power2.in",
+        onComplete: () => {
+          overlay.remove();
+          if (targetCity) {
+            const targetPin = document.querySelector(`.city-pin[data-city-id="${targetCity.id}"]`);
+            if (targetPin) this.triggerCityPinRipple(targetPin);
+          }
+        }
+      });
+    }, 550);
   }
 
   spawnFloatingCombatText(text, subtext = '', color = '#ffd32a', xPct = 50, yPct = 42) {
@@ -3498,7 +3576,7 @@ export class UIManager {
 
     overlay.innerHTML = `
       <div class="modal-card">
-        <h2 class="modal-title">${data.stars >= 1 ? '🎉 ÉTAPE RÉUSSIE !' : '💨 COURSE TERMINÉE'}</h2>
+        <h2 class="modal-title">${data.stars >= 1 ? '💀 ASSAUT VALIDÉ • ZONE PURGÉE !' : '⚠️ SECTEUR CONTESTÉ'}</h2>
 
         <div class="stars-awarded">
           ${starsHtml}
@@ -3538,20 +3616,20 @@ export class UIManager {
         ${data.newlyUnlockedCity ? `
           <div style="background: rgba(46, 213, 115, 0.2); border: 1px solid #2ed573; padding: 10px; border-radius: 14px; text-align: center;">
             <strong style="color: #2ed573;">✨ NOUVELLE VILLE DÉBLOQUÉE !</strong>
-            <p style="font-size: 0.85rem; margin-top: 4px;">Vous pouvez maintenant explorer <strong>${data.newlyUnlockedCity.name}</strong> !</p>
+            <p style="font-size: 0.85rem; margin-top: 4px;">Vous pouvez maintenant attaquer <strong>${data.newlyUnlockedCity.name}</strong> !</p>
           </div>
         ` : ''}
 
         <div class="results-actions-primary-dock" style="display: flex; flex-direction: column; gap: 8px; width: 100%; margin-top: 14px;">
           ${nextCity && isNextUnlocked ? `
             <button id="btn-results-next" class="btn-arcade" style="width: 100%; padding: 14px; background: linear-gradient(135deg, #2ed573, #10ac84); font-size: 1.05rem; font-weight: 950; box-shadow: 0 4px 18px rgba(46, 213, 115, 0.5); border: 2px solid #7bed9f; display: flex; align-items: center; justify-content: center; gap: 8px;">
-              <span>▶ ÉTAPE SUIVANTE : ${nextCity.name.toUpperCase()}</span>
+              <span>💥 RAID SUIVANT : ${nextCity.name.toUpperCase()}</span>
             </button>
           ` : ''}
 
-          <!-- BOUTON RETOUR À LA CARTE : HÉROS PRIORITAIRE, ULTRA LISIBLE ET MIS EN VALEUR -->
+          <!-- BOUTON RETOUR SATELLITE À LA CARTE : HÉROS PRIORITAIRE, TRANSITION CINÉMATIQUE FLUIDE -->
           <button id="btn-results-map" class="btn-arcade" style="width: 100%; padding: 13px; background: linear-gradient(135deg, #3742fa, #2f3542); font-size: 1.02rem; font-weight: 950; border: 2px solid #70a1ff; box-shadow: 0 4px 18px rgba(55, 66, 250, 0.45); display: flex; align-items: center; justify-content: center; gap: 8px;">
-            <span>🗺️ RETOUR À LA CARTE DU TOUR</span>
+            <span>🛰️ RETOUR SATELLITE À LA CARTE</span>
           </button>
         </div>
 
@@ -3604,14 +3682,17 @@ export class UIManager {
       soundManager.playClick();
       overlay.remove();
       this.activeModals = this.activeModals.filter(m => m !== overlay);
+      let targetCity = currentCityObj;
       if (data.newlyUnlockedCity) {
         this.selectedMapCity = data.newlyUnlockedCity;
         gameState.selectCity(data.newlyUnlockedCity.id);
+        targetCity = data.newlyUnlockedCity;
       } else if (nextCity && isNextUnlocked) {
         this.selectedMapCity = nextCity;
         gameState.selectCity(nextCity.id);
+        targetCity = nextCity;
       }
-      this.setScreen('MAP');
+      this.triggerReturnToMapCinematic(targetCity);
     });
 
     overlay.querySelector('#btn-results-garage').addEventListener('click', () => {
@@ -3676,7 +3757,7 @@ export class UIManager {
             🔄 RECOMMENCER
           </button>
           <button id="btn-pause-map" class="btn-arcade btn-ghost">
-            🗺️ QUITTER VERS LA CARTE
+            🛰️ RETOUR SATELLITE À LA CARTE
           </button>
         </div>
       </div>
@@ -3700,9 +3781,7 @@ export class UIManager {
       soundManager.playClick();
       overlay.remove();
       this.activeModals = this.activeModals.filter(m => m !== overlay);
-      gameState.currentMode = 'MAP';
-      soundManager.stopEngine();
-      this.setScreen('MAP');
+      this.triggerReturnToMapCinematic(gameState.selectedCity);
     });
 
     this.root.appendChild(overlay);
@@ -3740,6 +3819,12 @@ export class UIManager {
             <span>Musique Arcade :</span>
             <button id="toggle-music" class="btn-arcade ${musicOn ? 'btn-secondary' : 'btn-ghost'}" style="padding: 6px 16px; font-size: 0.85rem;">
               ${musicOn ? 'OUI' : 'NON'}
+            </button>
+          </div>
+          <div class="result-row" style="align-items: center;">
+            <span>Sensibilité Direction :</span>
+            <button id="toggle-steer-sens" class="btn-arcade btn-accent" style="padding: 6px 14px; font-size: 0.85rem; font-weight: 900;">
+              ${(storage.data.settings?.steerSensitivity || 'DYNAMIC') === 'HIGH' ? '⚡ ÉLEVÉE' : ((storage.data.settings?.steerSensitivity || 'DYNAMIC') === 'NORMAL' ? '🔹 NORMALE' : '🔥 DYNAMIQUE')}
             </button>
           </div>
         </div>
@@ -3792,6 +3877,19 @@ export class UIManager {
       soundManager.toggleMusic(next);
       e.target.textContent = next ? 'OUI' : 'NON';
       e.target.className = `btn-arcade ${next ? 'btn-secondary' : 'btn-ghost'}`;
+    });
+
+    overlay.querySelector('#toggle-steer-sens')?.addEventListener('click', (e) => {
+      soundManager.playClick();
+      const current = storage.data.settings.steerSensitivity || 'DYNAMIC';
+      const order = ['DYNAMIC', 'HIGH', 'NORMAL'];
+      const next = order[(order.indexOf(current) + 1) % order.length];
+      if (!storage.data.settings) storage.data.settings = {};
+      storage.data.settings.steerSensitivity = next;
+      storage.save();
+      const label = next === 'HIGH' ? '⚡ ÉLEVÉE' : (next === 'NORMAL' ? '🔹 NORMALE' : '🔥 DYNAMIQUE');
+      e.target.textContent = label;
+      Haptic.tap();
     });
 
     overlay.querySelector('#btn-settings-cloud')?.addEventListener('click', () => {

@@ -99,11 +99,15 @@ class GameApp {
       if (!this.isPointerDown || gameState.currentMode !== 'PLAYING') return;
 
       const deltaX = e.clientX - this.touchStartX;
-      if (Math.abs(deltaX) < 4) {
+      if (Math.abs(deltaX) < 3.5) {
         this.steerInput = 0;
         return;
       }
-      const sensitivity = 0.0045; // Pilotage souple, précis et non brutal
+      // Sensibilité directionnelle droite/gauche rehaussée et optimisée mobile (~+50% de réactivité)
+      const settingMode = storage.data.settings?.steerSensitivity || 'DYNAMIC';
+      const sensitivityMultiplier = settingMode === 'HIGH' ? 1.35 : (settingMode === 'NORMAL' ? 0.95 : 1.18);
+      const baseSensitivity = 0.0068; // Réponse instantanée au pouce sans dépasser le bord d'écran
+      const sensitivity = baseSensitivity * sensitivityMultiplier;
       this.steerInput = Math.max(-1.0, Math.min(1.0, deltaX * sensitivity));
     });
 
@@ -786,25 +790,27 @@ class GameApp {
       // 12. Mise à jour de l'état de course (accélération, décélération, combo, vitesse arrêtée lors d'un crash)
       gameState.update(delta, this.bike.isCrashed);
 
-      // 13. Franchissement triomphal de la ligne d'arrivée
+      // 13. Conquête de la zone d'assaut urbain (Périmètre purgé au feu)
       if (!this.hasCrossedFinish && this.bike.z >= this.environment.finishDistance) {
         this.hasCrossedFinish = true;
-        soundManager.playVictory();
-        Haptic.success();
-        this.particles.spawnVictoryConfetti(this.bike.mesh.position);
+        soundManager.playCrash();
+        soundManager.playEvilLaugh();
+        Haptic.carnage();
+        this.particles.spawnCannonBlast(this.bike.mesh.position, 8);
+        this.engine.triggerDynamicLight(this.bike.mesh.position, 0xff3838, 30, 0.9);
 
         if (this.ui) {
-          this.ui.triggerRaceFinishCelebration(gameState.selectedCity, gameState.score);
+          this.ui.triggerCarnageAssaultFinish(gameState.selectedCity, gameState.score, gameState.killsCount || 35);
         }
 
-        // Décélération progressive arcade avec pluie continue de confettis pendant 2.6s
+        // Décélération du bolide d'assaut avec gerbes d'étincelles et braises pendant 2.6s
         let finishTimer = 0;
         const finishInterval = setInterval(() => {
           finishTimer += 0.2;
-          this.bike.speed = Math.max(10, this.bike.speed * 0.93);
+          this.bike.speed = Math.max(8, this.bike.speed * 0.92);
           soundManager.updateEngine(Math.max(0.08, this.bike.speed / this.bike.maxSpeed));
-          if (Math.random() < 0.45) {
-            this.particles.spawnVictoryConfetti(this.bike.mesh.position);
+          if (Math.random() < 0.6) {
+            this.particles.spawnSpark(this.bike.mesh.position.x, this.bike.mesh.position.y + 0.4, this.bike.mesh.position.z);
           }
           if (finishTimer >= 2.6) {
             clearInterval(finishInterval);

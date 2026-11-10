@@ -51,7 +51,8 @@ const DEFAULT_SAVE = {
     sfx: true,
     music: true,
     vibration: true,
-    controlMode: 'swipe'
+    controlMode: 'swipe',
+    steerSensitivity: 'DYNAMIC'
   },
   googleAccount: {
     isConnected: false,

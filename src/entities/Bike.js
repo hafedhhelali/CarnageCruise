@@ -2299,13 +2299,14 @@ export class Bike {
       return;
     }
 
-    // --- CONTRÔLE NORMAL DIRECTIONNEL PROGRESSIF & AMORTI ---
-    this.smoothedSteer += (steerInput - this.smoothedSteer) * Math.min(1.0, delta * 7.5);
+    // --- CONTRÔLE NORMAL DIRECTIONNEL PROGRESSIF & AMORTI VIF ---
+    this.smoothedSteer += (steerInput - this.smoothedSteer) * Math.min(1.0, delta * 9.6);
 
     // Largeur étendue : Chaussée (-4.2 à +4.2) + Trottoirs (-6.0 à +6.0)
     // Permet de rouler confortablement sur le trottoir sans heurter les façades de bâtiments (8.5m)
+    // Sensibilité latérale accrue (10.2 m/s max) pour un slalom réactif et esquives précises
     const MAX_WIDTH = 6.0;
-    this.x -= this.smoothedSteer * 8.6 * delta;
+    this.x -= this.smoothedSteer * 10.2 * delta;
     this.x = Math.max(-MAX_WIDTH, Math.min(MAX_WIDTH, this.x));
 
     // Détection de montée sur le trottoir (|x| > 4.25m)
@@ -2315,8 +2316,8 @@ export class Bike {
     }
     this.wasOnSidewalk = onSidewalk;
 
-    this.targetLean = this.smoothedSteer * 0.32;
-    this.currentLean += (this.targetLean - this.currentLean) * Math.min(1.0, delta * 6.5);
+    this.targetLean = this.smoothedSteer * 0.35;
+    this.currentLean += (this.targetLean - this.currentLean) * Math.min(1.0, delta * 8.2);
 
     // Positionnement et rotation du bolide
     this.mesh.position.x = this.x;
