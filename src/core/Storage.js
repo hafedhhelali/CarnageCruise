@@ -8,7 +8,7 @@ const STORAGE_KEY = 'motormageddon_save_v1';
 const DEFAULT_SAVE = {
   version: 2,
   playerName: 'Pilote Express',
-  coins: 5000, // Pièces de départ
+  coins: 250, // Barème équilibré de départ (250 pièces)
   unlockedCities: [
     'paris', 'bruxelles', 'londres', 'saint-malo', 'bordeaux', 'barcelone',
     'madrid', 'lisbonne',

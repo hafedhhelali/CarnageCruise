@@ -655,11 +655,7 @@ export class IntersectionManager {
       if (distToPlayer < 35 && distToPlayer > -18 && !inter.triggeredCrossingCars) {
         inter.triggeredCrossingCars = true;
 
-        // Générer 2 véhicules transversaux en cascade
-        // ACCIDENT DE CROISEMENT REMIS (spectacle T-bone au centre ~45%) :
-        // deux véhicules en sens opposés convergent sur la même file et se percutent.
-        const willCrash = Math.random() < 0.45;
-        const crashPair = [];
+        // Générer 2 véhicules transversaux en cascade (Circulation fluide sans accident de croisement)
         const count = 2;
         for (let c = 0; c < count; c++) {
           const carTypes = ['taxi', 'van', 'compact', 'berline'];
@@ -667,10 +663,10 @@ export class IntersectionManager {
           const carMesh = this.createCrossingCarMesh(type);
 
           const fromLeft = c % 2 === 0;
-          const startX = willCrash ? (fromLeft ? -30 : 30) : (fromLeft ? -32 - (c * 14) : 32 + (c * 14));
-          const speedMag = willCrash ? 26 : (22.0 + Math.random() * 6.0);
+          const startX = fromLeft ? -32 - (c * 14) : 32 + (c * 14);
+          const speedMag = 22.0 + Math.random() * 6.0;
           const speedX = fromLeft ? speedMag : -speedMag;
-          const zOffset = willCrash ? -1.6 : (c === 0 ? -2.2 : 2.2);
+          const zOffset = (c === 0 ? -2.2 : 2.2);
 
           const curveX = roadCurveFunc ? roadCurveFunc(inter.z) : 0;
           carMesh.position.set(curveX + startX, 0, inter.z + zOffset);
@@ -683,19 +679,9 @@ export class IntersectionManager {
             z: inter.z + zOffset,
             active: true,
             fromLeft,
-            willCrash,
-            crashed: false,
-            partner: null,
-            spinV: 0,
-            vy: 0,
             curveX
           };
-          if (willCrash) crashPair.push(carEntry);
           this.crossingCars.push(carEntry);
-        }
-        if (crashPair.length === 2) {
-          crashPair[0].partner = crashPair[1];
-          crashPair[1].partner = crashPair[0];
         }
       }
 
@@ -729,51 +715,18 @@ export class IntersectionManager {
       }
     });
 
-    // 4. Déplacement des véhicules transversaux + ACCIDENT DE CROISEMENT (T-bone)
-    // Deux véhicules convergent sur la même file : impact, rebond, retournement,
-    // feu et explosion (effets délégués à this.onAccident branché côté main.js).
+    // 4. Déplacement fluide des véhicules transversaux (ambiance urbaine sans accident)
     for (let i = this.crossingCars.length - 1; i >= 0; i--) {
       const car = this.crossingCars[i];
       if (!car.active) continue;
 
-      if (!car.crashed) {
-        car.mesh.position.x += car.velX * delta;
+      car.mesh.position.x += car.velX * delta;
 
-        // Faire tourner les roues des voitures transversales
-        if (car.mesh.userData && car.mesh.userData.wheels) {
-          car.mesh.userData.wheels.forEach(w => {
-            w.children[0].rotation.y += delta * 18;
-          });
-        }
-
-        // Impact : le véhicule allant vers la droite atteint le centre du carrefour
-        if (car.willCrash && car.fromLeft && car.partner && !car.partner.crashed &&
-            car.mesh.position.x - car.curveX > -0.5) {
-          car.crashed = true;
-          car.partner.crashed = true;
-          car.velX *= 0.07;
-          car.partner.velX *= 0.07;
-          car.spinV = 3.2 + Math.random() * 3.5;
-          car.partner.spinV = -(3.2 + Math.random() * 3.5);
-          car.vy = 5.5 + Math.random() * 3.0;
-          car.partner.vy = 4.0 + Math.random() * 3.0;
-          const impactPos = new THREE.Vector3(car.curveX, 1.0, car.mesh.position.z);
-          if (this.onAccident) this.onAccident(impactPos);
-        }
-      } else {
-        // Véhicule mitraillé : rebond vertical amorti + rotation sur soi
-        car.vy -= 18 * delta;
-        car.y = (car.y || 0) + car.vy * delta;
-        if (car.mesh.position.y + car.vy * delta < 0) {
-          car.vy = Math.abs(car.vy) > 0.9 ? -car.vy * 0.35 : 0;
-          car.mesh.position.y = 0;
-        } else {
-          car.mesh.position.y += car.vy * delta;
-        }
-        car.mesh.rotation.y += car.spinV * delta;
-        car.spinV *= Math.max(0, 1 - 1.4 * delta);
-        car.velX *= Math.max(0, 1 - 2.6 * delta);
-        car.mesh.position.x += car.velX * delta;
+      // Faire tourner les roues des voitures transversales
+      if (car.mesh.userData && car.mesh.userData.wheels) {
+        car.mesh.userData.wheels.forEach(w => {
+          w.children[0].rotation.y += delta * 18;
+        });
       }
 
       // Supprimer quand la voiture sort du champ

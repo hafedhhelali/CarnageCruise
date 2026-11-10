@@ -38,15 +38,6 @@ class GameApp {
     this.traffic = new Traffic(this.engine.scene, this.particles);
     this.pigeons = new PigeonSystem(this.engine.scene);
     this.intersections = new IntersectionManager(this.engine.scene);
-    // Effets d'accident de croisement (remis) : explosion + lumière + secousse
-    this.intersections.onAccident = (pos) => {
-      this.particles.spawnCannonBlast(pos);
-      this.engine.triggerDynamicLight(pos, 0xff5040, 3.4, 0.35);
-      this.engine.triggerCameraShake(0.35);
-      soundManager.playCrash();
-      setTimeout(() => soundManager.playExplosion(), 110);
-      Haptic.impactHeavy();
-    };
     this.projectiles = new ProjectileManager(this.engine.scene, this.particles, soundManager, this.engine);
 
     // 3. État des contrôles et de la course

@@ -4555,33 +4555,34 @@ export class UIManager {
     banner.className = 'golden-coin-collect-banner';
     banner.style.cssText = `
       position: absolute;
-      top: 36px;
+      top: 32px;
       left: 50%;
-      background: linear-gradient(135deg, #ffd700 0%, #ff9f43 55%, #ee5253 100%);
-      color: #1e272e;
-      padding: 14px 30px;
-      border-radius: 40px;
-      box-shadow: 0 12px 40px rgba(255, 177, 66, 0.75), 0 0 25px rgba(255, 215, 0, 0.5);
-      border: 2.5px solid #ffffff;
+      background: linear-gradient(145deg, rgba(20, 16, 26, 0.94), rgba(12, 10, 16, 0.98));
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      color: #ffffff;
+      padding: 10px 22px;
+      border-radius: 20px;
+      box-shadow: 0 10px 32px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 215, 0, 0.35);
+      border: 1.5px solid #ffd700;
       z-index: 10000;
       pointer-events: none;
       display: flex;
       align-items: center;
-      gap: 14px;
-      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+      gap: 12px;
       white-space: nowrap;
     `;
 
     banner.innerHTML = `
-      <span style="font-size: 1.8rem; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.35));">🪙</span>
-      <div>
-        <div style="font-size: 0.68rem; font-weight: 900; letter-spacing: 1.2px; color: rgba(30, 39, 46, 0.75); text-transform: uppercase;">
+      <div style="width: 38px; height: 38px; border-radius: 50%; background: radial-gradient(circle, #ffeaa7 0%, #fdcb6e 60%, #e17055 100%); display: flex; align-items: center; justify-content: center; font-size: 1.35rem; box-shadow: 0 0 12px rgba(255, 215, 0, 0.6); flex-shrink: 0;">🪙</div>
+      <div style="display: flex; flex-direction: column;">
+        <div style="font-size: 0.68rem; font-weight: 850; letter-spacing: 1.5px; color: #ffd700; text-transform: uppercase;">
           ${title}
         </div>
-        <div style="font-size: 1.2rem; font-weight: 900; color: #1e272e; font-family: monospace; letter-spacing: 0.5px;">
-          +${coins.toLocaleString('fr-FR')} PIÈCES D'OR
+        <div style="font-size: 1.15rem; font-weight: 950; color: #ffffff; font-family: monospace; letter-spacing: 0.8px; text-shadow: 0 0 10px rgba(255, 215, 0, 0.4);">
+          +${coins.toLocaleString('fr-FR')} <span style="font-size: 0.8rem; color: #ffeaa7;">CRÉDITS</span>
         </div>
-        ${subtext ? `<div style="font-size: 0.66rem; font-weight: 850; color: rgba(30, 39, 46, 0.85);">${subtext}</div>` : ''}
+        ${subtext ? `<div style="font-size: 0.66rem; font-weight: 700; color: #a4b0be; letter-spacing: 0.4px;">${subtext}</div>` : ''}
       </div>
     `;
 
