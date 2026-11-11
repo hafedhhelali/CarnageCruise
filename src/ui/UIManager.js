@@ -246,7 +246,7 @@ export class UIManager {
         <!-- Bouton Héros Principal de Lancement -->
         <button id="btn-splash-play" class="btn-arcade btn-play-pulse hero-play-btn">
           <span class="hero-play-icon">🚀</span>
-          <span class="hero-play-label">LANCER L'ASSAUT</span>
+          <span class="hero-play-label">JOUER</span>
           <span class="hero-play-arrow">▶</span>
         </button>
 

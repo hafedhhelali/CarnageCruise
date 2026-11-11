@@ -208,6 +208,7 @@ html, body {
   border: 3px solid #fffa65;
   box-sizing: border-box;
   z-index: 50;
+  overflow-y: auto;
 }
 
 /* En-tête supérieur Splash */
