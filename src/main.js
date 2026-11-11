@@ -952,10 +952,23 @@ class GameApp {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
+  // Debug marker
+  const debugDiv = document.createElement('div');
+  debugDiv.id = 'debug-boot';
+  debugDiv.style.cssText = 'position:fixed;top:0;left:0;background:lime;color:black;padding:8px;z-index:99999;font-size:14px;font-weight:bold;';
+  debugDiv.textContent = 'BOOT: DOM ready, starting...';
+  document.body.appendChild(debugDiv);
+
   try {
     new GameApp();
+    debugDiv.textContent = 'BOOT: GameApp created OK';
+    debugDiv.style.background = 'green';
+    debugDiv.style.color = 'white';
   } catch (e) {
     console.error('[CarnageCruise] BOOT ERROR:', e);
+    debugDiv.style.background = 'red';
+    debugDiv.style.color = 'white';
+    debugDiv.textContent = 'BOOT ERROR: ' + (e && e.stack ? e.stack : e);
     document.body.innerHTML = '<div style="color:red;padding:20px;font-family:monospace;white-space:pre-wrap;">BOOT ERROR: ' + (e && e.stack ? e.stack : e) + '</div>';
   }
 });

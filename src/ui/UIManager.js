@@ -37,13 +37,24 @@ export class UIManager {
   }
 
   init() {
+    // Debug marker
+    const debugDiv = document.createElement('div');
+    debugDiv.id = 'debug-marker';
+    debugDiv.style.cssText = 'position:fixed;top:0;left:0;background:yellow;color:black;padding:5px;z-index:99999;font-size:12px;';
+    debugDiv.textContent = 'UI init started, root=' + (this.root ? 'OK' : 'NULL');
+    document.body.appendChild(debugDiv);
+    
     try {
       this.render();
+      debugDiv.textContent += ' | render OK';
     } catch (e) {
       console.error('[UIManager] render error:', e);
       if (this.root) {
         this.root.innerHTML = '<div style="color:red;padding:20px;font-family:monospace;white-space:pre-wrap;font-size:12px;">UI RENDER ERROR: ' + (e && e.stack ? e.stack : e) + '</div>';
+      } else {
+        document.body.innerHTML = '<div style="color:red;padding:20px;font-family:monospace;white-space:pre-wrap;font-size:12px;">UI ROOT IS NULL: ' + (e && e.stack ? e.stack : e) + '</div>';
       }
+      debugDiv.textContent += ' | ERROR: ' + e.message;
     }
     if (!cookieConsentManager.hasAnswered()) {
       setTimeout(() => {
@@ -4770,6 +4781,8 @@ export class UIManager {
 
   showOfflineReportModal(earnings) {
     if (!earnings) return;
+    // Ne rien afficher s'il n'y a rien à récolter
+    if (!earnings.cashEarned && !earnings.killsEarned) return;
     const overlay = document.createElement('div');
     overlay.className = 'modal-backdrop interactive';
     overlay.style.cssText = `
