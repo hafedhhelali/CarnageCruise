@@ -65,6 +65,7 @@ export class SkyDome {
       color: 0xffffff,
       gradientMap: textureFactory.getToonGradientMap()
     });
+    this.cloudMat = cloudMat; // Teinté la nuit via setNight()
 
     const cloudCount = 14;
     for (let i = 0; i < cloudCount; i++) {
@@ -103,6 +104,14 @@ export class SkyDome {
     if (this.domeMesh && this.domeMesh.material.uniforms) {
       this.domeMesh.material.uniforms.topColor.value.set(topColorHex);
       this.domeMesh.material.uniforms.bottomColor.value.set(bottomColorHex);
+    }
+  }
+
+  /** Mode nuit : nuages gris ardoise éteints au lieu de blanc éclatant */
+  setNight(night = false) {
+    this.isNight = !!night;
+    if (this.cloudMat) {
+      this.cloudMat.color.setHex(night ? 0x39415c : 0xffffff);
     }
   }
 

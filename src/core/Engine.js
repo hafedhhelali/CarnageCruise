@@ -166,6 +166,8 @@ export class Engine {
   applyCityAtmosphere(cityDef) {
     this.scene.background = new THREE.Color(cityDef.skyColor);
     this.scene.fog.color = new THREE.Color(cityDef.fogColor);
+    // Densité de brume par ville (différenciation : glace épaisse, désert clair)
+    if (cityDef.fogDensity) this.scene.fog.density = cityDef.fogDensity;
     if (this.skyDome) {
       this.skyDome.setColors(cityDef.skyColor, cityDef.fogColor);
     }
@@ -179,6 +181,48 @@ export class Engine {
     if (this.rimLight) {
       this.rimLight.color = new THREE.Color(cityDef.accentColor || 0x00cec9);
       this.rimLight.intensity = cityDef.isNuclearMission ? 0.75 : 0.45;
+    }
+  }
+
+  /**
+   * MODE NUIT ALÉATOIRE : bascule complète jour/nuit de l'ambiance 3D.
+   * La nuit, les phares, réverbères, fenêtres éclairées et feux tricolores
+   * deviennent les sources lumineuses principales (le bloom fait le reste).
+   * Les valeurs jour sont le calibrage validé — ne pas les modifier ici.
+   */
+  applyNightAtmosphere(night = false) {
+    this.isNight = !!night;
+    if (night) {
+      // Clapotis lunaire froid : tout s'éteint sauf les émissifs urbains
+      this.ambientLight.intensity = 0.14;
+      this.ambientLight.color.setHex(0x8fa3c8);
+      this.hemiLight.intensity = 0.22;
+      this.hemiLight.color.setHex(0x9fb8e8);
+      this.hemiLight.groundColor.setHex(0x1a2030);
+      this.dirLight.intensity = 0.22;
+      this.dirLight.color.setHex(0xbfd0ff); // Lune froide
+      this.rimLight.intensity = 0.55;
+      this.rimLight.color.setHex(0x48dbfb);
+      this.renderer.toneMappingExposure = 0.95;
+      this.scene.fog.color.setHex(0x0a0f1e);
+      this.scene.fog.density = 0.0012;
+      this.scene.background = new THREE.Color(0x05070f);
+      if (this.skyDome) {
+        this.skyDome.setColors(0x0a1030, 0x151d33);
+        this.skyDome.setNight(true);
+      }
+    } else {
+      // Retour au calibrage jour validé
+      this.ambientLight.intensity = 0.3;
+      this.ambientLight.color.setHex(0xcfe8ff);
+      this.hemiLight.intensity = 0.6;
+      this.dirLight.intensity = 1.15;
+      this.dirLight.color.setHex(0xfffdf7);
+      this.rimLight.intensity = 0.45;
+      this.renderer.toneMappingExposure = 1.0;
+      this.scene.fog.color.setHex(0xd8e8f8);
+      this.scene.fog.density = 0.0008;
+      if (this.skyDome) this.skyDome.setNight(false);
     }
   }
 

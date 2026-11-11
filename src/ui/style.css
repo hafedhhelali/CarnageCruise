@@ -269,15 +269,22 @@ html, body {
 
 .logo-glow-ring {
   position: absolute;
-  top: 50%;
+  top: 35%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 240px;
-  height: 80px;
+  width: 260px;
+  height: 260px;
   background: radial-gradient(ellipse at center, rgba(255, 71, 87, 0.45) 0%, rgba(255, 211, 42, 0) 70%);
-  filter: blur(20px);
+  filter: blur(24px);
   pointer-events: none;
   z-index: -1;
+}
+
+.game-logo-img {
+  width: clamp(150px, 42vw, 230px);
+  height: auto;
+  filter: drop-shadow(0 6px 18px rgba(255, 71, 87, 0.55));
+  margin-bottom: 4px;
 }
 
 .game-title {
@@ -5396,3 +5403,87 @@ html, body {
 
 
 
+/* ==========================================================================
+   MISSIONS QUOTIDIENNES (RETENTION D1-D7)
+   ========================================================================== */
+.daily-missions-panel {
+  width: 100%;
+  max-width: 420px;
+  background: rgba(15, 20, 35, 0.72);
+  border: 1.5px solid rgba(0, 206, 201, 0.4);
+  border-radius: 14px;
+  padding: 10px 12px;
+  margin: 8px auto;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+}
+.daily-missions-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.daily-missions-title {
+  font-size: 0.82rem;
+  font-weight: 900;
+  letter-spacing: 1.2px;
+  color: #00cec9;
+}
+.daily-missions-all {
+  font-size: 0.68rem;
+  font-weight: 900;
+  color: #2ed573;
+  letter-spacing: 0.8px;
+}
+.daily-mission-row {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.daily-mission-row:last-child { border-bottom: none; }
+.daily-mission-row.claimed { opacity: 0.55; }
+.daily-mission-label {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #f1f2f6;
+}
+.daily-mission-bar {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.daily-mission-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #00cec9, #2ed573);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+.daily-mission-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.68rem;
+}
+.daily-mission-progress { color: #a4b0be; font-weight: 700; }
+.daily-mission-reward { color: #fffa65; font-weight: 900; }
+.daily-mission-done { color: #2ed573; font-weight: 900; }
+.daily-mission-claim {
+  background: linear-gradient(135deg, #ffd32a, #ff9f43);
+  color: #1e272e;
+  border: none;
+  border-radius: 8px;
+  padding: 3px 10px;
+  font-size: 0.7rem;
+  font-weight: 900;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  animation: pulse 1.2s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+}

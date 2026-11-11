@@ -8,6 +8,7 @@ import * as THREE from 'three';
 import { Engine } from './core/Engine.js';
 import { gameState, CITIES } from './core/GameState.js';
 import { storage } from './core/Storage.js';
+import { dailyMissions, loginStreak } from './core/DailyMissions.js';
 import { soundManager } from './audio/SoundManager.js';
 import { Bike } from './entities/Bike.js';
 import { CharacterSystem } from './entities/Characters.js';
@@ -39,6 +40,32 @@ class GameApp {
     this.pigeons = new PigeonSystem(this.engine.scene);
     this.intersections = new IntersectionManager(this.engine.scene);
     this.projectiles = new ProjectileManager(this.engine.scene, this.particles, soundManager, this.engine);
+
+    // Abonnement des missions quotidiennes aux événements de jeu
+    gameState.subscribe((event, payload) => {
+      if (event === 'kill_updated') dailyMissions.onKill();
+      if (event === 'score_updated' && payload) {
+        if (payload.combo) dailyMissions.onBestCombo(payload.combo);
+        if (payload.itemType === 'near_miss') dailyMissions.onNearMiss();
+        if (payload.coinsEarned) dailyMissions.onCoins(payload.coinsEarned);
+      }
+      if (event === 'nitro_activated') dailyMissions.onNitro();
+      if (event === 'run_ended' && payload) {
+        dailyMissions.onRunComplete();
+        dailyMissions.onCoins(payload.coinsEarned || 0);
+        dailyMissions.onBestCombo(payload.maxCombo || 0);
+        dailyMissions.onDistance(payload.distance || 0);
+        dailyMissions.onKillStreak(payload.kills || 0);
+      }
+    });
+
+    // Claim automatique du calendrier de connexion au lancement
+    if (loginStreak.canClaim()) {
+      const reward = loginStreak.claim();
+      if (reward && this.ui) {
+        this.ui.showToastUnlock({ name: `🎁 JOUR ${reward.day}/7 : +${reward.coins} PIÈCES D'OR !` });
+      }
+    }
 
     // 3. État des contrôles et de la course
     this.steerInput = 0;
@@ -186,6 +213,15 @@ class GameApp {
         if (this.pigeons) this.pigeons.reset(0);
         if (this.intersections) this.intersections.reset();
         if (this.particles) this.particles.reset();
+
+        // MODE NUIT ALÉATOIRE (~35% des runs) : bascule l'ambiance 3D après
+        // l'atmosphère de la ville — phares, réverbères et fenêtres en vedette
+        this.isNightRun = Math.random() < 0.35;
+        this.engine.applyNightAtmosphere(this.isNightRun);
+        if (this.traffic && this.traffic.setNightMode) this.traffic.setNightMode(this.isNightRun);
+        if (this.isNightRun && this.ui) {
+          this.ui.showToastUnlock({ name: '🌙 COURSE DE NUIT — PLEINS PHARES !' });
+        }
 
         gameState.startRun();
       } else if (action === 'PAUSE') {
@@ -489,6 +525,40 @@ class GameApp {
       this.bike.mesh.position.z = this.bike.z;
       this.bike.mesh.rotation.y = roadAngle;
 
+      // 4b. EFFETS DE SURFACE : montée de trottoir & frôlement des façades
+      // Montée sur le trottoir (|x| > 4.25m) : gerbe d'étincelles de bordure,
+      // poussière, micro-secousse caméra et retour haptique à l'impact
+      const bikeAbsX = Math.abs(this.bike.x);
+      const onSidewalkNow = bikeAbsX > 4.25;
+      if (onSidewalkNow !== this._wasOnSidewalk) {
+        this._wasOnSidewalk = onSidewalkNow;
+        if (onSidewalkNow && currentSpeed > 4 && !isFlyingCraft) {
+          const curbPos = new THREE.Vector3(this.bike.mesh.position.x, 0.12, this.bike.z);
+          this.particles.spawnSparks(curbPos, 6, 0xb2bec3);
+          this.particles.spawnSkidSmoke(curbPos);
+          this.engine.triggerCameraShake(0.12);
+          Haptic.impactLight();
+        }
+      }
+
+      // Frôlement des façades (proche de la bordure extrême |x| > 5.45m) :
+      // gerbe d'étincelles continue le long du mur + grincement régulier
+      if (bikeAbsX > 5.45 && currentSpeed > 6 && !isFlyingCraft && !this.bike.isCrashed) {
+        this._wallScrapeTimer = (this._wallScrapeTimer || 0) - delta;
+        if (this._wallScrapeTimer <= 0) {
+          this._wallScrapeTimer = 0.055;
+          const side = Math.sign(this.bike.x);
+          const wallPos = new THREE.Vector3(
+            this.bike.mesh.position.x + side * 0.55,
+            0.45 + Math.random() * 0.5,
+            this.bike.z - 0.3 + Math.random() * 0.8
+          );
+          this.particles.spawnSparks(wallPos, 3, 0xffd32a);
+          if (Math.random() < 0.22) soundManager.playTireScreech();
+          this.engine.triggerCameraShake(0.05);
+        }
+      }
+
       // 5. Son moteur réactif (ronronnement ralenti à l'arrêt, accélération dynamique)
       if (!this.hasCrossedFinish) {
         soundManager.updateEngine(currentSpeed / 20.0);
@@ -660,6 +730,7 @@ class GameApp {
                 this.engine.triggerCameraShake(0.52);
                 soundManager.playPropSmash();
                 Haptic.impactLight();
+                dailyMissions.onPropSmash();
 
                 const propPos = new THREE.Vector3(worldX, 1.2, worldZ);
                 this.particles.spawnPropShatter(propPos, prop.userData.type || 'lamp');
@@ -736,9 +807,16 @@ class GameApp {
               const bumpPos = new THREE.Vector3(this.bike.mesh.position.x, 0.15, this.bike.z);
               if (this.particles.spawnSparks) this.particles.spawnSparks(bumpPos, 14, 0x00cec9);
               if (this.particles.spawnExhaustSmoke) this.particles.spawnExhaustSmoke(bumpPos, 1.2);
+              // Poussière de contact au sol (latérale, feeling de choc franc)
+              if (this.particles.spawnSkidSmoke) {
+                this.particles.spawnSkidSmoke(bumpPos);
+                this.particles.spawnSkidSmoke(new THREE.Vector3(bumpPos.x - 0.6, 0.1, bumpPos.z));
+                this.particles.spawnSkidSmoke(new THREE.Vector3(bumpPos.x + 0.6, 0.1, bumpPos.z));
+              }
+              this.engine.triggerCameraShake(Math.min(0.3, 0.1 + currentSpeed / 60));
 
               if (currentSpeed > 8.0) {
-                const airPts = Math.round(150 + (currentSpeed * 8));
+                const airPts = Math.round(100 + (currentSpeed * 5));
                 gameState.score += airPts;
                 this.particles.spawnComicBurst(
                   new THREE.Vector3(this.bike.mesh.position.x, this.bike.mesh.position.y + 1.4, this.bike.z + 1.2),
@@ -747,6 +825,7 @@ class GameApp {
                 );
                 this.engine.triggerCameraShake(Math.min(0.65, 0.35 + (currentSpeed / 45)));
                 if (this.ui) this.ui.spawnFloatingCombatText(`+${airPts}`, 'AIR TIME ! 🚀', '#00cec9', 50, 42);
+                dailyMissions.onAirTime();
                 Haptic.impactLight();
               }
             }

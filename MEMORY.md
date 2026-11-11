@@ -153,4 +153,68 @@
 - **Dôme Céleste & Nuages Flottants (`SkyDome.js`)** : Dégradé zénithal atmosphérique et nuages 3D vaporeux dérivants.
 - **Rigueur Architecturale & Code Clean** : Suite de tests automatisée `npm test` validée à 100% (12/12) et passage officiel au canal `0.9.0-beta` (Build 10).
 
+### ✅ 20. EXTENSION EUROPÉENNE & MONDE VIVANT (v0.9.1 → v0.9.5)
+- **Nouvelles villes** : Madrid 🇪🇸 et Lisbonne 🇵🇹 avec landmarks et props dédiés par ville (v0.9.1).
+- **Carte Europe SIG 100% fidèle** : pinch-zoom à deux doigts, pan tactile, barre de zoom non intrusive (v0.9.1, v0.9.4).
+- **Circulation 3D réelle** : véhicules roulants en double sens, piétons sur trottoirs et passages piétons, montée sur trottoir physiquement simulée (v0.9.4).
+- **Tirs traçants & attaques viscérales** : armes des engins avec projectiles 3D et impacts physiques (v0.9.4).
+- **Cadrage caméra & klaxon expressif** : trafic réduit et aéré, klaxon bi-ton avec panique des piétons, arrêt des piétons (v0.9.5).
+
+### ✅ 21. ARSENAL MILITAIRE & CYCLE DE VIE ROBUSTE (v0.9.6 → v0.9.12)
+- **Battle Tank** : obus de canon 120mm, usines nucléaires sur la carte, effets d'impact piétons (v0.9.6).
+- **Refonte Splash & Synthwave** : écran d'accueil refondu, compositeur synthwave procédural, crash de boot mobile résolu (v0.9.7).
+- **Google Ads & RGPD** : architecture publicitaire, consentement cookies CMP, boucle approche-explosion-évasion nucléaire, animaux de compagnie, nuées de pigeons dynamiques (v0.9.8).
+- **Véhicules spécialisés cataclysme** : Hovercraft, Rad-Rover et Snowmobile avec terrains dédiés (v0.9.12).
+- **Aero-Jet** : physique de vol complète, attaque aérienne strafing et plongée missile (v0.9.12).
+- **Stabilité lifecycle** : élimination des gels d'entrée en ville et de la destruction `userData` pigeons (v0.9.10, v0.9.11).
+
+### ✅ 22. WORLDMAGEDDON & EMPIRE TYCOON (v0.9.13 → v0.9.18)
+- **4 vecteurs d'extermination** : Street, Nucléaire, Rupture de Barrage & Déluge, Glissement de Montagne & Avalanche, avec compteur mondial de dépopulation (v0.9.13).
+- **Google Play Games** : sauvegarde cloud et connexion (v0.9.14).
+- **Empire Tycoon Clandestin** : QG avec 6 infrastructures clandestines, gains hors-ligne, gestion de la rentabilité (v0.9.15).
+- **Frappe WMD & simulation canvas** : extermination en temps réel 60fps sur carte GPU (v0.9.17, v0.9.18).
+
+### ✅ 23. SPECTACLE ARCADE & POLISH (v0.9.19 → v0.9.25)
+- **Populations réelles** par ville et physique de saut sur dos d'âne (v0.9.19).
+- **Missiles 3D spectaculaires** et destruction cinématique plein écran des WMD (v0.9.22).
+- **PixiJS v8 + GSAP** : rendu GPU des cinématiques, motion design arcade, bloom flash dynamique (v0.9.24).
+- **Bande-son sadique procédurale** : cris de piétons différenciés, verbalisation au feu rouge, boing-fwump des ralentisseurs, shatter physique des props, économie de pièces recalibrée (v0.9.25).
+- **Textes de combat flottants & haptique** : FCT GPU-optimized et retours tactiles (v0.9.23).
+
+### ✅ 24. CÉLÉBRATION FINALE & ERGONOMIE COCKPIT (v0.9.27 → v0.9.28)
+- **Célébration de victoire d'arrivée** : carte de résultats héroïque et retour carte (v0.9.27).
+- **Ruban de navigation des villes interactif** et dé cluttering du dock (v0.9.27).
+- **Sensibilité directionnelle gauche/droite** retravaillée et transition orbitale caméra KH-12 (v0.9.28).
+
+### ✅ 25. QUALITÉ AUDIOVISUELLE MAJEURE (v0.9.29)
+- **Calibrage graphique complet** (validé visuellement) : IBL remplacé par un dôme ciel dégradé + soleil compact (fini les taches blanches de RoomEnvironment), bloom 0.28/0.16/1.25, brume FogExp2 0.0008, exposition 1.0, PCFShadowMap.
+- **Marquage routier éclairé** : bandes centrales, passages piétons et ralentisseurs en matériau éclairé (fini les patchs néon `MeshBasicMaterial`), feux tricolores sous le seuil de bloom.
+- **Banque d'échantillons réels CC0 (Kenney)** : `SampleBank.js` — ~90 sons OGG (clics, pièces, crash, explosions, victoire, nitro, avalanche) avec variations de pitch, couches enrichies, chaîne d'éq « présence » et repli procédural automatique.
+- **Publicités désactivées en profondeur** : `ADS_ENABLED = false` dans AdManager (architecture Google Ads conservée), balise AdSense commentée dans `index.html`, tous les boutons pub retirés de l'UI.
+- **Purge du voile CSS** : `backdrop-filter` retirés du HUD, splash et garage allégés, notifications de heurt réduites, notification « Crédits noirs encaissés » restylée.
+- **Accidents de croisement T-bone** (remis puis re-supprimés définitivement en v0.9.30).
+
+### ✅ 26. BOUCLE DE JEU & ÉCONOMIE (v0.9.30 → v0.9.33)
+- **v0.9.30** : suppression définitive de l'accident de croisement, fumée de tir réduite, notification de butin restylée, barème des pièces calibré.
+- **v0.9.31** : bouton retour carte instantané dès 100% atteints, CTA d'assaut valide.
+- **v0.9.32** : carte de victoire persistante, refonte ergonomique de la carte (pilule de zoom dockée en haut à droite), boisson énergétique (boost), contrôles tactiles bas d'écran.
+- **v0.9.33** : sons d'arrivée coupés, canettes de boisson limitées, retour forcé à la carte avec compte à rebours.
+
+### ✅ 27. MODE NUIT & EFFETS DE SURFACE (v0.9.34 — en cours)
+- **Mode nuit aléatoire (~35% des courses)** : `Engine.applyNightAtmosphere()` bascule la scène en ambiance lunaire (dirLight 0.22 bleutée, ambient 0.14, hemi 0.22, exposure 0.95, brume nocturne `0x0a0f1e` densité 0.0012, dôme ciel nuit, nuages gris ardoise) — phares, réverbères, fenêtres éclairées et feux tricolores deviennent les sources principales.
+- **`Traffic.setNightMode()`** : optiques et faisceaux des véhicules rehaussés la nuit (opacité faisceau 0.22, émissifs 1.15).
+- **Phares de véhicules refondus** : cône de 5.6m correctement orienté (étroit à la lampe, évasé au loin) — fini le triangle inversé de 12m.
+- **Effets de surface** : montée de trottoir (étincelles de bordure + poussière + micro-secousse + haptique), frôlement des façades (gerbe d'étincelles continue + grincements), ralentisseur renforcé (poussière latérale + secousse de contact).
+- **Documentation** : MEMORY.md et HANDOFF.md resynchronisés sur l'intégralité de l'historique v0.9.1 → v0.9.34.
+
+### ✅ 28. RÉTENTION, LOGO & NOUVELLES VILLES (v0.9.35)
+- **Missions quotidiennes (D1-D7)** : `DailyMissions.js` — 15 missions pool, 3 tirées par jour (sélection déterministe par date), progression par type (kills, near-miss, combo, feux grillés, distance, air time, courses, pièces, nitro, props, kill streak), récompenses en pièces, panneau UI sur le splash avec boutons RÉCLAMER. Abonné aux événements `gameState` (kill_updated, score_updated, nitro_activated, run_ended).
+- **Calendrier de connexion 7 jours** : streak avec récompenses croissantes (20 → 250 pièces, bonus nitro J3, booster J7), reset si jour manqué, claim automatique au lancement avec toast.
+- **Combo « Risk it all »** : le timer de décroissance accélère à chaque kill (3.8s → plancher 2.0s), récupération au reset — tension permanente, score = skill.
+- **Score rééquilibré** : cibles et seuils d'étoiles ×1.25, quotas de kills ×1.5, points par piéton ×0.7, conduite 1.6→1.0, near-miss 75→50, air time 150+8→100+5. Le score n'est plus triviallement atteignable.
+- **Logo vectoriel** : `public/logo.svg` (512×512) — moto de guerre stylisée + onde de choc + étincelles radiales + titre arcade ; intégré au splash (`game-logo-img`) et favicon dans `index.html`.
+- **3 nouvelles villes différenciées** : Reykjavik 🇮🇸 (glace/neige, brouillard épais, route droite, trafic faible), Rio 🇧🇷 (tropical, soleil éclatant, route sinueuse, trafic dense), Route 66 🇺🇸 (désert, ligne droite infinie, poussière). Champs `trafficDensity`, `fogDensity`, `roadStraight`, `propsSet`, `elevation` ajoutés au schéma cityDef ; `getRoadCenterX` et `applyCityAtmosphere` les consomment.
+- **Missions affichées sur le splash** : panneau compact avec barres de progression et boutons de claim.
+
+
 

@@ -14,7 +14,8 @@ const DEFAULT_SAVE = {
     'madrid', 'lisbonne',
     'millau', 'marseille', 'nice', 'milan', 'geneve', 'chamonix',
     'annecy', 'lyon', 'strasbourg', 'rome', 'napoli', 'tunis', 'annaba', 'alger',
-    'berlin', 'amsterdam', 'seville', 'casablanca', 'venise', 'flamanville-nuc', 'doel-nuc', 'asco-nuc', 'tchernobyl'
+    'berlin', 'amsterdam', 'seville', 'casablanca', 'venise', 'flamanville-nuc', 'doel-nuc', 'asco-nuc', 'tchernobyl',
+'reykjavik', 'rio', 'route66'
   ],
   cityScores: {
     paris: { bestScore: 0, stars: 0, completed: false },

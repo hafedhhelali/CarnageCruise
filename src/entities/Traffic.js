@@ -25,7 +25,7 @@ export class Traffic {
       wheelCap: new THREE.SphereGeometry(0.08, 8, 8),
       headlightLens: new THREE.CylinderGeometry(0.12, 0.12, 0.05, 12),
       taillightBar: new THREE.BoxGeometry(0.42, 0.08, 0.04),
-      lightBeam: new THREE.ConeGeometry(1.6, 12.0, 10, 1, true),
+      lightBeam: new THREE.ConeGeometry(1.3, 5.6, 10, 1, true),
       underglow: new THREE.PlaneGeometry(2.2, 4.4)
     };
 
@@ -59,9 +59,9 @@ export class Traffic {
         envMapIntensity: 0.6 // Chrome doux : reflet réel sans bloc lumineux parasite
       }),
       beam: new THREE.MeshBasicMaterial({
-        color: 0xfffa65,
+        color: 0xfff3b0,
         transparent: true,
-        opacity: 0.14,
+        opacity: 0.1,
         depthWrite: false,
         side: THREE.DoubleSide
       }),
@@ -365,11 +365,12 @@ export class Traffic {
       group.add(taillight);
     }
 
-    // Faisceaux lumineux sur la chaussée
+    // Faisceaux lumineux sur la chaussée : cône étroit à la lampe qui s'élargit
+    // au loin (apex ARRIÈRE via -π/2, base large à ~8m) — fini le triangle inversé
     for (let s of [-0.68, 0.68]) {
       const beam = new THREE.Mesh(this.sharedGeos.lightBeam, this.sharedMats.beam);
-      beam.rotation.x = Math.PI / 2;
-      beam.position.set(s, 0.45, 7.5);
+      beam.rotation.x = -Math.PI / 2;
+      beam.position.set(s, 0.52, 5.1);
       group.add(beam);
     }
 
@@ -483,6 +484,20 @@ export class Traffic {
     v.userData.crashSpinX = (Math.random() - 0.5) * 16.0;
     v.userData.crashSpinY = 8.0 + Math.random() * 8.0;
     v.userData.crashSpinZ = (Math.random() - 0.5) * 12.0;
+  }
+
+  /**
+   * Mode nuit : optiques et faisceaux rehaussés (elles deviennent la source
+   * lumineuse principale avec réverbères et fenêtres éclairées).
+   */
+  setNightMode(night = false) {
+    this.isNight = !!night;
+    if (this.sharedMats) {
+      this.sharedMats.beam.opacity = night ? 0.22 : 0.1;
+      this.sharedMats.underglowMat.opacity = night ? 0.3 : 0.22;
+      this.sharedMats.headlightLED.emissiveIntensity = night ? 1.15 : 0.9;
+      this.sharedMats.taillightLED.emissiveIntensity = night ? 1.05 : 0.9;
+    }
   }
 
   reset() {

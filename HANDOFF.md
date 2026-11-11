@@ -8,15 +8,16 @@ Ce document fournit l'ensemble des informations de conception, d'architecture lo
 ## 1. VISION DU PROJET & SPÉCIFICATIONS
 
 - **Genre** : Jeu de course d'arcade urbain / Runner 3D burlesque
-- **Version actuelle** : **0.9.0-beta** (Build / versionCode 10 - Canal 0.x.x BETA)
+- **Version actuelle** : **0.9.33-beta** (Build / versionCode 43 - Canal 0.x.x BETA) — lot **0.9.34** en cours de développement
 - **Signature & Clé** : Keystore permanent dédié `android/app/motormageddon.keystore` (validité 10 000 jours, EOMedia Paris)
 - **Plateforme cible** : Android (Smartphones & Tablettes) + WebGL Mobile/Desktop
 - **Direction artistique** : Cartoon 3D éclatant, physique burlesque (slapstick), animations hilarantes et dynamiques, identité française affirmée.
 - **Moteur & Technologies** :
-  - **Moteur 3D** : Three.js (WebGL Toon/Gouraud optimisé mobile)
+  - **Moteur 3D** : Three.js r187 (WebGL Toon/Gouraud optimisé mobile)
   - **Packaging Android** : Capacitor 8.6 + Android Gradle Plugin + Java 17 (SDK 36 / Android 15/14/13/12+)
-  - **Moteur Audio** : Synthétiseur procédural WebAudio API avec gestion mémoire et cycle de vie Android strict (Background/Pause/Exit/Resume)
-  - **Build Tooling** : Vite + Gradle Wrapper + GitHub Actions CI/CD (génération automatique d'APK versionné à chaque push)
+  - **Moteur Audio** : Synthèse procédurale WebAudio **+ banque d'échantillons réels CC0 (`SampleBank.js`, packs Kenney)** avec repli procédural automatique
+  - **Motion & Cinématiques** : PixiJS v8 (rendu GPU) + GSAP (motion design) + @tweenjs/tween.js
+  - **Build Tooling** : Vite + Gradle Wrapper + GitHub Actions CI/CD (génération automatique d'APK **Release signé** versionné à chaque push)
 
 ---
 
@@ -287,6 +288,72 @@ Ce document fournit l'ensemble des informations de conception, d'architecture lo
 ### D. Rigueur Architecturale & Code Clean (Audit Lead Dev)
 - **Certification Clean Code & SOLID** : 12/12 tests automatisés validés via `npm test` (`scripts/verify-architecture.js`).
 - **Alignement Strict du Canal 0.x.x Beta** : Synchronisation exacte de `version.json`, `package.json`, `Version.js` sur `0.9.0-beta` (Build 10).
+
+---
+
+## 9. SYNTHÈSE DES ÉVOLUTIONS MAJEURES v0.9.1 → v0.9.33
+
+### A. Contenu & Monde (v0.9.1 → v0.9.15)
+- **17 villes** : extension Madrid 🇪🇸 et Lisbonne 🇵🇹 ; landmarks 3D dédiés par ville.
+- **Circulation 3D & piétons vivants** : véhicules double sens, piétons trottoirs/passages avec IA de fuite, montée sur trottoir.
+- **Arsenal** : Battle Tank (obus 120mm), Aero-Jet (vol + airstrike), véhicules cataclysme (Hovercraft, Rad-Rover, Snowmobile).
+- **Worldmageddon** : 4 vecteurs d'extermination (Street, Nucléaire, Barrage & Déluge, Montagne & Avalanche) avec dépopulation mondiale tracée.
+- **Empire Tycoon Clandestin** : QG, 6 infrastructures, gains hors-ligne, sauvegarde cloud Google Play Games.
+
+### B. Spectacle & Polish (v0.9.16 → v0.9.28)
+- **PixiJS v8 + GSAP** : cinématiques WMD plein écran GPU, textes de combat flottants, haptique.
+- **Bande-son sadique procédurale** : cris différenciés, verbalisation feu rouge, boing-fwump, shatter des props.
+- **Célébration de victoire**, ruban de navigation villes, cockpit ergonomique, sensibilité KH-12.
+
+### C. Qualité audiovisuelle (v0.9.29 — valeurs calibrées FIGÉES)
+- **Rendu (jour)** : dirLight **1.15** / hemi **0.6** / ambient **0.3** / exposure **1.0** / fog `FogExp2(0xd8e8f8, 0.0008)` / bloom **0.28 / rayon 0.16 / seuil 1.25** / IBL dôme ciel dégradé `environmentIntensity 0.6` / `PCFShadowMap`.
+- **Émissifs** : feux tricolores et dégâts SOUS le seuil de bloom (lampes ≤ 1.0, éclats 1.3–1.5 max) — toute valeur HDR > 1.25 déclenche un halo.
+- **Marquage routier** : `MeshStandardMaterial` éclairé (jamais `MeshBasicMaterial` blanc pur) — reçoit lumière, ombres et brume.
+- **Audio** : `SampleBank.js` charge ~90 OGG CC0 depuis `public/audio/` (interface, impact, scifi, casino, ui) avec pitch/variations et couches probabilitées ; éq « présence » (+3 dB @ 3.2 kHz, shelf +4 dB @ 2.4 kHz) ; repli synthèse procédurale si décodage impossible.
+- **Monétisation** : `AdManager.ADS_ENABLED = false` (aucune pub affichée/chargée) ; architecture Google Ads + CMP RGPD conservée pour réactivation (3 lignes à décommenter) ; balise AdSense commentée dans `index.html`.
+
+### D. Boucle de jeu (v0.9.30 → v0.9.33)
+- Suppression définitive de l'accident de croisement, fumée de tir réduite, barème pièces calibré.
+- Retour carte instantané à 100%, carte victoire persistante, pilule zoom dockée haut-droite, boisson énergétique (canettes limitées), contrôles tactiles bas d'écran, retour forcé compte à rebours.
+
+---
+
+## 10. AMBIANCE JOUR/NUIT & EFFETS DE SURFACE (v0.9.34)
+
+### A. Mode Nuit Aléatoire (~35% des courses)
+- **Tirage** : `main.js` à `START_RUN` → `this.isNightRun = Math.random() < 0.35` → `engine.applyNightAtmosphere(night)` + `traffic.setNightMode(night)` + toast `🌙 COURSE DE NUIT`.
+- **Calibrage nuit (figé)** : dirLight **0.22** (`0xbfd0ff` lune froide) / ambient **0.14** (`0x8fa3c8`) / hemi **0.22** (`0x9fb8e8`/`0x1a2030`) / rim **0.55** (`0x48dbfb`) / exposure **0.95** / fog **`0x0a0f1e` densité 0.0012** / background `0x05070f` / dôme ciel `0x0a1030`→`0x151d33` / nuages ardoise `0x39415c` (`SkyDome.setNight`).
+- **Retour jour** : les valeurs calibrées jour de la section 9.C sont restaurées à l'identique.
+- **Véhicules la nuit** (`Traffic.setNightMode`) : faisceaux opacité **0.22** (0.10 le jour), underglow 0.3, optiques avant `emissiveIntensity 1.15` / arrière 1.05.
+
+### B. Phares de Véhicules (géométrie corrigée)
+- Faisceau = `ConeGeometry(1.3, 5.6)` orienté **apex ARRIÈRE** (`rotation.x = -π/2`, position `z = 5.1`) : étroit à la lampe (z≈2.3), évasé au loin (z≈7.9). L'ancien cône de 12m orienté pointe-en-avant rendait un triangle inversé « bizarre ».
+
+### C. Effets de Surface (main.js, boucle PLAYING)
+- **Montée de trottoir** (|x| > 4.25 m, franchissement détecté) : 6 étincelles de bordure + `spawnSkidSmoke` + secousse 0.12 + `Haptic.impactLight()`.
+- **Frôlement des façades** (|x| > 5.45 m) : gerbe d'étincelles continue côté mur (throttle 55 ms), grincement ~22%, secousse 0.05.
+- **Ralentisseur** : poussière latérale triple au contact + secousse `0.1 + vitesse/60` (avant le gros shake Air Time existant).
+
+---
+
+## 11. RÉTENTION, IDENTITÉ & CONTENU (v0.9.35)
+
+### A. Missions Quotidiennes & Calendrier de Connexion
+- **`DailyMissions.js`** : 15 missions pool, 3 tirées par jour (sélection déterministe par date), progression par type, récompenses en pièces, panneau UI sur le splash avec boutons RÉCLAMER.
+- **Abonnement** aux événements `gameState` : `kill_updated`, `score_updated` (combo, near-miss, pièces), `nitro_activated`, `run_ended`.
+- **Calendrier 7 jours** : streak avec récompenses croissantes (20→250 pièces, bonus nitro J3, booster J7), reset si jour manqué, claim automatique au lancement avec toast.
+- **Combo « Risk it all »** : timer de décroissance accélère à chaque kill (3.8s → plancher 2.0s), récupération au reset.
+
+### B. Logo & Identité Visuelle
+- **`public/logo.svg`** (512×512) : moto de guerre stylisée + onde de choc + étincelles radiales + titre arcade ; intégré au splash (`game-logo-img`) et favicon dans `index.html`.
+
+### C. Nouvelles Villes Différenciées
+- **Reykjavik 🇮🇸** (glace/neige, brouillard épais, route droite, trafic faible), **Rio 🇧🇷** (tropical, soleil éclatant, route sinueuse, trafic dense), **Route 66 🇺🇸** (désert, ligne droite infinie, poussière).
+- **Champs optionnels** `trafficDensity`, `fogDensity`, `roadStraight`, `propsSet`, `elevation` dans le schéma cityDef ; consommés par `getRoadCenterX` et `applyCityAtmosphere`.
+
+### D. Rééquilibrage du Score
+- Cibles et seuils d'étoiles ×1.25, quotas de kills ×1.5, points par piéton ×0.7, conduite 1.6→1.0, near-miss 75→50, air time 150+8→100+5. Le score n'est plus triviallement atteignable.
+
 
 
 

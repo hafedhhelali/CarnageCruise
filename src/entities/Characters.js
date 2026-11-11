@@ -13,7 +13,7 @@ export const CHARACTER_TYPES = [
     type: 'parisian',
     name: 'Parisien Pressé',
     category: 'man',
-    points: 150,
+    points: 105,
     bodyColor: 0x2c3e50,
     pantsColor: 0x34495e,
     hatColor: 0x111111,
@@ -25,7 +25,7 @@ export const CHARACTER_TYPES = [
     type: 'chic_woman',
     name: 'Parisienne Chic',
     category: 'woman',
-    points: 170,
+    points: 119,
     bodyColor: 0xe84393, // Chemisier fuchsia éclatant
     pantsColor: 0x2d3436, // Jupe/pantalon chic
     hatColor: 0xfdcb6e,  // Coiffure dorée stylée
@@ -37,7 +37,7 @@ export const CHARACTER_TYPES = [
     type: 'papy',
     name: 'Papy & Canne en Bois',
     category: 'elderly',
-    points: 190,
+    points: 133,
     bodyColor: 0x795548, // Veste tweed marron
     pantsColor: 0x4e342e,
     hatColor: 0x576574,  // Casquette feutre
@@ -49,7 +49,7 @@ export const CHARACTER_TYPES = [
     type: 'papy_chic',
     name: 'Vieux Gentilhomme à Canne',
     category: 'elderly',
-    points: 220,
+    points: 154,
     bodyColor: 0x2f3542, // Redingote grise
     pantsColor: 0x57606f,
     hatColor: 0x1e272e,  // Chapeau melon
@@ -62,7 +62,7 @@ export const CHARACTER_TYPES = [
     type: 'grandma_cane',
     name: 'Mamie & Canne Fleurie',
     category: 'elderly',
-    points: 185,
+    points: 130,
     bodyColor: 0xa29bfe, // Châle mauve
     pantsColor: 0x6c5ce7,
     hatColor: 0xdfe4ea,  // Chignon argenté
@@ -74,7 +74,7 @@ export const CHARACTER_TYPES = [
     type: 'poussette',
     name: 'Parent & Poussette',
     category: 'stroller',
-    points: 260,
+    points: 182,
     bodyColor: 0x10ac84, // Parka turquoise
     pantsColor: 0x222f3e,
     hatColor: 0xffa502,
@@ -87,7 +87,7 @@ export const CHARACTER_TYPES = [
     type: 'poussette_twins',
     name: 'Maman & Poussette Jumeaux',
     category: 'stroller',
-    points: 340,
+    points: 238,
     bodyColor: 0xff6b81, // Veste rose corail
     pantsColor: 0x57606f,
     hatColor: 0xfffa65,
@@ -100,7 +100,7 @@ export const CHARACTER_TYPES = [
     type: 'child_scooter',
     name: 'Enfant en Trottinette',
     category: 'child',
-    points: 210,
+    points: 147,
     bodyColor: 0x0984e3, // T-shirt bleu vif
     pantsColor: 0xff7675, // Short corail
     hatColor: 0xff4757,  // Casquette rouge à l'envers
@@ -112,7 +112,7 @@ export const CHARACTER_TYPES = [
     type: 'grandma',
     name: 'Mamie & son Caddie',
     category: 'elderly',
-    points: 150,
+    points: 105,
     bodyColor: 0x8e44ad, // Cardigan violet
     pantsColor: 0x6c5ce7,
     hatColor: 0xc8d6e5,  // Chignon gris perle
@@ -124,7 +124,7 @@ export const CHARACTER_TYPES = [
     type: 'tourist_woman',
     name: 'Touriste Flâneuse',
     category: 'woman',
-    points: 130,
+    points: 91,
     bodyColor: 0x00d2d3, // Robe menthe
     pantsColor: 0x1dd1a1,
     hatColor: 0xff9ff3,
@@ -136,7 +136,7 @@ export const CHARACTER_TYPES = [
     type: 'businessman',
     name: 'Trader en Retard',
     category: 'man',
-    points: 180,
+    points: 126,
     bodyColor: 0x1e272e,
     pantsColor: 0x1e272e,
     tieColor: 0xff3838,
@@ -147,7 +147,7 @@ export const CHARACTER_TYPES = [
     type: 'waiter',
     name: 'Garçon de Café',
     category: 'man',
-    points: 220,
+    points: 154,
     bodyColor: 0xf5f6fa,
     vestColor: 0x2f3640,
     pantsColor: 0x2f3640,
@@ -159,7 +159,7 @@ export const CHARACTER_TYPES = [
     type: 'group',
     name: 'Groupe d\'Amis',
     category: 'man',
-    points: 320,
+    points: 224,
     bodyColor: 0xf39c12,
     pantsColor: 0x2980b9,
     hatColor: 0x27ae60,
@@ -171,7 +171,7 @@ export const CHARACTER_TYPES = [
     type: 'dog',
     name: 'Chien Fidèle 🐕',
     category: 'dog',
-    points: 210,
+    points: 147,
     bodyColor: 0xd35400, // Pelage roux caramel
     collarColor: 0xe74c3c,
     scale: 0.62,
@@ -182,7 +182,7 @@ export const CHARACTER_TYPES = [
     type: 'cat',
     name: 'Chat Agile 🐈',
     category: 'cat',
-    points: 230,
+    points: 161,
     bodyColor: 0x2d3436, // Pelage noir soyeux
     scale: 0.52,
     speed: 1.9,
@@ -192,7 +192,7 @@ export const CHARACTER_TYPES = [
     type: 'monkey',
     name: 'Singe Farceur 🐒',
     category: 'monkey',
-    points: 290,
+    points: 203,
     bodyColor: 0x795548, // Brun
     faceColor: 0xffdbac,
     fezColor: 0xc0392b,

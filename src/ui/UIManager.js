@@ -7,6 +7,7 @@
 
 import { gameState, CITIES, BIKES } from '../core/GameState.js';
 import { storage } from '../core/Storage.js';
+import { dailyMissions, loginStreak } from '../core/DailyMissions.js';
 import { soundManager } from '../audio/SoundManager.js';
 import { App } from '@capacitor/app';
 import { FULL_VERSION, APP_VERSION, COPYRIGHT_NOTICE, RELEASE_NAME, IS_BETA } from '../core/Version.js';
@@ -210,9 +211,13 @@ export class UIManager {
       <!-- Hero Titre & Logo Arcade Stylisé 3D -->
       <div class="logo-container">
         <div class="logo-glow-ring"></div>
+        <img src="./logo.svg" alt="Motormageddon" class="game-logo-img" width="220" height="220" />
         <h1 class="game-title">MOTORMAGEDDON</h1>
         <div class="game-subtitle">⚡ CARNAGE URBAIN & ASSAUT TOTAL ⚡</div>
       </div>
+
+      <!-- Missions Quotidiennes (Rétention D1-D7) -->
+      ${this.renderDailyMissionsPanel()}
 
       <!-- Carte d'Aperçu du Véhicule Équipé (Accès Rapide Garage) -->
       <div class="splash-vehicle-card clickable" id="btn-splash-quick-garage" title="Personnaliser et équiper dans le Garage">
@@ -323,6 +328,20 @@ export class UIManager {
     });
 
     this.root.appendChild(splash);
+
+    // Listeners des boutons "RÉCLAMER" des missions quotidiennes
+    splash.querySelectorAll('.daily-mission-claim').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const slot = parseInt(btn.getAttribute('data-slot'), 10);
+        const reward = dailyMissions.claim(slot);
+        if (reward > 0) {
+          soundManager.playCoin();
+          this.showToastUnlock({ name: `🎯 MISSION ACCOMPLIE : +${reward} PIÈCES !` });
+          this.render();
+        }
+      });
+    });
   }
 
   // --- 2. CARTE RÉALISTE DE FRANCE & EFFETS DE TRANSITION ---
@@ -4916,5 +4935,34 @@ export class UIManager {
         }
       }
     );
+  }
+
+  renderDailyMissionsPanel() {
+    const missions = dailyMissions.list();
+    const allClaimed = dailyMissions.allClaimed();
+    const rows = missions.map(m => {
+      const pct = Math.min(100, Math.round((m.progress / m.target) * 100));
+      const done = m.progress >= m.target;
+      const claimable = done && !m.claimed;
+      return `
+        <div class="daily-mission-row ${m.claimed ? 'claimed' : ''} ${claimable ? 'claimable' : ''}">
+          <div class="daily-mission-label">${m.label}</div>
+          <div class="daily-mission-bar"><div class="daily-mission-fill" style="width:${pct}%"></div></div>
+          <div class="daily-mission-meta">
+            <span class="daily-mission-progress">${Math.min(m.progress, m.target)}/${m.target}</span>
+            ${claimable ? `<button class="daily-mission-claim" data-slot="${m.slot}">+${m.reward} 🪙</button>` : (m.claimed ? '<span class="daily-mission-done">✓</span>' : `<span class="daily-mission-reward">+${m.reward} 🪙</span>`)}
+          </div>
+        </div>
+      `;
+    }).join('');
+    return `
+      <div class="daily-missions-panel">
+        <div class="daily-missions-header">
+          <span class="daily-missions-title">🎯 MISSIONS DU JOUR</span>
+          ${allClaimed ? '<span class="daily-missions-all">TOUT RÉCLAMÉ !</span>' : ''}
+        </div>
+        ${rows}
+      </div>
+    `;
   }
 }

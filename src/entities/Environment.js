@@ -199,6 +199,8 @@ export class Environment {
 
   // Calcul mathématique de la courbure de la rue selon Z (virages gauche/droite)
   getRoadCenterX(z) {
+    // Villes à route droite (désert, autoroute) : pas de virages
+    if (this.cityTheme && this.cityTheme.roadStraight) return 0;
     // Ondulation sinusoïdale douce de boulevard (+/- 1.8m)
     return Math.sin(z * 0.012) * 1.8 + Math.sin(z * 0.005) * 1.2;
   }
