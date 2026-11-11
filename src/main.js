@@ -534,9 +534,17 @@ class GameApp {
         this._wasOnSidewalk = onSidewalkNow;
         if (onSidewalkNow && currentSpeed > 4 && !isFlyingCraft) {
           const curbPos = new THREE.Vector3(this.bike.mesh.position.x, 0.12, this.bike.z);
-          this.particles.spawnSparks(curbPos, 6, 0xb2bec3);
-          this.particles.spawnSkidSmoke(curbPos);
-          this.engine.triggerCameraShake(0.12);
+          this.particles.spawnSparks(curbPos, 10, 0xb2bec3);
+          // Dérapage prononcé : 4 volutes de fumée épaisses le long du trottoir
+          if (this.particles.spawnSkidSmoke) {
+            for (let i = 0; i < 4; i++) {
+              this.particles.spawnSkidSmoke(new THREE.Vector3(
+                this.bike.mesh.position.x + (Math.random() - 0.5) * 0.6,
+                0.1, this.bike.z - i * 0.6
+              ));
+            }
+          }
+          this.engine.triggerCameraShake(0.15);
           Haptic.impactLight();
         }
       }
@@ -553,10 +561,21 @@ class GameApp {
             0.45 + Math.random() * 0.5,
             this.bike.z - 0.3 + Math.random() * 0.8
           );
-          this.particles.spawnSparks(wallPos, 3, 0xffd32a);
-          if (Math.random() < 0.22) soundManager.playTireScreech();
-          this.engine.triggerCameraShake(0.05);
+          this.particles.spawnSparks(wallPos, 6, 0xffd32a);
+          if (this.particles.spawnSkidSmoke) {
+            this.particles.spawnSkidSmoke(new THREE.Vector3(wallPos.x, 0.1, wallPos.z));
+          }
+          soundManager.playWallScrape();
+          this.engine.triggerCameraShake(0.06);
         }
+        // Inclinaison visuelle de la moto vers le mur (frottement)
+        const side = Math.sign(this.bike.x);
+        this.bike.mesh.rotation.z = THREE.MathUtils.lerp(
+          this.bike.mesh.rotation.z, side * 0.12, delta * 8
+        );
+      } else {
+        // Récupération de l'inclinaison
+        this.bike.mesh.rotation.z = THREE.MathUtils.lerp(this.bike.mesh.rotation.z, 0, delta * 10);
       }
 
       // 5. Son moteur réactif (ronronnement ralenti à l'arrêt, accélération dynamique)

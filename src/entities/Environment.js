@@ -139,6 +139,12 @@ export class Environment {
         emissiveIntensity: 0.35,
         roughness: 0.4
       }),
+      storeSigns: Array.from({ length: 6 }, (_, i) => new THREE.MeshStandardMaterial({
+        map: textureFactory.getStoreSignTexture(cityDef.id || 'paris', i),
+        roughness: 0.4,
+        emissive: 0xffffff,
+        emissiveIntensity: 0.12
+      })),
       foliage1: new THREE.MeshToonMaterial({ color: 0x27ae60, gradientMap: textureFactory.getToonGradientMap() }),
       foliage2: new THREE.MeshToonMaterial({ color: 0x1e8449, gradientMap: textureFactory.getToonGradientMap() }),
       wood: new THREE.MeshToonMaterial({ color: 0x5d4037, gradientMap: textureFactory.getToonGradientMap() }),
@@ -1353,7 +1359,9 @@ export class Environment {
     const facadeMat = this.sharedMats?.facade || new THREE.MeshStandardMaterial({ roughness: 0.8, metalness: 0.05 });
     const awningMat = side > 0 ? (this.sharedMats?.awningRed || new THREE.MeshStandardMaterial({ roughness: 0.7 })) : (this.sharedMats?.awningBlue || new THREE.MeshStandardMaterial({ roughness: 0.7 }));
     const balconyMat = this.sharedMats?.balcony || new THREE.MeshStandardMaterial({ color: 0x2d3436, metalness: 0.8, roughness: 0.25 });
-    const storeSignMat = this.sharedMats?.storeSign || new THREE.MeshStandardMaterial({ color: 0xff4757, roughness: 0.4 });
+    const storeSignMat = (this.sharedMats?.storeSigns && this.sharedMats.storeSigns.length)
+      ? this.sharedMats.storeSigns[Math.abs(Math.floor(currentZ / 8.5)) % this.sharedMats.storeSigns.length]
+      : (this.sharedMats?.storeSign || new THREE.MeshStandardMaterial({ color: 0xff4757, roughness: 0.4 }));
 
     while (currentZ < this.chunkLength / 2) {
       const bWidth = 8.5 + Math.random() * 5.0;

@@ -1085,6 +1085,53 @@ export class SoundManager {
     });
   }
 
+  playWallScrape() {
+    if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
+    this.resumeContext();
+
+    const now = this.ctx.currentTime;
+    const dest = this.getMasterOutput();
+
+    // Grincement métallique : bruit blanc filtré en bande étroite + oscillateur basse
+    const bufSize = Math.floor(this.ctx.sampleRate * 0.18);
+    const buf = this.ctx.createBuffer(1, bufSize, this.ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < bufSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (this.ctx.sampleRate * 0.06));
+    }
+    const noise = this.ctx.createBufferSource();
+    noise.buffer = buf;
+
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(1800, now);
+    filter.Q.setValueAtTime(4.0, now);
+
+    const noiseGain = this.ctx.createGain();
+    noiseGain.gain.setValueAtTime(0.28, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+
+    noise.connect(filter);
+    filter.connect(noiseGain);
+    noiseGain.connect(dest);
+    noise.start(now);
+
+    // Ton basse métallique
+    const osc = this.ctx.createOscillator();
+    const oscGain = this.ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(120, now);
+    osc.frequency.exponentialRampToValueAtTime(80, now + 0.15);
+    oscGain.gain.setValueAtTime(0.18, now);
+    oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+    osc.connect(oscGain);
+    oscGain.connect(dest);
+    osc.start(now);
+    osc.stop(now + 0.18);
+
+    noise.onended = () => this.cleanupNodes(noise, filter, noiseGain, osc, oscGain);
+  }
+
   playCurbMount() {
     if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
     this.resumeContext();

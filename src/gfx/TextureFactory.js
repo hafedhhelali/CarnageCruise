@@ -243,7 +243,50 @@ class TextureFactoryService {
   }
 
   // 4. Store banne rayé français pour bistrots et terrasses
-  getAwningTexture(primaryColor = '#e74c3c') {
+  getStoreSignTexture(cityId = 'paris', index = 0) {
+    const key = `storesign_${cityId}_${index % 6}`;
+    return this.getOrCreate(key, (canvas) => {
+      canvas.width = 256;
+      canvas.height = 64;
+      const ctx = canvas.getContext('2d');
+      // Fond de l'enseigne (couleur selon la ville)
+      const palettes = {
+        paris: ['#e74c3c', '#c0392b'],
+        rio: ['#ff5252', '#d32f2f'],
+        reykjavik: ['#00cec9', '#0097a7'],
+        route66: ['#ff9800', '#e65100'],
+        default: ['#e74c3c', '#c0392b']
+      };
+      const pal = palettes[cityId] || palettes.default;
+      const grad = ctx.createLinearGradient(0, 0, 0, 64);
+      grad.addColorStop(0, pal[0]);
+      grad.addColorStop(1, pal[1]);
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 256, 64);
+      // Bordure dorée
+      ctx.strokeStyle = '#ffd700';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(2, 2, 252, 60);
+      // Texte de boutique (variété selon l'index)
+      const shops = {
+        paris: ['BOULANGERIE', 'PHARMACIE', 'TABAC-PRESSE', 'ÉPICERIE', 'LIBRAIRIE', 'CAFÉ DE PARIS', 'BOUCHERIE', 'FLEURISTE'],
+        rio: ['PADARIA', 'FARMÁCIA', 'BAR', 'MERCADO', 'LIVRARIA', 'CAFÉ', 'AÇAÍ', 'BOTECO'],
+        reykjavik: ['BAKARÍ', 'APÓTEK', 'KIOSKI', 'MATVRUVER', 'BÓKABÚÐ', 'KAFFIHÚS', 'FISKMARKAÐUR'],
+        route66: ['DINER', 'GAS STATION', 'MOTEL', 'BARBER', 'SALOON', 'GENERAL STORE', 'CAFE', 'GARAGE'],
+        default: ['SHOP', 'STORE', 'MARKET', 'CAFE', 'BAKERY', 'PHARMACY']
+      };
+      const list = shops[cityId] || shops.default;
+      const name = list[index % list.length];
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 18px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.shadowColor = 'rgba(0,0,0,0.6)';
+      ctx.shadowBlur = 4;
+      ctx.fillText(name, 128, 32);
+      ctx.shadowBlur = 0;
+    });
+  }
     const key = `awning_${primaryColor}`;
     return this.getOrCreate(key, (canvas) => {
       canvas.width = 256;
