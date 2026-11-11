@@ -206,7 +206,7 @@ export class UIManager {
     splash.appendChild(btn);
 
     this.root.appendChild(splash);
-
+  }
 
   // --- 2. CARTE RÉALISTE DE FRANCE & EFFETS DE TRANSITION ---
   renderMapScreen() {
