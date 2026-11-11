@@ -959,3 +959,12 @@ window.addEventListener('DOMContentLoaded', () => {
     document.body.innerHTML = '<div style="color:red;padding:20px;font-family:monospace;white-space:pre-wrap;">BOOT ERROR: ' + (e && e.stack ? e.stack : e) + '</div>';
   }
 });
+
+// Global error handler
+window.addEventListener('error', (e) => {
+  console.error('[CarnageCruise] UNCAUGHT ERROR:', e.error);
+  const errDiv = document.createElement('div');
+  errDiv.style.cssText = 'color:red;padding:20px;font-family:monospace;white-space:pre-wrap;font-size:12px;position:fixed;top:0;left:0;right:0;z-index:99999;background:rgba(0,0,0,0.9);max-height:50vh;overflow:auto;';
+  errDiv.textContent = 'UNCAUGHT ERROR: ' + (e.error && e.error.stack ? e.error.stack : e.message);
+  document.body.appendChild(errDiv);
+});

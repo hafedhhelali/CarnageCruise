@@ -37,7 +37,14 @@ export class UIManager {
   }
 
   init() {
-    this.render();
+    try {
+      this.render();
+    } catch (e) {
+      console.error('[UIManager] render error:', e);
+      if (this.root) {
+        this.root.innerHTML = '<div style="color:red;padding:20px;font-family:monospace;white-space:pre-wrap;font-size:12px;">UI RENDER ERROR: ' + (e && e.stack ? e.stack : e) + '</div>';
+      }
+    }
     if (!cookieConsentManager.hasAnswered()) {
       setTimeout(() => {
         cookieConsentManager.showConsentModal();
