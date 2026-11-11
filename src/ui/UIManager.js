@@ -211,7 +211,7 @@ export class UIManager {
       <!-- Hero Titre & Logo Arcade Stylisé 3D -->
       <div class="logo-container">
         <div class="logo-glow-ring"></div>
-        <img src="./logo.svg" alt="Motormageddon" class="game-logo-img" width="220" height="220" />
+        <img src="./logo.svg" alt="CarnageCruise" class="game-logo-img" width="220" height="220" />
         <h1 class="game-title">MOTORMAGEDDON</h1>
         <div class="game-subtitle">⚡ CARNAGE URBAIN & ASSAUT TOTAL ⚡</div>
       </div>
@@ -3721,7 +3721,7 @@ export class UIManager {
       <div class="modal-card">
         <h2 class="modal-title">QUITTER LE JEU ?</h2>
         <p style="text-align: center; font-size: 0.9rem; color: #ced6e0;">
-          Voulez-vous vraiment quitter Motormageddon ? Toute votre progression est bien sauvegardée.
+          Voulez-vous vraiment quitter CarnageCruise ? Toute votre progression est bien sauvegardée.
         </p>
 
         <div class="modal-actions" style="margin-top: 10px;">
@@ -4050,7 +4050,7 @@ export class UIManager {
             ☁️ COMPTE GOOGLE & SAUVEGARDE CLOUD
           </button>
           <div style="font-size: 0.78rem; color: #a4b0be; margin-bottom: 8px;">
-            Motormageddon Arcade 3D ${FULL_VERSION}<br>
+            CarnageCruise Arcade 3D ${FULL_VERSION}<br>
             ${COPYRIGHT_NOTICE}
           </div>
           <button id="btn-settings-legal" class="btn-legal-link" style="font-size: 0.8rem;">
@@ -4208,7 +4208,7 @@ export class UIManager {
 
           <div style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px;">
             <strong style="color: #38ada9;">Jeu & Fiction Burlesque Worldmageddon :</strong><br>
-            <em>Motormageddon Arcade 3D</em> est une œuvre de fiction d'action satirique, humoristique et parodique.
+            <em>CarnageCruise Arcade 3D</em> est une œuvre de fiction d'action satirique, humoristique et parodique.
             Le scénario de dépopulation mondiale relève de la caricature de série B et du jeu vidéo d'arcade rétro.
             Toute ressemblance avec des personnes réelles, des incidents ou des marques existantes est purement fortuite.
             Le jeu encourage la prudence et le respect strict du Code de la Route dans la vie réelle.

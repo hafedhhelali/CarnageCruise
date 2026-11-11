@@ -1,4 +1,4 @@
-# 🧠 MOTORMAGEDDON - MÉMOIRE DU PROJET & JOURNAL DES MODIFICATIONS
+# 🧠 CarnageCruise - MÉMOIRE DU PROJET & JOURNAL DES MODIFICATIONS
 
 ## ÉTAT DU SYSTÈME & JALONS TERMINÉS
 
@@ -60,12 +60,12 @@
 - **Canal officiel** : **BETA** (`1.2.4-beta`, Build 7).
 - **Intégration GitHub Actions consolidée** :
   - **1 seule exécution par push** (déclencheur unique `push: branches: [main]`, concurrency activée).
-  - **1 seul APK officiel** généré et publié : `Motormageddon-v1.2.4-beta-b7-debug.apk` (sans doublon).
+  - **1 seul APK officiel** généré et publié : `CarnageCruise-v1.2.4-beta-b7-debug.apk` (sans doublon).
   - Extraction dynamique de la version depuis `version.json` dans GitHub Actions (`APP_VERSION`, `VERSION_CODE`, `CHANNEL`).
-  - Nom d'artefact GitHub dynamique : `Motormageddon-v1.2.3-beta-b6-APK`.
+  - Nom d'artefact GitHub dynamique : `CarnageCruise-v1.2.3-beta-b6-APK`.
   - Releases GitHub configurées en Pre-release (`prerelease: true`) marquées **[BETA]**.
   - Badge BETA distinctif rouge/rose sur le Splash Screen et dans les mentions légales de l'application.
-- **Keystore permanent** : `android/app/motormageddon.keystore` (RSA 2048, 10 000 jours, EOMedia) garantissant l'identité de signature SHA-256 sur toutes les versions.
+- **Keystore permanent** : `android/app/CarnageCruise.keystore` (RSA 2048, 10 000 jours, EOMedia) garantissant l'identité de signature SHA-256 sur toutes les versions.
 - **Script d'incrémentation** : `npm run version:patch`, `version:minor`, `version:major` configurés pour préserver automatiquement le canal `-beta`.
 
 ### ✅ 12. NOUVEAUTÉS DE LA VERSION 1.2.1-BETA
@@ -76,7 +76,7 @@
 - **Carte Haute Fidélité & Zéro Scroll** : Décalage sous la barre d'état du téléphone, suppression totale du défilement horizontal, géographie française exacte, rivières et pays frontaliers réels (Espagne 🇪🇸, Italie 🇮🇹, Suisse 🇨🇭, Allemagne 🇩🇪, Belgique 🇧🇪, Royaume-Uni 🇬🇧).
 
 ### ✅ 13. VALIDATION DU BUILD ANDROID & GITHUB ACTIONS
-- **Compilation locale & cloud APK** : `android/app/build/outputs/apk/debug/Motormageddon-v1.2.3-beta-b6-debug.apk`.
+- **Compilation locale & cloud APK** : `android/app/build/outputs/apk/debug/CarnageCruise-v1.2.3-beta-b6-debug.apk`.
 - **Dépôt officiel** : `https://github.com/hafedhhelali/Motormageddon`
 
 ### ✅ 14. NOUVEAUTÉS DE LA VERSION 1.2.2-BETA

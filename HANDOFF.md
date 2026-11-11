@@ -1,7 +1,7 @@
-# 🏍️ MOTORMAGEDDON : TOUR DE FRANCE ARCADE 3D
+# 🏍️ CarnageCruise : TOUR DE FRANCE ARCADE 3D
 ## DOCUMENT TECHNIQUE DE TRANSMISSION STUDIO (HANDOFF)
 
-Ce document fournit l'ensemble des informations de conception, d'architecture logicielle, de déploiement et de versionnage pour **Motormageddon**.
+Ce document fournit l'ensemble des informations de conception, d'architecture logicielle, de déploiement et de versionnage pour **CarnageCruise**.
 
 ---
 
@@ -9,7 +9,7 @@ Ce document fournit l'ensemble des informations de conception, d'architecture lo
 
 - **Genre** : Jeu de course d'arcade urbain / Runner 3D burlesque
 - **Version actuelle** : **0.9.33-beta** (Build / versionCode 43 - Canal 0.x.x BETA) — lot **0.9.34** en cours de développement
-- **Signature & Clé** : Keystore permanent dédié `android/app/motormageddon.keystore` (validité 10 000 jours, EOMedia Paris)
+- **Signature & Clé** : Keystore permanent dédié `android/app/CarnageCruise.keystore` (validité 10 000 jours, EOMedia Paris)
 - **Plateforme cible** : Android (Smartphones & Tablettes) + WebGL Mobile/Desktop
 - **Direction artistique** : Cartoon 3D éclatant, physique burlesque (slapstick), animations hilarantes et dynamiques, identité française affirmée.
 - **Moteur & Technologies** :
@@ -61,9 +61,9 @@ Ce document fournit l'ensemble des informations de conception, d'architecture lo
 - Nuancier de peinture élargi et bouton d'action pleine largeur ("ÉQUIPER CE BOLIDE" ou "DÉBLOQUER").
 
 ### G. Intégration CI/CD GitHub Actions & Canal BETA
-- Keystore cryptographique permanent `android/app/motormageddon.keystore` (RSA 2048, valide 27 ans, EOMedia) garantissant l'identité de signature SHA-256 sur toutes les versions.
+- Keystore cryptographique permanent `android/app/CarnageCruise.keystore` (RSA 2048, valide 27 ans, EOMedia) garantissant l'identité de signature SHA-256 sur toutes les versions.
 - Pipeline CI/CD consolidé : déclenchement unique sur `push: branches: [main]` (aucune double exécution lors des tags).
-- Publication unique : un seul APK officiel produit et publié (`Motormageddon-v1.2.0-beta-b3-debug.apk`), sans doublon générique `app-debug.apk`.
+- Publication unique : un seul APK officiel produit et publié (`CarnageCruise-v1.2.0-beta-b3-debug.apk`), sans doublon générique `app-debug.apk`.
 - Gestion de concurrence (`concurrency: cancel-in-progress`) pour éviter tout build superflus en parallèle.
 - Pre-release GitHub Release automatique étiquetée **[BETA]** avec `prerelease: true`.
 - Badge BETA élégant affiché sur le Splash Screen et dans les mentions légales de l'application.

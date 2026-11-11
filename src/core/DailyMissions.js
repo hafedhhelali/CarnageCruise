@@ -60,13 +60,20 @@ function ensureState() {
   if (!Array.isArray(s.ids)) s.ids = [];
   if (!Array.isArray(s.progress)) s.progress = [];
   if (!Array.isArray(s.claimed)) s.claimed = [];
+  // Aligner les tailles
+  while (s.progress.length < s.ids.length) s.progress.push(0);
+  while (s.claimed.length < s.ids.length) s.claimed.push(false);
+  if (s.progress.length > s.ids.length) s.progress = s.progress.slice(0, s.ids.length);
+  if (s.claimed.length > s.ids.length) s.claimed = s.claimed.slice(0, s.ids.length);
   return s;
 }
 
 function resetForToday() {
   const s = ensureState();
   const today = todayKey();
-  if (s.date === today && s.ids.length === MISSIONS_PER_DAY) return s;
+  // Validation : si les ids ne sont pas tous dans MISSION_POOL, on reset
+  const valid = s.ids.length === MISSIONS_PER_DAY && s.ids.every(id => MISSION_POOL.some(m => m.id === id));
+  if (s.date === today && valid) return s;
   const ids = pickDailyIds(today);
   s.date = today;
   s.ids = ids;
@@ -83,8 +90,9 @@ export const dailyMissions = {
     const s = resetForToday();
     return s.ids.map((id, i) => {
       const def = MISSION_POOL.find(m => m.id === id);
-      return { ...def, progress: s.progress[i], claimed: s.claimed[i], slot: i };
-    });
+      if (!def) return null;
+      return { ...def, progress: s.progress[i] || 0, claimed: !!s.claimed[i], slot: i };
+    }).filter(Boolean);
   },
 
   /** Avance une mission par type. amount = delta (kills, distance en m, etc.) */
@@ -94,7 +102,7 @@ export const dailyMissions = {
     s.ids.forEach((id, i) => {
       const def = MISSION_POOL.find(m => m.id === id);
       if (!def || def.type !== type || s.claimed[i]) return;
-      s.progress[i] = Math.min(def.target, s.progress[i] + amount);
+      s.progress[i] = Math.min(def.target, (s.progress[i] || 0) + amount);
       changed = true;
     });
     if (changed) storage.save();
@@ -160,10 +168,13 @@ const LOGIN_REWARDS = [
 ];
 
 function ensureLoginStreak() {
-  if (!storage.data.loginStreak) {
+  if (!storage.data.loginStreak || typeof storage.data.loginStreak !== 'object') {
     storage.data.loginStreak = { lastClaim: null, streak: 0, claimedToday: false };
   }
-  return storage.data.loginStreak;
+  const s = storage.data.loginStreak;
+  if (typeof s.streak !== 'number') s.streak = 0;
+  if (typeof s.lastClaim !== 'string' && s.lastClaim !== null) s.lastClaim = null;
+  return s;
 }
 
 export const loginStreak = {

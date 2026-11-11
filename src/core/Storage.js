@@ -218,7 +218,7 @@ export class Storage {
     if (totalScore < 10000) return 'Slalomeur des Trottoirs';
     if (totalScore < 25000) return 'Terreur des Boulevards';
     if (totalScore < 60000) return 'As du Pavé Français';
-    return 'Légende du Motormageddon';
+    return 'Légende du CarnageCruise';
   }
 
   setPlayerName(name) {
