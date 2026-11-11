@@ -44,7 +44,7 @@ export class UIManager {
 
     try {
       this.render();
-      debugDiv.textContent = 'UI init: root=' + (this.root ? 'OK' : 'NULL') + ' render OK';
+      debugDiv.textContent = 'UI init: root=' + (this.root ? 'OK' : 'NULL') + ' render OK | children=' + (this.root ? this.root.children.length : 0);
       debugDiv.style.background = 'green';
       debugDiv.style.color = 'white';
     } catch (e) {
