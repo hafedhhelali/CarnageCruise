@@ -287,6 +287,8 @@ class TextureFactoryService {
       ctx.shadowBlur = 0;
     });
   }
+
+  getAwningTexture(primaryColor = '#e74c3c') {
     const key = `awning_${primaryColor}`;
     return this.getOrCreate(key, (canvas) => {
       canvas.width = 256;
