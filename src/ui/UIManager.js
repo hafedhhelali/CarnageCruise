@@ -294,6 +294,7 @@ export class UIManager {
     `;
 
     splash.querySelector('#btn-splash-play').addEventListener('click', () => {
+      alert('PLAY clicked!');
       soundManager.playClick('hero');
       soundManager.resumeContext();
       soundManager.switchMusicTrack('MENU');
