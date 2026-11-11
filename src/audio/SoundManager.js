@@ -54,12 +54,46 @@ export class SoundManager {
 
       this.masterCompressor.connect(this.masterGain);
       this.masterGain.connect(this.ctx.destination);
+
+      // Bus musical d�di� avec r�verb/delay pour un son spatial et professionnel
+      this.musicBus = this.ctx.createGain();
+      this.musicBus.gain.setValueAtTime(1.0, this.ctx.currentTime);
+
+      // Delay feedback (r�verb simple et l�g�re)
+      this.musicDelay = this.ctx.createDelay(1.0);
+      this.musicDelay.delayTime.setValueAtTime(0.28, this.ctx.currentTime);
+
+      this.musicFeedback = this.ctx.createGain();
+      this.musicFeedback.gain.setValueAtTime(0.35, this.ctx.currentTime);
+
+      this.musicWetGain = this.ctx.createGain();
+      this.musicWetGain.gain.setValueAtTime(0.25, this.ctx.currentTime);
+
+      this.musicDryGain = this.ctx.createGain();
+      this.musicDryGain.gain.setValueAtTime(0.85, this.ctx.currentTime);
+
+      // Routage : musicBus -> dry -> masterCompressor
+      //           musicBus -> delay -> feedback -> delay (boucle) -> wet -> masterCompressor
+      this.musicBus.connect(this.musicDryGain);
+      this.musicDryGain.connect(this.masterCompressor);
+
+      this.musicBus.connect(this.musicDelay);
+      this.musicDelay.connect(this.musicFeedback);
+      this.musicFeedback.connect(this.musicDelay);
+      this.musicDelay.connect(this.musicWetGain);
+      this.musicWetGain.connect(this.masterCompressor);
     }
   }
 
   getMasterOutput() {
     if (!this.ctx) this.initContext();
     return this.masterCompressor || (this.ctx ? this.ctx.destination : null);
+  }
+
+  getMusicOutput() {
+    if (!this.ctx) this.initContext();
+    if (!this.musicBus) this.initContext();
+    return this.musicBus || this.getMasterOutput();
   }
 
   resumeContext() {
@@ -1926,7 +1960,7 @@ export class SoundManager {
     const playStep = () => {
       if (!this.musicPlaying || this.currentTrack !== 'MENU' || !this.ctx || this.isDestroyed) return;
       const now = this.ctx.currentTime;
-      const dest = this.getMasterOutput();
+      const dest = this.getMusicOutput();
 
       // 1. Basse Slap Synthwave punchy
       const bassFreq = bassGroove[step % bassGroove.length];
@@ -2030,7 +2064,7 @@ export class SoundManager {
     const playStep = () => {
       if (!this.musicPlaying || this.currentTrack !== 'GAMEPLAY' || !this.ctx || this.isDestroyed) return;
       const now = this.ctx.currentTime;
-      const dest = this.getMasterOutput();
+      const dest = this.getMusicOutput();
 
       // 1. Basse Acide Résonante
       const bassFreq = bassLine[step % bassLine.length];
@@ -2059,23 +2093,53 @@ export class SoundManager {
         bassOsc.stop(now + stepDuration * 0.95);
       }
 
-      // 2. Synth Lead Arpégé Héroïque
+      // 2. Synth Lead Arpégé Héroïque (triangle filtré = plus chaud)
       const leadFreq = leadLine[step % leadLine.length];
       if (leadFreq > 0) {
         const leadOsc = this.ctx.createOscillator();
         const leadGain = this.ctx.createGain();
-        leadOsc.type = 'square';
+        const leadFilter = this.ctx.createBiquadFilter();
+        leadOsc.type = 'triangle';
         leadOsc.frequency.setValueAtTime(leadFreq, now);
 
-        leadGain.gain.setValueAtTime(0.075, now);
+        leadFilter.type = 'lowpass';
+        leadFilter.frequency.setValueAtTime(leadFreq * 2.5, now);
+        leadFilter.frequency.exponentialRampToValueAtTime(leadFreq * 1.2, now + stepDuration * 0.85);
+        leadFilter.Q.value = 1.5;
+
+        leadGain.gain.setValueAtTime(0.09, now);
         leadGain.gain.exponentialRampToValueAtTime(0.001, now + stepDuration * 0.85);
 
-        leadOsc.connect(leadGain);
+        leadOsc.connect(leadFilter);
+        leadFilter.connect(leadGain);
         leadGain.connect(dest);
 
-        leadOsc.onended = () => this.cleanupNodes(leadOsc, leadGain);
+        leadOsc.onended = () => this.cleanupNodes(leadOsc, leadFilter, leadGain);
         leadOsc.start(now);
         leadOsc.stop(now + stepDuration * 0.85);
+      }
+
+      // 2b. Pad atmosphérique (note grave tenue pour la richesse harmonique)
+      if (step % 4 === 0) {
+        const padFreq = bassLine[step % bassLine.length] * 2;
+        if (padFreq > 0) {
+          const padOsc = this.ctx.createOscillator();
+          const padGain = this.ctx.createGain();
+          const padFilter = this.ctx.createBiquadFilter();
+          padOsc.type = 'sine';
+          padOsc.frequency.setValueAtTime(padFreq, now);
+          padFilter.type = 'lowpass';
+          padFilter.frequency.setValueAtTime(1200, now);
+          padFilter.Q.value = 0.7;
+          padGain.gain.setValueAtTime(0.04, now);
+          padGain.gain.exponentialRampToValueAtTime(0.001, now + stepDuration * 3.8);
+          padOsc.connect(padFilter);
+          padFilter.connect(padGain);
+          padGain.connect(dest);
+          padOsc.onended = () => this.cleanupNodes(padOsc, padFilter, padGain);
+          padOsc.start(now);
+          padOsc.stop(now + stepDuration * 3.8);
+        }
       }
 
       // 3. Percussions de Course
@@ -2105,7 +2169,7 @@ export class SoundManager {
     const playStep = () => {
       if (!this.musicPlaying || this.currentTrack !== 'NUCLEAR' || !this.ctx || this.isDestroyed) return;
       const now = this.ctx.currentTime;
-      const dest = this.getMasterOutput();
+      const dest = this.getMusicOutput();
 
       // Drone lourd saturé
       const freq = nucBass[step % nucBass.length];
@@ -2159,7 +2223,7 @@ export class SoundManager {
     gain.gain.exponentialRampToValueAtTime(0.001, time + 0.14);
 
     osc.connect(gain);
-    gain.connect(this.getMasterOutput());
+    gain.connect(this.getMusicOutput());
 
     osc.onended = () => this.cleanupNodes(osc, gain);
     osc.start(time);
@@ -2189,7 +2253,7 @@ export class SoundManager {
 
     noise.connect(filter);
     filter.connect(gain);
-    gain.connect(this.getMasterOutput());
+    gain.connect(this.getMusicOutput());
 
     noise.onended = () => this.cleanupNodes(noise, filter, gain);
     noise.start(time);
@@ -2246,7 +2310,7 @@ export class SoundManager {
     const playStep = () => {
       if (!this.musicPlaying || this.currentTrack !== 'SADISTIC_CARNAGE' || !this.ctx || this.isDestroyed) return;
       const now = this.ctx.currentTime;
-      const dest = this.getMasterOutput();
+      const dest = this.getMusicOutput();
       const currentIntensity = this.musicIntensity || 'TENSION';
 
       // 1. Basse Acide 303 Distordue
@@ -2354,7 +2418,7 @@ export class SoundManager {
     gain.gain.exponentialRampToValueAtTime(0.001, time + 0.18);
 
     osc.connect(gain);
-    gain.connect(this.getMasterOutput());
+    gain.connect(this.getMusicOutput());
 
     osc.onended = () => this.cleanupNodes(osc, gain);
     osc.start(time);
@@ -2392,7 +2456,7 @@ export class SoundManager {
     filter.connect(gain);
     bodyOsc.connect(bodyGain);
     bodyGain.connect(gain);
-    gain.connect(this.getMasterOutput());
+    gain.connect(this.getMusicOutput());
 
     noise.onended = () => this.cleanupNodes(noise, filter, bodyOsc, bodyGain, gain);
     noise.start(time);
@@ -2408,7 +2472,7 @@ export class SoundManager {
     if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
     this.resumeContext();
     const now = this.ctx.currentTime;
-    const dest = this.getMasterOutput();
+    const dest = this.getMusicOutput();
 
     const modOsc = this.ctx.createOscillator();
     const modGain = this.ctx.createGain();
@@ -2448,7 +2512,7 @@ export class SoundManager {
     if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
     this.resumeContext();
     const now = this.ctx.currentTime;
-    const dest = this.getMasterOutput();
+    const dest = this.getMusicOutput();
 
     const osc = this.ctx.createOscillator();
     const filter = this.ctx.createBiquadFilter();
@@ -2479,7 +2543,7 @@ export class SoundManager {
     if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
     this.resumeContext();
     const now = this.ctx.currentTime;
-    const dest = this.getMasterOutput();
+    const dest = this.getMusicOutput();
 
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
@@ -2520,7 +2584,7 @@ export class SoundManager {
     if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
     this.resumeContext();
     const now = this.ctx.currentTime;
-    const dest = this.getMasterOutput();
+    const dest = this.getMusicOutput();
 
     // 1. Ressort Cartoon BOING
     const springOsc = this.ctx.createOscillator();
@@ -2575,7 +2639,7 @@ export class SoundManager {
     if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
     this.resumeContext();
     const now = this.ctx.currentTime;
-    const dest = this.getMasterOutput();
+    const dest = this.getMusicOutput();
 
     // 1. Buzz strident d'infraction routière
     const oscA = this.ctx.createOscillator();
@@ -2627,7 +2691,7 @@ export class SoundManager {
     this.resumeContext();
 
     const now = this.ctx.currentTime;
-    const dest = this.getMasterOutput();
+    const dest = this.getMusicOutput();
 
     // 1. Clochette aiguë "Ting !"
     const bellOsc = this.ctx.createOscillator();
@@ -2759,7 +2823,7 @@ export class SoundManager {
     const playStep = () => {
       if (!this.musicPlaying || this.currentTrack !== 'SADISTIC_CARNAGE' || !this.ctx || this.isDestroyed) return;
       const now = this.ctx.currentTime;
-      const dest = this.getMasterOutput();
+      const dest = this.getMusicOutput();
       const currentIntensity = this.musicIntensity || 'TENSION';
 
       // 1. Basse Acide 303 Distordue
@@ -2867,7 +2931,7 @@ export class SoundManager {
     gain.gain.exponentialRampToValueAtTime(0.001, time + 0.18);
 
     osc.connect(gain);
-    gain.connect(this.getMasterOutput());
+    gain.connect(this.getMusicOutput());
 
     osc.onended = () => this.cleanupNodes(osc, gain);
     osc.start(time);
@@ -2905,7 +2969,7 @@ export class SoundManager {
     filter.connect(gain);
     bodyOsc.connect(bodyGain);
     bodyGain.connect(gain);
-    gain.connect(this.getMasterOutput());
+    gain.connect(this.getMusicOutput());
 
     noise.onended = () => this.cleanupNodes(noise, filter, bodyOsc, bodyGain, gain);
     noise.start(time);
@@ -2921,7 +2985,7 @@ export class SoundManager {
     if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
     this.resumeContext();
     const now = this.ctx.currentTime;
-    const dest = this.getMasterOutput();
+    const dest = this.getMusicOutput();
 
     const modOsc = this.ctx.createOscillator();
     const modGain = this.ctx.createGain();
@@ -2961,7 +3025,7 @@ export class SoundManager {
     if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
     this.resumeContext();
     const now = this.ctx.currentTime;
-    const dest = this.getMasterOutput();
+    const dest = this.getMusicOutput();
 
     const osc = this.ctx.createOscillator();
     const filter = this.ctx.createBiquadFilter();
@@ -2992,7 +3056,7 @@ export class SoundManager {
     if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
     this.resumeContext();
     const now = this.ctx.currentTime;
-    const dest = this.getMasterOutput();
+    const dest = this.getMusicOutput();
 
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
@@ -3033,7 +3097,7 @@ export class SoundManager {
     if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
     this.resumeContext();
     const now = this.ctx.currentTime;
-    const dest = this.getMasterOutput();
+    const dest = this.getMusicOutput();
 
     // 1. Ressort Cartoon BOING
     const springOsc = this.ctx.createOscillator();
@@ -3088,7 +3152,7 @@ export class SoundManager {
     if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
     this.resumeContext();
     const now = this.ctx.currentTime;
-    const dest = this.getMasterOutput();
+    const dest = this.getMusicOutput();
 
     // 1. Buzz strident d'infraction routière
     const oscA = this.ctx.createOscillator();
@@ -3266,7 +3330,7 @@ export class SoundManager {
     const playStep = () => {
       if (!this.musicPlaying || this.currentTrack !== 'SADISTIC_CARNAGE' || !this.ctx || this.isDestroyed) return;
       const now = this.ctx.currentTime;
-      const dest = this.getMasterOutput();
+      const dest = this.getMusicOutput();
       const currentIntensity = this.musicIntensity || 'TENSION';
 
       // 1. Basse Acide 303 Distordue
@@ -3374,7 +3438,7 @@ export class SoundManager {
     gain.gain.exponentialRampToValueAtTime(0.001, time + 0.18);
 
     osc.connect(gain);
-    gain.connect(this.getMasterOutput());
+    gain.connect(this.getMusicOutput());
 
     osc.onended = () => this.cleanupNodes(osc, gain);
     osc.start(time);
@@ -3412,7 +3476,7 @@ export class SoundManager {
     filter.connect(gain);
     bodyOsc.connect(bodyGain);
     bodyGain.connect(gain);
-    gain.connect(this.getMasterOutput());
+    gain.connect(this.getMusicOutput());
 
     noise.onended = () => this.cleanupNodes(noise, filter, bodyOsc, bodyGain, gain);
     noise.start(time);
@@ -3428,7 +3492,7 @@ export class SoundManager {
     if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
     this.resumeContext();
     const now = this.ctx.currentTime;
-    const dest = this.getMasterOutput();
+    const dest = this.getMusicOutput();
 
     const modOsc = this.ctx.createOscillator();
     const modGain = this.ctx.createGain();
@@ -3468,7 +3532,7 @@ export class SoundManager {
     if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
     this.resumeContext();
     const now = this.ctx.currentTime;
-    const dest = this.getMasterOutput();
+    const dest = this.getMusicOutput();
 
     const osc = this.ctx.createOscillator();
     const filter = this.ctx.createBiquadFilter();
@@ -3499,7 +3563,7 @@ export class SoundManager {
     if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
     this.resumeContext();
     const now = this.ctx.currentTime;
-    const dest = this.getMasterOutput();
+    const dest = this.getMusicOutput();
 
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
@@ -3540,7 +3604,7 @@ export class SoundManager {
     if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
     this.resumeContext();
     const now = this.ctx.currentTime;
-    const dest = this.getMasterOutput();
+    const dest = this.getMusicOutput();
 
     // 1. Ressort Cartoon BOING
     const springOsc = this.ctx.createOscillator();
@@ -3595,7 +3659,7 @@ export class SoundManager {
     if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
     this.resumeContext();
     const now = this.ctx.currentTime;
-    const dest = this.getMasterOutput();
+    const dest = this.getMusicOutput();
 
     // 1. Buzz strident d'infraction routière
     const oscA = this.ctx.createOscillator();
