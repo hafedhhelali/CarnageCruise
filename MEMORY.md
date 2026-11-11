@@ -77,7 +77,7 @@
 
 ### ✅ 13. VALIDATION DU BUILD ANDROID & GITHUB ACTIONS
 - **Compilation locale & cloud APK** : `android/app/build/outputs/apk/debug/CarnageCruise-v1.2.3-beta-b6-debug.apk`.
-- **Dépôt officiel** : `https://github.com/hafedhhelali/Motormageddon`
+- **Dépôt officiel** : `https://github.com/hafedhhelali/CarnageCruise`
 
 ### ✅ 14. NOUVEAUTÉS DE LA VERSION 1.2.2-BETA
 - **Contenu Abaissé sur Tous les Écrans** : `calc(env(safe-area-inset-top, 36px) + 36px)` appliqué à Splash, Carte, Garage, HUD et Modales pour dégager l'encoche et la barre d'état.
