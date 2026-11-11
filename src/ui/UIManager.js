@@ -289,7 +289,9 @@ export class UIManager {
       soundManager.playClick('hero');
       soundManager.resumeContext();
       soundManager.switchMusicTrack('MENU');
+      console.log('[UI] setScreen MAP');
       this.setScreen('MAP');
+      console.log('[UI] setScreen MAP done, currentScreen=' + this.currentScreen);
     });
 
     splash.querySelector('#btn-splash-tycoon')?.addEventListener('click', () => {
@@ -339,7 +341,14 @@ export class UIManager {
 
     this.root.appendChild(splash);
 
-    // Listeners des boutons "RÉCLAMER" des missions quotidiennes
+    // Clic n'importe où sur le splash pour lancer (en plus du bouton JOUER)
+    splash.addEventListener('click', (e) => {
+      if (e.target.closest('button') || e.target.closest('.clickable')) return; // ne pas intercepter les boutons
+      soundManager.playClick('hero');
+      soundManager.resumeContext();
+      soundManager.switchMusicTrack('MENU');
+      this.setScreen('MAP');
+    });
     splash.querySelectorAll('.daily-mission-claim').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
