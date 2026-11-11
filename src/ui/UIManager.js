@@ -200,10 +200,10 @@ export class UIManager {
   renderSplashScreen() {
     const splash = document.createElement('div');
     splash.className = 'screen-splash interactive';
-    splash.style.cssText = 'background: #1a1a2e !important; border: 4px solid #ff0000 !important;';
+    splash.style.cssText = 'background: red !important; z-index: 9999 !important; position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important;';
 
     const testDiv = document.createElement('div');
-    testDiv.style.cssText = 'color: yellow; font-size: 24px; font-weight: bold; padding: 20px; text-align: center;';
+    testDiv.style.cssText = 'color: white; font-size: 32px; font-weight: bold; padding: 20px; text-align: center; background: blue;';
     testDiv.textContent = 'TEST: Splash is visible! If you see this, the splash renders.';
     splash.appendChild(testDiv);
 
