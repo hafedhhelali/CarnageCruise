@@ -955,11 +955,28 @@ class GameApp {
   }
 }
 
+// Lancement automatique dès que le DOM est prêt
 window.addEventListener('DOMContentLoaded', () => {
+  // Debug marker visible
+  const dbg = document.createElement('div');
+  dbg.style.cssText = 'position:fixed;top:10px;left:10px;background:lime;color:black;padding:10px;z-index:99999;font-size:16px;font-weight:bold;';
+  dbg.textContent = 'DEBUG: DOM ready';
+  document.body.appendChild(dbg);
+
   try {
+    const canvas = document.getElementById('webgl-canvas');
+    const uiRoot = document.getElementById('ui-root');
+    dbg.textContent = 'DEBUG: canvas=' + (canvas ? 'OK' : 'NULL') + ' uiRoot=' + (uiRoot ? 'OK' : 'NULL');
+
     new GameApp();
+    dbg.textContent = 'DEBUG: GameApp OK, canvas=' + (canvas ? 'OK' : 'NULL') + ' uiRoot=' + (uiRoot ? 'OK' : 'NULL');
+    dbg.style.background = 'green';
+    dbg.style.color = 'white';
   } catch (e) {
     console.error('[CarnageCruise] BOOT ERROR:', e);
+    dbg.style.background = 'red';
+    dbg.style.color = 'white';
+    dbg.textContent = 'BOOT ERROR: ' + (e && e.message ? e.message : e);
     document.body.innerHTML = '<div style="color:red;padding:20px;font-family:monospace;white-space:pre-wrap;">BOOT ERROR: ' + (e && e.stack ? e.stack : e) + '</div>';
   }
 });

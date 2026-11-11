@@ -37,8 +37,16 @@ export class UIManager {
   }
 
   init() {
+    const debugDiv = document.createElement('div');
+    debugDiv.style.cssText = 'position:fixed;bottom:10px;left:10px;background:orange;color:black;padding:10px;z-index:99999;font-size:14px;font-weight:bold;';
+    debugDiv.textContent = 'UI init: root=' + (this.root ? 'OK' : 'NULL');
+    document.body.appendChild(debugDiv);
+
     try {
       this.render();
+      debugDiv.textContent = 'UI init: root=' + (this.root ? 'OK' : 'NULL') + ' render OK';
+      debugDiv.style.background = 'green';
+      debugDiv.style.color = 'white';
     } catch (e) {
       console.error('[UIManager] render error:', e);
       if (this.root) {
@@ -46,6 +54,9 @@ export class UIManager {
       } else {
         document.body.innerHTML = '<div style="color:red;padding:20px;font-family:monospace;white-space:pre-wrap;font-size:12px;">UI ROOT IS NULL: ' + (e && e.stack ? e.stack : e) + '</div>';
       }
+      debugDiv.textContent = 'UI init: ERROR ' + (e && e.message ? e.message : e);
+      debugDiv.style.background = 'red';
+      debugDiv.style.color = 'white';
     }
     if (!cookieConsentManager.hasAnswered()) {
       setTimeout(() => {
