@@ -37,27 +37,7 @@ export class UIManager {
   }
 
   init() {
-    const debugDiv = document.createElement('div');
-    debugDiv.style.cssText = 'position:fixed;bottom:10px;left:10px;background:orange;color:black;padding:10px;z-index:99999;font-size:14px;font-weight:bold;';
-    debugDiv.textContent = 'UI init: root=' + (this.root ? 'OK' : 'NULL');
-    document.body.appendChild(debugDiv);
-
-    try {
-      this.render();
-      debugDiv.textContent = 'UI init: root=' + (this.root ? 'OK' : 'NULL') + ' render OK | children=' + (this.root ? this.root.children.length : 0);
-      debugDiv.style.background = 'green';
-      debugDiv.style.color = 'white';
-    } catch (e) {
-      console.error('[UIManager] render error:', e);
-      if (this.root) {
-        this.root.innerHTML = '<div style="color:red;padding:20px;font-family:monospace;white-space:pre-wrap;font-size:12px;">UI RENDER ERROR: ' + (e && e.stack ? e.stack : e) + '</div>';
-      } else {
-        document.body.innerHTML = '<div style="color:red;padding:20px;font-family:monospace;white-space:pre-wrap;font-size:12px;">UI ROOT IS NULL: ' + (e && e.stack ? e.stack : e) + '</div>';
-      }
-      debugDiv.textContent = 'UI init: ERROR ' + (e && e.message ? e.message : e);
-      debugDiv.style.background = 'red';
-      debugDiv.style.color = 'white';
-    }
+    this.render();
     if (!cookieConsentManager.hasAnswered()) {
       setTimeout(() => {
         cookieConsentManager.showConsentModal();
@@ -200,23 +180,196 @@ export class UIManager {
   renderSplashScreen() {
     const splash = document.createElement('div');
     splash.className = 'screen-splash interactive';
-    splash.style.cssText = 'background: red !important; z-index: 9999 !important; position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important;';
 
-    const testDiv = document.createElement('div');
-    testDiv.style.cssText = 'color: white; font-size: 32px; font-weight: bold; padding: 20px; text-align: center; background: blue;';
-    testDiv.textContent = 'TEST: Splash is visible! If you see this, the splash renders.';
-    splash.appendChild(testDiv);
+    const coins = storage.data.coins;
+    const totalStars = storage.getTotalStars();
+    const equippedBikeId = storage.getEquippedBike() || 'scooter';
+    const equippedBike = BIKES.find(b => b.id === equippedBikeId) || BIKES[0];
+    const isMusicOn = storage.data.settings.music;
 
-    const btn = document.createElement('button');
-    btn.style.cssText = 'padding: 20px 40px; font-size: 24px; background: #ff4757; color: white; border: none; border-radius: 12px; cursor: pointer; margin: 20px;';
-    btn.textContent = 'JOUER';
-    btn.addEventListener('click', () => {
-      alert('PLAY clicked!');
+    splash.innerHTML = `
+      <!-- En-tête supérieur ergonomique avec statuts, pièces, étoiles et toggle audio -->
+      <div class="splash-header-bar">
+        <div class="splash-badge-version">
+          ${IS_BETA ? '<span class="badge-beta-pill">BETA</span>' : ''}
+          <span class="badge-version-text">${FULL_VERSION}</span>
+        </div>
+        <div class="splash-header-right">
+          <!-- Pilule de monnaie simple (aucun appel publicitaire) -->
+          <div class="currency-pill" title="Pièces d'or">
+            <span>🪙 ${coins}</span>
+          </div>
+          <div class="stars-pill" title="Total d'étoiles gagnées">
+            <span>★ ${totalStars}</span>
+          </div>
+          <button id="btn-splash-audio" class="btn-round-action btn-audio-quick" title="${isMusicOn ? 'Couper la Musique' : 'Activer la Musique'}">
+            <span>${isMusicOn ? '🔊' : '🔇'}</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Hero Titre & Logo Arcade Stylisé 3D -->
+      <div class="logo-container">
+        <div class="logo-glow-ring"></div>
+        <img src="./logo.svg" alt="CarnageCruise" class="game-logo-img" width="220" height="220" />
+        <h1 class="game-title">MOTORMAGEDDON</h1>
+        <div class="game-subtitle">⚡ CARNAGE URBAIN & ASSAUT TOTAL ⚡</div>
+      </div>
+
+      <!-- Missions Quotidiennes (Rétention D1-D7) -->
+      ${this.renderDailyMissionsPanel()}
+
+      <!-- Carte d'Aperçu du Véhicule Équipé (Accès Rapide Garage) -->
+      <div class="splash-vehicle-card clickable" id="btn-splash-quick-garage" title="Personnaliser et équiper dans le Garage">
+        <div class="vehicle-card-badge">VÉHICULE PRÊT AU DÉPART</div>
+        <div class="vehicle-card-main">
+          <span class="vehicle-card-icon">${equippedBike.icon}</span>
+          <div class="vehicle-card-text">
+            <span class="vehicle-card-name">${equippedBike.name}</span>
+            <span class="vehicle-card-tag">${equippedBike.tagline}</span>
+          </div>
+          <span class="vehicle-card-cta">GARAGE ➔</span>
+        </div>
+      </div>
+
+      <!-- Zone Ergonomique Inférieure pour Pouces (Thumb Zone Mobile) -->
+      <div class="splash-footer">
+        <!-- Bouton Héros Principal de Lancement -->
+        <button id="btn-splash-play" class="btn-arcade btn-play-pulse hero-play-btn">
+          <span class="hero-play-icon">🚀</span>
+          <span class="hero-play-label">LANCER L'ASSAUT</span>
+          <span class="hero-play-arrow">▶</span>
+        </button>
+
+        <!-- Grille 2 Colonnes Tactile Ergonomique -->
+        <div class="splash-action-grid">
+          <button id="btn-splash-garage" class="btn-arcade btn-secondary btn-touch-target">
+            <span class="btn-icon">🪖</span>
+            <span class="btn-label">GARAGE & ARSENAL</span>
+          </button>
+          <button id="btn-splash-tycoon" class="btn-arcade btn-accent btn-touch-target">
+            <span class="btn-icon">🏭</span>
+            <span class="btn-label">EMPIRE TYCOON</span>
+          </button>
+        </div>
+
+        <!-- Ligne d'Utilitaires Secondaires -->
+        <div class="splash-utility-row">
+          <button id="btn-splash-cloud" class="btn-arcade btn-ghost btn-sm-utility" title="Sauvegarde Google Play Games">
+            <span>☁️ CLOUD</span>
+          </button>
+          <button id="btn-splash-profile" class="btn-arcade btn-accent btn-sm-utility">
+            <span>👤 PROFIL</span>
+          </button>
+          <button id="btn-splash-settings" class="btn-arcade btn-ghost btn-sm-utility">
+            <span>⚙️ OPTIONS</span>
+          </button>
+          <button id="btn-splash-legal" class="btn-arcade btn-ghost btn-sm-utility">
+            <span>ℹ️ INFOS</span>
+          </button>
+        </div>
+
+        <div class="splash-legal">
+          <span>${COPYRIGHT_NOTICE}</span>
+        </div>
+      </div>
+    `;
+
+    const bindTap = (selector, handler) => {
+      const el = splash.querySelector(selector);
+      if (!el) return;
+      let handledTouch = false;
+      el.addEventListener('touchstart', (e) => {
+        handledTouch = true;
+        if (e.cancelable) e.preventDefault();
+        handler(e);
+      }, { passive: false });
+      el.addEventListener('click', (e) => {
+        if (handledTouch) {
+          handledTouch = false;
+          return;
+        }
+        handler(e);
+      });
+    };
+
+    bindTap('#btn-splash-play', () => {
+      soundManager.playClick('hero');
+      soundManager.resumeContext();
+      soundManager.switchMusicTrack('MENU');
       this.setScreen('MAP');
     });
-    splash.appendChild(btn);
+
+    bindTap('#btn-splash-tycoon', () => {
+      soundManager.playClick();
+      soundManager.resumeContext();
+      this.showTycoonModal();
+    });
+
+    bindTap('#btn-splash-garage', () => {
+      soundManager.playClick('garage');
+      this.previousScreen = 'SPLASH';
+      this.setScreen('GARAGE');
+    });
+
+    bindTap('#btn-splash-quick-garage', () => {
+      soundManager.playClick('garage');
+      this.previousScreen = 'SPLASH';
+      this.setScreen('GARAGE');
+    });
+
+    bindTap('#btn-splash-cloud', () => {
+      soundManager.playClick('default');
+      this.showCloudSaveModal();
+    });
+
+    bindTap('#btn-splash-profile', () => {
+      soundManager.playClick('default');
+      this.showProfileModal();
+    });
+
+    bindTap('#btn-splash-settings', () => {
+      soundManager.playClick('default');
+      this.showSettingsModal();
+    });
+
+    bindTap('#btn-splash-legal', () => {
+      soundManager.playClick('default');
+      this.showLegalModal();
+    });
+
+    bindTap('#btn-splash-audio', () => {
+      const nextMusicState = !storage.data.settings.music;
+      soundManager.toggleMusic(nextMusicState);
+      soundManager.playClick('default');
+      this.render();
+    });
 
     this.root.appendChild(splash);
+
+    // Listeners des boutons "RÉCLAMER" des missions quotidiennes
+    splash.querySelectorAll('.daily-mission-claim').forEach(btn => {
+      let handled = false;
+      const onClaim = (e) => {
+        e.stopPropagation();
+        const slot = parseInt(btn.getAttribute('data-slot'), 10);
+        const reward = dailyMissions.claim(slot);
+        if (reward > 0) {
+          soundManager.playCoin();
+          this.showToastUnlock({ name: `🎯 MISSION ACCOMPLIE : +${reward} PIÈCES !` });
+          this.render();
+        }
+      };
+      btn.addEventListener('touchstart', (e) => {
+        handled = true;
+        if (e.cancelable) e.preventDefault();
+        onClaim(e);
+      }, { passive: false });
+      btn.addEventListener('click', (e) => {
+        if (handled) { handled = false; return; }
+        onClaim(e);
+      });
+    });
   }
 
   // --- 2. CARTE RÉALISTE DE FRANCE & EFFETS DE TRANSITION ---

@@ -68,18 +68,6 @@ class GameApp {
       }
     });
 
-    // Claim automatique du calendrier de connexion au lancement
-    try {
-      if (loginStreak.canClaim()) {
-        const reward = loginStreak.claim();
-        if (reward && this.ui) {
-          this.ui.showToastUnlock({ name: `🎁 JOUR ${reward.day}/7 : +${reward.coins} PIÈCES D'OR !` });
-        }
-      }
-    } catch (e) {
-      console.error('[App] loginStreak error:', e);
-    }
-
     // 3. État des contrôles et de la course
     this.steerInput = 0;
     this.touchStartX = null;
@@ -90,6 +78,18 @@ class GameApp {
     // 4. Initialiser l'interface utilisateur
     this.ui = new UIManager(this.uiRoot, (action, payload) => this.handleUIAction(action, payload));
 
+    // Claim automatique du calendrier de connexion au lancement
+    try {
+      if (loginStreak.canClaim()) {
+        const reward = loginStreak.claim();
+        if (reward && this.ui) {
+          this.ui.showToastUnlock({ name: `🎁 JOUR ${reward.day}/7 : +${reward.coins} PIÈCES D'OR !` });
+        }
+      }
+    } catch (e) {
+      console.warn('[App] loginStreak error:', e);
+    }
+
     // 5. Configurer la première ville
     this.setupCity(gameState.selectedCity);
 
@@ -99,12 +99,16 @@ class GameApp {
     // 7. Horloge d'animation Three.js
     this.clock = new THREE.Clock();
 
-    // 8. Rapport de Crise Hors-Ligne Tycoon (si absence > 60s)
-    const offlineEarnings = tycoonManager.checkOfflineEarnings();
-    if (offlineEarnings) {
-      setTimeout(() => {
-        this.ui.showOfflineReportModal(offlineEarnings);
-      }, 1200);
+    // 8. Rapport de Crise Hors-Ligne Tycoon (si absence > 60s et gains existants)
+    try {
+      const offlineEarnings = tycoonManager.checkOfflineEarnings();
+      if (offlineEarnings && (offlineEarnings.cashEarned > 0 || offlineEarnings.killsEarned > 0)) {
+        setTimeout(() => {
+          if (this.ui) this.ui.showOfflineReportModal(offlineEarnings);
+        }, 1200);
+      }
+    } catch (e) {
+      console.warn('[App] offlineEarnings error:', e);
     }
 
     // Démarrer la boucle principale à 60 FPS
@@ -113,8 +117,7 @@ class GameApp {
     // Poignée de débogage (dev) : inspection du pipeline de rendu dans la console
     window.__mm = { app: this, engine: this.engine, sound: soundManager };
     } catch (e) {
-      console.error('[CarnageCruise] CONSTRUCTOR ERROR:', e);
-      document.body.innerHTML = '<div style="color:red;padding:20px;font-family:monospace;white-space:pre-wrap;font-size:12px;">CONSTRUCTOR ERROR: ' + (e && e.stack ? e.stack : e) + '</div>';
+      console.error('[CarnageCruise] Constructor error:', e);
     }
   }
 
@@ -955,37 +958,17 @@ class GameApp {
   }
 }
 
-// Lancement automatique dès que le DOM est prêt
-window.addEventListener('DOMContentLoaded', () => {
-  // Debug marker visible
-  const dbg = document.createElement('div');
-  dbg.style.cssText = 'position:fixed;top:10px;left:10px;background:lime;color:black;padding:10px;z-index:99999;font-size:16px;font-weight:bold;';
-  dbg.textContent = 'DEBUG: DOM ready';
-  document.body.appendChild(dbg);
-
+// Lancement automatique fiable dès que le DOM est prêt
+function boot() {
   try {
-    const canvas = document.getElementById('webgl-canvas');
-    const uiRoot = document.getElementById('ui-root');
-    dbg.textContent = 'DEBUG: canvas=' + (canvas ? 'OK' : 'NULL') + ' uiRoot=' + (uiRoot ? 'OK' : 'NULL');
-
     new GameApp();
-    dbg.textContent = 'DEBUG: GameApp OK, canvas=' + (canvas ? 'OK' : 'NULL') + ' uiRoot=' + (uiRoot ? 'OK' : 'NULL');
-    dbg.style.background = 'green';
-    dbg.style.color = 'white';
   } catch (e) {
-    console.error('[CarnageCruise] BOOT ERROR:', e);
-    dbg.style.background = 'red';
-    dbg.style.color = 'white';
-    dbg.textContent = 'BOOT ERROR: ' + (e && e.message ? e.message : e);
-    document.body.innerHTML = '<div style="color:red;padding:20px;font-family:monospace;white-space:pre-wrap;">BOOT ERROR: ' + (e && e.stack ? e.stack : e) + '</div>';
+    console.error('[CarnageCruise] Boot Error:', e);
   }
-});
+}
 
-// Global error handler
-window.addEventListener('error', (e) => {
-  console.error('[CarnageCruise] UNCAUGHT ERROR:', e.error);
-  const errDiv = document.createElement('div');
-  errDiv.style.cssText = 'color:red;padding:20px;font-family:monospace;white-space:pre-wrap;font-size:12px;position:fixed;top:0;left:0;right:0;z-index:99999;background:rgba(0,0,0,0.9);max-height:50vh;overflow:auto;';
-  errDiv.textContent = 'UNCAUGHT ERROR: ' + (e.error && e.error.stack ? e.error.stack : e.message);
-  document.body.appendChild(errDiv);
-});
+if (document.readyState === 'loading') {
+  window.addEventListener('DOMContentLoaded', boot);
+} else {
+  boot();
+}
