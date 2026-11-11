@@ -64,7 +64,7 @@ html, body {
 }
 
 .interactive {
-  pointer-events: auto;
+  pointer-events: auto !important;
 }
 
 /* --- BOUTONS ARCADE DE LUXE (DESIGN JAPONAIS 3D MULTI-COUCHE) --- */

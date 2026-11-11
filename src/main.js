@@ -952,27 +952,10 @@ class GameApp {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-  // Debug marker + alert visible
-  const debugDiv = document.createElement('div');
-  debugDiv.id = 'debug-boot';
-  debugDiv.style.cssText = 'position:fixed;top:0;left:0;background:lime;color:black;padding:8px;z-index:99999;font-size:14px;font-weight:bold;';
-  debugDiv.textContent = 'BOOT: DOM ready, starting...';
-  document.body.appendChild(debugDiv);
-  console.log('[BOOT] DOMContentLoaded fired, debugDiv appended');
-
   try {
     new GameApp();
-    debugDiv.textContent = 'BOOT: GameApp created OK';
-    debugDiv.style.background = 'green';
-    debugDiv.style.color = 'white';
-    console.log('[BOOT] GameApp created OK');
-    alert('BOOT OK v0.9.35 — GameApp créé. Si vous voyez cet alert mais pas l\'écran de jeu, le problème est dans le rendu UI.');
   } catch (e) {
     console.error('[CarnageCruise] BOOT ERROR:', e);
-    debugDiv.style.background = 'red';
-    debugDiv.style.color = 'white';
-    debugDiv.textContent = 'BOOT ERROR: ' + (e && e.stack ? e.stack : e);
-    alert('BOOT ERROR: ' + (e && e.message ? e.message : e));
     document.body.innerHTML = '<div style="color:red;padding:20px;font-family:monospace;white-space:pre-wrap;">BOOT ERROR: ' + (e && e.stack ? e.stack : e) + '</div>';
   }
 });
