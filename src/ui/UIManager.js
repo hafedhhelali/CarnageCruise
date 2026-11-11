@@ -189,6 +189,13 @@ export class UIManager {
   renderSplashScreen() {
     const splash = document.createElement('div');
     splash.className = 'screen-splash interactive';
+    splash.style.cssText = 'background: rgba(12,13,20,0.95) !important; border: 4px solid #00cec9 !important; z-index: 999 !important;';
+
+    const debugMarker = document.createElement('div');
+    debugMarker.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:yellow;color:black;padding:20px;z-index:99999;font-size:16px;font-weight:bold;text-align:center;';
+    debugMarker.textContent = 'SPLASH RENDERED';
+    document.body.appendChild(debugMarker);
+    setTimeout(() => debugMarker.remove(), 3000);
 
     const coins = storage.data.coins;
     const totalStars = storage.getTotalStars();
