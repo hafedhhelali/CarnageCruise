@@ -341,22 +341,6 @@ export class UIManager {
 
     this.root.appendChild(splash);
 
-    // Clic n'importe où sur le splash pour lancer (en plus du bouton JOUER)
-    splash.addEventListener('click', (e) => {
-      if (e.target.closest('button') || e.target.closest('.clickable')) return;
-      soundManager.playClick('hero');
-      soundManager.resumeContext();
-      soundManager.switchMusicTrack('MENU');
-      this.setScreen('MAP');
-    });
-
-    // Auto-transition vers la carte après 2.5s (si le joueur ne clique pas)
-    setTimeout(() => {
-      if (this.currentScreen === 'SPLASH') {
-        soundManager.switchMusicTrack('MENU');
-        this.setScreen('MAP');
-      }
-    }, 2500);
     splash.querySelectorAll('.daily-mission-claim').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
