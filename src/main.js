@@ -29,6 +29,10 @@ class GameApp {
       this.canvas = document.getElementById('webgl-canvas');
       this.uiRoot = document.getElementById('ui-root');
 
+      if (!this.canvas) {
+        throw new Error('Canvas #webgl-canvas not found in DOM');
+      }
+
       // 1. Initialiser le moteur 3D
       this.engine = new Engine(this.canvas);
 

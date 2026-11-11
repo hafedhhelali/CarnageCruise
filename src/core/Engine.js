@@ -15,11 +15,25 @@ export class Engine {
     this.scene = new THREE.Scene();
 
     // Rendu WebGL haute performance mobile & colorimétrie dynamique
-    this.renderer = new THREE.WebGLRenderer({
-      canvas: this.canvas,
-      antialias: true,
-      powerPreference: 'high-performance'
-    });
+    try {
+      this.renderer = new THREE.WebGLRenderer({
+        canvas: this.canvas,
+        antialias: true,
+        powerPreference: 'high-performance'
+      });
+    } catch (e) {
+      console.warn('[Engine] WebGL high-performance failed, trying default:', e);
+      try {
+        this.renderer = new THREE.WebGLRenderer({
+          canvas: this.canvas,
+          antialias: false,
+          powerPreference: 'default'
+        });
+      } catch (e2) {
+        console.error('[Engine] WebGL context creation failed:', e2);
+        throw new Error('WebGL context creation failed: ' + e2.message);
+      }
+    }
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2.0));
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
