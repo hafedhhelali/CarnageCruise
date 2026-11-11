@@ -21,6 +21,7 @@ export class SoundManager {
     this.wasEnginePlaying = false;
     this.musicTimer = null;
     this.isDestroyed = false;
+    this._sfxCooldowns = new Map();
 
     this.initContext();
     this.bindLifecycleEvents();
@@ -30,8 +31,17 @@ export class SoundManager {
     this.samples.preload();
   }
 
+  canPlaySfx(key, minIntervalMs = 70) {
+    const now = performance.now();
+    const last = this._sfxCooldowns.get(key) || 0;
+    if (now - last < minIntervalMs) return false;
+    this._sfxCooldowns.set(key, now);
+    return true;
+  }
+
   /** Tente de jouer un échantillon réel ; false = la synthèse procédurale prend le relais */
   trySample(key, opts) {
+    if (!this.canPlaySfx(key, opts?.cooldownMs || 65)) return true;
     if (!this.samples) return false;
     return this.samples.play(key, opts);
   }
@@ -1119,51 +1129,121 @@ export class SoundManager {
     });
   }
 
-  playWallScrape() {
+  playWallScrape(side = 0) {
     if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
+    if (!this.canPlaySfx('wall_scrape', 110)) return;
     this.resumeContext();
 
     const now = this.ctx.currentTime;
     const dest = this.getMasterOutput();
 
-    // Grincement métallique : bruit blanc filtré en bande étroite + oscillateur basse
-    const bufSize = Math.floor(this.ctx.sampleRate * 0.18);
+    // Panning stéréo dynamique gauche (-1) / droite (+1)
+    let targetNode = dest;
+    let panner = null;
+    if (this.ctx.createStereoPanner && side !== 0) {
+      try {
+        panner = this.ctx.createStereoPanner();
+        panner.pan.setValueAtTime(Math.max(-0.85, Math.min(0.85, side * 0.75)), now);
+        panner.connect(dest);
+        targetNode = panner;
+      } catch (e) {
+        targetNode = dest;
+      }
+    }
+
+    // 1. Friction métallique réaliste (bruit filtré passe-bande résonant)
+    const bufSize = Math.floor(this.ctx.sampleRate * 0.12);
     const buf = this.ctx.createBuffer(1, bufSize, this.ctx.sampleRate);
     const data = buf.getChannelData(0);
     for (let i = 0; i < bufSize; i++) {
-      data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (this.ctx.sampleRate * 0.06));
+      data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (this.ctx.sampleRate * 0.05));
     }
     const noise = this.ctx.createBufferSource();
     noise.buffer = buf;
 
     const filter = this.ctx.createBiquadFilter();
     filter.type = 'bandpass';
-    filter.frequency.setValueAtTime(1800, now);
-    filter.Q.setValueAtTime(4.0, now);
+    filter.frequency.setValueAtTime(1400 + Math.random() * 400, now);
+    filter.Q.setValueAtTime(3.2, now);
 
     const noiseGain = this.ctx.createGain();
-    noiseGain.gain.setValueAtTime(0.28, now);
-    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+    noiseGain.gain.setValueAtTime(0.22, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
 
     noise.connect(filter);
     filter.connect(noiseGain);
-    noiseGain.connect(dest);
+    noiseGain.connect(targetNode);
     noise.start(now);
 
-    // Ton basse métallique
-    const osc = this.ctx.createOscillator();
-    const oscGain = this.ctx.createGain();
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(120, now);
-    osc.frequency.exponentialRampToValueAtTime(80, now + 0.15);
-    oscGain.gain.setValueAtTime(0.18, now);
-    oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
-    osc.connect(oscGain);
-    oscGain.connect(dest);
-    osc.start(now);
-    osc.stop(now + 0.18);
+    // 2. Choc sourd métallique de carrosserie
+    const subOsc = this.ctx.createOscillator();
+    const subGain = this.ctx.createGain();
+    subOsc.type = 'triangle';
+    subOsc.frequency.setValueAtTime(180, now);
+    subOsc.frequency.exponentialRampToValueAtTime(50, now + 0.09);
+    subGain.gain.setValueAtTime(0.22, now);
+    subGain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+    subOsc.connect(subGain);
+    subGain.connect(targetNode);
+    subOsc.start(now);
+    subOsc.stop(now + 0.09);
 
-    noise.onended = () => this.cleanupNodes(noise, filter, noiseGain, osc, oscGain);
+    noise.onended = () => {
+      this.cleanupNodes(noise, filter, noiseGain, subOsc, subGain);
+      if (panner) { try { panner.disconnect(); } catch (e) {} }
+    };
+  }
+
+  playPlaneFlyby() {
+    if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
+    this.resumeContext();
+    const now = this.ctx.currentTime;
+    const dest = this.getMasterOutput();
+
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    const filter = this.ctx.createBiquadFilter();
+
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(160, now);
+    osc.frequency.exponentialRampToValueAtTime(340, now + 0.3);
+    osc.frequency.exponentialRampToValueAtTime(130, now + 0.65);
+
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(600, now);
+    filter.frequency.exponentialRampToValueAtTime(2800, now + 0.3);
+    filter.frequency.exponentialRampToValueAtTime(400, now + 0.65);
+
+    gain.gain.setValueAtTime(0.01, now);
+    gain.gain.linearRampToValueAtTime(0.32, now + 0.3);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.65);
+
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(dest);
+
+    osc.start(now);
+    osc.stop(now + 0.65);
+    osc.onended = () => this.cleanupNodes(osc, filter, gain);
+  }
+
+  playGeigerClick() {
+    if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
+    this.resumeContext();
+    const now = this.ctx.currentTime;
+    const dest = this.getMasterOutput();
+
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(2200 + Math.random() * 800, now);
+    gain.gain.setValueAtTime(0.18, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.012);
+    osc.connect(gain);
+    gain.connect(dest);
+    osc.start(now);
+    osc.stop(now + 0.012);
+    osc.onended = () => this.cleanupNodes(osc, gain);
   }
 
   playCurbMount() {

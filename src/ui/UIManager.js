@@ -387,7 +387,7 @@ export class UIManager {
     mapScreen.innerHTML = `
       <!-- EN-TÊTE STABLE SANS PERTURBATIONS VISUELLES : 2 RANGÉES ÉPURÉES -->
       <div class="map-header-redesign">
-        <!-- Rangée 1 : Navigation, Raccourci Engin & Récompense Google Ads -->
+        <!-- Rangée 1 : Navigation, Raccourci Engin, Profil & Monnaie -->
         <div class="map-top-bar">
           <button id="btn-map-back" class="map-top-btn" title="Retour Accueil">
             <span class="top-btn-icon">🏠</span>
@@ -401,6 +401,12 @@ export class UIManager {
               <span class="quick-veh-label">VÉHICULE D'ASSAUT</span>
               <span class="quick-veh-title">${currentBike.shortName || currentBike.name} ▾</span>
             </div>
+          </button>
+
+          <!-- BOUTON ACCÈS PROFIL DU JOUEUR -->
+          <button id="btn-open-profile" class="map-top-btn" title="Profil du Joueur & Progression">
+            <span class="top-btn-icon">👤</span>
+            <span class="top-btn-text">PROFIL</span>
           </button>
 
           <!-- Pilule de monnaie simple (aucun appel publicitaire) -->
@@ -563,20 +569,12 @@ export class UIManager {
 
             <!-- Mer Méditerranée -->
             <text x="470" y="790" fill="#00cec9" font-size="14" font-weight="900" letter-spacing="4" opacity="0.45">MER MÉDITERRANÉE</text>
-
-            <!-- Tracé Lumineux Officiel du Grand Tour (Néon Or Éclatant reliant les 22 étapes) -->
-            <path class="tour-route-glow" d="${REAL_TOUR_ROUTE_PATH}" fill="none" stroke="#ffd700" stroke-width="4.2" stroke-dasharray="10,6" opacity="0.9" filter="url(#glowTourRoute)" />
           </svg>
 
-          <!-- SVG Overlay pour ligne active animée lors des déplacements -->
-          <svg class="travel-line-overlay" viewBox="0 -320 1060 1480" preserveAspectRatio="none">
-            <line id="travel-active-line" x1="0" y1="0" x2="0" y2="0" stroke="#ffd700" stroke-width="5" stroke-dasharray="10,7" opacity="0" filter="url(#glowTourRoute)" />
-          </svg>
-
-          <!-- Jeton Motard Voyageur Animé se déplaçant d'une ville à une autre -->
-          <div class="moto-traveler" id="moto-traveler" style="left: ${this.selectedMapCity ? this.selectedMapCity.mapCoords.x : 44.8}%; top: ${this.selectedMapCity ? this.selectedMapCity.mapCoords.y : 40.2}%;">
-            <div class="moto-traveler-icon">🏍️</div>
-            <div class="moto-traveler-exhaust">💨</div>
+          <!-- Avion Voyageur Animé se déplaçant d'une ville à une autre (✈️) -->
+          <div class="plane-traveler" id="plane-traveler" style="left: ${this.selectedMapCity ? this.selectedMapCity.mapCoords.x : 44.8}%; top: ${this.selectedMapCity ? this.selectedMapCity.mapCoords.y : 40.2}%;">
+            <div class="plane-traveler-icon">✈️</div>
+            <div class="plane-traveler-trail">💨</div>
           </div>
 
           <!-- Pins interactifs des 20 villes d'Europe et Méditerranée avec médaillons 3D et drapeaux -->
@@ -724,6 +722,11 @@ export class UIManager {
     mapScreen.querySelector('#btn-open-worldmageddon')?.addEventListener('click', () => {
       soundManager.playClick();
       this.showWorldmageddonModal();
+    });
+
+    mapScreen.querySelector('#btn-open-profile')?.addEventListener('click', () => {
+      soundManager.playClick();
+      this.showProfileModal();
     });
 
     mapScreen.querySelector('#btn-open-tycoon')?.addEventListener('click', () => {
@@ -875,37 +878,28 @@ export class UIManager {
       const previousCity = this.selectedMapCity;
       soundManager.playClick();
 
-      // Déclenchement de l'effet de déplacement animé si la ville est différente
+      // Déclenchement du vol en avion animé si la ville est différente (✈️)
       if (previousCity && previousCity.id !== city.id) {
-        soundManager.playTravelWhoosh();
+        soundManager.playPlaneFlyby();
 
-        const traveler = mapScreen.querySelector('#moto-traveler');
-        const travelLine = mapScreen.querySelector('#travel-active-line');
-
-        if (traveler) {
+        const plane = mapScreen.querySelector('#plane-traveler');
+        if (plane) {
           const fromCoords = previousCity.mapCoords;
           const toCoords = city.mapCoords;
 
-          const angle = Math.atan2(toCoords.y - fromCoords.y, toCoords.x - fromCoords.x) * (180 / Math.PI);
-          traveler.classList.add('traveling');
-          traveler.style.transform = `translate(-50%, -50%) rotate(${angle > 90 || angle < -90 ? '180deg scaleY(-1)' : `${angle}deg`})`;
-          traveler.style.left = `${toCoords.x}%`;
-          traveler.style.top = `${toCoords.y}%`;
-
-          if (travelLine) {
-            travelLine.setAttribute('x1', (fromCoords.x / 100) * 1060);
-            travelLine.setAttribute('y1', (fromCoords.y / 100) * 1480 - 320);
-            travelLine.setAttribute('x2', (toCoords.x / 100) * 1060);
-            travelLine.setAttribute('y2', (toCoords.y / 100) * 1480 - 320);
-            travelLine.setAttribute('opacity', '1');
-            setTimeout(() => travelLine.setAttribute('opacity', '0'), 700);
-          }
+          const angleDeg = Math.atan2(toCoords.y - fromCoords.y, toCoords.x - fromCoords.x) * (180 / Math.PI);
+          plane.classList.add('flying');
+          plane.style.transform = `translate(-50%, -50%) rotate(${angleDeg}deg) scale(1.4)`;
+          plane.style.left = `${toCoords.x}%`;
+          plane.style.top = `${toCoords.y}%`;
 
           setTimeout(() => {
-            traveler.classList.remove('traveling');
-            traveler.style.transform = 'translate(-50%, -50%) scale(1.2)';
-            setTimeout(() => traveler.style.transform = 'translate(-50%, -50%) scale(1)', 150);
-          }, 600);
+            plane.classList.remove('flying');
+            plane.style.transform = 'translate(-50%, -50%) scale(1.15)';
+            setTimeout(() => {
+              if (plane) plane.style.transform = 'translate(-50%, -50%) scale(1)';
+            }, 180);
+          }, 650);
         }
       }
 
@@ -970,8 +964,8 @@ export class UIManager {
 
       if (isAlreadySelected) {
         if (storage.isCityExterminated(city.id)) {
-          soundManager.playCrash();
-          this.showToastUnlock({ name: '☠️ VILLE FERMÉE : Accès définitivement condamné suite à l\'extermination totale !' });
+          soundManager.playClick();
+          this.showExterminatedCityView(city);
           return;
         }
         if (!storage.isCityUnlocked(city.id)) {
@@ -1103,23 +1097,7 @@ export class UIManager {
         </button>
       </div>
 
-      <!-- 2. RUBAN HORIZONTAL FLUIDE DE SÉLECTION DIRECTE (ACCÈS INSTANTANÉ AUX 47 VILLES) -->
-      <div class="city-quick-carousel-track" id="city-carousel-strip">
-        ${CITIES.map((c, i) => {
-          const isCur = c.id === city.id;
-          const isUnl = storage.isCityUnlocked(c.id);
-          const isExt = storage.isCityExterminated(c.id);
-          return `
-            <div class="city-carousel-pill ${isCur ? 'active' : ''} ${isUnl ? 'unlocked' : 'locked'} ${isExt ? 'exterminated' : ''}" data-nav-city-id="${c.id}">
-              <span class="cpill-flag">${c.countryFlag || '🌍'}</span>
-              <span class="cpill-name">${c.name}</span>
-              <span class="cpill-badge">${isExt ? '☠️' : (isUnl ? `#${i+1}` : '🔒')}</span>
-            </div>
-          `;
-        }).join('')}
-      </div>
-
-      <!-- 3. TÉLÉMÉTRIE ARCADE 3 PILIERS HAUTE LISIBILITÉ (AUCUN CHIFFRE COMPRESSÉ) -->
+      <!-- 2. TÉLÉMÉTRIE ARCADE 3 PILIERS HAUTE LISIBILITÉ -->
       <div class="city-stats-grid">
         <div class="cstat-col">
           <span class="cstat-label">🎯 OBJECTIF</span>
@@ -1135,26 +1113,26 @@ export class UIManager {
         </div>
       </div>
 
-      <!-- 4. BANNIÈRE SÉLECTEUR D'ENGIN D'ASSAUT DÉDIÉE (PLEINE LARGEUR ET CLAIRE) -->
+      <!-- 3. BANNIÈRE SÉLECTEUR D'ENGIN D'ASSAUT DÉDIÉE (PLEINE LARGEUR ET HAUTE VISIBILITÉ) -->
       <button id="btn-city-vehicle-shortcut" class="city-vehicle-dock-btn" title="Modifier votre bolide dans le Garage">
         <div class="veh-dock-left">
           <span class="veh-dock-icon">${currentBike.icon || '🪖'}</span>
           <div class="veh-dock-texts">
-            <span class="veh-dock-sub">BOLIDE SÉLECTIONNÉ POUR L'ASSAUT</span>
-            <span class="veh-dock-name">${currentBike.name.toUpperCase()}</span>
+            <span class="veh-dock-sub">ENGIN SÉLECTIONNÉ POUR L'ASSAUT</span>
+            <span class="veh-dock-name">${(currentBike.shortName || currentBike.name).toUpperCase()}</span>
           </div>
         </div>
         <span class="veh-dock-action">GARAGE ▾</span>
       </button>
 
-      <!-- 5. DOCK D'ACTIONS PRINCIPAL ERGONOMIQUE HAUTE VISIBILITÉ -->
+      <!-- 4. DOCK D'ACTIONS PRINCIPAL ERGONOMIQUE HAUTE VISIBILITÉ -->
       <div class="city-main-actions-dock">
         ${isExterminated ? `
-          <button class="btn-arcade btn-enter-city-hero btn-city-closed" disabled>
-            <span class="btn-enter-hero-icon">☠️</span>
+          <button id="btn-inspect-ruins" class="btn-arcade btn-enter-city-hero btn-city-ruins" title="Revisiter les ruines de la métropole anéantie">
+            <span class="btn-enter-hero-icon">☢️</span>
             <div class="btn-enter-hero-texts">
-              <span class="btn-enter-hero-title">VILLE CONDAMNÉE & SCELLÉE</span>
-              <span class="btn-enter-hero-desc">ANÉANTISSEMENT TOTAL PAR FRAPPE STRATÉGIQUE</span>
+              <span class="btn-enter-hero-title">REVISITER LES RUINES DÉVASTÉES ▶</span>
+              <span class="btn-enter-hero-desc">INSPECTER LA ZONE SINISTRÉE (AUCUNE COURSE)</span>
             </div>
           </button>
         ` : (unlocked ? `
@@ -1165,8 +1143,12 @@ export class UIManager {
               <span class="btn-enter-hero-desc">OBJECTIF : ${city.targetScore.toLocaleString('fr-FR')} PTS</span>
             </div>
           </button>
-          <button id="btn-wmd-city" class="btn-arcade btn-wmd-dock" title="Exterminer avec ADM">
-            <span>💀 ADM</span>
+          <button id="btn-wmd-city" class="btn-arcade btn-wmd-dock" title="Exterminer avec une Arme de Destruction Massive">
+            <span class="wmd-dock-icon">☢️</span>
+            <div class="wmd-dock-texts">
+              <span class="wmd-dock-title">FRAPPE ADM</span>
+              <span class="wmd-dock-sub">EXTERMINATION</span>
+            </div>
           </button>
         ` : `
           <button class="btn-arcade btn-enter-city-hero btn-enter-city-locked" disabled>
@@ -1190,25 +1172,6 @@ export class UIManager {
       if (this.navigateMapCity) this.navigateMapCity(1);
     });
 
-    // Événements clic sur les pilules de villes du ruban
-    detailCard.querySelectorAll('.city-carousel-pill').forEach(pill => {
-      pill.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const targetId = pill.getAttribute('data-nav-city-id');
-        if (targetId && this.selectCityById) {
-          this.selectCityById(targetId);
-        }
-      });
-    });
-
-    // Défilement automatique pour centrer la pilule active
-    const activePill = detailCard.querySelector('.city-carousel-pill.active');
-    if (activePill) {
-      setTimeout(() => {
-        activePill.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-      }, 50);
-    }
-
     // Raccourci engin actif
     const cityVehBtn = detailCard.querySelector('#btn-city-vehicle-shortcut');
     if (cityVehBtn) {
@@ -1217,7 +1180,11 @@ export class UIManager {
       });
     }
 
-    if (unlocked && !isExterminated) {
+    if (isExterminated) {
+      detailCard.querySelector('#btn-inspect-ruins')?.addEventListener('click', () => {
+        this.showExterminatedCityView(city);
+      });
+    } else if (unlocked) {
       const launchRun = () => {
         soundManager.playClick();
         gameState.selectCity(city.id);
@@ -1234,6 +1201,116 @@ export class UIManager {
         });
       }
     }
+  }
+
+  // --- VUE DÉTAILLÉE POST-APOCALYPTIQUE D'UNE VILLE EXTERMINÉE (INSPECTION SANS COURSE) ---
+  showExterminatedCityView(city) {
+    soundManager.playClick();
+    this.closeActiveModals();
+
+    const victimPop = city.population || city.exterminationTarget || 500000;
+    const overlay = document.createElement('div');
+    overlay.id = 'modal-city-ruins';
+    overlay.className = 'ruins-view-overlay';
+    this.activeModals.push(overlay);
+
+    overlay.innerHTML = `
+      <div class="ruins-view-container">
+        <!-- Bannière d'alerte risque biologique / atomique maximal -->
+        <div class="ruins-hazard-banner">
+          <span class="hazard-stripes"></span>
+          <span class="hazard-title">⚠️ ZONE SINISTRÉE INTERDITE • NIVEAU DE DANGER CRITIQUE ⚠️</span>
+          <span class="hazard-stripes"></span>
+        </div>
+
+        <!-- Décor Apocalyptique Ciel Rouge & Ruines Urbaines -->
+        <div class="ruins-skyline-card">
+          <div class="ruins-ash-particles" id="ruins-ash-container"></div>
+          <div class="ruins-smoke-layer"></div>
+          <div class="ruins-skyline-art">
+            <span class="ruins-icon-big">🏙️🔥🏚️☢️</span>
+          </div>
+          <div class="ruins-city-badge">
+            <span class="ruins-flag">${city.countryFlag || '🌍'}</span>
+            <div class="ruins-city-texts">
+              <h2 class="ruins-city-name">${city.name.toUpperCase()}</h2>
+              <span class="ruins-city-sub">${city.country || 'Europe'} • COORDONNÉES SATELLITE KH-12</span>
+            </div>
+            <span class="ruins-status-tag">CONDAMNÉE ☠️</span>
+          </div>
+        </div>
+
+        <!-- Rapport Officiel d'Anéantissement Stratégique -->
+        <div class="ruins-report-card">
+          <div class="ruins-report-header">
+            <span>💀</span>
+            <h3>DOSSIER D'EXTINCTION STRATÉGIQUE</h3>
+          </div>
+
+          <div class="ruins-stats-grid">
+            <div class="ruins-stat-box">
+              <span class="ruins-stat-lbl">POPULATION SURVIVANTE</span>
+              <span class="ruins-stat-val text-red">0 ÂME (ÉRADICATION 100%)</span>
+            </div>
+            <div class="ruins-stat-box">
+              <span class="ruins-stat-lbl">VICTIMES VAPORISÉES</span>
+              <span class="ruins-stat-val text-yellow">${victimPop.toLocaleString('fr-FR')} HABITANTS</span>
+            </div>
+            <div class="ruins-stat-box">
+              <span class="ruins-stat-lbl">RADIATIONS RÉSIDUELLES</span>
+              <span class="ruins-stat-val text-orange">480 Sv/h (LÉTALITÉ IMMÉDIATE)</span>
+            </div>
+            <div class="ruins-stat-box">
+              <span class="ruins-stat-lbl">STATUT GÉOGRAPHIQUE</span>
+              <span class="ruins-stat-val text-cyan">RUINES CONDAMNÉES & SCELLÉES</span>
+            </div>
+          </div>
+
+          <div class="ruins-intel-text">
+            Cette métropole a été intégralement détruite par frappe d'extinction massive. Les infrastructures routières, boulevards et circuits de compétition sont réduits en poussière radioactive stérile. Aucun assaut mécanique n'est possible dans ce secteur.
+          </div>
+        </div>
+
+        <!-- Bouton Retour à la Carte -->
+        <button id="btn-close-ruins-view" class="btn-arcade btn-ruins-back">
+          <span>◀ RETOUR À LA CARTE STRATÉGIQUE</span>
+        </button>
+      </div>
+    `;
+
+    this.root.appendChild(overlay);
+
+    // Audio d'ambiance compteur Geiger
+    soundManager.playGeigerClick();
+    const geigerInterval = setInterval(() => {
+      if (!document.getElementById('modal-city-ruins')) {
+        clearInterval(geigerInterval);
+        return;
+      }
+      if (Math.random() < 0.6) {
+        soundManager.playGeigerClick();
+      }
+    }, 450);
+
+    // Particules de cendres flottantes
+    const ashContainer = overlay.querySelector('#ruins-ash-container');
+    if (ashContainer) {
+      for (let i = 0; i < 24; i++) {
+        const flake = document.createElement('div');
+        flake.className = 'ash-flake';
+        flake.style.left = `${Math.random() * 100}%`;
+        flake.style.animationDuration = `${2.5 + Math.random() * 3.5}s`;
+        flake.style.animationDelay = `${Math.random() * 2}s`;
+        ashContainer.appendChild(flake);
+      }
+    }
+
+    overlay.querySelector('#btn-close-ruins-view')?.addEventListener('click', () => {
+      soundManager.playClick();
+      clearInterval(geigerInterval);
+      overlay.remove();
+      this.activeModals = this.activeModals.filter(m => m !== overlay);
+    });
   }
 
   // --- SÉLECTEUR RAPIDE D'ENGIN D'ASSAUT DEPUIS LA CARTE ---
@@ -1566,16 +1643,23 @@ export class UIManager {
               <span style="font-size: 0.76rem; color: #ff4757; font-weight: 950;" id="wmd-telemetry-destruction">DÉSTRUCTION : 0%</span>
             </div>
 
-            <div style="display: flex; align-items: baseline; justify-content: space-between;">
-              <div id="wmd-live-counter" style="font-size: 1.85rem; font-weight: 950; color: #fffa65; font-family: monospace; letter-spacing: 1px; text-shadow: 0 0 18px rgba(255, 250, 101, 0.85);">
-                0 VICTIMES
+            <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 8px;">
+              <div id="wmd-live-counter" style="font-size: 1.5rem; font-weight: 950; color: #fffa65; font-family: monospace; letter-spacing: 0.5px; text-shadow: 0 0 18px rgba(255, 250, 101, 0.85);">
+                +0 VICTIMES
               </div>
-              <span id="wmd-live-rate" style="font-size: 0.82rem; color: #ff7675; font-weight: 900;">0 âmes/sec</span>
+              <div id="wmd-survivors-counter" style="font-size: 0.95rem; font-weight: 900; color: #ff7675; font-family: monospace;">
+                SURVIVANTS : ${victimPop.toLocaleString('fr-FR')}
+              </div>
             </div>
 
             <!-- Jauge d'anéantissement urbain -->
             <div style="width: 100%; height: 9px; background: rgba(255, 255, 255, 0.12); border-radius: 5px; overflow: hidden;">
               <div id="wmd-live-progress" style="width: 0%; height: 100%; background: linear-gradient(90deg, #fffa65, #ff4757, #b71540); transition: width 0.08s linear;"></div>
+            </div>
+
+            <!-- Journal télémétrique en temps réel de destruction par secteurs -->
+            <div id="wmd-sector-log" style="background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(255, 71, 87, 0.35); border-radius: 8px; padding: 6px 10px; font-family: monospace; font-size: 0.70rem; color: #2ed573; max-height: 50px; overflow: hidden; display: flex; flex-direction: column; gap: 2px;">
+              <div>[T-0.0s] Cible verrouillée • Acquisition satellite KH-12</div>
             </div>
 
             <div style="display: flex; justify-content: space-between; font-size: 0.70rem; color: #a4b0be; font-weight: 800;">
@@ -1804,12 +1888,22 @@ export class UIManager {
     const impactBanner = overlay.querySelector('#wmd-impact-banner');
     const statusPhaseEl = overlay.querySelector('#wmd-status-phase');
     const liveCounterEl = overlay.querySelector('#wmd-live-counter');
-    const liveRateEl = overlay.querySelector('#wmd-live-rate');
+    const survivorsEl = overlay.querySelector('#wmd-survivors-counter');
+    const sectorLogEl = overlay.querySelector('#wmd-sector-log');
     const liveProgressEl = overlay.querySelector('#wmd-live-progress');
     const destrEl = overlay.querySelector('#wmd-telemetry-destruction');
     const radTempEl = overlay.querySelector('#wmd-rad-temp');
     const screenFlash = overlay.querySelector('#wmd-screen-flash');
     const confirmBtn = overlay.querySelector('#btn-wmd-confirm-close');
+
+    let loggedMilestones = new Set();
+    const addSectorLog = (msg) => {
+      if (!sectorLogEl) return;
+      const row = document.createElement('div');
+      row.textContent = msg;
+      sectorLogEl.appendChild(row);
+      sectorLogEl.scrollTop = sectorLogEl.scrollHeight;
+    };
 
     soundManager.playCountdownBeep(false);
     setTimeout(() => soundManager.playCountdownBeep(false), 550);
@@ -1882,11 +1976,26 @@ export class UIManager {
         shockwaveRadius = detProgress * shockwaveMaxRadius;
 
         const currentCasualties = Math.floor(victimPop * Math.pow(detProgress, 0.65));
+        const currentSurvivors = Math.max(0, victimPop - currentCasualties);
+
         liveCounterEl.textContent = `+${currentCasualties.toLocaleString('fr-FR')} VICTIMES`;
-        liveRateEl.textContent = `+${Math.floor(victimPop / 2.2).toLocaleString('fr-FR')} /s`;
+        if (survivorsEl) survivorsEl.textContent = `SURVIVANTS : ${currentSurvivors.toLocaleString('fr-FR')}`;
         liveProgressEl.style.width = `${(detProgress * 100).toFixed(0)}%`;
         destrEl.textContent = `DÉSTRUCTION : ${(detProgress * 100).toFixed(0)}%`;
         radTempEl.textContent = `${Math.floor(22 + detProgress * 5200)} °C`;
+
+        if (detProgress >= 0.15 && !loggedMilestones.has('m1')) {
+          loggedMilestones.add('m1');
+          addSectorLog('[T+0.5s] 💥 Blast supersonique : Centre-ville & avenues pulvérisés');
+        }
+        if (detProgress >= 0.40 && !loggedMilestones.has('m2')) {
+          loggedMilestones.add('m2');
+          addSectorLog('[T+1.2s] 🔥 Tempête de feu 8 000°C : Usines & résidences désintégrées');
+        }
+        if (detProgress >= 0.70 && !loggedMilestones.has('m3')) {
+          loggedMilestones.add('m3');
+          addSectorLog('[T+1.9s] ⚡ Flash EMP : Effondrement du réseau et communications');
+        }
 
         impactBanner.textContent = `💥 ANÉANTISSEMENT DÉFINITIF EN COURS...`;
         statusPhaseEl.textContent = `EXTINCTION : ${(detProgress * 100).toFixed(0)}%`;
@@ -1898,14 +2007,19 @@ export class UIManager {
           simPhase = 'EXTERMINATED';
 
           liveCounterEl.textContent = `+${victimPop.toLocaleString('fr-FR')} VICTIMES (TOTAL)`;
-          liveRateEl.textContent = `EXTINCTION 100%`;
+          if (survivorsEl) survivorsEl.textContent = `0 SURVIVANT (0%)`;
           liveProgressEl.style.width = '100%';
           destrEl.textContent = `DÉSTRUCTION : 100%`;
           radTempEl.textContent = `5 240 °C`;
           statusPhaseEl.textContent = `☠️ VILLE EXTERMINÉE`;
-          impactBanner.textContent = `☠️ CITÉ ENTIÈRE PULVÉRISÉE & SCÈLLÉE !`;
+          impactBanner.textContent = `☠️ CITÉ ENTIÈRE PULVÉRISÉE & SCELLÉE !`;
           impactBanner.style.borderColor = '#ff4757';
           impactBanner.style.color = '#ff7675';
+
+          if (!loggedMilestones.has('m4')) {
+            loggedMilestones.add('m4');
+            addSectorLog('[T+2.8s] ☠️ BIOMASSE LOCALE : 0 SIGNAUX VITAUX (EXTINCTION TOTALE)');
+          }
 
           soundManager.playEvilLaugh();
           soundManager.playVictory();
@@ -3637,83 +3751,155 @@ export class UIManager {
     }, 3200);
   }
   showProfileModal() {
+    soundManager.playClick();
+    this.closeActiveModals();
+
     const overlay = document.createElement('div');
-    overlay.className = 'modal-overlay';
+    overlay.id = 'modal-profile-screen';
+    overlay.className = 'modal-overlay interactive';
     this.activeModals.push(overlay);
 
     const stats = storage.data.stats;
     const title = storage.getPlayerTitle();
     const unlockedCount = storage.data.unlockedCities.length;
+    const exterminatedCount = (storage.data.exterminatedCities || []).length;
     const totalStars = storage.getTotalStars();
+    const wmProgress = storage.getWorldmageddonProgress();
+    const currentCoins = storage.data.coins || 0;
 
     overlay.innerHTML = `
-      <div class="modal-card" style="max-width: 440px;">
-        <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 4px;">
-          <div style="width: 58px; height: 58px; border-radius: 50%; background: linear-gradient(135deg, #ff4757, #ffa502); display: flex; align-items: center; justify-content: center; font-size: 2rem;">
-            🏍️
+      <div class="modal-card profile-modal-card" style="max-width: 480px; max-height: 90vh; overflow-y: auto; text-align: left; padding: 16px;">
+        
+        <!-- EN-TÊTE PROFIL DU JOUEUR -->
+        <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #ffd700; padding-bottom: 10px; margin-bottom: 12px;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="width: 52px; height: 52px; border-radius: 50%; background: linear-gradient(135deg, #eb4d4b, #f0932b); display: flex; align-items: center; justify-content: center; font-size: 1.8rem; border: 2px solid #ffd700; box-shadow: 0 0 14px rgba(255, 215, 0, 0.4);">
+              💀
+            </div>
+            <div>
+              <h2 style="margin: 0; font-size: 1.25rem; font-weight: 950; color: #ffffff; letter-spacing: 0.5px;">${storage.data.playerName || 'PILOTE DU CARNAGE'}</h2>
+              <div style="background: rgba(255, 215, 0, 0.15); border: 1px solid #ffd700; color: #ffd700; font-size: 0.72rem; font-weight: 900; padding: 2px 8px; border-radius: 8px; display: inline-block; margin-top: 3px;">
+                ${wmProgress.rankIcon} ${title} • ${wmProgress.rank}
+              </div>
+            </div>
           </div>
-          <div>
-            <h2 style="font-size: 1.4rem; font-weight: 900; color: #fff;">${storage.data.playerName}</h2>
-            <div style="background: rgba(255, 71, 87, 0.2); border: 1px solid #ff4757; color: #ff6b81; font-size: 0.75rem; font-weight: 800; padding: 2px 8px; border-radius: 10px; display: inline-block;">
-              ${title}
+          <button id="btn-close-profile" class="btn-round-action" style="background: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.3); color: #fff; width: 34px; height: 34px;">✕</button>
+        </div>
+
+        <!-- SECTION 1 : PROGRESSION WORLDMAGEDDON & GRAND TOUR -->
+        <div style="background: rgba(15, 23, 42, 0.85); border: 1.5px solid rgba(0, 206, 201, 0.45); border-radius: 12px; padding: 12px; margin-bottom: 12px;">
+          <div style="font-size: 0.75rem; color: #00cec9; font-weight: 900; letter-spacing: 0.8px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
+            <span>📊 BILAN GLOBAL DE CAMPAGNE</span>
+            <span style="color: #fffa65;">${wmProgress.totalKills.toLocaleString('fr-FR')} VICTIMES</span>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <div style="background: rgba(0,0,0,0.3); padding: 8px; border-radius: 8px; text-align: center;">
+              <span style="font-size: 0.68rem; color: #a4b0be; display: block; font-weight: 800;">VILLES DÉBLOQUÉES</span>
+              <strong style="font-size: 1.1rem; color: #2ed573; font-weight: 950;">${unlockedCount} / ${CITIES.length}</strong>
+            </div>
+            <div style="background: rgba(0,0,0,0.3); padding: 8px; border-radius: 8px; text-align: center;">
+              <span style="font-size: 0.68rem; color: #a4b0be; display: block; font-weight: 800;">VILLES ANÉANTIES</span>
+              <strong style="font-size: 1.1rem; color: #ff4757; font-weight: 950;">${exterminatedCount} / ${CITIES.length}</strong>
+            </div>
+            <div style="background: rgba(0,0,0,0.3); padding: 8px; border-radius: 8px; text-align: center;">
+              <span style="font-size: 0.68rem; color: #a4b0be; display: block; font-weight: 800;">ÉTOILES DU TOUR</span>
+              <strong style="font-size: 1.1rem; color: #ffd700; font-weight: 950;">${totalStars} / ${CITIES.length * 3} ⭐</strong>
+            </div>
+            <div style="background: rgba(0,0,0,0.3); padding: 8px; border-radius: 8px; text-align: center;">
+              <span style="font-size: 0.68rem; color: #a4b0be; display: block; font-weight: 800;">TRÉSORERIE DISPO</span>
+              <strong style="font-size: 1.1rem; color: #ffd32a; font-weight: 950;">🪙 ${currentCoins.toLocaleString('fr-FR')}</strong>
             </div>
           </div>
         </div>
 
-        <div class="results-stats">
-          <div class="result-row">
-            <span>🏆 Score Cumulé Total :</span>
-            <span style="color: #fffa65;">${stats.totalScore || 0} pts</span>
+        <!-- SECTION 2 : PARAMÈTRES DU JEU (AUDIO & HAPTIQUE) -->
+        <div style="background: rgba(15, 23, 42, 0.85); border: 1.5px solid rgba(255, 255, 255, 0.15); border-radius: 12px; padding: 12px; margin-bottom: 12px;">
+          <div style="font-size: 0.75rem; color: #ced6e0; font-weight: 900; letter-spacing: 0.8px; margin-bottom: 8px;">
+            ⚙️ PARAMÈTRES & COMMANDES
           </div>
-          <div class="result-row">
-            <span>🤸 Personnes Heurtées :</span>
-            <span style="color: #ff4757;">${stats.totalInteractions || 0}</span>
-          </div>
-          <div class="result-row">
-            <span>🔓 Villes Débloquées :</span>
-            <span style="color: #2ed573;">${unlockedCount} / ${CITIES.length}</span>
-          </div>
-          <div class="result-row">
-            <span>⭐ Étoiles Collectées :</span>
-            <span style="color: var(--gold);">${totalStars} / ${CITIES.length * 3}</span>
-          </div>
-          <div class="result-row">
-            <span>🛣️ Distance Parcourue :</span>
-            <span>${((stats.totalDistance || 0) / 1000).toFixed(1)} km</span>
-          </div>
-          <div class="result-row">
-            <span>🏁 Parties Jouées :</span>
-            <span>${stats.totalRuns || 0}</span>
-          </div>
-          <div class="result-row">
-            <span>🔥 Combo Record :</span>
-            <span>x${stats.maxCombo || 1}</span>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <button id="btn-toggle-music" class="btn-arcade" style="padding: 10px 8px; font-size: 0.76rem; background: ${soundManager.mutedMusic ? 'rgba(80,80,80,0.4)' : 'linear-gradient(135deg, #0984e3, #6c5ce7)'};">
+              🎵 MUSIQUE : ${soundManager.mutedMusic ? 'OFF 🔇' : 'ON 🔊'}
+            </button>
+            <button id="btn-toggle-sfx" class="btn-arcade" style="padding: 10px 8px; font-size: 0.76rem; background: ${soundManager.mutedSfx ? 'rgba(80,80,80,0.4)' : 'linear-gradient(135deg, #00cec9, #0984e3)'};">
+              🔊 SFX : ${soundManager.mutedSfx ? 'OFF 🔇' : 'ON 🔊'}
+            </button>
+            <button id="btn-toggle-haptic" class="btn-arcade" style="padding: 10px 8px; font-size: 0.76rem; background: ${Haptic.enabled ? 'linear-gradient(135deg, #2ed573, #26de81)' : 'rgba(80,80,80,0.4)'};">
+              📳 VIBRATIONS : ${Haptic.enabled ? 'ON ✅' : 'OFF ❌'}
+            </button>
+            <button id="btn-toggle-steer" class="btn-arcade" style="padding: 10px 8px; font-size: 0.76rem; background: linear-gradient(135deg, #e67e22, #f39c12);">
+              🎯 BRAQUAGE : ARCADE
+            </button>
           </div>
         </div>
 
-        <h3 style="font-size: 0.9rem; font-weight: 800; color: #ced6e0; margin-top: 4px;">CIBLES & VILLES EXTERMINÉES</h3>
-        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; max-height: 120px; overflow-y: auto;">
-          ${CITIES.map(c => {
-            const unl = storage.isCityUnlocked(c.id);
-            const data = storage.getCityData(c.id);
-            return `
-              <div style="background: rgba(255,255,255,0.06); padding: 6px; border-radius: 10px; text-align: center; font-size: 0.75rem;">
-                <div style="font-weight: 800; color: ${unl ? '#fff' : '#747d8c'};">${c.name}</div>
-                <div style="color: var(--gold); font-size: 0.7rem;">${unl ? '★'.repeat(data.stars) : '🔒'}</div>
-              </div>
-            `;
-          }).join('')}
+        <!-- SECTION 3 : RACCOURCIS STRATÉGIQUES TYCOON & RESET -->
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px;">
+          <button id="btn-profile-open-tycoon" class="btn-arcade" style="padding: 12px; font-size: 0.85rem; background: linear-gradient(135deg, #ffd32a, #e67e22); color: #000; font-weight: 950;">
+            🏭 ACCÉDER AU QG TYCOON CLANDESTIN
+          </button>
+          
+          <button id="btn-profile-cloud" class="btn-arcade" style="padding: 10px; font-size: 0.80rem; background: linear-gradient(135deg, #4285F4, #34A853);">
+            ☁️ SAUVEGARDE CLOUD & COMPTE GOOGLE PLAY
+          </button>
+
+          <button id="btn-profile-reset-campagne" class="btn-arcade" style="padding: 10px; font-size: 0.80rem; background: rgba(255, 71, 87, 0.15); border: 1.5px solid #ff4757; color: #ff7675;">
+            🔄 RÉINITIALISER L'AVANCEMENT DE LA CAMPAGNE
+          </button>
         </div>
 
-        <button id="btn-profile-cloud" class="btn-arcade" style="width: 100%; margin-top: 10px; background: linear-gradient(135deg, #4285F4, #34A853); font-size: 0.85rem;">
-          ☁️ SAUVEGARDE CLOUD & COMPTE GOOGLE
-        </button>
-
-        <button id="btn-close-profile" class="btn-arcade btn-secondary" style="margin-top: 8px;">
-          FERMER
+        <button id="btn-profile-close-bottom" class="btn-arcade btn-secondary" style="width: 100%; padding: 11px;">
+          FERMER LE PROFIL
         </button>
       </div>
     `;
+
+    this.root.appendChild(overlay);
+
+    // Événements boutons Paramètres
+    overlay.querySelector('#btn-toggle-music')?.addEventListener('click', () => {
+      soundManager.toggleMusic();
+      const btn = overlay.querySelector('#btn-toggle-music');
+      if (btn) {
+        btn.textContent = `🎵 MUSIQUE : ${soundManager.mutedMusic ? 'OFF 🔇' : 'ON 🔊'}`;
+        btn.style.background = soundManager.mutedMusic ? 'rgba(80,80,80,0.4)' : 'linear-gradient(135deg, #0984e3, #6c5ce7)';
+      }
+    });
+
+    overlay.querySelector('#btn-toggle-sfx')?.addEventListener('click', () => {
+      soundManager.toggleSfx();
+      const btn = overlay.querySelector('#btn-toggle-sfx');
+      if (btn) {
+        btn.textContent = `🔊 SFX : ${soundManager.mutedSfx ? 'OFF 🔇' : 'ON 🔊'}`;
+        btn.style.background = soundManager.mutedSfx ? 'rgba(80,80,80,0.4)' : 'linear-gradient(135deg, #00cec9, #0984e3)';
+      }
+    });
+
+    overlay.querySelector('#btn-toggle-haptic')?.addEventListener('click', () => {
+      Haptic.enabled = !Haptic.enabled;
+      if (Haptic.enabled) Haptic.tap();
+      const btn = overlay.querySelector('#btn-toggle-haptic');
+      if (btn) {
+        btn.textContent = `📳 VIBRATIONS : ${Haptic.enabled ? 'ON ✅' : 'OFF ❌'}`;
+        btn.style.background = Haptic.enabled ? 'linear-gradient(135deg, #2ed573, #26de81)' : 'rgba(80,80,80,0.4)';
+      }
+    });
+
+    // Raccourcis Tycoon et Reset
+    overlay.querySelector('#btn-profile-open-tycoon')?.addEventListener('click', () => {
+      soundManager.playClick();
+      overlay.remove();
+      this.activeModals = this.activeModals.filter(m => m !== overlay);
+      this.showTycoonModal();
+    });
+
+    overlay.querySelector('#btn-profile-reset-campagne')?.addEventListener('click', () => {
+      soundManager.playClick();
+      overlay.remove();
+      this.activeModals = this.activeModals.filter(m => m !== overlay);
+      this.showResetProgressionModal();
+    });
 
     overlay.querySelector('#btn-profile-cloud')?.addEventListener('click', () => {
       soundManager.playClick();
@@ -3722,19 +3908,19 @@ export class UIManager {
       this.showCloudSaveModal();
     });
 
-    overlay.querySelector('#btn-close-profile').addEventListener('click', () => {
+    const closeProfile = () => {
       soundManager.playClick();
       overlay.remove();
       this.activeModals = this.activeModals.filter(m => m !== overlay);
-    });
+    };
+    overlay.querySelector('#btn-close-profile')?.addEventListener('click', closeProfile);
+    overlay.querySelector('#btn-profile-close-bottom')?.addEventListener('click', closeProfile);
 
-    this.root.appendChild(overlay);
-
-    const pauseCard = overlay.querySelector('.modal-card');
-    if (pauseCard) {
-      gsap.fromTo(pauseCard,
-        { scale: 0.8, opacity: 0, y: 30 },
-        { scale: 1.0, opacity: 1, y: 0, duration: 0.35, ease: "back.out(1.8)" }
+    const card = overlay.querySelector('.modal-card');
+    if (card) {
+      gsap.fromTo(card,
+        { scale: 0.85, opacity: 0, y: 25 },
+        { scale: 1.0, opacity: 1, y: 0, duration: 0.32, ease: "back.out(1.8)" }
       );
     }
   }
@@ -4543,8 +4729,10 @@ export class UIManager {
   // --- QG EMPIRE TYCOON WORLDMAGEDDON (IDLE ARCADE TYCOON) ---
 
   showTycoonModal() {
+    if (document.getElementById('modal-tycoon')) return;
     this.closeActiveModals();
     const overlay = document.createElement('div');
+    overlay.id = 'modal-tycoon';
     overlay.className = 'modal-backdrop interactive';
     overlay.style.cssText = `
       position: fixed; inset: 0; background: rgba(10, 12, 18, 0.94);
@@ -4553,152 +4741,198 @@ export class UIManager {
     `;
     this.activeModals.push(overlay);
 
-    const renderTycoonContent = () => {
+    const updateTycoonUI = () => {
       const rates = tycoonManager.getTotalRates();
       const currentCoins = storage.data.coins || 0;
       const wmProgress = storage.getWorldmageddonProgress();
 
-      overlay.innerHTML = `
-        <div class="modal-card" style="max-width: 520px; width: 100%; max-height: 92vh; overflow-y: auto; background: #151824; border: 2px solid #ffd32a; border-radius: 16px; padding: 16px; color: #fff; box-shadow: 0 0 35px rgba(255, 211, 42, 0.35);">
-          <!-- EN-TÊTE DU QG TYCOON -->
-          <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255, 211, 42, 0.3); padding-bottom: 10px; margin-bottom: 12px;">
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <span style="font-size: 1.6rem;">🏭</span>
-              <div>
-                <h2 style="margin: 0; font-size: 1.15rem; color: #ffd32a; font-weight: 900; letter-spacing: 0.5px;">QG EMPIRE WORLDMAGEDDON</h2>
-                <span style="font-size: 0.72rem; color: #2ed573; font-weight: 700;">★ PRODUCTION CLANDESTINE ACTIVE (IDLE)</span>
-              </div>
-            </div>
-            <button id="btn-close-tycoon" class="btn-round-action" style="background: rgba(255, 71, 87, 0.2); border-color: #ff4757; color: #ff4757; width: 34px; height: 34px;">✕</button>
-          </div>
+      const coinsEl = overlay.querySelector('#tycoon-val-coins');
+      if (coinsEl) coinsEl.textContent = `🪙 ${currentCoins.toLocaleString('fr-FR')}`;
 
-          <!-- TABLEAU DE BORD DE RENTABILITÉ DOUBLE DEVISE -->
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
-            <div style="background: rgba(30, 39, 46, 0.8); border: 1px solid #ffd32a; border-radius: 10px; padding: 10px; text-align: center;">
-              <div style="font-size: 0.72rem; color: #ced6e0; font-weight: 700;">TRÉSORERIE LIQUIDE</div>
-              <div style="font-size: 1.25rem; font-weight: 900; color: #ffd32a; margin: 3px 0;">🪙 ${currentCoins.toLocaleString('fr-FR')}</div>
-              <div style="font-size: 0.75rem; color: #2ed573; font-weight: 800;">+${rates.cashPerSec.toLocaleString('fr-FR')} $/s</div>
-            </div>
-            <div style="background: rgba(30, 39, 46, 0.8); border: 1px solid #ff4757; border-radius: 10px; padding: 10px; text-align: center;">
-              <div style="font-size: 0.72rem; color: #ced6e0; font-weight: 700;">EXTINCTION MONDIALE</div>
-              <div style="font-size: 1.25rem; font-weight: 900; color: #ff4757; margin: 3px 0;">☠️ ${wmProgress.totalKills.toLocaleString('fr-FR')}</div>
-              <div style="font-size: 0.75rem; color: #ff6b81; font-weight: 800;">+${rates.killsPerSec.toLocaleString('fr-FR')} cibles/s</div>
-            </div>
-          </div>
+      const cashRateEl = overlay.querySelector('#tycoon-cash-rate');
+      if (cashRateEl) cashRateEl.textContent = `+${rates.cashPerSec.toLocaleString('fr-FR')} $/s`;
 
-          <!-- SYNERGIE DE COURSE & BONUS ÉTOILES -->
-          <div style="background: rgba(0, 206, 201, 0.12); border: 1px dashed #00cec9; border-radius: 8px; padding: 6px 12px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; font-size: 0.76rem;">
-            <span style="color: #81ecec;">⭐ Synergie Grand Tour d'Europe :</span>
-            <strong style="color: #00cec9; font-weight: 900;">+${rates.starBonusPct}% Rendement Global</strong>
-          </div>
+      const killsEl = overlay.querySelector('#tycoon-val-kills');
+      if (killsEl) killsEl.textContent = `☠️ ${wmProgress.totalKills.toLocaleString('fr-FR')}`;
 
-          <!-- BOUTON INTERACTIF TURBO BOOST TAP -->
-          <div style="position: relative; margin-bottom: 14px;">
-            <button id="btn-turbo-boost-tap" class="tycoon-boost-tap-btn">
-              <span>⚡</span> <span>TURBO FRAPPE (TAP !)</span> <span style="font-size: 0.82rem; background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 6px;">+${Math.max(10, Math.floor(rates.cashPerSec * 2))} 🪙</span>
-            </button>
-          </div>
+      const killsRateEl = overlay.querySelector('#tycoon-kills-rate');
+      if (killsRateEl) killsRateEl.textContent = `+${rates.killsPerSec.toLocaleString('fr-FR')} cibles/s`;
 
-          <!-- BOUTONS D'ACCÈS RAPIDE : RECHERCHE R&D -->
-          <div style="display: flex; gap: 8px; margin-bottom: 14px;">
-            <button id="btn-open-research-modal" class="btn-arcade" style="flex: 1; padding: 8px 12px; font-size: 0.82rem; background: linear-gradient(135deg, #0984e3, #6c5ce7);">
-              🔬 ARBRE DE RECHERCHE R&D
-            </button>
-          </div>
+      const tapGain = Math.max(10, Math.floor(rates.cashPerSec * 2));
+      const tapBadge = overlay.querySelector('#tycoon-tap-badge');
+      if (tapBadge) tapBadge.textContent = `+${tapGain} 🪙`;
 
-          <!-- LISTE DES 6 INFRASTRUCTURES CLANDESTINES -->
-          <h3 style="margin: 0 0 10px 0; font-size: 0.85rem; color: #fffa65; letter-spacing: 0.5px;">🏢 INFRASTRUCTURES D'EXTINCTION GLOBALE</h3>
-          <div class="tycoon-buildings-list" style="display: flex; flex-direction: column; gap: 8px;">
-            ${TYCOON_BUILDINGS.map(b => {
-              const lvl = tycoonManager.getBuildingLevel(b.id);
-              const cost = tycoonManager.getUpgradeCost(b.id);
-              const bRates = tycoonManager.getBuildingRates(b.id);
-              const canAfford = currentCoins >= cost;
+      TYCOON_BUILDINGS.forEach(b => {
+        const lvl = tycoonManager.getBuildingLevel(b.id);
+        const cost = tycoonManager.getUpgradeCost(b.id);
+        const bRates = tycoonManager.getBuildingRates(b.id);
+        const canAfford = currentCoins >= cost;
 
-              return `
-                <div class="tycoon-card" style="background: rgba(26, 32, 44, 0.85); border: 1px solid ${lvl > 0 ? '#ffd32a' : '#4a5568'}; border-radius: 10px; padding: 10px; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
-                  <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
-                    <div style="font-size: 1.8rem; background: rgba(0,0,0,0.3); border-radius: 8px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;">${b.icon}</div>
-                    <div style="flex: 1;">
-                      <div style="display: flex; align-items: center; gap: 6px;">
-                        <strong style="font-size: 0.85rem; color: ${lvl > 0 ? '#fff' : '#a0aec0'};">${b.name}</strong>
-                        <span style="font-size: 0.72rem; color: #ffd32a; font-weight: 800; background: rgba(255, 211, 42, 0.15); padding: 1px 6px; border-radius: 6px;">Niv. ${lvl}</span>
-                      </div>
-                      <div style="font-size: 0.7rem; color: #a4b0be; margin-top: 2px;">${b.tag}</div>
-                      ${lvl > 0 ? `
-                        <div style="font-size: 0.72rem; color: #2ed573; font-weight: 700; margin-top: 2px;">
-                          +${bRates.cashPerSec.toLocaleString('fr-FR')} $/s • <span style="color: #ff7675;">+${bRates.killsPerSec.toLocaleString('fr-FR')} cibles/s</span>
-                        </div>
-                      ` : `
-                        <div style="font-size: 0.7rem; color: #e17055; font-weight: 700; margin-top: 2px;">Inactif • Acheter pour débloquer</div>
-                      `}
-                    </div>
-                  </div>
-                  <button class="btn-arcade btn-upgrade-building" data-b-id="${b.id}" style="padding: 7px 12px; font-size: 0.78rem; min-width: 95px; background: ${canAfford ? 'linear-gradient(135deg, #2ed573, #26de81)' : 'rgba(100, 110, 120, 0.3)'}; color: ${canAfford ? '#fff' : '#888'};" ${canAfford ? '' : 'disabled'}>
-                    ${lvl === 0 ? 'DÉBLOQUER' : 'AMÉLIORER'}<br>
-                    <span style="font-size: 0.7rem; font-weight: 900;">🪙 ${cost.toLocaleString('fr-FR')}</span>
-                  </button>
-                </div>
-              `;
-            }).join('')}
-          </div>
-        </div>
-      `;
+        const card = overlay.querySelector(`.tycoon-card[data-b-id="${b.id}"]`);
+        if (card) {
+          card.style.borderColor = lvl > 0 ? '#ffd32a' : '#4a5568';
+          const lvlPill = card.querySelector('.tycoon-lvl-pill');
+          if (lvlPill) lvlPill.textContent = `Niv. ${lvl}`;
 
-      // Handlers
-      overlay.querySelector('#btn-close-tycoon')?.addEventListener('click', () => {
-        soundManager.playClick();
-        overlay.remove();
-        this.activeModals = this.activeModals.filter(m => m !== overlay);
-      });
-
-      overlay.querySelector('#btn-open-research-modal')?.addEventListener('click', () => {
-        soundManager.playClick();
-        this.showResearchModal();
-      });
-
-      overlay.querySelectorAll('.btn-upgrade-building').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          const bId = e.currentTarget.getAttribute('data-b-id');
-          const res = tycoonManager.upgradeBuilding(bId);
-          if (res.success) {
-            soundManager.playCoin();
-            renderTycoonContent();
+          const ratesDiv = card.querySelector('.tycoon-building-rates');
+          if (ratesDiv) {
+            ratesDiv.innerHTML = lvl > 0
+              ? `+${bRates.cashPerSec.toLocaleString('fr-FR')} $/s • <span style="color: #ff7675;">+${bRates.killsPerSec.toLocaleString('fr-FR')} cibles/s</span>`
+              : `<span style="color: #e17055;">Inactif • Acheter pour débloquer</span>`;
           }
-        });
+
+          const btn = card.querySelector('.btn-upgrade-building');
+          if (btn) {
+            btn.disabled = !canAfford;
+            btn.style.background = canAfford ? 'linear-gradient(135deg, #2ed573, #26de81)' : 'rgba(100, 110, 120, 0.3)';
+            btn.style.color = canAfford ? '#fff' : '#888';
+            btn.innerHTML = `${lvl === 0 ? 'DÉBLOQUER' : 'AMÉLIORER'}<br><span style="font-size: 0.7rem; font-weight: 900;">🪙 ${cost.toLocaleString('fr-FR')}</span>`;
+          }
+        }
       });
-
-      // Turbo Boost Tap
-      const tapBtn = overlay.querySelector('#btn-turbo-boost-tap');
-      if (tapBtn) {
-        tapBtn.addEventListener('click', (e) => {
-          soundManager.playClick();
-          const tapGain = Math.max(10, Math.floor(rates.cashPerSec * 2));
-          storage.addCoins(tapGain);
-          storage.recordCataclysmKill(Math.max(1, Math.floor(rates.killsPerSec)), 'STREET');
-
-          const floatEl = document.createElement('div');
-          floatEl.className = 'floating-cash-text';
-          floatEl.textContent = `+${tapGain} 🪙`;
-          const rect = tapBtn.getBoundingClientRect();
-          floatEl.style.left = `${rect.left + rect.width / 2}px`;
-          floatEl.style.top = `${rect.top}px`;
-          document.body.appendChild(floatEl);
-          setTimeout(() => floatEl.remove(), 850);
-
-          renderTycoonContent();
-        });
-      }
     };
 
-    renderTycoonContent();
+    const rates = tycoonManager.getTotalRates();
+    const currentCoins = storage.data.coins || 0;
+    const wmProgress = storage.getWorldmageddonProgress();
+    const tapGain = Math.max(10, Math.floor(rates.cashPerSec * 2));
+
+    overlay.innerHTML = `
+      <div class="modal-card" style="max-width: 520px; width: 100%; max-height: 92vh; overflow-y: auto; background: #151824; border: 2px solid #ffd32a; border-radius: 16px; padding: 16px; color: #fff; box-shadow: 0 0 35px rgba(255, 211, 42, 0.35);">
+        <!-- EN-TÊTE DU QG TYCOON -->
+        <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255, 211, 42, 0.3); padding-bottom: 10px; margin-bottom: 12px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 1.6rem;">🏭</span>
+            <div>
+              <h2 style="margin: 0; font-size: 1.15rem; color: #ffd32a; font-weight: 900; letter-spacing: 0.5px;">QG EMPIRE WORLDMAGEDDON</h2>
+              <span style="font-size: 0.72rem; color: #2ed573; font-weight: 700;">★ PRODUCTION CLANDESTINE ACTIVE (IDLE)</span>
+            </div>
+          </div>
+          <button id="btn-close-tycoon" class="btn-round-action" style="background: rgba(255, 71, 87, 0.2); border-color: #ff4757; color: #ff4757; width: 34px; height: 34px;">✕</button>
+        </div>
+
+        <!-- TABLEAU DE BORD DE RENTABILITÉ DOUBLE DEVISE -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+          <div style="background: rgba(30, 39, 46, 0.8); border: 1px solid #ffd32a; border-radius: 10px; padding: 10px; text-align: center;">
+            <div style="font-size: 0.72rem; color: #ced6e0; font-weight: 700;">TRÉSORERIE LIQUIDE</div>
+            <div id="tycoon-val-coins" style="font-size: 1.25rem; font-weight: 900; color: #ffd32a; margin: 3px 0;">🪙 ${currentCoins.toLocaleString('fr-FR')}</div>
+            <div id="tycoon-cash-rate" style="font-size: 0.75rem; color: #2ed573; font-weight: 800;">+${rates.cashPerSec.toLocaleString('fr-FR')} $/s</div>
+          </div>
+          <div style="background: rgba(30, 39, 46, 0.8); border: 1px solid #ff4757; border-radius: 10px; padding: 10px; text-align: center;">
+            <div style="font-size: 0.72rem; color: #ced6e0; font-weight: 700;">EXTINCTION MONDIALE</div>
+            <div id="tycoon-val-kills" style="font-size: 1.25rem; font-weight: 900; color: #ff4757; margin: 3px 0;">☠️ ${wmProgress.totalKills.toLocaleString('fr-FR')}</div>
+            <div id="tycoon-kills-rate" style="font-size: 0.75rem; color: #ff6b81; font-weight: 800;">+${rates.killsPerSec.toLocaleString('fr-FR')} cibles/s</div>
+          </div>
+        </div>
+
+        <!-- SYNERGIE DE COURSE & BONUS ÉTOILES -->
+        <div style="background: rgba(0, 206, 201, 0.12); border: 1px dashed #00cec9; border-radius: 8px; padding: 6px 12px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; font-size: 0.76rem;">
+          <span style="color: #81ecec;">⭐ Synergie Grand Tour d'Europe :</span>
+          <strong id="tycoon-star-bonus" style="color: #00cec9; font-weight: 900;">+${rates.starBonusPct}% Rendement Global</strong>
+        </div>
+
+        <!-- BOUTON INTERACTIF TURBO BOOST TAP -->
+        <div style="position: relative; margin-bottom: 14px;">
+          <button id="btn-turbo-boost-tap" class="tycoon-boost-tap-btn">
+            <span>⚡</span> <span>TURBO FRAPPE (TAP !)</span> <span id="tycoon-tap-badge" style="font-size: 0.82rem; background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 6px;">+${tapGain} 🪙</span>
+          </button>
+        </div>
+
+        <!-- BOUTONS D'ACCÈS RAPIDE : RECHERCHE R&D -->
+        <div style="display: flex; gap: 8px; margin-bottom: 14px;">
+          <button id="btn-open-research-modal" class="btn-arcade" style="flex: 1; padding: 8px 12px; font-size: 0.82rem; background: linear-gradient(135deg, #0984e3, #6c5ce7);">
+            🔬 ARBRE DE RECHERCHE R&D
+          </button>
+        </div>
+
+        <!-- LISTE DES INFRASTRUCTURES CLANDESTINES -->
+        <h3 style="margin: 0 0 10px 0; font-size: 0.85rem; color: #fffa65; letter-spacing: 0.5px;">🏢 INFRASTRUCTURES D'EXTINCTION GLOBALE</h3>
+        <div class="tycoon-buildings-list" style="display: flex; flex-direction: column; gap: 8px;">
+          ${TYCOON_BUILDINGS.map(b => {
+            const lvl = tycoonManager.getBuildingLevel(b.id);
+            const cost = tycoonManager.getUpgradeCost(b.id);
+            const bRates = tycoonManager.getBuildingRates(b.id);
+            const canAfford = currentCoins >= cost;
+
+            return `
+              <div class="tycoon-card" data-b-id="${b.id}" style="background: rgba(26, 32, 44, 0.85); border: 1px solid ${lvl > 0 ? '#ffd32a' : '#4a5568'}; border-radius: 10px; padding: 10px; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
+                  <div style="font-size: 1.8rem; background: rgba(0,0,0,0.3); border-radius: 8px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;">${b.icon}</div>
+                  <div style="flex: 1;">
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                      <strong style="font-size: 0.85rem; color: ${lvl > 0 ? '#fff' : '#a0aec0'};">${b.name}</strong>
+                      <span class="tycoon-lvl-pill" style="font-size: 0.72rem; color: #ffd32a; font-weight: 800; background: rgba(255, 211, 42, 0.15); padding: 1px 6px; border-radius: 6px;">Niv. ${lvl}</span>
+                    </div>
+                    <div style="font-size: 0.7rem; color: #a4b0be; margin-top: 2px;">${b.tag}</div>
+                    <div class="tycoon-building-rates" style="font-size: 0.72rem; color: #2ed573; font-weight: 700; margin-top: 2px;">
+                      ${lvl > 0 ? `+${bRates.cashPerSec.toLocaleString('fr-FR')} $/s • <span style="color: #ff7675;">+${bRates.killsPerSec.toLocaleString('fr-FR')} cibles/s</span>` : `<span style="color: #e17055;">Inactif • Acheter pour débloquer</span>`}
+                    </div>
+                  </div>
+                </div>
+                <button class="btn-arcade btn-upgrade-building" data-b-id="${b.id}" style="padding: 7px 12px; font-size: 0.78rem; min-width: 95px; background: ${canAfford ? 'linear-gradient(135deg, #2ed573, #26de81)' : 'rgba(100, 110, 120, 0.3)'}; color: ${canAfford ? '#fff' : '#888'};" ${canAfford ? '' : 'disabled'}>
+                  ${lvl === 0 ? 'DÉBLOQUER' : 'AMÉLIORER'}<br>
+                  <span style="font-size: 0.7rem; font-weight: 900;">🪙 ${cost.toLocaleString('fr-FR')}</span>
+                </button>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+
+    // Handlers
+    overlay.querySelector('#btn-close-tycoon')?.addEventListener('click', () => {
+      soundManager.playClick();
+      overlay.remove();
+      this.activeModals = this.activeModals.filter(m => m !== overlay);
+    });
+
+    overlay.querySelector('#btn-open-research-modal')?.addEventListener('click', () => {
+      soundManager.playClick();
+      this.showResearchModal();
+    });
+
+    overlay.querySelectorAll('.btn-upgrade-building').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const bId = e.currentTarget.getAttribute('data-b-id');
+        const res = tycoonManager.upgradeBuilding(bId);
+        if (res.success) {
+          soundManager.playCoin();
+          updateTycoonUI();
+        }
+      });
+    });
+
+    // Turbo Boost Tap
+    const tapBtn = overlay.querySelector('#btn-turbo-boost-tap');
+    if (tapBtn) {
+      tapBtn.addEventListener('click', (e) => {
+        soundManager.playClick();
+        const curRates = tycoonManager.getTotalRates();
+        const tapAmt = Math.max(10, Math.floor(curRates.cashPerSec * 2));
+        storage.addCoins(tapAmt);
+        storage.recordCataclysmKill(Math.max(1, Math.floor(curRates.killsPerSec)), 'STREET');
+
+        const floatEl = document.createElement('div');
+        floatEl.className = 'floating-cash-text';
+        floatEl.textContent = `+${tapAmt} 🪙`;
+        const rect = tapBtn.getBoundingClientRect();
+        floatEl.style.left = `${rect.left + rect.width / 2}px`;
+        floatEl.style.top = `${rect.top}px`;
+        document.body.appendChild(floatEl);
+        setTimeout(() => floatEl.remove(), 850);
+
+        updateTycoonUI();
+      });
+    }
+
     this.root.appendChild(overlay);
 
     const pauseCard = overlay.querySelector('.modal-card');
     if (pauseCard) {
       gsap.fromTo(pauseCard,
-        { scale: 0.8, opacity: 0, y: 30 },
-        { scale: 1.0, opacity: 1, y: 0, duration: 0.35, ease: "back.out(1.8)" }
+        { scale: 0.85, opacity: 0, y: 25 },
+        { scale: 1.0, opacity: 1, y: 0, duration: 0.32, ease: "back.out(1.8)" }
       );
     }
   }
@@ -4921,24 +5155,33 @@ export class UIManager {
 
   showToastUnlock(data) {
     const toast = document.createElement('div');
+    const isExtermOrClosed = (data.name || '').includes('☠️') || (data.name || '').toLowerCase().includes('condamné') || (data.name || '').toLowerCase().includes('fermée');
+
     toast.style.cssText = `
       position: absolute;
       top: 32px;
       left: 50%;
-      background: linear-gradient(135deg, #2ed573, #1e90ff);
+      background: ${isExtermOrClosed ? 'linear-gradient(135deg, #eb4d4b, #2b1115)' : 'linear-gradient(135deg, #2ed573, #1e90ff)'};
       color: #fff;
-      padding: 13px 28px;
-      border-radius: 35px;
+      padding: 12px 22px;
+      border-radius: 28px;
       font-weight: 900;
+      font-size: 0.88rem;
+      line-height: 1.35;
       letter-spacing: 0.5px;
       text-transform: uppercase;
-      box-shadow: 0 10px 30px rgba(46, 213, 115, 0.55), 0 0 20px rgba(30, 144, 255, 0.45);
-      border: 1.5px solid rgba(255, 255, 255, 0.65);
-      z-index: 1000;
+      text-align: center;
+      max-width: 90vw;
+      width: max-content;
+      box-sizing: border-box;
+      white-space: normal;
+      word-break: break-word;
+      box-shadow: ${isExtermOrClosed ? '0 10px 30px rgba(255, 71, 87, 0.7), 0 0 20px rgba(235, 77, 75, 0.5)' : '0 10px 30px rgba(46, 213, 115, 0.55), 0 0 20px rgba(30, 144, 255, 0.45)'};
+      border: 2px solid ${isExtermOrClosed ? '#ff4757' : 'rgba(255, 255, 255, 0.65)'};
+      z-index: 10000;
       pointer-events: none;
-      white-space: nowrap;
     `;
-    toast.innerHTML = `✨ ${data.name || 'Débloqué'} !`;
+    toast.innerHTML = isExtermOrClosed ? `${data.name || 'Zone Condamnée'}` : `✨ ${data.name || 'Débloqué'} !`;
     this.root.appendChild(toast);
 
     gsap.fromTo(toast,

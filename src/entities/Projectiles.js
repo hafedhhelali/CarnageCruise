@@ -352,19 +352,19 @@ export class ProjectileManager {
           p.mesh.userData.flame.scale.set(flameFlicker, flameFlicker, flameFlicker);
         }
 
-        // 2. Particules de traînée de fumée et feu
+        // 2. Particules de traînée de fumée et feu (traînée allégée et nette)
         p.trailTimer = (p.trailTimer || 0) + delta;
-        if (p.trailTimer > 0.035) {
+        if (p.trailTimer > 0.085) {
           p.trailTimer = 0;
           const trailPos = p.mesh.position.clone();
           trailPos.z -= 0.6;
           if (this.particles) {
             if (p.type === '120mm_shell') {
               if (this.particles.spawnSparks) this.particles.spawnSparks(trailPos, 2, 0xff793f);
-              if (this.particles.spawnExhaustSmoke) this.particles.spawnExhaustSmoke(trailPos, 0.14);
+              if (this.particles.spawnExhaustSmoke) this.particles.spawnExhaustSmoke(trailPos, 0.08);
             } else if (p.type === 'missile') {
               if (this.particles.spawnSparks) this.particles.spawnSparks(trailPos, 2, 0xffd32a);
-              if (this.particles.spawnExhaustSmoke) this.particles.spawnExhaustSmoke(trailPos, 0.16);
+              if (this.particles.spawnExhaustSmoke) this.particles.spawnExhaustSmoke(trailPos, 0.09);
             } else if (p.type === 'plasma_emp') {
               if (this.particles.spawnShockwave) this.particles.spawnShockwave(trailPos, 0x00cec9);
             }

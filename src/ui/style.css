@@ -1526,39 +1526,38 @@ html, body {
   transition: opacity 0.3s ease;
 }
 
-/* Jeton motard voyageur animé se déplaçant de ville en ville */
-.moto-traveler {
+/* ==========================================================================
+   AVION VOYAGEUR ANIMÉ SE DÉPLAÇANT DE VILLE EN VILLE (✈️)
+   ========================================================================== */
+.plane-traveler {
   position: absolute;
   transform: translate(-50%, -50%);
   z-index: 35;
   pointer-events: none;
-  transition: left 0.62s cubic-bezier(0.25, 1, 0.5, 1), top 0.62s cubic-bezier(0.25, 1, 0.5, 1), transform 0.62s ease;
+  transition: left 0.65s cubic-bezier(0.25, 1, 0.5, 1), top 0.65s cubic-bezier(0.25, 1, 0.5, 1), transform 0.65s cubic-bezier(0.25, 1, 0.5, 1);
   display: flex;
   align-items: center;
   justify-content: center;
-  filter: drop-shadow(0 0 12px #ffd700);
+  filter: drop-shadow(0 0 14px #00cec9) drop-shadow(0 0 8px #ffffff);
 }
 
-.moto-traveler-icon {
-  font-size: 1.8rem;
-  animation: travelerWiggle 0.35s ease-in-out infinite alternate;
+.plane-traveler-icon {
+  font-size: 2.1rem;
+  display: inline-block;
+  transform-origin: center center;
+  transition: transform 0.2s ease;
 }
 
-.moto-traveler.traveling .moto-traveler-exhaust {
+.plane-traveler.flying .plane-traveler-trail {
   opacity: 1;
-  transform: scale(1.4) translateX(-8px);
+  transform: scale(1.6) translateX(-10px);
 }
 
-.moto-traveler-exhaust {
-  font-size: 1.2rem;
+.plane-traveler-trail {
+  font-size: 1.3rem;
   opacity: 0;
   transition: opacity 0.2s ease, transform 0.2s ease;
-  margin-left: -4px;
-}
-
-@keyframes travelerWiggle {
-  0% { transform: translateY(0) rotate(-3deg); }
-  100% { transform: translateY(-4px) rotate(3deg); }
+  margin-left: -6px;
 }
 
 /* Effets visuels et animations de pénalité de score suite à choc véhicule */
@@ -4079,14 +4078,14 @@ html, body {
    ========================================================================== */
 
 .btn-nav-arrow {
-  width: 44px;
-  height: 44px;
-  min-width: 44px;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
   border-radius: 50%;
-  background: rgba(15, 23, 42, 0.9);
-  border: 1.5px solid rgba(0, 206, 201, 0.65);
+  background: rgba(15, 23, 42, 0.95);
+  border: 1.5px solid rgba(0, 206, 201, 0.7);
   color: #00cec9;
-  font-size: 1.15rem;
+  font-size: 0.95rem;
   font-weight: 900;
   display: flex;
   align-items: center;
@@ -4717,34 +4716,39 @@ html, body {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  background: rgba(15, 23, 42, 0.72);
-  border: 1.5px solid rgba(0, 206, 201, 0.4);
+  background: linear-gradient(135deg, rgba(14, 30, 52, 0.95), rgba(7, 18, 32, 0.98));
+  border: 2px solid #00cec9;
   border-radius: 14px;
   padding: 8px 12px;
   cursor: pointer;
-  transition: transform 0.12s, border-color 0.15s, background 0.15s;
+  transition: transform 0.12s, border-color 0.15s, box-shadow 0.15s;
   box-sizing: border-box;
   width: 100%;
+  box-shadow: 0 4px 16px rgba(0, 206, 201, 0.25);
 }
 
 .city-vehicle-dock-btn:active {
   transform: scale(0.98);
-  border-color: #00cec9;
-  background: rgba(0, 206, 201, 0.18);
+  border-color: #ffd700;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
 }
 
 .veh-dock-left {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   min-width: 0;
   flex: 1;
 }
 
 .veh-dock-icon {
-  font-size: 1.4rem;
+  font-size: 1.5rem;
   line-height: 1;
   flex-shrink: 0;
+  background: rgba(0, 206, 201, 0.15);
+  border: 1.5px solid #00cec9;
+  border-radius: 8px;
+  padding: 3px 6px;
 }
 
 .veh-dock-texts {
@@ -4755,17 +4759,17 @@ html, body {
 }
 
 .veh-dock-sub {
-  font-size: 0.58rem;
-  font-weight: 800;
-  color: #a4b0be;
+  font-size: 0.60rem;
+  font-weight: 900;
+  color: #ffd700;
   letter-spacing: 0.5px;
 }
 
 .veh-dock-name {
   font-family: var(--font-header);
-  font-size: 0.86rem;
+  font-size: 0.90rem;
   font-weight: 950;
-  color: #00cec9;
+  color: #ffffff;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -4774,14 +4778,15 @@ html, body {
 
 .veh-dock-action {
   font-family: var(--font-header);
-  font-size: 0.68rem;
-  font-weight: 900;
-  color: #ffd700;
-  background: rgba(255, 215, 0, 0.15);
-  border: 1px solid rgba(255, 215, 0, 0.4);
-  padding: 4px 8px;
+  font-size: 0.72rem;
+  font-weight: 950;
+  color: #000000;
+  background: linear-gradient(135deg, #ffd700, #ffa502);
+  border: 1px solid #fffa65;
+  padding: 5px 10px;
   border-radius: 8px;
   flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.4);
 }
 
 .city-main-actions-dock {
@@ -4792,30 +4797,268 @@ html, body {
 }
 
 .btn-wmd-dock {
-  background: rgba(235, 77, 75, 0.22);
-  border: 1.5px solid #ff7675;
-  color: #ff7675;
-  font-weight: 950;
-  font-size: 0.82rem;
+  background: linear-gradient(135deg, #eb4d4b, #b71540);
+  border: 2px solid #fffa65;
+  color: #ffffff;
   border-radius: 16px;
-  padding: 0 16px;
+  padding: 6px 14px;
   cursor: pointer;
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  justify-content: center;
-  transition: transform 0.12s;
+  gap: 8px;
+  box-shadow: 0 0 16px rgba(235, 77, 75, 0.65), inset 0 0 8px rgba(255, 250, 101, 0.25);
+  transition: transform 0.12s, box-shadow 0.15s;
+  animation: wmdPulseBtn 1.8s infinite alternate;
 }
 
 .btn-wmd-dock:active {
-  transform: scale(0.92);
+  transform: scale(0.94);
+}
+
+@keyframes wmdPulseBtn {
+  0% { box-shadow: 0 0 12px rgba(235, 77, 75, 0.6); }
+  100% { box-shadow: 0 0 22px rgba(255, 71, 87, 0.9), 0 0 8px #fffa65; }
+}
+
+.wmd-dock-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.wmd-dock-texts {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.wmd-dock-title {
+  font-size: 0.82rem;
+  font-weight: 950;
+  color: #fffa65;
+  letter-spacing: 0.5px;
+  text-shadow: 0 0 6px rgba(0, 0, 0, 0.8);
+}
+
+.wmd-dock-sub {
+  font-size: 0.60rem;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: 0.8px;
 }
 
 .btn-city-closed {
-  background: #1e272e !important;
+  background: linear-gradient(135deg, #2b1115, #1e272e) !important;
   color: #ff7675 !important;
-  border-color: #ff4757 !important;
+  border: 2px solid #ff4757 !important;
   cursor: not-allowed !important;
+}
+
+.btn-city-ruins {
+  background: linear-gradient(135deg, #3d0c11, #63171b) !important;
+  border: 2px solid #ff4757 !important;
+  box-shadow: 0 4px 20px rgba(255, 71, 87, 0.5) !important;
+  color: #ffffff !important;
+  opacity: 1 !important;
+  cursor: pointer !important;
+}
+
+.btn-city-ruins .btn-enter-hero-title {
+  color: #fffa65 !important;
+  font-weight: 950 !important;
+  text-shadow: 0 0 10px rgba(255, 71, 87, 0.8) !important;
+}
+
+.btn-city-ruins .btn-enter-hero-desc {
+  color: #f1f2f6 !important;
+  font-weight: 800 !important;
+}
+
+/* ==========================================================================
+   VUE DÉTAILLÉE POST-APOCALYPTIQUE D'UNE VILLE EXTERMINÉE (RUINS VIEW)
+   ========================================================================== */
+.ruins-view-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 10, 16, 0.96);
+  backdrop-filter: blur(12px);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px;
+  font-family: var(--font-header);
+}
+
+.ruins-view-container {
+  max-width: 500px;
+  width: 100%;
+  max-height: 92vh;
+  overflow-y: auto;
+  background: #11141c;
+  border: 2px solid #ff4757;
+  border-radius: 18px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 0 40px rgba(255, 71, 87, 0.4);
+}
+
+.ruins-hazard-banner {
+  background: repeating-linear-gradient(
+    -45deg,
+    #2b1115,
+    #2b1115 10px,
+    #ff4757 10px,
+    #ff4757 20px
+  );
+  padding: 8px 12px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.ruins-hazard-banner .hazard-title {
+  background: rgba(10, 12, 18, 0.92);
+  color: #fffa65;
+  font-size: 0.72rem;
+  font-weight: 950;
+  padding: 3px 8px;
+  border-radius: 4px;
+  display: inline-block;
+  letter-spacing: 0.5px;
+}
+
+.ruins-skyline-card {
+  position: relative;
+  background: linear-gradient(180deg, #2b0b0e 0%, #0d0f17 100%);
+  border: 1.5px solid rgba(255, 71, 87, 0.4);
+  border-radius: 14px;
+  padding: 24px 16px 16px 16px;
+  text-align: center;
+  overflow: hidden;
+}
+
+.ruins-skyline-art .ruins-icon-big {
+  font-size: 3.5rem;
+  display: block;
+  filter: drop-shadow(0 0 16px rgba(255, 71, 87, 0.8));
+  animation: ruinsFireGlow 1.8s infinite alternate;
+}
+
+@keyframes ruinsFireGlow {
+  0% { transform: scale(0.98); filter: drop-shadow(0 0 12px #ff4757); }
+  100% { transform: scale(1.03); filter: drop-shadow(0 0 24px #ffa502); }
+}
+
+.ruins-city-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.ruins-city-name {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 950;
+  color: #ffffff;
+  letter-spacing: 1px;
+}
+
+.ruins-city-sub {
+  font-size: 0.68rem;
+  color: #a4b0be;
+  font-weight: 800;
+}
+
+.ruins-status-tag {
+  background: #ff4757;
+  color: #ffffff;
+  font-size: 0.70rem;
+  font-weight: 950;
+  padding: 3px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.5px;
+}
+
+.ruins-report-card {
+  background: rgba(18, 22, 32, 0.9);
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.ruins-report-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid rgba(255, 71, 87, 0.3);
+  padding-bottom: 6px;
+  margin-bottom: 10px;
+}
+
+.ruins-report-header h3 {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #ff7675;
+  font-weight: 950;
+  letter-spacing: 0.5px;
+}
+
+.ruins-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.ruins-stat-box {
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 8px;
+  padding: 8px;
+  text-align: center;
+}
+
+.ruins-stat-lbl {
+  font-size: 0.62rem;
+  color: #a4b0be;
+  font-weight: 800;
+  display: block;
+}
+
+.ruins-stat-val {
+  font-size: 0.78rem;
+  font-weight: 950;
+  margin-top: 2px;
+  display: block;
+}
+
+.text-red { color: #ff4757; }
+.text-yellow { color: #fffa65; }
+.text-orange { color: #ffa502; }
+.text-cyan { color: #00cec9; }
+
+.ruins-intel-text {
+  font-size: 0.75rem;
+  color: #ced6e0;
+  line-height: 1.45;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 8px 10px;
+  border-radius: 8px;
+  border-left: 3px solid #ff4757;
+}
+
+.btn-ruins-back {
+  width: 100%;
+  padding: 14px;
+  font-size: 0.95rem;
+  font-weight: 950;
+  background: linear-gradient(135deg, #2ed573, #1e90ff);
+  border-radius: 14px;
+  color: #ffffff;
 }
 
 /* ==========================================================================

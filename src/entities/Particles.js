@@ -339,25 +339,25 @@ export class ParticleSystem {
       });
     }
 
-    // 5. Épaisses volutes de fumée noire de détonation montant en champignon
-    const smokeCount = Math.min(14, Math.floor(6 + radius * 0.8));
+    // 5. Volutes discrètes de fumée de détonation (allégées pour ne pas masquer l'écran)
+    const smokeCount = 3;
     for (let j = 0; j < smokeCount; j++) {
       const smoke = new THREE.Mesh(this.sharedGeos.smokeSphere, this.sharedMats.smokeDark.clone());
       smoke.position.set(
-        pos.x + (Math.random() - 0.5) * 2.0,
-        explosionCenter.y + Math.random() * 1.5,
-        pos.z + (Math.random() - 0.5) * 2.0
+        pos.x + (Math.random() - 0.5) * 1.2,
+        explosionCenter.y + Math.random() * 0.8,
+        pos.z + (Math.random() - 0.5) * 1.2
       );
-      smoke.scale.setScalar(1.2 + Math.random() * 1.6);
+      smoke.scale.setScalar(0.7 + Math.random() * 0.5);
       this.scene.add(smoke);
       this.smokePuffs.push({
         mesh: smoke,
-        velY: 2.5 + Math.random() * 2.8,
-        velX: (Math.random() - 0.5) * 1.4,
-        velZ: (Math.random() - 0.5) * 1.4,
-        growRate: 3.2,
-        life: 1.4,
-        maxLife: 1.4
+        velY: 1.8 + Math.random() * 1.5,
+        velX: (Math.random() - 0.5) * 1.0,
+        velZ: (Math.random() - 0.5) * 1.0,
+        growRate: 1.3,
+        life: 0.65,
+        maxLife: 0.65
       });
     }
   }

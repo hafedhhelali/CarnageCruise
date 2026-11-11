@@ -575,7 +575,7 @@ class GameApp {
       if (bikeAbsX > 5.45 && currentSpeed > 6 && !isFlyingCraft && !this.bike.isCrashed) {
         this._wallScrapeTimer = (this._wallScrapeTimer || 0) - delta;
         if (this._wallScrapeTimer <= 0) {
-          this._wallScrapeTimer = 0.055;
+          this._wallScrapeTimer = 0.14;
           const side = Math.sign(this.bike.x);
           const wallPos = new THREE.Vector3(
             this.bike.mesh.position.x + side * 0.55,
@@ -586,7 +586,7 @@ class GameApp {
           if (this.particles.spawnSkidSmoke) {
             this.particles.spawnSkidSmoke(new THREE.Vector3(wallPos.x, 0.1, wallPos.z));
           }
-          soundManager.playWallScrape();
+          soundManager.playWallScrape(side);
           this.engine.triggerCameraShake(0.06);
         }
         // Inclinaison visuelle de la moto vers le mur (frottement)

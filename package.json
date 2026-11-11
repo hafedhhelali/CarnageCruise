@@ -1,6 +1,6 @@
 {
-  "name": "motormageddon",
-  "version": "0.9.37-beta",
+  "name": "carnage-cruise",
+  "version": "0.9.38-beta",
   "type": "module",
   "main": "index.js",
   "scripts": {
@@ -15,7 +15,7 @@
   "keywords": [],
   "author": "EOMedia",
   "license": "ISC",
-  "description": "CarnageCruise Arcade 3D",
+  "description": "Carnage Cruise Arcade 3D",
   "dependencies": {
     "@capacitor/android": "^8.6.0",
     "@capacitor/app": "^8.1.2",

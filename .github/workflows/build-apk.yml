@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: motormageddon-build-${{ github.ref }}
+  group: carnagecruise-build-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   build-android:
-    name: 🚀 Build Motormageddon Android APK
+    name: 🚀 Build Carnage Cruise Android APK
     runs-on: ubuntu-latest
 
     steps:
@@ -41,7 +41,7 @@ jobs:
           APP_VER=$(node -p "require('./version.json').version")
           VER_CODE=$(node -p "require('./version.json').versionCode")
           CHANNEL=$(node -p "require('./version.json').channel || 'beta'")
-          RELEASE_TITLE=$(node -p "require('./version.json').releaseName || 'Motormageddon Arcade'")
+          RELEASE_TITLE=$(node -p "require('./version.json').releaseName || 'Carnage Cruise Arcade'")
           echo "APP_VERSION=$APP_VER" >> $GITHUB_ENV
           echo "VERSION_CODE=$VER_CODE" >> $GITHUB_ENV
           echo "CHANNEL=$CHANNEL" >> $GITHUB_ENV
@@ -50,7 +50,7 @@ jobs:
           echo "version_code=$VER_CODE" >> $GITHUB_OUTPUT
           echo "channel=$CHANNEL" >> $GITHUB_OUTPUT
           echo "==============================================="
-          echo "📦 Motormageddon Version: v$APP_VER (Build $VER_CODE)"
+          echo "📦 Carnage Cruise Version: v$APP_VER (Build $VER_CODE)"
           echo "🏷️ Canal: $CHANNEL"
           echo "🎯 Titre: $RELEASE_TITLE"
           echo "==============================================="
@@ -77,9 +77,9 @@ jobs:
       - name: 📤 Upload Versioned Release APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Motormageddon-v${{ env.APP_VERSION }}-b${{ env.VERSION_CODE }}-Release-APK
+          name: CarnageCruise-v${{ env.APP_VERSION }}-b${{ env.VERSION_CODE }}-Release-APK
           path: |
-            android/app/build/outputs/apk/release/Motormageddon-*-release.apk
+            android/app/build/outputs/apk/release/CarnageCruise-*-release.apk
           retention-days: 14
 
       - name: 🏷️ Publish GitHub Beta Release
@@ -88,10 +88,10 @@ jobs:
         with:
           tag_name: "v${{ env.APP_VERSION }}"
           files: |
-            android/app/build/outputs/apk/release/Motormageddon-*-release.apk
-          name: "Motormageddon v${{ env.APP_VERSION }} [BETA]"
+            android/app/build/outputs/apk/release/CarnageCruise-*-release.apk
+          name: "Carnage Cruise v${{ env.APP_VERSION }} [BETA]"
           body: |
-            # 🏁 Motormageddon v${{ env.APP_VERSION }} (Canal BETA)
+            # 🏁 Carnage Cruise v${{ env.APP_VERSION }} (Canal BETA)
             
             **Version :** `v${{ env.APP_VERSION }}` (Build `${{ env.VERSION_CODE }}`)  
             **Canal :** `BETA - Version de Test Publique`  

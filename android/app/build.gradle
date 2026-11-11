@@ -41,7 +41,7 @@ android {
 
     applicationVariants.all { variant ->
         variant.outputs.all {
-            outputFileName = "Motormageddon-v${variant.versionName}-b${variant.versionCode}-${variant.buildType.name}.apk"
+            outputFileName = "CarnageCruise-v${variant.versionName}-b${variant.versionCode}-${variant.buildType.name}.apk"
         }
     }
 }
