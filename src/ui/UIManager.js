@@ -217,7 +217,7 @@ export class UIManager {
       </div>
 
       <!-- Missions Quotidiennes (Rétention D1-D7) -->
-      ${this.renderDailyMissionsPanel()}
+      ${(() => { try { return this.renderDailyMissionsPanel(); } catch (e) { console.error('[UI] renderDailyMissionsPanel error:', e); return ''; } })()}
 
       <!-- Carte d'Aperçu du Véhicule Équipé (Accès Rapide Garage) -->
       <div class="splash-vehicle-card clickable" id="btn-splash-quick-garage" title="Personnaliser et équiper dans le Garage">

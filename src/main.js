@@ -25,11 +25,12 @@ import * as TWEEN from '@tweenjs/tween.js';
 
 class GameApp {
   constructor() {
-    this.canvas = document.getElementById('webgl-canvas');
-    this.uiRoot = document.getElementById('ui-root');
+    try {
+      this.canvas = document.getElementById('webgl-canvas');
+      this.uiRoot = document.getElementById('ui-root');
 
-    // 1. Initialiser le moteur 3D
-    this.engine = new Engine(this.canvas);
+      // 1. Initialiser le moteur 3D
+      this.engine = new Engine(this.canvas);
 
     // 2. Initialiser les entités
     this.bike = new Bike(this.engine.scene);
@@ -43,28 +44,36 @@ class GameApp {
 
     // Abonnement des missions quotidiennes aux événements de jeu
     gameState.subscribe((event, payload) => {
-      if (event === 'kill_updated') dailyMissions.onKill();
-      if (event === 'score_updated' && payload) {
-        if (payload.combo) dailyMissions.onBestCombo(payload.combo);
-        if (payload.itemType === 'near_miss') dailyMissions.onNearMiss();
-        if (payload.coinsEarned) dailyMissions.onCoins(payload.coinsEarned);
-      }
-      if (event === 'nitro_activated') dailyMissions.onNitro();
-      if (event === 'run_ended' && payload) {
-        dailyMissions.onRunComplete();
-        dailyMissions.onCoins(payload.coinsEarned || 0);
-        dailyMissions.onBestCombo(payload.maxCombo || 0);
-        dailyMissions.onDistance(payload.distance || 0);
-        dailyMissions.onKillStreak(payload.kills || 0);
+      try {
+        if (event === 'kill_updated') dailyMissions.onKill();
+        if (event === 'score_updated' && payload) {
+          if (payload.combo) dailyMissions.onBestCombo(payload.combo);
+          if (payload.itemType === 'near_miss') dailyMissions.onNearMiss();
+          if (payload.coinsEarned) dailyMissions.onCoins(payload.coinsEarned);
+        }
+        if (event === 'nitro_activated') dailyMissions.onNitro();
+        if (event === 'run_ended' && payload) {
+          dailyMissions.onRunComplete();
+          dailyMissions.onCoins(payload.coinsEarned || 0);
+          dailyMissions.onBestCombo(payload.maxCombo || 0);
+          dailyMissions.onDistance(payload.distance || 0);
+          dailyMissions.onKillStreak(payload.kills || 0);
+        }
+      } catch (e) {
+        console.error('[App] dailyMissions event error:', e);
       }
     });
 
     // Claim automatique du calendrier de connexion au lancement
-    if (loginStreak.canClaim()) {
-      const reward = loginStreak.claim();
-      if (reward && this.ui) {
-        this.ui.showToastUnlock({ name: `🎁 JOUR ${reward.day}/7 : +${reward.coins} PIÈCES D'OR !` });
+    try {
+      if (loginStreak.canClaim()) {
+        const reward = loginStreak.claim();
+        if (reward && this.ui) {
+          this.ui.showToastUnlock({ name: `🎁 JOUR ${reward.day}/7 : +${reward.coins} PIÈCES D'OR !` });
+        }
       }
+    } catch (e) {
+      console.error('[App] loginStreak error:', e);
     }
 
     // 3. État des contrôles et de la course
@@ -99,6 +108,10 @@ class GameApp {
 
     // Poignée de débogage (dev) : inspection du pipeline de rendu dans la console
     window.__mm = { app: this, engine: this.engine, sound: soundManager };
+    } catch (e) {
+      console.error('[CarnageCruise] CONSTRUCTOR ERROR:', e);
+      document.body.innerHTML = '<div style="color:red;padding:20px;font-family:monospace;white-space:pre-wrap;font-size:12px;">CONSTRUCTOR ERROR: ' + (e && e.stack ? e.stack : e) + '</div>';
+    }
   }
 
   setupCity(cityDef) {
@@ -938,7 +951,11 @@ class GameApp {
   }
 }
 
-// Lancement automatique dès que le DOM est prêt
 window.addEventListener('DOMContentLoaded', () => {
-  new GameApp();
+  try {
+    new GameApp();
+  } catch (e) {
+    console.error('[CarnageCruise] BOOT ERROR:', e);
+    document.body.innerHTML = '<div style="color:red;padding:20px;font-family:monospace;white-space:pre-wrap;">BOOT ERROR: ' + (e && e.stack ? e.stack : e) + '</div>';
+  }
 });
