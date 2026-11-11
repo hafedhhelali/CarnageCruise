@@ -1,7 +1,7 @@
-# Generation des icones Android Motormageddon
+# Generation des icones Android CarnageCruise
 Add-Type -AssemblyName System.Drawing
 
-$resDir = "c:\Projects\Motormageddon\android\app\src\main\res"
+$resDir = "c:\Projects\CarnageCruise\android\app\src\main\res"
 
 $sizes = @{
     "mipmap-mdpi" = 48
