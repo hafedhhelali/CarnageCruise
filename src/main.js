@@ -22,6 +22,7 @@ import { UIManager } from './ui/UIManager.js';
 import { tycoonManager } from './core/TycoonManager.js';
 import { Haptic } from './services/HapticFeedback.js';
 import * as TWEEN from '@tweenjs/tween.js';
+import './ui/style.css';
 
 class GameApp {
   constructor() {
