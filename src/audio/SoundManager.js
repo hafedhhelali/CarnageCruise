@@ -1227,6 +1227,43 @@ export class SoundManager {
     osc.onended = () => this.cleanupNodes(osc, filter, gain);
   }
 
+  playSupersonicJet() {
+    if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
+    this.resumeContext();
+    const now = this.ctx.currentTime;
+    const dest = this.getMasterOutput();
+
+    const bufferSize = Math.floor(this.ctx.sampleRate * 1.8);
+    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * 0.75;
+    }
+
+    const noise = this.ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(220, now);
+    filter.frequency.exponentialRampToValueAtTime(1350, now + 0.9);
+    filter.frequency.exponentialRampToValueAtTime(280, now + 1.8);
+    filter.Q.setValueAtTime(1.6, now);
+
+    const gain = this.ctx.createGain();
+    gain.gain.setValueAtTime(0.01, now);
+    gain.gain.linearRampToValueAtTime(0.48, now + 0.9);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 1.8);
+
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(dest);
+
+    noise.start(now);
+    noise.stop(now + 1.8);
+    noise.onended = () => this.cleanupNodes(noise, filter, gain);
+  }
+
   playGeigerClick() {
     if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
     this.resumeContext();

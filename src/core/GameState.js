@@ -31,7 +31,7 @@ export const CITIES = [
     unlockedByDefault: true,
     population: 2160000,
     exterminationTarget: 2160000,
-    mapCoords: { x: 44.8, y: 40.2 }
+    mapCoords: { x: 41.7, y: 55.1 }
   },
   {
     id: 'bruxelles',
@@ -56,7 +56,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 1220000,
     exterminationTarget: 1220000,
-    mapCoords: { x: 51.4, y: 31.4 }
+    mapCoords: { x: 44.6, y: 50.1 }
   },
   {
     id: 'londres',
@@ -81,7 +81,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 8980000,
     exterminationTarget: 8980000,
-    mapCoords: { x: 39.2, y: 27 }
+    mapCoords: { x: 38, y: 48.4 }
   },
   {
     id: 'dublin',
@@ -106,7 +106,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 1250000,
     exterminationTarget: 1250000,
-    mapCoords: { x: 18.5, y: 23.5 }
+    mapCoords: { x: 29, y: 43.4 }
   },
   {
     id: 'newcastle',
@@ -131,7 +131,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 820000,
     exterminationTarget: 820000,
-    mapCoords: { x: 37.8, y: 16.5 }
+    mapCoords: { x: 35.9, y: 38.9 }
   },
   {
     id: 'reykjavik',
@@ -156,7 +156,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 135000,
     exterminationTarget: 135000,
-    mapCoords: { x: 12.5, y: 5.2 }
+    mapCoords: { x: 6, y: 9.2 }
   },
   {
     id: 'oslo',
@@ -181,7 +181,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 697000,
     exterminationTarget: 697000,
-    mapCoords: { x: 62.5, y: 11.5 }
+    mapCoords: { x: 54, y: 23.9 }
   },
   {
     id: 'stockholm',
@@ -206,7 +206,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 975000,
     exterminationTarget: 975000,
-    mapCoords: { x: 71.2, y: 12.8 }
+    mapCoords: { x: 64.8, y: 25.8 }
   },
   {
     id: 'copenhague',
@@ -231,7 +231,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 650000,
     exterminationTarget: 650000,
-    mapCoords: { x: 65.8, y: 21.2 }
+    mapCoords: { x: 56.7, y: 36.9 }
   },
   {
     id: 'helsinki',
@@ -256,7 +256,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 660000,
     exterminationTarget: 660000,
-    mapCoords: { x: 79.5, y: 10.5 }
+    mapCoords: { x: 74.9, y: 23.1 }
   },
   {
     id: 'tallinn',
@@ -281,7 +281,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 440000,
     exterminationTarget: 440000,
-    mapCoords: { x: 78.8, y: 14.8 }
+    mapCoords: { x: 74.6, y: 25.5 }
   },
   {
     id: 'riga',
@@ -306,7 +306,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 615000,
     exterminationTarget: 615000,
-    mapCoords: { x: 78.2, y: 19.2 }
+    mapCoords: { x: 73.7, y: 33.2 }
   },
   {
     id: 'vilnius',
@@ -331,7 +331,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 590000,
     exterminationTarget: 590000,
-    mapCoords: { x: 79, y: 23.8 }
+    mapCoords: { x: 75.4, y: 39.7 }
   },
   {
     id: 'saint_petersbourg',
@@ -356,7 +356,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 5400000,
     exterminationTarget: 5400000,
-    mapCoords: { x: 87.2, y: 11.2 }
+    mapCoords: { x: 82.9, y: 23.9 }
   },
   {
     id: 'moscou',
@@ -381,7 +381,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 13000000,
     exterminationTarget: 13000000,
-    mapCoords: { x: 96.5, y: 17.5 }
+    mapCoords: { x: 93.6, y: 36.7 }
   },
   {
     id: 'minsk',
@@ -406,7 +406,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 2000000,
     exterminationTarget: 2000000,
-    mapCoords: { x: 84.8, y: 25.5 }
+    mapCoords: { x: 78.8, y: 41.9 }
   },
   {
     id: 'kiev',
@@ -431,7 +431,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 2950000,
     exterminationTarget: 2950000,
-    mapCoords: { x: 94.3, y: 33.8 }
+    mapCoords: { x: 83.1, y: 51.1 }
   },
   {
     id: 'varsovie',
@@ -456,7 +456,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 1860000,
     exterminationTarget: 1860000,
-    mapCoords: { x: 79.2, y: 31.5 }
+    mapCoords: { x: 69.1, y: 46.5 }
   },
   {
     id: 'berlin',
@@ -481,7 +481,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 3670000,
     exterminationTarget: 3670000,
-    mapCoords: { x: 70.8, y: 32.4 }
+    mapCoords: { x: 57.9, y: 45.7 }
   },
   {
     id: 'bonn',
@@ -506,7 +506,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 330000,
     exterminationTarget: 330000,
-    mapCoords: { x: 58.2, y: 34.5 }
+    mapCoords: { x: 48.7, y: 50.4 }
   },
   {
     id: 'francfort',
@@ -531,7 +531,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 760000,
     exterminationTarget: 760000,
-    mapCoords: { x: 61.5, y: 37.8 }
+    mapCoords: { x: 51, y: 52 }
   },
   {
     id: 'amsterdam',
@@ -556,7 +556,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 870000,
     exterminationTarget: 870000,
-    mapCoords: { x: 52.8, y: 25 }
+    mapCoords: { x: 45.4, y: 46.1 }
   },
   {
     id: 'anvers',
@@ -581,7 +581,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 530000,
     exterminationTarget: 530000,
-    mapCoords: { x: 50.8, y: 29.5 }
+    mapCoords: { x: 44.7, y: 49.1 }
   },
   {
     id: 'cherbourg',
@@ -606,7 +606,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 80000,
     exterminationTarget: 80000,
-    mapCoords: { x: 37.5, y: 36.8 }
+    mapCoords: { x: 35.8, y: 53.2 }
   },
   {
     id: 'saint_malo',
@@ -631,7 +631,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 47000,
     exterminationTarget: 47000,
-    mapCoords: { x: 31.1, y: 39.9 }
+    mapCoords: { x: 35.3, y: 55.6 }
   },
   {
     id: 'bordeaux',
@@ -656,7 +656,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 260000,
     exterminationTarget: 260000,
-    mapCoords: { x: 35.4, y: 54.7 }
+    mapCoords: { x: 37.4, y: 64.7 }
   },
   {
     id: 'lyon',
@@ -681,7 +681,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 520000,
     exterminationTarget: 520000,
-    mapCoords: { x: 52.8, y: 51.4 }
+    mapCoords: { x: 45.3, y: 62.6 }
   },
   {
     id: 'strasbourg',
@@ -706,7 +706,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 290000,
     exterminationTarget: 290000,
-    mapCoords: { x: 62.3, y: 40.5 }
+    mapCoords: { x: 49.6, y: 55.8 }
   },
   {
     id: 'geneve',
@@ -731,7 +731,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 200000,
     exterminationTarget: 200000,
-    mapCoords: { x: 59, y: 49.7 }
+    mapCoords: { x: 47.3, y: 61.5 }
   },
   {
     id: 'zurich',
@@ -756,7 +756,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 420000,
     exterminationTarget: 420000,
-    mapCoords: { x: 56.5, y: 52.8 }
+    mapCoords: { x: 50.8, y: 58.7 }
   },
   {
     id: 'innsbruck',
@@ -781,7 +781,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 130000,
     exterminationTarget: 130000,
-    mapCoords: { x: 67.5, y: 47.8 }
+    mapCoords: { x: 55, y: 59 }
   },
   {
     id: 'prague',
@@ -806,7 +806,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 1330000,
     exterminationTarget: 1330000,
-    mapCoords: { x: 71.5, y: 39.8 }
+    mapCoords: { x: 59.5, y: 52.1 }
   },
   {
     id: 'vienne',
@@ -831,7 +831,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 1980000,
     exterminationTarget: 1980000,
-    mapCoords: { x: 74.8, y: 45.2 }
+    mapCoords: { x: 62.3, y: 56.7 }
   },
   {
     id: 'bratislava',
@@ -856,7 +856,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 475000,
     exterminationTarget: 475000,
-    mapCoords: { x: 76.8, y: 45.8 }
+    mapCoords: { x: 63.4, y: 56.9 }
   },
   {
     id: 'budapest',
@@ -881,7 +881,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 1750000,
     exterminationTarget: 1750000,
-    mapCoords: { x: 79.8, y: 48.2 }
+    mapCoords: { x: 66.2, y: 58.4 }
   },
   {
     id: 'ljubljana',
@@ -906,7 +906,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 295000,
     exterminationTarget: 295000,
-    mapCoords: { x: 71.8, y: 50.5 }
+    mapCoords: { x: 59.6, y: 61.9 }
   },
   {
     id: 'zagreb',
@@ -931,7 +931,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 800000,
     exterminationTarget: 800000,
-    mapCoords: { x: 74.2, y: 51.2 }
+    mapCoords: { x: 61.7, y: 62.4 }
   },
   {
     id: 'sarajevo',
@@ -956,7 +956,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 350000,
     exterminationTarget: 350000,
-    mapCoords: { x: 77.8, y: 56.8 }
+    mapCoords: { x: 65.3, y: 66.9 }
   },
   {
     id: 'belgrade',
@@ -981,7 +981,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 1400000,
     exterminationTarget: 1400000,
-    mapCoords: { x: 81.5, y: 55.2 }
+    mapCoords: { x: 68.3, y: 64.8 }
   },
   {
     id: 'podgorica',
@@ -1006,7 +1006,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 200000,
     exterminationTarget: 200000,
-    mapCoords: { x: 78.8, y: 61.2 }
+    mapCoords: { x: 66.6, y: 70.1 }
   },
   {
     id: 'tirana',
@@ -1031,7 +1031,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 560000,
     exterminationTarget: 560000,
-    mapCoords: { x: 80.8, y: 65.2 }
+    mapCoords: { x: 67.4, y: 72.5 }
   },
   {
     id: 'skopje',
@@ -1056,7 +1056,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 550000,
     exterminationTarget: 550000,
-    mapCoords: { x: 83.8, y: 63.5 }
+    mapCoords: { x: 69.7, y: 71.1 }
   },
   {
     id: 'sofia',
@@ -1081,7 +1081,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 1300000,
     exterminationTarget: 1300000,
-    mapCoords: { x: 86.8, y: 60.8 }
+    mapCoords: { x: 72.5, y: 69.5 }
   },
   {
     id: 'bucarest',
@@ -1106,7 +1106,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 1830000,
     exterminationTarget: 1830000,
-    mapCoords: { x: 89.2, y: 54.5 }
+    mapCoords: { x: 76.6, y: 65.7 }
   },
   {
     id: 'chisinau',
@@ -1131,7 +1131,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 530000,
     exterminationTarget: 530000,
-    mapCoords: { x: 91.8, y: 48.2 }
+    mapCoords: { x: 80.7, y: 59.6 }
   },
   {
     id: 'istanbul',
@@ -1156,7 +1156,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 15800000,
     exterminationTarget: 15800000,
-    mapCoords: { x: 93.5, y: 64 }
+    mapCoords: { x: 80.9, y: 73.2 }
   },
   {
     id: 'athenes',
@@ -1181,7 +1181,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 3150000,
     exterminationTarget: 3150000,
-    mapCoords: { x: 85.5, y: 73.8 }
+    mapCoords: { x: 73.1, y: 79.6 }
   },
   {
     id: 'crete',
@@ -1206,7 +1206,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 630000,
     exterminationTarget: 630000,
-    mapCoords: { x: 87.8, y: 83.2 }
+    mapCoords: { x: 75.2, y: 85 }
   },
   {
     id: 'nicosie',
@@ -1231,7 +1231,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 330000,
     exterminationTarget: 330000,
-    mapCoords: { x: 97.2, y: 81.5 }
+    mapCoords: { x: 87.3, y: 85.3 }
   },
   {
     id: 'venise',
@@ -1256,7 +1256,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 260000,
     exterminationTarget: 260000,
-    mapCoords: { x: 69.8, y: 50 }
+    mapCoords: { x: 56.3, y: 63.3 }
   },
   {
     id: 'milan',
@@ -1281,7 +1281,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 1370000,
     exterminationTarget: 1370000,
-    mapCoords: { x: 64.2, y: 49.3 }
+    mapCoords: { x: 51.7, y: 63.3 }
   },
   {
     id: 'rome',
@@ -1306,7 +1306,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 2870000,
     exterminationTarget: 2870000,
-    mapCoords: { x: 73.6, y: 62.5 }
+    mapCoords: { x: 56.6, y: 71.3 }
   },
   {
     id: 'napoli',
@@ -1331,7 +1331,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 960000,
     exterminationTarget: 960000,
-    mapCoords: { x: 79.2, y: 67.6 }
+    mapCoords: { x: 59.2, y: 73.6 }
   },
   {
     id: 'nice',
@@ -1356,7 +1356,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 340000,
     exterminationTarget: 340000,
-    mapCoords: { x: 61.8, y: 60.5 }
+    mapCoords: { x: 48.9, y: 67.3 }
   },
   {
     id: 'marseille',
@@ -1381,7 +1381,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 870000,
     exterminationTarget: 870000,
-    mapCoords: { x: 55.2, y: 61.8 }
+    mapCoords: { x: 46.1, y: 68.2 }
   },
   {
     id: 'barcelone',
@@ -1406,7 +1406,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 1630000,
     exterminationTarget: 1630000,
-    mapCoords: { x: 48.1, y: 65.2 }
+    mapCoords: { x: 41.4, y: 72.4 }
   },
   {
     id: 'saragosse',
@@ -1431,7 +1431,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 680000,
     exterminationTarget: 680000,
-    mapCoords: { x: 33.5, y: 64.2 }
+    mapCoords: { x: 36.9, y: 71.8 }
   },
   {
     id: 'madrid',
@@ -1456,7 +1456,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 3220000,
     exterminationTarget: 3220000,
-    mapCoords: { x: 27.8, y: 69.9 }
+    mapCoords: { x: 32.8, y: 74.5 }
   },
   {
     id: 'seville',
@@ -1481,7 +1481,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 690000,
     exterminationTarget: 690000,
-    mapCoords: { x: 17.9, y: 80.7 }
+    mapCoords: { x: 29.4, y: 80.9 }
   },
   {
     id: 'lisbonne',
@@ -1506,7 +1506,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 545000,
     exterminationTarget: 545000,
-    mapCoords: { x: 8.5, y: 74 }
+    mapCoords: { x: 24.8, y: 78.1 }
   },
   {
     id: 'casablanca',
@@ -1531,7 +1531,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 3750000,
     exterminationTarget: 3750000,
-    mapCoords: { x: 15.1, y: 89.2 }
+    mapCoords: { x: 27.1, y: 88.5 }
   },
   {
     id: 'alger',
@@ -1556,7 +1556,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 2980000,
     exterminationTarget: 2980000,
-    mapCoords: { x: 40.6, y: 82.1 }
+    mapCoords: { x: 42.7, y: 82.2 }
   },
   {
     id: 'annaba',
@@ -1581,7 +1581,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 460000,
     exterminationTarget: 460000,
-    mapCoords: { x: 61.3, y: 80.7 }
+    mapCoords: { x: 49.7, y: 81.9 }
   },
   {
     id: 'tunis',
@@ -1606,7 +1606,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 1070000,
     exterminationTarget: 1070000,
-    mapCoords: { x: 69.3, y: 80.4 }
+    mapCoords: { x: 53.2, y: 82 }
   },
   {
     id: 'tripoli',
@@ -1631,7 +1631,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 1150000,
     exterminationTarget: 1150000,
-    mapCoords: { x: 73.8, y: 89.2 }
+    mapCoords: { x: 57.6, y: 89.8 }
   },
   {
     id: 'benghazi',
@@ -1656,7 +1656,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 650000,
     exterminationTarget: 650000,
-    mapCoords: { x: 84.5, y: 91.8 }
+    mapCoords: { x: 67.7, y: 91.3 }
   },
   {
     id: 'le_caire',
@@ -1681,7 +1681,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 10000000,
     exterminationTarget: 10000000,
-    mapCoords: { x: 95.8, y: 94.8 }
+    mapCoords: { x: 84.2, y: 95.3 }
   }
 ];
 
@@ -2002,8 +2002,11 @@ export class GameState {
     this.isNitroActive = false;
     this.nitroTimer = 0;
     this.energyDrinkCans = 2; // Stock limité de 2 canettes pour la course (cheval / à pied)
-    this.nitroDuration = 5.0;
-    this.energyDrinkCans = 2; // Stock de canettes Energy Drink (cheval / à pied) : pas dispo tout le temps
+    this.isRuinsMode = this.isRuinsMode || !!this.selectedCity?.isRuinsMode || (this.selectedCity?.id ? storage.isCityExterminated(this.selectedCity.id) : false);
+    this.nitroDuration = 5.0; // Durée nitro standard
+
+
+
 
     // Mission Nucléaire : Approche Centrale, Explosion & Fuite Éperdue
     this.nuclearPhase = null; // 'APPROACH', 'ESCAPE', 'ESCAPED'
@@ -2071,6 +2074,7 @@ export class GameState {
     this.isNitroActive = false;
     this.nitroTimer = 0;
     this.energyDrinkCans = 2; // Stock limité de 2 canettes pour la course (cheval / à pied)
+    this.isRuinsMode = this.isRuinsMode || !!this.selectedCity?.isRuinsMode || (this.selectedCity?.id ? storage.isCityExterminated(this.selectedCity.id) : false);
 
     // Gestion des Cataclysmes & Modes d'Extermination Worldmageddon
     this.disasterType = this.selectedCity?.disasterType || (this.selectedCity?.isNuclearMission ? 'NUCLEAR' : (this.selectedCity?.isDamMission ? 'DAM' : (this.selectedCity?.isMountainMission ? 'MOUNTAIN' : 'STREET')));

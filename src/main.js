@@ -123,8 +123,18 @@ class GameApp {
   }
 
   setupCity(cityDef) {
+    if (gameState.isRuinsMode) {
+      this.engine.applyRuinsAtmosphere();
+      this.environment.setCity(cityDef, null, true);
+      this.characters.reset();
+      if (this.traffic) this.traffic.reset();
+      if (this.projectiles) this.projectiles.reset();
+      this.intersections.reset();
+      return;
+    }
+
     this.engine.applyCityAtmosphere(cityDef);
-    this.environment.setCity(cityDef);
+    this.environment.setCity(cityDef, null, false);
     this.characters.reset();
     if (this.traffic) this.traffic.reset();
     if (this.projectiles) this.projectiles.reset();
@@ -235,16 +245,31 @@ class GameApp {
         if (this.intersections) this.intersections.reset();
         if (this.particles) this.particles.reset();
 
-        // MODE NUIT ALÉATOIRE (~35% des runs) : bascule l'ambiance 3D après
-        // l'atmosphère de la ville — phares, réverbères et fenêtres en vedette
-        this.isNightRun = Math.random() < 0.35;
-        this.engine.applyNightAtmosphere(this.isNightRun);
-        if (this.traffic && this.traffic.setNightMode) this.traffic.setNightMode(this.isNightRun);
-        if (this.isNightRun && this.ui) {
-          this.ui.showToastUnlock({ name: '🌙 COURSE DE NUIT — PLEINS PHARES !' });
+        if (gameState.isRuinsMode) {
+          soundManager.stopMusic();
+          soundManager.playGeigerClick();
+          if (this.ui) {
+            this.ui.showToastUnlock({ name: '☢️ EXPLORATION DES RUINES — ZONE CONDAMNÉE' });
+          }
+        } else {
+          // MODE NUIT ALÉATOIRE (~35% des runs) : bascule l'ambiance 3D après
+          // l'atmosphère de la ville — phares, réverbères et fenêtres en vedette
+          this.isNightRun = Math.random() < 0.35;
+          this.engine.applyNightAtmosphere(this.isNightRun);
+          if (this.traffic && this.traffic.setNightMode) this.traffic.setNightMode(this.isNightRun);
+          if (this.isNightRun && this.ui) {
+            this.ui.showToastUnlock({ name: '🌙 COURSE DE NUIT — PLEINS PHARES !' });
+          }
         }
 
         gameState.startRun();
+      } else if (action === 'EXIT_RUINS' || action === 'RETURN_MAP') {
+        gameState.isRuinsMode = false;
+        gameState.currentMode = 'MAP';
+        soundManager.stopEngine();
+        if (storage.data.settings.music) soundManager.startMusic('MENU');
+        this.setupCity(gameState.selectedCity);
+        this.ui.render();
       } else if (action === 'PAUSE') {
         gameState.currentMode = 'PAUSED';
         soundManager.stopEngine();
@@ -624,95 +649,109 @@ class GameApp {
       // 7. Génération et recyclage du monde 3D
       this.environment.update(this.bike.z, delta);
 
-      // 8. Gestion des piétons (Trottoirs & Passages Piétons), collisions burlesques et frôlements (near-miss)
-      this.characters.update(
-        delta,
-        this.bike.z,
-        this.bike.mesh.position.x,
-        currentSpeed,
-        (hitChar) => {
-          // Si le joueur est en vol (Aero-Jet à 38m) ou invulnérable, aucun choc direct au sol
-          if (isFlyingCraft || this.bike.isInvulnerable()) return;
-
-          // Calcul des bonus de position (Trottoir ou Passage piéton)
-          let bonusPts = hitChar.typeDef.points;
-          let categoryLabel = hitChar.typeDef.type;
-          if (hitChar.isOnSidewalk) {
-            bonusPts += 200;
-            categoryLabel = 'TROTTOIR_CARNAGE';
-          } else if (hitChar.isCrossing) {
-            bonusPts += 250;
-            categoryLabel = 'PASSAGE_PIETON';
-          }
-
-          // Impact cartoon équilibré !
-          this.engine.triggerCameraShake(0.38);
-          this.particles.spawnComicBurst(hitChar.group.position, bonusPts, gameState.combo);
-          this.particles.spawnBloodBurst(hitChar.group.position);
-          if (this.ui) {
-            this.ui.triggerPedestrianCarnageFlash();
-            const subLabel = hitChar.isOnSidewalk ? 'TROTTOIR !' : (hitChar.isCrossing ? 'PASSAGE CLOUTÉ !' : 'STRIKE !');
-            this.ui.spawnFloatingCombatText(`+${bonusPts}`, subLabel, '#ff4757', 50, 42);
-          }
-          Haptic.impactLight();
-          gameState.recordKill(bonusPts, categoryLabel, hitChar.typeDef.category);
-
-          // Si série de carnages ou choc sur piéton, dépêcher l'ambulance d'urgence !
-          if (this.traffic && (gameState.combo >= 2 || Math.random() < 0.4)) {
-            this.traffic.spawnEmergencyAmbulance(this.bike.z, (z) => this.environment.getRoadCenterX(z));
-          }
-        },
-        (z) => this.environment.getRoadCenterX(z),
-        (nearChar) => {
-          // Frôlement / Near-Miss à pleine vitesse (ignoré en plein vol dans le ciel)
-          if (isFlyingCraft || this.bike.isInvulnerable()) return;
-          gameState.addNearMiss();
-          this.particles.spawnComicBurst(nearChar.group.position, 75, gameState.combo);
-          if (this.ui) this.ui.spawnFloatingCombatText('+75', 'FRÔLEMENT !', '#ffd32a', 45, 55);
-          Haptic.tap();
-        },
-        this.bike.isInvulnerable()
-      );
-
-      // 8b. Circulation routière (Véhicules, Taxis, Fourgons, Autobus)
-      if (this.traffic) {
-        this.traffic.update(
+      // 8. Ambiance Spécifique Ruines ou Gameplay Vivant Normal
+      if (gameState.isRuinsMode) {
+        // En mode Ruines : Cité anéantie sans survivant, pas de piétons vivants ni de trafic
+        if (Math.random() < 0.03) soundManager.playGeigerClick();
+        if (Math.random() < 0.28 && this.particles) {
+          const sparkPos = new THREE.Vector3(
+            this.bike.x + (Math.random() - 0.5) * 16,
+            Math.random() * 3.5 + 0.4,
+            this.bike.z + (Math.random() - 0.5) * 22
+          );
+          this.particles.spawnSpark(sparkPos, Math.random() < 0.35 ? 0xff4757 : 0x7f8c8d);
+        }
+      } else {
+        // 8a. Gestion des piétons (Trottoirs & Passages Piétons), collisions burlesques et frôlements (near-miss)
+        this.characters.update(
           delta,
           this.bike.z,
           this.bike.mesh.position.x,
           currentSpeed,
-          (z) => this.environment.getRoadCenterX(z),
-          (car, isPlayerInvuln) => {
-            if (isFlyingCraft) return; // En vol dans les airs, la circulation au sol ne heurte pas le jet
-            if (isPlayerInvuln || gameState.isNitroActive || this.bike.currentBikeId === 'rouleau' || this.bike.currentBikeId === 'tank') {
-              // Carambolage royal ! La voiture vole en éclats
-              this.engine.triggerCameraShake(0.65);
-              soundManager.playCrash();
-              this.particles.spawnCrashBurst(car.position);
-              gameState.score += 500;
-              gameState.recordKill(500, 'CARAMBOLAGE', 'car');
-              this.particles.spawnComicBurst(car.position, 500, gameState.combo);
-              if (this.ui) this.ui.spawnFloatingCombatText('+500', 'WRECKAGE !', '#ffa502', 50, 40);
-              Haptic.impactHeavy();
-            } else {
-              // Collision avec un véhicule de circulation
-              const crashed = this.bike.triggerCrash();
-              if (crashed) {
-                this.engine.triggerCameraShake(0.75);
-                soundManager.playCrash();
-                soundManager.playPenaltyBuzzer();
-                this.particles.spawnCrashBurst(this.bike.mesh.position);
-                gameState.applyVehicleCrashPenalty(300);
-                if (this.ui) {
-                  this.ui.triggerCrashPenaltyUI(300);
-                  this.ui.spawnFloatingCombatText('-300', 'CRASH !', '#eb4d4b', 50, 35);
-                }
-                Haptic.impactHeavy();
-              }
+          (hitChar) => {
+            // Si le joueur est en vol (Aero-Jet à 38m) ou invulnérable, aucun choc direct au sol
+            if (isFlyingCraft || this.bike.isInvulnerable()) return;
+
+            // Calcul des bonus de position (Trottoir ou Passage piéton)
+            let bonusPts = hitChar.typeDef.points;
+            let categoryLabel = hitChar.typeDef.type;
+            if (hitChar.isOnSidewalk) {
+              bonusPts += 200;
+              categoryLabel = 'TROTTOIR_CARNAGE';
+            } else if (hitChar.isCrossing) {
+              bonusPts += 250;
+              categoryLabel = 'PASSAGE_PIETON';
             }
+
+            // Impact cartoon équilibré !
+            this.engine.triggerCameraShake(0.38);
+            this.particles.spawnComicBurst(hitChar.group.position, bonusPts, gameState.combo);
+            this.particles.spawnBloodBurst(hitChar.group.position);
+            if (this.ui) {
+              this.ui.triggerPedestrianCarnageFlash();
+              const subLabel = hitChar.isOnSidewalk ? 'TROTTOIR !' : (hitChar.isCrossing ? 'PASSAGE CLOUTÉ !' : 'STRIKE !');
+              this.ui.spawnFloatingCombatText(`+${bonusPts}`, subLabel, '#ff4757', 50, 42);
+            }
+            Haptic.impactLight();
+            gameState.recordKill(bonusPts, categoryLabel, hitChar.typeDef.category);
+
+            // Si série de carnages ou choc sur piéton, dépêcher l'ambulance d'urgence !
+            if (this.traffic && (gameState.combo >= 2 || Math.random() < 0.4)) {
+              this.traffic.spawnEmergencyAmbulance(this.bike.z, (z) => this.environment.getRoadCenterX(z));
+            }
+          },
+          (z) => this.environment.getRoadCenterX(z),
+          (nearChar) => {
+            // Frôlement / Near-Miss à pleine vitesse (ignoré en plein vol dans le ciel)
+            if (isFlyingCraft || this.bike.isInvulnerable()) return;
+            gameState.addNearMiss();
+            this.particles.spawnComicBurst(nearChar.group.position, 75, gameState.combo);
+            if (this.ui) this.ui.spawnFloatingCombatText('+75', 'FRÔLEMENT !', '#ffd32a', 45, 55);
+            Haptic.tap();
           },
           this.bike.isInvulnerable()
         );
+
+        // 8b. Circulation routière (Véhicules, Taxis, Fourgons, Autobus)
+        if (this.traffic) {
+          this.traffic.update(
+            delta,
+            this.bike.z,
+            this.bike.mesh.position.x,
+            currentSpeed,
+            (z) => this.environment.getRoadCenterX(z),
+            (car, isPlayerInvuln) => {
+              if (isFlyingCraft) return; // En vol dans les airs, la circulation au sol ne heurte pas le jet
+              if (isPlayerInvuln || gameState.isNitroActive || this.bike.currentBikeId === 'rouleau' || this.bike.currentBikeId === 'tank') {
+                // Carambolage royal ! La voiture vole en éclats
+                this.engine.triggerCameraShake(0.65);
+                soundManager.playCrash();
+                this.particles.spawnCrashBurst(car.position);
+                gameState.score += 500;
+                gameState.recordKill(500, 'CARAMBOLAGE', 'car');
+                this.particles.spawnComicBurst(car.position, 500, gameState.combo);
+                if (this.ui) this.ui.spawnFloatingCombatText('+500', 'WRECKAGE !', '#ffa502', 50, 40);
+                Haptic.impactHeavy();
+              } else {
+                // Collision avec un véhicule de circulation
+                const crashed = this.bike.triggerCrash();
+                if (crashed) {
+                  this.engine.triggerCameraShake(0.75);
+                  soundManager.playCrash();
+                  soundManager.playPenaltyBuzzer();
+                  this.particles.spawnCrashBurst(this.bike.mesh.position);
+                  gameState.applyVehicleCrashPenalty(300);
+                  if (this.ui) {
+                    this.ui.triggerCrashPenaltyUI(300);
+                    this.ui.spawnFloatingCombatText('-300', 'CRASH !', '#eb4d4b', 50, 35);
+                  }
+                  Haptic.impactHeavy();
+                }
+              }
+            },
+            this.bike.isInvulnerable()
+          );
+        }
       }
 
       // 8c. Détection d'impact des balles traçantes (Tir AK-47 & Armes à feu)

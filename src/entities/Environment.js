@@ -65,6 +65,30 @@ export class Environment {
   }
 
   initSharedMaterials(cityDef) {
+    if (this.isRuinsMode) {
+      const roadMat = new THREE.MeshStandardMaterial({ color: 0x141418, roughness: 0.95, metalness: 0.05 });
+      const sidewalkMat = new THREE.MeshStandardMaterial({ color: 0x221a16, roughness: 0.95, metalness: 0.05 });
+      const curbMat = new THREE.MeshStandardMaterial({ color: 0x2e2522, roughness: 0.9 });
+      const stripeMat = new THREE.MeshStandardMaterial({ color: 0x3d3835, roughness: 0.95, opacity: 0.35, transparent: true });
+
+      this.sharedMats = {
+        road: roadMat,
+        sidewalk: sidewalkMat,
+        curb: curbMat,
+        stripe: stripeMat,
+        mast: new THREE.MeshStandardMaterial({ color: 0x1a1a1d, roughness: 0.85 }),
+        roof: new THREE.MeshToonMaterial({ color: 0x121214, gradientMap: textureFactory.getToonGradientMap() }),
+        buildingPalette: [0x161618, 0x202023, 0x1b1312, 0x271d1a, 0x2f2420, 0x111113].map(c =>
+          new THREE.MeshToonMaterial({ color: c, gradientMap: textureFactory.getToonGradientMap() })
+        ),
+        rubbleMat: new THREE.MeshStandardMaterial({ color: 0x2d2d30, roughness: 0.95 }),
+        wreckMat: new THREE.MeshStandardMaterial({ color: 0x121214, roughness: 0.92, metalness: 0.35 }),
+        craterRimMat: new THREE.MeshStandardMaterial({ color: 0x0a0a0c, roughness: 0.98 }),
+        craterMagmaMat: new THREE.MeshBasicMaterial({ color: 0xff3838 })
+      };
+      return;
+    }
+
     let roadMat, sidewalkMat, curbMat, stripeMat;
 
     // Toutes les étapes sont des villes authentiques avec routes en bitume haute fidélité
@@ -156,7 +180,8 @@ export class Environment {
     };
   }
 
-  setCity(cityDef, finishDistance = null) {
+  setCity(cityDef, finishDistance = null, isRuins = false) {
+    this.isRuinsMode = !!isRuins || !!cityDef.isRuinsMode;
     this.cityTheme = cityDef;
     this.disasterType = cityDef.disasterType || (cityDef.isNuclearMission ? 'NUCLEAR' : (cityDef.isDamMission ? 'DAM' : (cityDef.isMountainMission ? 'MOUNTAIN' : 'STREET')));
     this.isCataclysmMission = this.disasterType !== 'STREET';
@@ -1349,6 +1374,11 @@ export class Environment {
   }
 
   populateBuildings(chunk, side) {
+    if (this.isRuinsMode) {
+      this.populateRuinsBuildings(chunk, side);
+      return;
+    }
+
     const xBase = side * 8.5;
     let currentZ = -this.chunkLength / 2;
 
@@ -1438,7 +1468,109 @@ export class Environment {
     }
   }
 
+  populateRuinsBuildings(chunk, side) {
+    const xBase = side * 8.5;
+    let currentZ = -this.chunkLength / 2;
+    const buildingPalette = this.sharedMats?.buildingPalette || [new THREE.MeshStandardMaterial({ color: 0x18181a, roughness: 0.95 })];
+    const rubbleMat = this.sharedMats?.rubbleMat || new THREE.MeshStandardMaterial({ color: 0x2d2d30, roughness: 0.95 });
+
+    while (currentZ < this.chunkLength / 2) {
+      const bWidth = 7.0 + Math.random() * 5.0;
+      const bHeight = 3.5 + Math.random() * 8.5; // Bâtiments effondrés de hauteur inégale
+      const bDepth = 9.5;
+
+      const randomMat = buildingPalette[Math.floor(Math.random() * buildingPalette.length)];
+      const bGeo = new THREE.BoxGeometry(bDepth, bHeight, bWidth);
+      const bMesh = new THREE.Mesh(bGeo, randomMat);
+
+      // Inclinaison et effondrement asymétrique réaliste
+      bMesh.rotation.z = side * (0.04 + Math.random() * 0.12);
+      bMesh.rotation.x = (Math.random() - 0.5) * 0.12;
+      bMesh.position.set(xBase + side * (bDepth / 2), bHeight / 2 - 0.2, currentZ + bWidth / 2);
+      bMesh.castShadow = true;
+      chunk.add(bMesh);
+
+      // Piles d'éboulis et blocs de béton fissurés sur le trottoir
+      for (let r = 0; r < 2; r++) {
+        const rubbleSize = 0.6 + Math.random() * 0.7;
+        const rubble = new THREE.Mesh(new THREE.BoxGeometry(rubbleSize, rubbleSize * 0.5, rubbleSize), rubbleMat);
+        rubble.position.set(xBase - side * (1.2 + Math.random() * 1.6), 0.2, currentZ + Math.random() * bWidth);
+        rubble.rotation.set(Math.random() * 2, Math.random() * 2, Math.random() * 2);
+        chunk.add(rubble);
+      }
+
+      currentZ += bWidth;
+    }
+  }
+
+  populateRuinsProps(chunk) {
+    // 1. Cratères d'impact sur la chaussée avec cœur magmatique incandescent
+    [-16, 10].forEach((z, idx) => {
+      const craterGroup = new THREE.Group();
+      const craterX = (idx % 2 === 0 ? -1.6 : 1.6) + (Math.random() - 0.5) * 1.0;
+      craterGroup.position.set(craterX, 0.015, z);
+
+      const rim = new THREE.Mesh(new THREE.RingGeometry(0.8, 1.7, 12), this.sharedMats?.craterRimMat || new THREE.MeshStandardMaterial({ color: 0x0a0a0c, roughness: 0.98 }));
+      rim.rotation.x = -Math.PI / 2;
+      craterGroup.add(rim);
+
+      const core = new THREE.Mesh(new THREE.CircleGeometry(0.8, 12), this.sharedMats?.craterMagmaMat || new THREE.MeshBasicMaterial({ color: 0xff3838 }));
+      core.rotation.x = -Math.PI / 2;
+      core.position.y = 0.005;
+      craterGroup.add(core);
+
+      chunk.add(craterGroup);
+    });
+
+    // 2. Épaves calcinées et renversées
+    [-22, 14].forEach((z, idx) => {
+      const side = (idx % 2 === 0 ? 1 : -1);
+      const wreckGroup = new THREE.Group();
+      wreckGroup.position.set(side * 4.5, 0.35, z);
+      wreckGroup.rotation.z = side * (0.35 + Math.random() * 0.4);
+      wreckGroup.rotation.y = (Math.random() - 0.5) * 0.8;
+
+      const wreckMat = this.sharedMats?.wreckMat || new THREE.MeshStandardMaterial({ color: 0x121214, roughness: 0.92, metalness: 0.35 });
+      const chassis = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.65, 3.2), wreckMat);
+      wreckGroup.add(chassis);
+
+      const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.45, 1.5), wreckMat);
+      cabin.position.set(0, 0.45, -0.2);
+      wreckGroup.add(cabin);
+
+      const wheelGeo = new THREE.CylinderGeometry(0.28, 0.28, 0.18, 8);
+      const wheelMat = new THREE.MeshStandardMaterial({ color: 0x08080a, roughness: 0.95 });
+      [-0.8, 0.8].forEach(wx => {
+        [-0.9, 0.9].forEach(wz => {
+          const wheel = new THREE.Mesh(wheelGeo, wheelMat);
+          wheel.rotation.z = Math.PI / 2;
+          wheel.position.set(wx, -0.15, wz);
+          wreckGroup.add(wheel);
+        });
+      });
+
+      chunk.add(wreckGroup);
+    });
+
+    // 3. Mâts et lampadaires tordus
+    [-6].forEach(z => {
+      const lampGroup = new THREE.Group();
+      lampGroup.position.set(-4.5, 0, z);
+      lampGroup.rotation.z = -0.52;
+      lampGroup.rotation.y = 0.25;
+      const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.08, 3.8, 6), this.sharedMats?.mast || new THREE.MeshStandardMaterial({ color: 0x1a1a1d, roughness: 0.85 }));
+      mast.position.y = 1.9;
+      lampGroup.add(mast);
+      chunk.add(lampGroup);
+    });
+  }
+
   populateStreetProps(chunk) {
+    if (this.isRuinsMode) {
+      this.populateRuinsProps(chunk);
+      return;
+    }
+
     if (this.isDamMission) {
       // --- ACCESSOIRES FLUVIAUX : BOUÉES DE NAVIGATION JAUNES & BALISES ---
       const buoyMat = new THREE.MeshStandardMaterial({ color: 0xf39c12, roughness: 0.4 });

@@ -26,6 +26,7 @@ const DEFAULT_SAVE = {
     bordeaux: { bestScore: 0, stars: 0, completed: false },
     strasbourg: { bestScore: 0, stars: 0, completed: false }
   },
+  cityDestruction: {},
   exterminatedCities: [],
   unlockedBikes: ['tank', 'aero_jet', 'hovercraft', 'rad_rover', 'snowmobile', 'scooter', 'chopper', 'decapotable', 'trottinette_hache', 'cheval', 'run_ak47', 'run_chainsaw', 'rouleau', 'dragster'],
   equippedBike: 'tank',
@@ -102,6 +103,7 @@ export class Storage {
           unlockedCities: Array.from(new Set([...DEFAULT_SAVE.unlockedCities, ...(parsed.unlockedCities || [])])),
           unlockedBikes: Array.from(new Set([...DEFAULT_SAVE.unlockedBikes, ...(parsed.unlockedBikes || [])])),
           exterminatedCities: Array.from(new Set(parsed.exterminatedCities || [])),
+          cityDestruction: { ...DEFAULT_SAVE.cityDestruction, ...(parsed.cityDestruction || {}) },
           cityScores: { ...DEFAULT_SAVE.cityScores, ...(parsed.cityScores || {}) },
           bikeColors: { ...DEFAULT_SAVE.bikeColors, ...(parsed.bikeColors || {}) },
           settings: { ...DEFAULT_SAVE.settings, ...(parsed.settings || {}) },
@@ -144,7 +146,36 @@ export class Storage {
 
   isCityExterminated(cityId) {
     if (!cityId) return false;
-    return Array.isArray(this.data.exterminatedCities) && this.data.exterminatedCities.includes(cityId);
+    return (Array.isArray(this.data.exterminatedCities) && this.data.exterminatedCities.includes(cityId)) ||
+           (this.data.cityDestruction && (this.data.cityDestruction[cityId] >= 100));
+  }
+
+  getCityDestruction(cityId) {
+    if (!cityId) return 0;
+    if (this.isCityExterminated(cityId)) return 100;
+    if (!this.data.cityDestruction) this.data.cityDestruction = {};
+    return Math.min(100, Math.max(0, this.data.cityDestruction[cityId] || 0));
+  }
+
+  addCityDestruction(cityId, percentToAdd = 25, victimCount = 0) {
+    if (!cityId) return { previousPct: 0, newPct: 0, isNowExterminated: false };
+    if (!this.data.cityDestruction) this.data.cityDestruction = {};
+    
+    const prev = this.getCityDestruction(cityId);
+    const newPct = Math.min(100, Math.round(prev + percentToAdd));
+    this.data.cityDestruction[cityId] = newPct;
+
+    const isNowExterminated = newPct >= 100;
+    if (isNowExterminated) {
+      this.markCityExterminated(cityId, victimCount);
+    } else {
+      if (victimCount > 0) {
+        this.recordCataclysmKill(victimCount, 'WMD');
+      }
+      this.save();
+    }
+
+    return { previousPct: prev, newPct, isNowExterminated };
   }
 
   markCityExterminated(cityId, victims = 1500000) {

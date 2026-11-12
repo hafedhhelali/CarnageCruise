@@ -191,10 +191,34 @@ export class Engine {
     }
     if (this.dirLight) {
       this.dirLight.color = new THREE.Color(0xfffaed);
+      this.dirLight.intensity = 1.0;
     }
     if (this.rimLight) {
       this.rimLight.color = new THREE.Color(cityDef.accentColor || 0x00cec9);
       this.rimLight.intensity = cityDef.isNuclearMission ? 0.75 : 0.45;
+    }
+  }
+
+  applyRuinsAtmosphere() {
+    const ruinsSky = 0x120302;
+    const ruinsFog = 0x1a0604;
+    this.scene.background = new THREE.Color(ruinsSky);
+    this.scene.fog.color = new THREE.Color(ruinsFog);
+    this.scene.fog.density = 0.016;
+    if (this.skyDome) {
+      this.skyDome.setColors(ruinsSky, ruinsFog);
+    }
+    if (this.hemiLight) {
+      this.hemiLight.color = new THREE.Color(0x400c08);
+      this.hemiLight.groundColor = new THREE.Color(0x100201);
+    }
+    if (this.dirLight) {
+      this.dirLight.color = new THREE.Color(0xff3311);
+      this.dirLight.intensity = 1.45;
+    }
+    if (this.rimLight) {
+      this.rimLight.color = new THREE.Color(0xff4757);
+      this.rimLight.intensity = 0.95;
     }
   }
 

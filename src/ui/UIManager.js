@@ -11,7 +11,7 @@ import { dailyMissions, loginStreak } from '../core/DailyMissions.js';
 import { soundManager } from '../audio/SoundManager.js';
 import { App } from '@capacitor/app';
 import { FULL_VERSION, APP_VERSION, COPYRIGHT_NOTICE, RELEASE_NAME, IS_BETA } from '../core/Version.js';
-import { REAL_COUNTRY_PATHS, REAL_TOUR_ROUTE_PATH } from './EuropeMapData.js';
+import { REAL_COUNTRY_PATHS } from './EuropeMapData.js';
 import { adManager } from '../services/AdManager.js';
 import { cookieConsentManager } from '../services/CookieConsentManager.js';
 import { tycoonManager, TYCOON_BUILDINGS, RESEARCH_NODES } from '../core/TycoonManager.js';
@@ -453,7 +453,7 @@ export class UIManager {
         </div>
 
         <div class="europe-map-canvas-container" id="europe-canvas">
-          <svg class="europe-svg" viewBox="0 -320 1060 1480" preserveAspectRatio="none">
+          <svg class="europe-svg" viewBox="0 0 1200 1100">
             <defs>
               <!-- Dégradé de relief européen : Verts luxuriants, ocres et sommets -->
               <linearGradient id="franceLuxury" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -476,99 +476,43 @@ export class UIManager {
                 <stop offset="100%" stop-color="#03080e" />
               </radialGradient>
 
-              <!-- Dégradé Méditerranée Bleu Saphir Lumineux -->
-              <linearGradient id="mediterraneanGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#006266" />
-                <stop offset="50%" stop-color="#1289a7" />
-                <stop offset="100%" stop-color="#0652dd" />
-              </linearGradient>
-
-              <!-- Filtre néon doré éclatant pour le tracé du Tour -->
-              <filter id="glowTourRoute" x="-20%" y="-20%" width="140%" height="140%">
-                <feGaussianBlur stdDeviation="3.5" result="blur" />
-                <feMerge>
-                  <feMergeNode in="blur" />
-                  <feMergeNode in="SourceGraphic" />
-                </feMerge>
-              </filter>
-
               <!-- Halo côtier turquoise -->
               <filter id="coastalGlow" x="-10%" y="-10%" width="120%" height="120%">
-                <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#00cec9" flood-opacity="0.35" />
+                <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#00cec9" flood-opacity="0.35" />
               </filter>
             </defs>
 
             <!-- Fond Océanique / Mers Européennes & Méditerranée -->
             <rect width="100%" height="100%" fill="url(#oceanShading)" />
 
-            <!-- Rides marines de l'Atlantique, Manche et Méditerranée -->
-            <path d="M 60 480 Q 95 470 130 480 T 200 480" fill="none" stroke="#00cec9" stroke-width="1.4" opacity="0.25" />
-            <path d="M 120 220 Q 155 210 190 220 T 260 220" fill="none" stroke="#00cec9" stroke-width="1.4" opacity="0.25" />
-            <path d="M 520 740 Q 555 730 590 740 T 660 740" fill="none" stroke="#00cec9" stroke-width="1.4" opacity="0.25" />
-            <path d="M 480 840 Q 520 830 570 840 T 660 840" fill="none" stroke="#00d2d3" stroke-width="1.6" opacity="0.3" />
-            <path d="M 380 890 Q 430 880 480 890 T 580 890" fill="none" stroke="#00d2d3" stroke-width="1.6" opacity="0.3" />
+            <!-- ================= GÉOGRAPHIE RÉALISTE DE TOUTE L'EUROPE & BASSIN MÉDITERRANÉEN (50 PAYS SIG 50M) ================= -->
+            ${Object.entries(REAL_COUNTRY_PATHS).map(([code, country]) => {
+              const isFrance = code === 'FRA';
+              const isMaghreb = (code === 'MAR' || code === 'DZA' || code === 'TUN' || code === 'LBY' || code === 'EGY');
+              const strokeColor = isFrance ? '#00cec9' : (isMaghreb ? '#e67e22' : '#2ed573');
+              const strokeW = isFrance ? '2.4' : '1.1';
+              return `
+                <path class="country-${code.toLowerCase()} ${isFrance ? 'france-mainland' : 'neighbor-country'}"
+                      d="${country.d}"
+                      fill="${isFrance ? 'url(#franceLuxury)' : 'url(#neighborCountryGrad)'}"
+                      stroke="${strokeColor}"
+                      stroke-width="${strokeW}"
+                      opacity="${isFrance ? '1.0' : '0.88'}"
+                      filter="url(#coastalGlow)" />
+              `;
+            }).join('')}
 
-            <!-- Rose des sables / Boussole nautique d'époque dans l'Atlantique -->
-            <g transform="translate(110, 410) scale(0.9)" opacity="0.6">
-              <circle cx="0" cy="0" r="34" fill="none" stroke="#ffd700" stroke-width="1.4" stroke-dasharray="4,4" />
-              <polygon points="0,-42 8,-10 0,0 -8,-10" fill="#ffd700" />
-              <polygon points="0,42 8,10 0,0 -8,10" fill="#e17055" />
-              <polygon points="42,0 10,8 0,0 10,-8" fill="#a4b0be" />
-              <polygon points="-42,0 -10,8 0,0 -10,-8" fill="#a4b0be" />
-              <text x="-5" y="-48" fill="#ffd700" font-size="12" font-weight="900">N</text>
-            </g>
-
-            <!-- ================= GÉOGRAPHIE RÉALISTE DE L'EUROPE & BASSIN MÉDITERRANÉEN (100% SIG RÉELLE) ================= -->
-
-            <!-- 1. ROYAUME-UNI 🇬🇧 & IRLANDE 🇮🇪 -->
-            <path class="country-ireland" filter="url(#coastalGlow)" d="${REAL_COUNTRY_PATHS.IRL.d}" fill="url(#neighborCountryGrad)" stroke="#2ed573" stroke-width="1.8" opacity="0.8" />
-            <path class="country-uk" filter="url(#coastalGlow)" d="${REAL_COUNTRY_PATHS.GBR.d}" fill="url(#neighborCountryGrad)" stroke="#38ada9" stroke-width="2.2" />
-            <text x="90" y="10" fill="#2ed573" font-size="12" font-weight="900" letter-spacing="1">IRLANDE 🇮🇪</text>
-            <text x="290" y="20" fill="#74b9ff" font-size="13" font-weight="900" letter-spacing="1.2">ROYAUME-UNI 🇬🇧</text>
-
-            <!-- 2. BENELUX (BELGIQUE 🇧🇪 & PAYS-BAS 🇳🇱) -->
-            <path class="country-netherlands" filter="url(#coastalGlow)" d="${REAL_COUNTRY_PATHS.NLD.d}" fill="url(#neighborCountryGrad)" stroke="#38ada9" stroke-width="1.8" />
-            <path class="country-benelux" filter="url(#coastalGlow)" d="${REAL_COUNTRY_PATHS.BEL.d}" fill="url(#neighborCountryGrad)" stroke="#38ada9" stroke-width="2.2" />
-            <text x="510" y="160" fill="#74b9ff" font-size="12" font-weight="900" letter-spacing="1">BELGIQUE 🇧🇪</text>
-
-            <!-- 3. ALLEMAGNE 🇩🇪 -->
-            <path class="country-germany" filter="url(#coastalGlow)" d="${REAL_COUNTRY_PATHS.DEU.d}" fill="url(#neighborCountryGrad)" stroke="#2c3e50" stroke-width="2.0" />
-            <text x="720" y="180" fill="#74b9ff" font-size="13" font-weight="900" letter-spacing="1.2">ALLEMAGNE 🇩🇪</text>
-
-            <!-- 4. SUISSE 🇨🇭 -->
-            <path class="country-switzerland" filter="url(#coastalGlow)" d="${REAL_COUNTRY_PATHS.CHE.d}" fill="url(#neighborCountryGrad)" stroke="#38ada9" stroke-width="2.0" />
-            <text x="610" y="400" fill="#74b9ff" font-size="12" font-weight="900" letter-spacing="1">SUISSE 🇨🇭</text>
-
-            <!-- 5. FRANCE MÉTROPOLITAINE & CORSE (100% GÉOGRAPHIE SIG RÉELLE) 🇫🇷 -->
-            <path class="france-mainland" filter="url(#coastalGlow)" d="${REAL_COUNTRY_PATHS.FRA.d}" fill="url(#franceLuxury)" stroke="#00cec9" stroke-width="2.8" />
-            <text x="430" y="380" fill="#00cec9" font-size="18" font-weight="900" letter-spacing="3" opacity="0.5">FRANCE 🇫🇷</text>
-            <text x="690" y="620" fill="#00cec9" font-size="10" font-weight="900">CORSE 🇫🇷</text>
-
-            <!-- 6. PÉNINSULE IBÉRIQUE : PORTUGAL 🇵🇹 ET ESPAGNE 🇪🇸 -->
-            <path class="country-portugal" filter="url(#coastalGlow)" d="${REAL_COUNTRY_PATHS.PRT.d}" fill="url(#neighborCountryGrad)" stroke="#2ed573" stroke-width="2.2" />
-            <text x="80" y="760" fill="#2ed573" font-size="12" font-weight="900" letter-spacing="1.5">PORTUGAL 🇵🇹</text>
-
-            <path class="country-spain" filter="url(#coastalGlow)" d="${REAL_COUNTRY_PATHS.ESP.d}" fill="url(#neighborCountryGrad)" stroke="#e74c3c" stroke-width="2.4" />
-            <text x="260" y="760" fill="#74b9ff" font-size="15" font-weight="900" letter-spacing="2">ESPAGNE 🇪🇸</text>
-            <text x="280" y="725" fill="#ffd700" font-size="11" font-weight="900">MADRID 👑</text>
-            <text x="490" y="660" fill="#ff7675" font-size="11" font-weight="900">BARCELONE</text>
-
-            <!-- 7. ITALIE 🇮🇹 (DU NORD AU SUD, ROME, NAPLES ET SICILE) -->
-            <path class="country-italy" filter="url(#coastalGlow)" d="${REAL_COUNTRY_PATHS.ITA.d}" fill="url(#neighborCountryGrad)" stroke="#38ada9" stroke-width="2.4" />
-            <text x="770" y="520" fill="#74b9ff" font-size="14" font-weight="900" letter-spacing="1.5">ITALIE 🇮🇹</text>
-            <text x="770" y="625" fill="#ffd700" font-size="11" font-weight="900">ROME 🏛️</text>
-            <text x="830" y="705" fill="#ff7675" font-size="11" font-weight="900">NAPOLI 🌋</text>
-
-            <!-- 8. AFRIQUE DU NORD : MAROC 🇲🇦, ALGÉRIE 🇩🇿 ET TUNISIE 🇹🇳 (CÔTE SUD MÉDITERRANÉENNE) -->
-            <path class="country-morocco" filter="url(#coastalGlow)" d="${REAL_COUNTRY_PATHS.MAR.d}" fill="url(#neighborCountryGrad)" stroke="#e67e22" stroke-width="2.0" opacity="0.8" />
-            <path class="country-algeria" filter="url(#coastalGlow)" d="${REAL_COUNTRY_PATHS.DZA.d}" fill="url(#neighborCountryGrad)" stroke="#2ed573" stroke-width="2.5" />
-            <text x="410" y="990" fill="#2ed573" font-size="15" font-weight="900" letter-spacing="2">ALGÉRIE 🇩🇿 (ALGER & ANNABA)</text>
-
-            <path class="country-tunisia" filter="url(#coastalGlow)" d="${REAL_COUNTRY_PATHS.TUN.d}" fill="url(#neighborCountryGrad)" stroke="#ff4757" stroke-width="2.4" />
-            <text x="710" y="980" fill="#ff4757" font-size="14" font-weight="900" letter-spacing="2">TUNISIE 🇹🇳 (TUNIS)</text>
-
-            <!-- Mer Méditerranée -->
-            <text x="470" y="790" fill="#00cec9" font-size="14" font-weight="900" letter-spacing="4" opacity="0.45">MER MÉDITERRANÉE</text>
+            <!-- Noms Géographiques Clés -->
+            <text x="360" y="860" fill="#00cec9" font-size="16" font-weight="900" letter-spacing="4" opacity="0.45">MER MÉDITERRANÉE</text>
+            <text x="750" y="320" fill="#00cec9" font-size="14" font-weight="900" letter-spacing="3" opacity="0.4">MER BALTIQUE</text>
+            <text x="940" y="680" fill="#00cec9" font-size="14" font-weight="900" letter-spacing="3" opacity="0.4">MER NOIRE</text>
+            <text x="490" y="625" fill="#00cec9" font-size="18" font-weight="900" letter-spacing="3" opacity="0.65">FRANCE 🇫🇷</text>
+            <text x="380" y="820" fill="#74b9ff" font-size="15" font-weight="900" letter-spacing="2" opacity="0.6">ESPAGNE 🇪🇸</text>
+            <text x="660" y="770" fill="#74b9ff" font-size="14" font-weight="900" letter-spacing="2" opacity="0.6">ITALIE 🇮🇹</text>
+            <text x="590" y="520" fill="#74b9ff" font-size="14" font-weight="900" letter-spacing="2" opacity="0.6">ALLEMAGNE 🇩🇪</text>
+            <text x="430" y="470" fill="#74b9ff" font-size="13" font-weight="900" letter-spacing="1.5" opacity="0.6">ROYAUME-UNI 🇬🇧</text>
+            <text x="500" y="910" fill="#2ed573" font-size="15" font-weight="900" letter-spacing="2" opacity="0.6">ALGÉRIE 🇩🇿</text>
+            <text x="630" y="910" fill="#ff4757" font-size="14" font-weight="900" letter-spacing="2" opacity="0.6">TUNISIE 🇹🇳</text>
           </svg>
 
           <!-- Avion Voyageur Animé se déplaçant d'une ville à une autre (✈️) -->
@@ -621,8 +565,8 @@ export class UIManager {
       if (!viewportEl) return { x: targetX, y: targetY };
       const vw = viewportEl.clientWidth || 360;
       const vh = viewportEl.clientHeight || 400;
-      const effectiveW = 1060 * zoom;
-      const effectiveH = 1480 * zoom;
+      const effectiveW = 1200 * zoom;
+      const effectiveH = 1100 * zoom;
 
       let minX, maxX;
       if (effectiveW <= vw) {
@@ -663,8 +607,8 @@ export class UIManager {
       if (!city || !viewportEl) return;
       const vw = viewportEl.clientWidth || 360;
       const vh = viewportEl.clientHeight || 400;
-      const cityPxX = (city.mapCoords.x / 100) * 1060;
-      const cityPxY = (city.mapCoords.y / 100) * 1480;
+      const cityPxX = (city.mapCoords.x / 100) * 1200;
+      const cityPxY = (city.mapCoords.y / 100) * 1100;
       const targetPanX = vw / 2 - cityPxX * this.mapZoom;
       const targetPanY = vh / 2 - cityPxY * this.mapZoom;
       const clamped = clampPan(targetPanX, targetPanY, this.mapZoom);
@@ -1071,6 +1015,7 @@ export class UIManager {
 
     const unlocked = storage.isCityUnlocked(city.id);
     const isExterminated = storage.isCityExterminated(city.id);
+    const cityDestruction = storage.getCityDestruction(city.id);
     const cityData = storage.getCityData(city.id);
     const starsHtml = isExterminated ? '★★★' : ('★'.repeat(cityData.stars) + '☆'.repeat(3 - cityData.stars));
 
@@ -1083,8 +1028,8 @@ export class UIManager {
         <div class="city-nav-info">
           <div class="city-nav-top-meta">
             <span class="city-nav-step-badge">ÉTAPE ${stageIndex} / ${CITIES.length}</span>
-            <span class="city-status-pill ${isExterminated ? 'status-ext' : (unlocked ? 'status-unl' : 'status-loc')}">
-              ${isExterminated ? '☠️ SCELLÉE' : (unlocked ? '⚡ LIBRE' : '🔒 VERR.')}
+            <span class="city-status-pill ${isExterminated ? 'status-ext' : (cityDestruction > 0 ? 'status-ext' : (unlocked ? 'status-unl' : 'status-loc'))}">
+              ${isExterminated ? '☠️ CONDAMNÉE' : (cityDestruction > 0 ? `💥 DÉTRUITE ${cityDestruction}%` : (unlocked ? '⚡ LIBRE' : '🔒 VERR.'))}
             </span>
           </div>
           <div class="city-nav-title-row">
@@ -1100,8 +1045,8 @@ export class UIManager {
       <!-- 2. TÉLÉMÉTRIE ARCADE 3 PILIERS HAUTE LISIBILITÉ -->
       <div class="city-stats-grid">
         <div class="cstat-col">
-          <span class="cstat-label">🎯 OBJECTIF</span>
-          <span class="cstat-val cstat-target">${city.targetScore.toLocaleString('fr-FR')} <small>pts</small></span>
+          <span class="cstat-label">${cityDestruction > 0 ? '💥 DÉSTRUCTION' : '🎯 OBJECTIF'}</span>
+          <span class="cstat-val ${cityDestruction > 0 ? 'text-red' : 'cstat-target'}">${cityDestruction > 0 ? `${cityDestruction}%` : `${city.targetScore.toLocaleString('fr-FR')} pts`}</span>
         </div>
         <div class="cstat-col">
           <span class="cstat-label">🏆 RECORD</span>
@@ -1128,11 +1073,18 @@ export class UIManager {
       <!-- 4. DOCK D'ACTIONS PRINCIPAL ERGONOMIQUE HAUTE VISIBILITÉ -->
       <div class="city-main-actions-dock">
         ${isExterminated ? `
-          <button id="btn-inspect-ruins" class="btn-arcade btn-enter-city-hero btn-city-ruins" title="Revisiter les ruines de la métropole anéantie">
-            <span class="btn-enter-hero-icon">☢️</span>
+          <button id="btn-enter-ruins-3d" class="btn-arcade btn-enter-city-hero btn-city-ruins" title="Explorer les ruines de la métropole anéantie en 3D">
+            <span class="btn-enter-hero-icon">☠️</span>
             <div class="btn-enter-hero-texts">
-              <span class="btn-enter-hero-title">REVISITER LES RUINES DÉVASTÉES ▶</span>
-              <span class="btn-enter-hero-desc">INSPECTER LA ZONE SINISTRÉE (AUCUNE COURSE)</span>
+              <span class="btn-enter-hero-title">EXPLORER LES RUINES (3D) ▶</span>
+              <span class="btn-enter-hero-desc">VISITER LA VILLE DÉVASTÉE (0 SURVIVANT)</span>
+            </div>
+          </button>
+          <button id="btn-inspect-ruins-intel" class="btn-arcade btn-wmd-dock" title="Consulter le dossier d'extinction stratégique">
+            <span class="wmd-dock-icon">📋</span>
+            <div class="wmd-dock-texts">
+              <span class="wmd-dock-title">DOSSIER</span>
+              <span class="wmd-dock-sub">RAPPORT</span>
             </div>
           </button>
         ` : (unlocked ? `
@@ -1147,7 +1099,7 @@ export class UIManager {
             <span class="wmd-dock-icon">☢️</span>
             <div class="wmd-dock-texts">
               <span class="wmd-dock-title">FRAPPE ADM</span>
-              <span class="wmd-dock-sub">EXTERMINATION</span>
+              <span class="wmd-dock-sub">${cityDestruction > 0 ? `${cityDestruction}% DÉTRUITE` : 'TACTIQUE'}</span>
             </div>
           </button>
         ` : `
@@ -1181,13 +1133,20 @@ export class UIManager {
     }
 
     if (isExterminated) {
-      detailCard.querySelector('#btn-inspect-ruins')?.addEventListener('click', () => {
+      detailCard.querySelector('#btn-enter-ruins-3d')?.addEventListener('click', () => {
+        soundManager.playClick();
+        gameState.selectCity(city.id);
+        gameState.isRuinsMode = true;
+        this.triggerCityEntryCinematic(city);
+      });
+      detailCard.querySelector('#btn-inspect-ruins-intel')?.addEventListener('click', () => {
         this.showExterminatedCityView(city);
       });
     } else if (unlocked) {
       const launchRun = () => {
         soundManager.playClick();
         gameState.selectCity(city.id);
+        gameState.isRuinsMode = false;
         this.triggerCityEntryCinematic(city);
       };
 
@@ -1271,14 +1230,33 @@ export class UIManager {
           </div>
         </div>
 
-        <!-- Bouton Retour à la Carte -->
-        <button id="btn-close-ruins-view" class="btn-arcade btn-ruins-back">
-          <span>◀ RETOUR À LA CARTE STRATÉGIQUE</span>
-        </button>
+        <!-- Boutons d'Action : Visite 3D et Retour -->
+        <div style="display: flex; gap: 10px; width: 100%; margin-top: 14px;">
+          <button id="btn-ruins-enter-3d-modal" class="btn-arcade btn-enter-city-hero btn-city-ruins" style="flex: 1.5; margin: 0; padding: 12px 14px;">
+            <span class="btn-enter-hero-icon">☠️</span>
+            <div class="btn-enter-hero-texts">
+              <span class="btn-enter-hero-title">ENTRER DANS LES RUINES (3D) ▶</span>
+              <span class="btn-enter-hero-desc">PILOTER DANS LA VILLE DÉVASTÉE</span>
+            </div>
+          </button>
+          <button id="btn-close-ruins-view" class="btn-arcade btn-ruins-back" style="flex: 1; margin: 0; padding: 12px 10px;">
+            <span>◀ RETOUR CARTE</span>
+          </button>
+        </div>
       </div>
     `;
 
     this.root.appendChild(overlay);
+
+    overlay.querySelector('#btn-ruins-enter-3d-modal')?.addEventListener('click', () => {
+      soundManager.playClick();
+      clearInterval(geigerInterval);
+      overlay.remove();
+      this.activeModals = this.activeModals.filter(m => m !== overlay);
+      gameState.selectCity(city.id);
+      gameState.isRuinsMode = true;
+      this.triggerCityEntryCinematic(city);
+    });
 
     // Audio d'ambiance compteur Geiger
     soundManager.playGeigerClick();
@@ -1573,6 +1551,19 @@ export class UIManager {
   // --- SIMULATION TACTIQUE D'EXTINCTION MASSIVE APOCALYPTIQUE PLEIN ÉCRAN ---
   simulateWmdExtinction(city, weaponType, victimPop) {
     this.closeActiveModals();
+    soundManager.playSupersonicJet();
+
+    const initialDestruction = storage.getCityDestruction(city.id) || 0;
+    let strikeDamage = 35;
+    if (weaponType === 'NUKE') strikeDamage = 40;
+    else if (weaponType === 'CARPET') strikeDamage = 30;
+    else if (weaponType === 'ORBITAL') strikeDamage = 45;
+    else if (weaponType === 'BIO') strikeDamage = 25;
+
+    const targetDestruction = Math.min(100, initialDestruction + strikeDamage);
+    const totalPop = city.population || city.exterminationTarget || 500000;
+    const strikeVictims = Math.round(totalPop * (strikeDamage / 100));
+    const initialSurvivors = Math.max(0, totalPop - Math.round(totalPop * (initialDestruction / 100)));
 
     const overlay = document.createElement('div');
     overlay.className = `wmd-simulation-overlay wmd-sim-${weaponType.toLowerCase()}`;
@@ -1623,7 +1614,7 @@ export class UIManager {
           <div style="text-align: right; display: flex; align-items: center; gap: 10px;">
             <div>
               <div style="font-size: 0.68rem; color: ${weaponColor}; font-weight: 950; letter-spacing: 0.8px;" id="wmd-status-phase">T-03 : ACQUISITION</div>
-              <div style="font-size: 0.78rem; font-family: monospace; color: #fffa65; font-weight: 900;">POP : ${(victimPop).toLocaleString('fr-FR')}</div>
+              <div style="font-size: 0.78rem; font-family: monospace; color: #fffa65; font-weight: 900;">POP : ${totalPop.toLocaleString('fr-FR')}</div>
             </div>
             <button id="btn-wmd-skip" style="background: rgba(255,255,255,0.14); border: 1.5px solid rgba(255,255,255,0.3); color: #fffa65; border-radius: 8px; padding: 5px 10px; font-size: 0.72rem; font-weight: 950; cursor: pointer; letter-spacing: 0.5px;">PASSER ⏩</button>
           </div>
@@ -1640,7 +1631,7 @@ export class UIManager {
           <div class="wmd-telemetry-card" style="background: rgba(8, 14, 26, 0.94); backdrop-filter: blur(14px); border: 1.5px solid rgba(255, 255, 255, 0.22); border-radius: 16px; padding: 12px 16px; box-sizing: border-box; display: flex; flex-direction: column; gap: 7px; box-shadow: 0 6px 24px rgba(0,0,0,0.85);">
             <div style="display: flex; align-items: center; justify-content: space-between;">
               <span style="font-size: 0.72rem; color: #ced6e0; font-weight: 850; letter-spacing: 0.8px;">💀 BILAN ESTIMÉ DES PERTES HUMAINES</span>
-              <span style="font-size: 0.76rem; color: #ff4757; font-weight: 950;" id="wmd-telemetry-destruction">DÉSTRUCTION : 0%</span>
+              <span style="font-size: 0.76rem; color: #ff4757; font-weight: 950;" id="wmd-telemetry-destruction">DÉSTRUCTION : ${initialDestruction}%</span>
             </div>
 
             <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 8px;">
@@ -1648,13 +1639,13 @@ export class UIManager {
                 +0 VICTIMES
               </div>
               <div id="wmd-survivors-counter" style="font-size: 0.95rem; font-weight: 900; color: #ff7675; font-family: monospace;">
-                SURVIVANTS : ${victimPop.toLocaleString('fr-FR')}
+                SURVIVANTS : ${initialSurvivors.toLocaleString('fr-FR')}
               </div>
             </div>
 
             <!-- Jauge d'anéantissement urbain -->
             <div style="width: 100%; height: 9px; background: rgba(255, 255, 255, 0.12); border-radius: 5px; overflow: hidden;">
-              <div id="wmd-live-progress" style="width: 0%; height: 100%; background: linear-gradient(90deg, #fffa65, #ff4757, #b71540); transition: width 0.08s linear;"></div>
+              <div id="wmd-live-progress" style="width: ${initialDestruction}%; height: 100%; background: linear-gradient(90deg, #fffa65, #ff4757, #b71540); transition: width 0.08s linear;"></div>
             </div>
 
             <!-- Journal télémétrique en temps réel de destruction par secteurs -->
@@ -1975,14 +1966,15 @@ export class UIManager {
 
         shockwaveRadius = detProgress * shockwaveMaxRadius;
 
-        const currentCasualties = Math.floor(victimPop * Math.pow(detProgress, 0.65));
-        const currentSurvivors = Math.max(0, victimPop - currentCasualties);
+        const currentDetPct = Math.round(initialDestruction + (targetDestruction - initialDestruction) * detProgress);
+        const currentCasualties = Math.round(strikeVictims * Math.pow(detProgress, 0.65));
+        const currentSurvivors = Math.max(0, totalPop - Math.round(totalPop * (currentDetPct / 100)));
 
         liveCounterEl.textContent = `+${currentCasualties.toLocaleString('fr-FR')} VICTIMES`;
         if (survivorsEl) survivorsEl.textContent = `SURVIVANTS : ${currentSurvivors.toLocaleString('fr-FR')}`;
-        liveProgressEl.style.width = `${(detProgress * 100).toFixed(0)}%`;
-        destrEl.textContent = `DÉSTRUCTION : ${(detProgress * 100).toFixed(0)}%`;
-        radTempEl.textContent = `${Math.floor(22 + detProgress * 5200)} °C`;
+        liveProgressEl.style.width = `${currentDetPct}%`;
+        destrEl.textContent = `DÉSTRUCTION : ${currentDetPct}%`;
+        radTempEl.textContent = `${Math.floor(22 + (currentDetPct / 100) * 5200)} °C`;
 
         if (detProgress >= 0.15 && !loggedMilestones.has('m1')) {
           loggedMilestones.add('m1');
@@ -1997,38 +1989,61 @@ export class UIManager {
           addSectorLog('[T+1.9s] ⚡ Flash EMP : Effondrement du réseau et communications');
         }
 
-        impactBanner.textContent = `💥 ANÉANTISSEMENT DÉFINITIF EN COURS...`;
-        statusPhaseEl.textContent = `EXTINCTION : ${(detProgress * 100).toFixed(0)}%`;
+        impactBanner.textContent = (targetDestruction >= 100) ? `💥 ANÉANTISSEMENT DÉFINITIF EN COURS...` : `💥 FRAPPE TACTIQUE EN COURS...`;
+        statusPhaseEl.textContent = `EXTINCTION : ${currentDetPct}%`;
 
         if (cameraShake > 0) cameraShake *= 0.93;
 
         if (detProgress >= 1.0) {
           hasCompleted = true;
-          simPhase = 'EXTERMINATED';
+          simPhase = (targetDestruction >= 100) ? 'EXTERMINATED' : 'DAMAGED';
 
-          liveCounterEl.textContent = `+${victimPop.toLocaleString('fr-FR')} VICTIMES (TOTAL)`;
-          if (survivorsEl) survivorsEl.textContent = `0 SURVIVANT (0%)`;
-          liveProgressEl.style.width = '100%';
-          destrEl.textContent = `DÉSTRUCTION : 100%`;
-          radTempEl.textContent = `5 240 °C`;
-          statusPhaseEl.textContent = `☠️ VILLE EXTERMINÉE`;
-          impactBanner.textContent = `☠️ CITÉ ENTIÈRE PULVÉRISÉE & SCELLÉE !`;
-          impactBanner.style.borderColor = '#ff4757';
-          impactBanner.style.color = '#ff7675';
+          liveCounterEl.textContent = `+${strikeVictims.toLocaleString('fr-FR')} VICTIMES`;
+          const finalSurvivors = Math.max(0, totalPop - Math.round(totalPop * (targetDestruction / 100)));
+          if (survivorsEl) survivorsEl.textContent = `SURVIVANTS : ${finalSurvivors.toLocaleString('fr-FR')}`;
+          liveProgressEl.style.width = `${targetDestruction}%`;
+          destrEl.textContent = `DÉSTRUCTION : ${targetDestruction}%`;
+          radTempEl.textContent = `${Math.floor(22 + (targetDestruction / 100) * 5200)} °C`;
 
-          if (!loggedMilestones.has('m4')) {
-            loggedMilestones.add('m4');
-            addSectorLog('[T+2.8s] ☠️ BIOMASSE LOCALE : 0 SIGNAUX VITAUX (EXTINCTION TOTALE)');
-          }
+          if (targetDestruction >= 100) {
+            statusPhaseEl.textContent = `☠️ VILLE EXTERMINÉE`;
+            impactBanner.textContent = `☠️ CITÉ ENTIÈRE PULVÉRISÉE & SCELLÉE (100%) !`;
+            impactBanner.style.borderColor = '#ff4757';
+            impactBanner.style.color = '#ff7675';
 
-          soundManager.playEvilLaugh();
-          soundManager.playVictory();
-          Haptic.success();
+            if (!loggedMilestones.has('m4')) {
+              loggedMilestones.add('m4');
+              addSectorLog('[T+2.8s] ☠️ BIOMASSE LOCALE : 0 SIGNAUX VITAUX (EXTINCTION TOTALE)');
+            }
 
-          if (confirmBtn) {
-            confirmBtn.style.opacity = '1';
-            confirmBtn.style.pointerEvents = 'auto';
-            confirmBtn.innerHTML = `<span>☠️ SCELLER ET CONDAMNER ${city.name.toUpperCase()} DÉFINITIVEMENT ▶</span>`;
+            soundManager.playEvilLaugh();
+            soundManager.playVictory();
+            Haptic.success();
+
+            if (confirmBtn) {
+              confirmBtn.style.opacity = '1';
+              confirmBtn.style.pointerEvents = 'auto';
+              confirmBtn.innerHTML = `<span>☠️ SCELLER ET CONDAMNER ${city.name.toUpperCase()} DÉFINITIVEMENT ▶</span>`;
+            }
+          } else {
+            statusPhaseEl.textContent = `💥 FRAPPE RÉUSSIE (${targetDestruction}%)`;
+            impactBanner.textContent = `💥 IMPACT CONFIRMÉ : CITÉ DÉTRUITE À ${targetDestruction}% !`;
+            impactBanner.style.borderColor = '#ff9f43';
+            impactBanner.style.color = '#fffa65';
+
+            if (!loggedMilestones.has('m4')) {
+              loggedMilestones.add('m4');
+              addSectorLog(`[T+2.8s] 💥 DÉGÂTS CONFIRMÉS : ${targetDestruction}% PULVÉRISÉ`);
+            }
+
+            soundManager.playVictory();
+            Haptic.success();
+
+            if (confirmBtn) {
+              confirmBtn.style.opacity = '1';
+              confirmBtn.style.pointerEvents = 'auto';
+              confirmBtn.innerHTML = `<span>💥 VALIDER LA FRAPPE (${targetDestruction}% DÉTRUITE) ▶</span>`;
+            }
           }
         }
       }
@@ -2144,33 +2159,205 @@ export class UIManager {
       // RENDU SPÉCIFIQUE PAR ARME : 4 ANIMATIONS MAJEURES AAA
       // =========================================================================
 
-      // --- 1. NUKE : ICBM RE-ENTRY + CHAMPIGNON ATOMIQUE À ÉCLAIRS INTERNES ---
+      // --- 1. NUKE : FORMATION B-2 SPIRIT STEALTH BOMBER + 2 ESCORTES F-22 + LARGAGE MISSILE CROISIÈRE ---
       if (weaponType === 'NUKE') {
         if (simPhase === 'APPROACH') {
-          const t = elapsed / 1.8;
-          const missileX = w * 0.98 + (centerX - w * 0.98) * t;
-          const missileY = -30 + (centerY - (-30)) * t;
+          const t = Math.min(1.0, elapsed / 1.8);
+          const flightAng = Math.atan2(h * 0.38, w + 360);
+          const startX = -160;
+          const startY = h * 0.22;
+          const curFlightX = startX + (w + 360) * t;
+          const curFlightY = startY + (h * 0.38) * t;
 
-          // Traînée de flammes supersoniques
-          const tailGrad = ctx.createLinearGradient(w * 0.98, -30, missileX, missileY);
-          tailGrad.addColorStop(0, 'rgba(255, 71, 87, 0.1)');
-          tailGrad.addColorStop(0.7, 'rgba(255, 159, 67, 0.85)');
-          tailGrad.addColorStop(1, '#ffffff');
+          // Helper de dessin d'un chasseur furtif d'escorte (F-22 Raptor)
+          const drawFighter = (fx, fy) => {
+            ctx.save();
+            ctx.translate(fx, fy);
+            ctx.rotate(flightAng + Math.PI / 2);
 
-          ctx.strokeStyle = tailGrad;
-          ctx.lineWidth = 6;
+            // Ombre au sol
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.42)';
+            ctx.beginPath();
+            ctx.moveTo(0 + 20, -20 + 26);
+            ctx.lineTo(-14 + 20, 14 + 26);
+            ctx.lineTo(-6 + 20, 16 + 26);
+            ctx.lineTo(0 + 20, 12 + 26);
+            ctx.lineTo(6 + 20, 16 + 26);
+            ctx.lineTo(14 + 20, 14 + 26);
+            ctx.closePath();
+            ctx.fill();
+
+            // Silhouette furtive F-22 Raptor
+            ctx.fillStyle = '#2d3436';
+            ctx.beginPath();
+            ctx.moveTo(0, -20);
+            ctx.lineTo(-14, 14);
+            ctx.lineTo(-6, 16);
+            ctx.lineTo(0, 12);
+            ctx.lineTo(6, 16);
+            ctx.lineTo(14, 14);
+            ctx.closePath();
+            ctx.fill();
+
+            // Verrière cockpit bleu métallisé
+            ctx.fillStyle = '#74b9ff';
+            ctx.beginPath();
+            ctx.ellipse(0, -7, 2.5, 5, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Flammes de post-combustion jumelées
+            ctx.fillStyle = (Math.random() < 0.5 ? '#fffa65' : '#ff7675');
+            ctx.beginPath();
+            ctx.arc(-3.5, 16, 2, 0, Math.PI * 2);
+            ctx.arc(3.5, 16, 2, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Traînées de condensation supersoniques
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.55)';
+            ctx.lineWidth = 1.4;
+            [-3.5, 3.5].forEach(ex => {
+              ctx.beginPath();
+              ctx.moveTo(ex, 16);
+              ctx.lineTo(ex, 90);
+              ctx.stroke();
+            });
+
+            ctx.restore();
+          };
+
+          // Dessiner les 2 chasseurs d'escorte (gauche et droite)
+          const escortDistX = Math.cos(flightAng + Math.PI / 2) * 58;
+          const escortDistY = Math.sin(flightAng + Math.PI / 2) * 58;
+          const lagX = -Math.cos(flightAng) * 45;
+          const lagY = -Math.sin(flightAng) * 45;
+          drawFighter(curFlightX + escortDistX + lagX, curFlightY + escortDistY + lagY);
+          drawFighter(curFlightX - escortDistX + lagX, curFlightY - escortDistY + lagY);
+
+          // Dessiner le B-2 Spirit Stealth Bomber au centre
+          ctx.save();
+          ctx.translate(curFlightX, curFlightY);
+          ctx.rotate(flightAng + Math.PI / 2);
+
+          // Ombre projetée sur le terrain
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.48)';
           ctx.beginPath();
-          ctx.moveTo(w * 0.98, -30);
-          ctx.lineTo(missileX, missileY);
-          ctx.stroke();
-
-          // Tête d'ogive MIRV
-          ctx.fillStyle = '#fffa65';
-          ctx.beginPath();
-          ctx.arc(missileX, missileY, 6, 0, Math.PI * 2);
+          ctx.moveTo(0 + 26, -34 + 32);
+          ctx.lineTo(-62 + 26, 12 + 32);
+          ctx.lineTo(-42 + 26, 16 + 32);
+          ctx.lineTo(-24 + 26, 8 + 32);
+          ctx.lineTo(0 + 26, 18 + 32);
+          ctx.lineTo(24 + 26, 8 + 32);
+          ctx.lineTo(42 + 26, 16 + 32);
+          ctx.lineTo(62 + 26, 12 + 32);
+          ctx.closePath();
           ctx.fill();
 
-          // Réticule nucléaire tournant au centre
+          // Cellule furtive B-2 Spirit (Ailes volantes composites anthracite)
+          ctx.fillStyle = '#1c1f24';
+          ctx.beginPath();
+          ctx.moveTo(0, -34);
+          ctx.lineTo(-62, 12);
+          ctx.lineTo(-42, 16);
+          ctx.lineTo(-24, 8);
+          ctx.lineTo(0, 18);
+          ctx.lineTo(24, 8);
+          ctx.lineTo(42, 16);
+          ctx.lineTo(62, 12);
+          ctx.closePath();
+          ctx.fill();
+
+          // Lignes de structure radar-absorbante
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.moveTo(0, -34);
+          ctx.lineTo(0, 18);
+          ctx.moveTo(-62, 12);
+          ctx.lineTo(0, -34);
+          ctx.lineTo(62, 12);
+          ctx.stroke();
+
+          // Verrière de pilotage furtive
+          ctx.fillStyle = 'rgba(116, 185, 255, 0.85)';
+          ctx.beginPath();
+          ctx.ellipse(0, -18, 4, 8, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Échappements et traînées de condensation
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.65)';
+          ctx.lineWidth = 2.2;
+          [-14, 14].forEach(eng => {
+            ctx.beginPath();
+            ctx.moveTo(eng, 10);
+            ctx.lineTo(eng, 130);
+            ctx.stroke();
+          });
+
+          // Feux clignotants d'extrémité d'ailes
+          ctx.fillStyle = (Math.floor(elapsed * 8) % 2 === 0) ? '#ff4757' : '#2ed573';
+          ctx.beginPath();
+          ctx.arc(-60, 12, 2.5, 0, Math.PI * 2);
+          ctx.arc(60, 12, 2.5, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Soute ventrale d'armement ouverte à t >= 0.45
+          if (t >= 0.45) {
+            ctx.fillStyle = '#0a0c10';
+            ctx.fillRect(-6, -6, 12, 16);
+            ctx.strokeStyle = '#ff3838';
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(-6, -6, 12, 16);
+          }
+
+          ctx.restore();
+
+          // ARME LÂCHÉE : Missile de croisière nucléaire plongeant vers le centre
+          if (t >= 0.45) {
+            const dropT = (t - 0.45) / 0.55;
+            const dropOriginX = startX + (w + 360) * 0.45;
+            const dropOriginY = startY + (h * 0.38) * 0.45;
+
+            const missileX = dropOriginX + (centerX - dropOriginX) * Math.pow(dropT, 1.4);
+            const missileY = dropOriginY + (centerY - dropOriginY) * Math.pow(dropT, 1.4);
+
+            const boosterGrad = ctx.createLinearGradient(dropOriginX, dropOriginY, missileX, missileY);
+            boosterGrad.addColorStop(0, 'rgba(255, 71, 87, 0.15)');
+            boosterGrad.addColorStop(0.65, 'rgba(255, 159, 67, 0.85)');
+            boosterGrad.addColorStop(1, '#ffffff');
+
+            ctx.strokeStyle = boosterGrad;
+            ctx.lineWidth = 4.5;
+            ctx.beginPath();
+            ctx.moveTo(dropOriginX, dropOriginY);
+            ctx.lineTo(missileX, missileY);
+            ctx.stroke();
+
+            ctx.save();
+            ctx.translate(missileX, missileY);
+            const missileAngle = Math.atan2(centerY - dropOriginY, centerX - dropOriginX);
+            ctx.rotate(missileAngle);
+
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.roundRect(-10, -2.5, 20, 5, 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#ff3838';
+            ctx.beginPath();
+            ctx.arc(10, 0, 2.5, -Math.PI / 2, Math.PI / 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#fffa65';
+            ctx.beginPath();
+            ctx.moveTo(-10, -2);
+            ctx.lineTo(-17 + (Math.random() - 0.5) * 4, 0);
+            ctx.lineTo(-10, 2);
+            ctx.fill();
+
+            ctx.restore();
+          }
+
+          // Réticule d'acquisition satellite KH-12 tournant au centre-ville
           const rot = elapsed * 3.5;
           ctx.strokeStyle = '#ff3838';
           ctx.lineWidth = 2.5;
@@ -2179,6 +2366,12 @@ export class UIManager {
           ctx.stroke();
           ctx.beginPath();
           ctx.arc(centerX, centerY, 62, -rot, -rot + Math.PI);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(centerX - 15, centerY);
+          ctx.lineTo(centerX + 15, centerY);
+          ctx.moveTo(centerX, centerY - 15);
+          ctx.lineTo(centerX, centerY + 15);
           ctx.stroke();
         } else if (simPhase === 'DETONATION' || simPhase === 'EXTERMINATED') {
           // Double onde de choc supersonique
@@ -2358,19 +2551,51 @@ export class UIManager {
         }
       }
 
-      // --- 3. ORBITAL : FAISCEAU IONIQUE PULSAR (65px) + RAMIFICATION FRACTALE EMP ---
+      // --- 3. ORBITAL : SURVOL HYPERSONIQUE MACH 6 AURORA + FAISCEAU IONIQUE PULSAR ---
       else if (weaponType === 'ORBITAL') {
         if (simPhase === 'APPROACH') {
-          const t = elapsed / 1.8;
-          ctx.strokeStyle = 'rgba(0, 206, 201, 0.85)';
-          ctx.lineWidth = 2.5;
-          const corners = [[0, 0], [w, 0], [0, h], [w, h]];
-          corners.forEach(c => {
-            ctx.beginPath();
-            ctx.moveTo(c[0], c[1]);
-            ctx.lineTo(centerX + (Math.random() - 0.5) * 6, centerY + (Math.random() - 0.5) * 6);
-            ctx.stroke();
-          });
+          const t = Math.min(1.0, elapsed / 1.8);
+          // Vol hypersonique traversant le ciel
+          const craftX = -100 + (w + 220) * Math.pow(t, 1.15);
+          const craftY = h * 0.22 + t * 45;
+
+          // Cône d'onde de choc plasma hypersonique Mach 6
+          const plasmaGrad = ctx.createRadialGradient(craftX + 24, craftY, 0, craftX, craftY, 75);
+          plasmaGrad.addColorStop(0, 'rgba(0, 206, 201, 0.95)');
+          plasmaGrad.addColorStop(0.4, 'rgba(9, 132, 227, 0.35)');
+          plasmaGrad.addColorStop(1, 'rgba(0, 206, 201, 0)');
+          ctx.fillStyle = plasmaGrad;
+          ctx.beginPath();
+          ctx.arc(craftX + 15, craftY, 75, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Cellule furtive pointue d'avion spatial Aurora / Darkstar
+          ctx.fillStyle = '#0f172a';
+          ctx.beginPath();
+          ctx.moveTo(craftX + 36, craftY);
+          ctx.lineTo(craftX - 28, craftY - 18);
+          ctx.lineTo(craftX - 16, craftY);
+          ctx.lineTo(craftX - 28, craftY + 18);
+          ctx.closePath();
+          ctx.fill();
+
+          // Ligne centrale lumineuse
+          ctx.strokeStyle = '#00cec9';
+          ctx.lineWidth = 1.6;
+          ctx.beginPath();
+          ctx.moveTo(craftX + 36, craftY);
+          ctx.lineTo(craftX - 16, craftY);
+          ctx.stroke();
+
+          // Faisceau de visée laser satellite KH-12 verrouillant le centre-ville
+          ctx.strokeStyle = 'rgba(0, 206, 201, 0.75)';
+          ctx.lineWidth = 1.8;
+          ctx.setLineDash([6, 4]);
+          ctx.beginPath();
+          ctx.moveTo(craftX, craftY);
+          ctx.lineTo(centerX, centerY);
+          ctx.stroke();
+          ctx.setLineDash([]);
 
           // Réticule cybernétique hexagonal
           ctx.strokeStyle = '#00cec9';
@@ -2429,37 +2654,67 @@ export class UIManager {
         }
       }
 
-      // --- 4. BIO : NAPPES VOLUMÉTRIQUES BICOLORES RAMPANTES (ÉMERAUDE & VIOLET) ---
+      // --- 4. BIO : ÉPANDEUR FURTIF MILITAIRE + NAPPES VOLUMÉTRIQUES BICOLORES ---
       else if (weaponType === 'BIO') {
         if (simPhase === 'APPROACH') {
-          const t = elapsed / 1.8;
-          const dropPositions = [
-            [centerX, centerY - 85],
-            [centerX + 85, centerY],
-            [centerX, centerY + 85],
-            [centerX - 85, centerY]
-          ];
+          const t = Math.min(1.0, elapsed / 1.8);
+          const planeX = -120 + (w + 240) * t;
+          const planeY = h * 0.32 + Math.sin(t * Math.PI) * 18;
 
-          dropPositions.forEach(dp => {
-            const curY = -30 + (dp[1] - (-30)) * t;
-            ctx.fillStyle = '#2ed573';
+          // Silhouette d'avion lourd militaire d'épandage
+          ctx.fillStyle = '#1e272e';
+          ctx.beginPath();
+          ctx.moveTo(planeX + 30, planeY);
+          ctx.lineTo(planeX - 24, planeY - 26);
+          ctx.lineTo(planeX - 14, planeY);
+          ctx.lineTo(planeX - 24, planeY + 26);
+          ctx.closePath();
+          ctx.fill();
+
+          // Verrière cockpit vert toxique
+          ctx.fillStyle = '#2ed573';
+          ctx.beginPath();
+          ctx.ellipse(planeX + 10, planeY, 3, 5, Math.PI / 2, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Épandage d'aérosol toxique bicolore dense derrière les ailes
+          [-20, 20].forEach(sprayY => {
+            const sprayGrad = ctx.createLinearGradient(planeX - 20, planeY + sprayY, planeX - 180, planeY + sprayY);
+            sprayGrad.addColorStop(0, 'rgba(46, 213, 115, 0.85)');
+            sprayGrad.addColorStop(0.6, 'rgba(108, 92, 231, 0.55)');
+            sprayGrad.addColorStop(1, 'rgba(46, 213, 115, 0)');
+            ctx.fillStyle = sprayGrad;
             ctx.beginPath();
-            ctx.arc(dp[0], curY, 8, 0, Math.PI * 2);
+            ctx.moveTo(planeX - 20, planeY + sprayY);
+            ctx.lineTo(planeX - 180, planeY + sprayY - 14);
+            ctx.lineTo(planeX - 180, planeY + sprayY + 14);
+            ctx.closePath();
             ctx.fill();
-
-            // Parachute en dôme
-            ctx.strokeStyle = '#a4b0be';
-            ctx.lineWidth = 1.5;
-            ctx.beginPath();
-            ctx.arc(dp[0], curY - 14, 12, Math.PI, 0);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(dp[0] - 12, curY - 14);
-            ctx.lineTo(dp[0], curY);
-            ctx.moveTo(dp[0] + 12, curY - 14);
-            ctx.lineTo(dp[0], curY);
-            ctx.stroke();
           });
+
+          // Parachutes de conteneurs chimiques neuro-toxiques
+          if (t >= 0.40) {
+            const dropPositions = [
+              [centerX, centerY - 65],
+              [centerX + 65, centerY],
+              [centerX, centerY + 65],
+              [centerX - 65, centerY]
+            ];
+            const dropT = (t - 0.40) / 0.60;
+            dropPositions.forEach(dp => {
+              const curY = -30 + (dp[1] - (-30)) * dropT;
+              ctx.fillStyle = '#2ed573';
+              ctx.beginPath();
+              ctx.arc(dp[0], curY, 6, 0, Math.PI * 2);
+              ctx.fill();
+
+              ctx.strokeStyle = '#a4b0be';
+              ctx.lineWidth = 1.5;
+              ctx.beginPath();
+              ctx.arc(dp[0], curY - 10, 10, Math.PI, 0);
+              ctx.stroke();
+            });
+          }
         } else if (simPhase === 'DETONATION' || simPhase === 'EXTERMINATED') {
           bioGasPuffs.forEach(puff => {
             puff.x += puff.vx;
@@ -2532,16 +2787,20 @@ export class UIManager {
 
     animFrameId = requestAnimationFrame(renderFrame);
 
-    // Handler de clôture définitive
+    // Handler de validation de la frappe
     const handleClose = () => {
       if (animFrameId) cancelAnimationFrame(animFrameId);
       pixiRenderer.destroy();
-      storage.markCityExterminated(city.id, victimPop);
+      const res = storage.addCityDestruction(city.id, strikeDamage, strikeVictims);
       soundManager.playClick();
       overlay.remove();
       this.activeModals = this.activeModals.filter(m => m !== overlay);
       this.render();
-      this.showToastUnlock({ name: `☠️ ${city.name.toUpperCase()} EST DÉSORMAIS EXTERMINÉE ET FERMÉE DÉFINITIVEMENT !` });
+      if (res.isNowExterminated) {
+        this.showToastUnlock({ name: `☠️ ${city.name.toUpperCase()} EST DÉSORMAIS EXTERMINÉE ET CONDAMNÉE (100%) !` });
+      } else {
+        this.showToastUnlock({ name: `💥 FRAPPE RÉUSSIE : ${city.name.toUpperCase()} EST DÉTRUITE À ${res.newPct}% !` });
+      }
     };
 
     // Bouton Passer (Accélérer l'extermination pour l'utilisateur pressé)
@@ -2564,20 +2823,24 @@ export class UIManager {
     // Nettoyer toute transition orpheline préalable
     document.querySelectorAll('.city-entry-transition').forEach(el => el.remove());
 
-    // Effet cinématique fluide d'entrée dans la ville avec monument
+    const isRuins = gameState.isRuinsMode;
     const overlay = document.createElement('div');
-    overlay.className = 'city-entry-transition';
+    overlay.className = `city-entry-transition ${isRuins ? 'city-entry-ruins' : ''}`;
     overlay.innerHTML = `
       <div class="city-entry-content">
-        <div class="entry-sub">BIENVENUE EN ${city.country ? city.country.toUpperCase() : 'EUROPE'} • GRAND TOUR</div>
-        <div class="entry-title">${city.countryFlag || ''} ${city.name.toUpperCase()}</div>
-        <div class="entry-tagline" style="color: #ffd700; font-weight: 800; margin-top: 4px;">🏛️ ${city.monument || city.subtitle}</div>
-        <div style="font-size: 0.88rem; color: #ced6e0; margin-top: 4px;">${city.subtitle}</div>
+        <div class="entry-sub">${isRuins ? '⚠️ ZONE SINISTRÉE INTERDITE • RECONNAISSANCE 3D' : `BIENVENUE EN ${city.country ? city.country.toUpperCase() : 'EUROPE'} • GRAND TOUR`}</div>
+        <div class="entry-title">${isRuins ? '☠️ ' : (city.countryFlag || '')} ${city.name.toUpperCase()}</div>
+        <div class="entry-tagline" style="color: ${isRuins ? '#ff4757' : '#ffd700'}; font-weight: 800; margin-top: 4px;">${isRuins ? '☢️ RADIATIONS 540 Sv/h • 0 SURVIVANT' : `🏛️ ${city.monument || city.subtitle}`}</div>
+        <div style="font-size: 0.88rem; color: #ced6e0; margin-top: 4px;">${isRuins ? 'SECTEUR DÉTRUIT • VISITE DES RUINES' : city.subtitle}</div>
       </div>
     `;
     this.root.appendChild(overlay);
 
-    soundManager.playVictory();
+    if (isRuins) {
+      soundManager.playGeigerClick();
+    } else {
+      soundManager.playVictory();
+    }
 
     let launched = false;
     const launchNow = () => {
@@ -2864,41 +3127,54 @@ export class UIManager {
     }
 
     hud.innerHTML = `
-      <div class="hud-top-bar">
-        <!-- Badge Score Lumineux Arcade -->
-        <div class="score-box-arcade">
-          <div class="score-badge-header">
-            <span class="score-badge-icon">⚡</span>
-            <span class="score-badge-label">SCORE</span>
+      <div class="hud-top-bar ${gameState.isRuinsMode ? 'hud-top-bar-ruins' : ''}">
+        ${gameState.isRuinsMode ? `
+          <div class="ruins-hud-banner" style="display: flex; align-items: center; gap: 10px; background: rgba(14, 8, 8, 0.94); border: 2px solid #ff4757; padding: 8px 16px; border-radius: 12px; box-shadow: 0 4px 18px rgba(0,0,0,0.85);">
+            <span style="font-size: 1.5rem;">☢️</span>
+            <div>
+              <div style="font-size: 0.88rem; font-weight: 950; color: #ff7675; letter-spacing: 0.5px;">RECONNAISSANCE RUINES • ${gameState.selectedCity.name.toUpperCase()}</div>
+              <div style="font-size: 0.68rem; color: #ced6e0; font-weight: 800;">540 Sv/h • 0 SURVIVANT (VILLE CONDAMNÉE)</div>
+            </div>
           </div>
-          <span class="score-value" id="hud-score-val">${gameState.score.toLocaleString('fr-FR')}</span>
-          <div class="combo-badge" id="hud-combo-badge">
-            <span class="combo-flame">🔥</span>
-            <span id="hud-combo-text">COMBO x1</span>
+          <button id="btn-hud-exit-ruins" class="btn-arcade" style="background: linear-gradient(135deg, #eb4d4b, #c0392b); border: 2px solid #ff7675; color: #ffffff; font-weight: 950; font-size: 0.85rem; padding: 10px 16px; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 15px rgba(235,77,75,0.5);" title="Quitter la reconnaissance et retourner à la carte">
+            <span>🗺️ QUITTER LES RUINES</span>
+          </button>
+        ` : `
+          <!-- Badge Score Lumineux Arcade -->
+          <div class="score-box-arcade">
+            <div class="score-badge-header">
+              <span class="score-badge-icon">⚡</span>
+              <span class="score-badge-label">SCORE</span>
+            </div>
+            <span class="score-value" id="hud-score-val">${gameState.score.toLocaleString('fr-FR')}</span>
+            <div class="combo-badge" id="hud-combo-badge">
+              <span class="combo-flame">🔥</span>
+              <span id="hud-combo-text">COMBO x1</span>
+            </div>
           </div>
-        </div>
 
-        <!-- Carte d'Objectif et de Progression Compacte (Épurée & Aérée) -->
-        <div class="progress-objective-compact" id="hud-objective-card">
-          <div class="objective-header-row">
-            <span class="city-target-title" id="hud-city-name">${gameState.selectedCity.isNuclearMission ? '☢️ ' + gameState.selectedCity.name.toUpperCase() : (gameState.selectedCity.emblem || '📍') + ' ' + gameState.selectedCity.name.toUpperCase()}</span>
-            <span class="objective-target-pts" id="hud-target-pts">🎯 ${gameState.selectedCity.targetScore.toLocaleString('fr-FR')} PTS</span>
+          <!-- Carte d'Objectif et de Progression Compacte (Épurée & Aérée) -->
+          <div class="progress-objective-compact" id="hud-objective-card">
+            <div class="objective-header-row">
+              <span class="city-target-title" id="hud-city-name">${gameState.selectedCity.isNuclearMission ? '☢️ ' + gameState.selectedCity.name.toUpperCase() : (gameState.selectedCity.emblem || '📍') + ' ' + gameState.selectedCity.name.toUpperCase()}</span>
+              <span class="objective-target-pts" id="hud-target-pts">🎯 ${gameState.selectedCity.targetScore.toLocaleString('fr-FR')} PTS</span>
+            </div>
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" id="hud-progress-fill"></div>
+              <span class="progress-pct-text" id="hud-progress-pct">0%</span>
+            </div>
           </div>
-          <div class="progress-bar-bg">
-            <div class="progress-bar-fill" id="hud-progress-fill"></div>
-            <span class="progress-pct-text" id="hud-progress-pct">0%</span>
-          </div>
-        </div>
 
-        <!-- Bouton Rapide Retour Carte dès 100% atteint -->
-        <button id="btn-hud-return-map-100" class="hud-btn-return-map-100" title="Objectif 100% accompli ! Retourner à la carte">
-          <span>🗺️ RETOUR CARTE</span>
-        </button>
+          <!-- Bouton Rapide Retour Carte dès 100% atteint -->
+          <button id="btn-hud-return-map-100" class="hud-btn-return-map-100" title="Objectif 100% accompli ! Retourner à la carte">
+            <span>🗺️ RETOUR CARTE</span>
+          </button>
 
-        <!-- Bouton Pause Chrome -->
-        <button class="btn-icon-pause" id="btn-hud-pause" title="Mettre en pause">
-          ⏸️
-        </button>
+          <!-- Bouton Pause Chrome -->
+          <button class="btn-icon-pause" id="btn-hud-pause" title="Mettre en pause">
+            ⏸️
+          </button>
+        `}
       </div>
 
       <div class="hud-bottom-controls">
@@ -2992,6 +3268,14 @@ export class UIManager {
       };
       nitroBtn.addEventListener('touchstart', handleNitro, { passive: false });
       nitroBtn.addEventListener('click', handleNitro);
+    }
+
+    const exitRuinsBtn = hud.querySelector('#btn-hud-exit-ruins');
+    if (exitRuinsBtn) {
+      exitRuinsBtn.addEventListener('click', () => {
+        soundManager.playClick();
+        if (this.onAction) this.onAction('EXIT_RUINS');
+      });
     }
 
     const returnMap100 = hud.querySelector('#btn-hud-return-map-100');
