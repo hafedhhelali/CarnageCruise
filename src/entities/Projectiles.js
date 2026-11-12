@@ -1,5 +1,5 @@
 /**
- * Motormageddon - ProjectileManager
+ * Carnage Cruise - ProjectileManager
  * Gestionnaire physique de projectiles 3D haute performance (60 FPS)
  * Obus d'artillerie 120mm pour char, missiles supersoniques, torpilles vortex,
  * boules de plasma ionique EMP, jets de flammes et cartouches de calibre lourd.

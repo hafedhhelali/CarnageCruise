@@ -1,5 +1,5 @@
 /**
- * Motormageddon - Moteur Audio Procédural WebAudio Haute Performance
+ * Carnage Cruise - Moteur Audio Procédural WebAudio Haute Performance
  * Sons cartoon, ambiance moteur réactive et musique arcade rétro-dynamique.
  * Gestion mémoire stricte, déconnexion des nœuds audio et cycle de vie Android (Background/Pause/Exit).
  */

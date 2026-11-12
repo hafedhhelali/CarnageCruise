@@ -1,5 +1,5 @@
 /**
- * Motormageddon - Générateur d'Environnements Urbains 3D Français
+ * Carnage Cruise - Générateur d'Environnements Urbains 3D Français
  * Génération de rues courbées (virages gauche/droite), carrefours, mobilier urbain,
  * et Arche spectaculaire de Ligne d'Arrivée avec effets de victoire.
  */

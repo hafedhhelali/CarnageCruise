@@ -1,5 +1,5 @@
 /**
- * Motormageddon - Gestionnaire d'Interface Utilisateur (UIManager)
+ * Carnage Cruise - Gestionnaire d'Interface Utilisateur (UIManager)
  * Carte réaliste de France avec effets de transition cinématique,
  * Section Profil joueur, Système de freinage HUD, Gestionnaire de bouton retour Android,
  * et correction de la navigation du Garage.
@@ -212,7 +212,7 @@ export class UIManager {
       <div class="logo-container">
         <div class="logo-glow-ring"></div>
         <img src="./logo.svg" alt="CarnageCruise" class="game-logo-img" width="220" height="220" />
-        <h1 class="game-title">MOTORMAGEDDON</h1>
+        <h1 class="game-title">CARNAGE CRUISE</h1>
         <div class="game-subtitle">⚡ CARNAGE URBAIN & ASSAUT TOTAL ⚡</div>
       </div>
 
@@ -3143,7 +3143,7 @@ export class UIManager {
     }
   }
 
-  // --- CONQUÊTE D'ASSAUT URBAIN APOCALYPTIQUE (MOTORMAGEDDON CARNAGE) ---
+  // --- CONQUÊTE D'ASSAUT URBAIN APOCALYPTIQUE (CARNAGE CRUISE) ---
   triggerCarnageAssaultFinish(city, score, victims = 35) {
     if (this.assaultOverlay) {
       this.assaultOverlay.remove();

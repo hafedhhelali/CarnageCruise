@@ -1,5 +1,5 @@
 /**
- * Motormageddon - Système de Circulation Urbaine 3D Haute-Fidélité (Trafic Réduit & Graphismes Luxueux)
+ * Carnage Cruise - Système de Circulation Urbaine 3D Haute-Fidélité (Trafic Réduit & Graphismes Luxueux)
  * Véhicules modélisés avec carrosseries métallisées réalistes, reflets vernis, vitrages fumés,
  * phares LED DRL avec halos, feux arrière néon, jantes alliage 3D et physique de carambolage.
  * Trafic équilibré et aéré : 2 à 3 voitures maximum à l'écran avec large distance de sécurité.

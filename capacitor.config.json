@@ -1,6 +1,6 @@
 {
   "appId": "com.motormageddon.game",
-  "appName": "CarnageCruise",
+  "appName": "Carnage Cruise",
   "webDir": "dist",
   "bundledWebRuntime": false,
   "server": {

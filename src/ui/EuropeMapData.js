@@ -1,5 +1,5 @@
 /**
- * Motormageddon - Tracés Vectoriels Géographiques Réels d'Europe & Méditerranée
+ * Carnage Cruise - Tracés Vectoriels Géographiques Réels d'Europe & Méditerranée
  * Issus des données officielles SIG Natural Earth (100% fidèles à la géographie réelle).
  */
 

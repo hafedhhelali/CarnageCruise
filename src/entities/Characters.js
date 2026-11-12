@@ -1,5 +1,5 @@
 /**
- * Motormageddon - Système de Personnages 3D Cartoon Haute Définition (Graphismes & Animations Experts)
+ * Carnage Cruise - Système de Personnages 3D Cartoon Haute Définition (Graphismes & Animations Experts)
  * Piétons vivants et expressifs : Yeux cartoon brillants, bouches animées (cri de terreur), sourcils expressifs,
  * démarches uniques, IA de panique hystérique (bras moulinant en l'air, tête jetée en arrière vers la moto),
  * et voltige burlesque avec étoiles de vertige tournantes (dizzy stars) à l'impact.

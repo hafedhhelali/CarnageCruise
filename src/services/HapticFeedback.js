@@ -1,5 +1,5 @@
 /**
- * Motormageddon - Service Haptique Ultra-Léger (Zéro Dépendance)
+ * Carnage Cruise - Service Haptique Ultra-Léger (Zéro Dépendance)
  * Fournit un retour tactile déterministe et subtil sur Android/iOS (Web & Capacitor)
  */
 

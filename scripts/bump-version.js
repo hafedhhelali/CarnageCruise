@@ -1,5 +1,5 @@
 /**
- * Motormageddon - Script de Versionnage Automatique
+ * Carnage Cruise - Script de Versionnage Automatique
  * Met à jour simultanément version.json, package.json, src/core/Version.js et prépare le build Android.
  * Usage: node scripts/bump-version.js [patch|minor|major]
  */
@@ -60,7 +60,7 @@ fs.writeFileSync(packageJsonPath, JSON.stringify(pkg, null, 2) + '\n');
 
 // 4. Écrire src/core/Version.js
 const versionJsContent = `/**
- * Motormageddon - Constantes de Versionnage Unique (Single Source of Truth)
+ * Carnage Cruise - Constantes de Versionnage Unique (Single Source of Truth)
  * Canal : ${isBeta ? 'BETA' : 'RELEASE'}
  */
 

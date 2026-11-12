@@ -1,5 +1,5 @@
 /**
- * Motormageddon - TycoonManager.js
+ * Carnage Cruise - TycoonManager.js
  * Moteur Économique & Tycoon de l'Apocalypse (Worldmageddon Tycoon)
  * 
  * Responsabilités :

@@ -1,5 +1,5 @@
 /**
- * Motormageddon - Moteur de Rendu 3D Three.js & Caméra Arcade Dynamique
+ * Carnage Cruise - Moteur de Rendu 3D Three.js & Caméra Arcade Dynamique
  * Optimisé pour smartphones (60 FPS visés, gestion thermique, DPI contrôlé).
  */
 

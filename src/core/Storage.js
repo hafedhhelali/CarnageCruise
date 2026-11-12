@@ -1,9 +1,10 @@
 /**
- * Motormageddon - Système de Sauvegarde Persistante Robuste
+ * Carnage Cruise - Système de Sauvegarde Persistante Robuste
  * Sauvegarde les scores, déblocages de villes, motos, paramètres et profil joueur.
  */
 
-const STORAGE_KEY = 'motormageddon_save_v1';
+const PRIMARY_STORAGE_KEY = 'carnage_cruise_save_v1';
+const LEGACY_STORAGE_KEY = 'motormageddon_save_v1';
 
 const DEFAULT_SAVE = {
   version: 2,
@@ -89,7 +90,10 @@ export class Storage {
 
   load() {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
+      let raw = localStorage.getItem(PRIMARY_STORAGE_KEY);
+      if (!raw) {
+        raw = localStorage.getItem(LEGACY_STORAGE_KEY);
+      }
       if (raw) {
         const parsed = JSON.parse(raw);
         return {
@@ -114,7 +118,7 @@ export class Storage {
 
   save() {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
+      localStorage.setItem(PRIMARY_STORAGE_KEY, JSON.stringify(this.data));
     } catch (e) {
       console.error('[Storage] Échec de la sauvegarde', e);
     }
@@ -449,6 +453,9 @@ export class Storage {
   resetAll() {
     this.data = JSON.parse(JSON.stringify(DEFAULT_SAVE));
     this.save();
+    try {
+      localStorage.removeItem(LEGACY_STORAGE_KEY);
+    } catch (e) {}
   }
 }
 

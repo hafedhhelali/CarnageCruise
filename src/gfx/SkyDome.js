@@ -1,5 +1,5 @@
 /**
- * Motormageddon - Dôme Céleste & Nuages Flottants Procéduraux (SkyDome)
+ * Carnage Cruise - Dôme Céleste & Nuages Flottants Procéduraux (SkyDome)
  * Dôme hémisphérique avec dégradé zénithal personnalisé selon la ville,
  * soleil rutilant et nuages 3D cartoon vaporeux dérivant au-dessus des étapes.
  */

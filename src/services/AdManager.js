@@ -1,5 +1,5 @@
 /**
- * Motormageddon - Gestionnaire de Publicités & Récompenses (AdManager)
+ * Carnage Cruise - Gestionnaire de Publicités & Récompenses (AdManager)
  * Simulateur de publicités récompensées et interstitielles haute fidélité pour arcade mobile :
  * - +20 Pièces gratuites (Rewarded Video)
  * - Recharge instantanée Nitro 5s (Rewarded Video)

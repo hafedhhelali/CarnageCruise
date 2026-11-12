@@ -1,5 +1,5 @@
 /**
- * Motormageddon - Missions quotidiennes & calendrier de connexion (rétention D1-D7).
+ * Carnage Cruise - Missions quotidiennes & calendrier de connexion (rétention D1-D7).
  * État persisté dans storage.data ; aucune dépendance réseau.
  */
 

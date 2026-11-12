@@ -1,5 +1,5 @@
 /**
- * Motormageddon - Système de Pigeons Urbains 3D Vivants (Flocks & Décollage Dynamique)
+ * Carnage Cruise - Système de Pigeons Urbains 3D Vivants (Flocks & Décollage Dynamique)
  * Pigeons parisiens réalistes : Picorent le bitume et les trottoirs en battant de la tête,
  * et décollent en panique dans un froufrou d'ailes spectaculaire à l'approche du bolide !
  */

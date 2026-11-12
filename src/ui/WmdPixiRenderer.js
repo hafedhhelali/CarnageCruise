@@ -1,5 +1,5 @@
 /**
- * Motormageddon - Moteur de Rendu Tactique PixiJS (v8) GPU
+ * Carnage Cruise - Moteur de Rendu Tactique PixiJS (v8) GPU
  * Accélération matérielle WebGL2/WebGPU pour les simulations de frappes militaires d'extermination :
  * - Rendu Additif Lumineux GPU (blendMode = 'add') pour lasers, plasmas, ondes de choc et boules de feu.
  * - Filtres Shader GPU (Vision Nocturne militaire, Inversion Négative thermique, Predator, Noir & Blanc).

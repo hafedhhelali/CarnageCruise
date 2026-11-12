@@ -1,5 +1,5 @@
 /**
- * Motormageddon - Usine de Textures Procédurales Haute Définition (TextureFactory)
+ * Carnage Cruise - Usine de Textures Procédurales Haute Définition (TextureFactory)
  * Génère des textures canvas riches, optimisées et mémoïsées pour métamorphoser
  * la qualité visuelle du jeu : asphalte texturé avec vibreurs de course, pavés parisiens,
  * façades haussmanniennes détaillées, devantures de commerces, ombres de contact et peaux cartoon.

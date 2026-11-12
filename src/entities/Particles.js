@@ -1,5 +1,5 @@
 /**
- * Motormageddon - Système de Particules Hautes Performances Three.js (Architecture Propre & Optimisée)
+ * Carnage Cruise - Système de Particules Hautes Performances Three.js (Architecture Propre & Optimisée)
  * Effets Cartoon Explosifs : Volutes de fumée d'échappement volumétriques, ondes de choc (shockwave rings),
  * étincelles étoilées BD, dérapages au sol, confettis de victoire et micro-détails d'impact.
  * Zéro fuite mémoire via pooling de géométries et matériaux partagés.

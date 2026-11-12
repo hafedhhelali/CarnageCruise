@@ -1,5 +1,5 @@
 /**
- * Motormageddon - Système de Carrefours Urbains Français Haute Fidélité
+ * Carnage Cruise - Système de Carrefours Urbains Français Haute Fidélité
  * Grands carrefours réalistes avec voies perpendiculaires, trottoirs arrondis en granit,
  * feux tricolores français (mât, visières, répétiteur bas deux-roues), passages piétons zébrés,
  * barrières parisiennes Croix de Saint-André, plaques de rues bleues et trafic transversal dynamique.

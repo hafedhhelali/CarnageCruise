@@ -1,5 +1,5 @@
 /**
- * Motormageddon - Constantes de Versionnage Unique (Single Source of Truth)
+ * Carnage Cruise - Constantes de Versionnage Unique (Single Source of Truth)
  * Canal : BETA
  */
 

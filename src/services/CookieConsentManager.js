@@ -1,12 +1,13 @@
 /**
- * Motormageddon - Gestionnaire de Consentement Cookies & Google Ads (RGPD, ePrivacy & Google CMP)
+ * Carnage Cruise - Gestionnaire de Consentement Cookies & Google Ads (RGPD, ePrivacy & Google CMP)
  * Conforme à la politique de consentement de l'Union Européenne (Google EU User Consent Policy)
  * et support complet de Google Consent Mode v2.
  */
 
 import { soundManager } from '../audio/SoundManager.js';
 
-const STORAGE_KEY = 'motormageddon_cookie_consent_v1';
+const PRIMARY_STORAGE_KEY = 'carnage_cruise_cookie_consent_v1';
+const LEGACY_STORAGE_KEY = 'motormageddon_cookie_consent_v1';
 
 export class CookieConsentManager {
   constructor() {
@@ -16,7 +17,10 @@ export class CookieConsentManager {
 
   loadConsent() {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
+      let stored = localStorage.getItem(PRIMARY_STORAGE_KEY);
+      if (!stored) {
+        stored = localStorage.getItem(LEGACY_STORAGE_KEY);
+      }
       if (stored) {
         return JSON.parse(stored);
       }
@@ -32,7 +36,7 @@ export class CookieConsentManager {
       timestamp: new Date().toISOString()
     };
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(this.consent));
+      localStorage.setItem(PRIMARY_STORAGE_KEY, JSON.stringify(this.consent));
     } catch (e) {}
 
     this.applyConsentToGoogle(this.consent);
@@ -128,7 +132,7 @@ export class CookieConsentManager {
         </div>
 
         <p class="cookie-text">
-          Nous respectons votre vie privée. Motormageddon utilise des cookies et le stockage local strictement nécessaires 
+          Nous respectons votre vie privée. Carnage Cruise utilise des cookies et le stockage local strictement nécessaires 
           au bon fonctionnement du jeu (sauvegarde de vos bolides, records, et progression de course). 
           Avec votre accord, nous et nos partenaires tiers (notamment <strong>Google Ads & AdSense</strong>) utilisons également des 
           cookies et identifiants publicitaires pour mesurer l'audience et diffuser des publicités adaptées permettant de vous offrir 

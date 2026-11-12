@@ -1,5 +1,5 @@
 /**
- * Motormageddon - Gestionnaire de Post-Processing Arcade Hautes Performances
+ * Carnage Cruise - Gestionnaire de Post-Processing Arcade Hautes Performances
  * Intègre EffectComposer, UnrealBloomPass (halo néon subtil) et OutputPass.
  * Architecture résiliente et adaptive : ajustement selon la résolution mobile pour 60 FPS garantis.
  */

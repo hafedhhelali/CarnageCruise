@@ -1,5 +1,5 @@
 /**
- * Motormageddon - Banque d'échantillons audio réels (OGG CC0 Kenney).
+ * Carnage Cruise - Banque d'échantillons audio réels (OGG CC0 Kenney).
  * Chargement différé + cache de décodage, lecture avec variations de pitch
  * aléatoires pour éviter la fatigue auditive, couches optionnelles enrichies.
  * Fallback : chaque appel SoundManager conserve sa synthèse procédurale

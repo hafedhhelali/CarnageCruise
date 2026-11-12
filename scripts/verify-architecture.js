@@ -1,5 +1,5 @@
 /**
- * Motormageddon - Suite de Tests & Validation d'Architecture (Lead Dev)
+ * Carnage Cruise - Suite de Tests & Validation d'Architecture (Lead Dev)
  * Vérifie :
  * 1. Synchronisation stricte de la Source Unique de Vérité (Version 0.x.x beta)
  * 2. Disponibilité de tous les modules graphiques & post-processing

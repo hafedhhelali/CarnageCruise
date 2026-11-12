@@ -1,5 +1,5 @@
 /**
- * Motormageddon - Modélisation 3D et Physique Arcade de la Moto et du Pilote
+ * Carnage Cruise - Modélisation 3D et Physique Arcade de la Moto et du Pilote
  * Comprend 4 modèles de motos détaillées, le pilote cartoon articulé, et la dynamique de conduite.
  */
 

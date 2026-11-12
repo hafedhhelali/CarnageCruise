@@ -1,5 +1,5 @@
 /**
- * Motormageddon - Gestionnaire de l'État du Jeu (GameState)
+ * Carnage Cruise - Gestionnaire de l'État du Jeu (GameState)
  * Villes françaises enrichies (Montagne, Corniche, Lac, Mer, Ponts, Monuments)
  * et objectifs calibrés pour un véritable challenge d'arcade.
  */
@@ -1972,7 +1972,7 @@ export const COMBO_TITLES = [
   "FOUET SANGLANT !",
   "BOUCHERIE URBAINE !",
   "HÉCATOMBE TOTALE !",
-  "MOTORMAGEDDON SUPRÊME !"
+  "CARNAGE CRUISE SUPRÊME !"
 ];
 
 export class GameState {

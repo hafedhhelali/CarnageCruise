@@ -1,5 +1,5 @@
 /**
- * Motormageddon - Point d'Entrée Principal du Jeu
+ * Carnage Cruise - Point d'Entrée Principal du Jeu
  * Intégration du moteur 3D, physique de conduite avec virages, feux et carrefours,
  * freinage complet avec arrêt/reprise, collisions burlesques et célébration d'arrivée.
  */
