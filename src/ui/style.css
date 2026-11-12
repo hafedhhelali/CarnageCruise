@@ -85,7 +85,8 @@ html, body {
 .screen-hud .btn-nitro-pedal,
 .screen-hud .btn-attack-pedal,
 .screen-hud #btn-hud-pause,
-.screen-hud #btn-hud-return-map-100 {
+.screen-hud #btn-hud-return-map-100,
+.screen-hud #btn-hud-exit-ruins {
   pointer-events: auto !important;
 }
 

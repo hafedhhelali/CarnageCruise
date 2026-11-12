@@ -269,7 +269,7 @@ class GameApp {
         soundManager.stopEngine();
         if (storage.data.settings.music) soundManager.startMusic('MENU');
         this.setupCity(gameState.selectedCity);
-        this.ui.render();
+        this.ui.setScreen('MAP');
       } else if (action === 'PAUSE') {
         gameState.currentMode = 'PAUSED';
         soundManager.stopEngine();
@@ -954,7 +954,7 @@ class GameApp {
       gameState.update(delta, this.bike.isCrashed);
 
       // 13. Conquête de la zone d'assaut urbain (Périmètre purgé au feu - Fin de l'épreuve)
-      if (!this.hasCrossedFinish && (this.bike.z >= this.environment.finishDistance || (this.bike.z / this.environment.finishDistance) >= 1.0)) {
+      if (!gameState.isRuinsMode && !this.hasCrossedFinish && (this.bike.z >= this.environment.finishDistance || (this.bike.z / this.environment.finishDistance) >= 1.0)) {
         this.hasCrossedFinish = true;
         this.bike.speed = 0; // Arrêt net du bolide
 

@@ -2087,8 +2087,14 @@ export class GameState {
     this.nuclearEscapeTimer = 22.0;
     this.nuclearDetonated = false;
 
-    // Compte à rebours 3, 2, 1, GO !
-    this.currentMode = 'COUNTDOWN';
+    // Démarrage : Reconnaissance immédiate en mode ruines ou compte à rebours 3, 2, 1, GO en course classique
+    if (this.isRuinsMode) {
+      this.currentMode = 'PLAYING';
+      this.targetSpeed = this.selectedBike ? this.selectedBike.maxSpeed : 22;
+      this.speed = Math.max(14, this.targetSpeed * 0.65);
+    } else {
+      this.currentMode = 'COUNTDOWN';
+    }
 
     soundManager.startEngine();
     soundManager.updateEngine(0.08); // Ronronnement au ralenti à l'arrêt

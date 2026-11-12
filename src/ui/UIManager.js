@@ -106,6 +106,13 @@ export class UIManager {
       return;
     }
     if (this.currentScreen === 'HUD') {
+      // En mode exploration des ruines : retour direct et immédiat à la carte
+      if (gameState.isRuinsMode) {
+        gameState.isRuinsMode = false;
+        if (this.onAction) this.onAction('EXIT_RUINS');
+        else this.setScreen('MAP');
+        return;
+      }
       // Si la course est terminée ou en mode résultats, retour direct à la carte
       if (gameState.isGameOver || gameState.currentMode === 'RESULTS') {
         this.setScreen('MAP');
@@ -1904,7 +1911,8 @@ export class UIManager {
     let hasCompleted = false;
 
     const renderFrame = (now) => {
-      const elapsed = (now - startTime) / 1000;
+      try {
+        const elapsed = (now - startTime) / 1000;
 
       // 1. PHASE D'APPROCHE (0s - 1.8s)
       if (elapsed < 1.8) {
@@ -2617,38 +2625,46 @@ export class UIManager {
           ctx.fillRect(centerX - beamWidth, 0, beamWidth * 2, h);
 
           // Anneaux d'ondes de choc EMP bleus
-          ctx.strokeStyle = '#00cec9';
-          ctx.lineWidth = 5;
-          ctx.beginPath();
-          ctx.arc(centerX, centerY, shockwaveRadius, 0, Math.PI * 2);
-          ctx.stroke();
+          if (shockwaveRadius > 1) {
+            ctx.strokeStyle = '#00cec9';
+            ctx.lineWidth = 5;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, shockwaveRadius, 0, Math.PI * 2);
+            ctx.stroke();
+          }
 
           // Cratère de plasma bleu persistant
           const plasmaR = Math.min(160, shockwaveRadius * 0.38);
-          const plasmaGrad = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, plasmaR);
-          plasmaGrad.addColorStop(0, '#ffffff');
-          plasmaGrad.addColorStop(0.4, '#00cec9');
-          plasmaGrad.addColorStop(0.8, '#0984e3');
-          plasmaGrad.addColorStop(1, 'rgba(0,0,0,0)');
-          ctx.fillStyle = plasmaGrad;
-          ctx.beginPath();
-          ctx.arc(centerX, centerY, plasmaR, 0, Math.PI * 2);
-          ctx.fill();
+          if (plasmaR > 2) {
+            const plasmaGrad = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, plasmaR);
+            plasmaGrad.addColorStop(0, '#ffffff');
+            plasmaGrad.addColorStop(0.4, '#00cec9');
+            plasmaGrad.addColorStop(0.8, '#0984e3');
+            plasmaGrad.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = plasmaGrad;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, plasmaR, 0, Math.PI * 2);
+            ctx.fill();
+          }
 
           // Éclairs électriques EMP branchés ramifiant le long des boulevards
-          if (Math.random() < 0.5) empArcs.push(createEmpArc());
+          if (Math.random() < 0.4 && empArcs.length < 12) empArcs.push(createEmpArc());
           for (let a = empArcs.length - 1; a >= 0; a--) {
             const arc = empArcs[a];
+            if (!arc || !arc.pts || arc.pts.length < 2) {
+              empArcs.splice(a, 1);
+              continue;
+            }
             arc.life -= 0.07;
             if (arc.life <= 0) {
               empArcs.splice(a, 1);
               continue;
             }
-            ctx.strokeStyle = `rgba(129, 236, 236, ${arc.life})`;
+            ctx.strokeStyle = `rgba(129, 236, 236, ${Math.max(0, arc.life)})`;
             ctx.lineWidth = 2.5;
             ctx.beginPath();
             ctx.moveTo(arc.pts[0].x, arc.pts[0].y);
-            for (let pt of arc.pts) ctx.lineTo(pt.x, pt.y);
+            for (let i = 1; i < arc.pts.length; i++) ctx.lineTo(arc.pts[i].x, arc.pts[i].y);
             ctx.stroke();
           }
         }
@@ -2781,6 +2797,9 @@ export class UIManager {
       }
 
       ctx.restore();
+      } catch (frameErr) {
+        console.error('[WMD Tactical Frame Error]:', frameErr);
+      }
 
       animFrameId = requestAnimationFrame(renderFrame);
     };
@@ -3129,15 +3148,15 @@ export class UIManager {
     hud.innerHTML = `
       <div class="hud-top-bar ${gameState.isRuinsMode ? 'hud-top-bar-ruins' : ''}">
         ${gameState.isRuinsMode ? `
-          <div class="ruins-hud-banner" style="display: flex; align-items: center; gap: 10px; background: rgba(14, 8, 8, 0.94); border: 2px solid #ff4757; padding: 8px 16px; border-radius: 12px; box-shadow: 0 4px 18px rgba(0,0,0,0.85);">
+          <div class="ruins-hud-banner" style="display: flex; align-items: center; gap: 10px; background: rgba(14, 8, 8, 0.94); border: 2px solid #ff4757; padding: 8px 14px; border-radius: 12px; box-shadow: 0 4px 18px rgba(0,0,0,0.85); pointer-events: auto;">
             <span style="font-size: 1.5rem;">☢️</span>
             <div>
               <div style="font-size: 0.88rem; font-weight: 950; color: #ff7675; letter-spacing: 0.5px;">RECONNAISSANCE RUINES • ${gameState.selectedCity.name.toUpperCase()}</div>
               <div style="font-size: 0.68rem; color: #ced6e0; font-weight: 800;">540 Sv/h • 0 SURVIVANT (VILLE CONDAMNÉE)</div>
             </div>
           </div>
-          <button id="btn-hud-exit-ruins" class="btn-arcade" style="background: linear-gradient(135deg, #eb4d4b, #c0392b); border: 2px solid #ff7675; color: #ffffff; font-weight: 950; font-size: 0.85rem; padding: 10px 16px; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 15px rgba(235,77,75,0.5);" title="Quitter la reconnaissance et retourner à la carte">
-            <span>🗺️ QUITTER LES RUINES</span>
+          <button id="btn-hud-exit-ruins" class="btn-arcade interactive" style="background: linear-gradient(135deg, #eb4d4b, #c0392b); border: 2.5px solid #ff7675; color: #ffffff; font-weight: 950; font-size: 0.92rem; padding: 12px 20px; border-radius: 14px; cursor: pointer; box-shadow: 0 6px 20px rgba(235,77,75,0.7); pointer-events: auto !important; z-index: 9999;" title="Quitter la reconnaissance et retourner à l'accueil / carte">
+            <span>🗺️ RETOURNER À L'ACCUEIL</span>
           </button>
         ` : `
           <!-- Badge Score Lumineux Arcade -->
@@ -3272,10 +3291,22 @@ export class UIManager {
 
     const exitRuinsBtn = hud.querySelector('#btn-hud-exit-ruins');
     if (exitRuinsBtn) {
-      exitRuinsBtn.addEventListener('click', () => {
+      const handleExitRuins = (e) => {
+        if (e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
         soundManager.playClick();
-        if (this.onAction) this.onAction('EXIT_RUINS');
-      });
+        gameState.isRuinsMode = false;
+        if (this.onAction) {
+          this.onAction('EXIT_RUINS');
+        } else {
+          this.setScreen('MAP');
+        }
+      };
+      exitRuinsBtn.addEventListener('pointerdown', handleExitRuins);
+      exitRuinsBtn.addEventListener('touchstart', handleExitRuins, { passive: false });
+      exitRuinsBtn.addEventListener('click', handleExitRuins);
     }
 
     const returnMap100 = hud.querySelector('#btn-hud-return-map-100');

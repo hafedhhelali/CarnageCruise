@@ -239,8 +239,7 @@ export class Engine {
       this.hemiLight.groundColor.setHex(0x1a2030);
       this.dirLight.intensity = 0.22;
       this.dirLight.color.setHex(0xbfd0ff); // Lune froide
-      this.rimLight.intensity = 0.55;
-      this.rimLight.color.setHex(0x48dbfb);
+      this.rimLight.intensity = 0.0; // Éteint la rim light frontale la nuit (supprime le reflet gênant au milieu de la route)
       this.renderer.toneMappingExposure = 0.95;
       this.scene.fog.color.setHex(0x0a0f1e);
       this.scene.fog.density = 0.0012;
@@ -315,8 +314,12 @@ export class Engine {
       this.dirLight.target.position.set(bikePosition.x, 0, bikePosition.z);
     }
     if (this.rimLight) {
-      this.rimLight.position.set(bikePosition.x, 6, bikePosition.z + 26);
-      this.rimLight.target.position.set(bikePosition.x, 1.2, bikePosition.z);
+      if (this.isNight) {
+        this.rimLight.intensity = 0.0;
+      } else {
+        this.rimLight.position.set(bikePosition.x + 12, 12, bikePosition.z - 12);
+        this.rimLight.target.position.set(bikePosition.x, 1.2, bikePosition.z);
+      }
     }
 
     // Calcul de la secousse d'impact comique
