@@ -50,54 +50,251 @@ class TextureFactoryService {
     return texture;
   }
 
-  // 1. Asphalte de course haute définition avec grain minéral, traces d'usure et vibreurs latéraux
+  // 1. Asphalte urbain Next-Gen haute définition : grain bitumineux profond, traces de roulement,
+  // caniveaux en granit biseautés, lignes de rive blanches et plots rétro-réfléchissants LED
   getRoadTexture() {
-    return this.getOrCreate('road_asphalt_hd', (canvas) => {
+    return this.getOrCreate('road_asphalt_urban_v2', (canvas) => {
       canvas.width = 512;
       canvas.height = 1024;
       const ctx = canvas.getContext('2d');
 
-      // Fond asphalte bitumineux sombre
-      ctx.fillStyle = '#212429';
+      // Fond asphalte bitumineux anthracite profond et confortable
+      ctx.fillStyle = '#1b1f27';
       ctx.fillRect(0, 0, 512, 1024);
 
-      // Bruit minéral (granulats d'asphalte)
+      // Bruit minéral fin (granulats de basalte et quartz)
       const imgData = ctx.getImageData(0, 0, 512, 1024);
       const data = imgData.data;
       for (let i = 0; i < data.length; i += 4) {
-        const noise = (Math.random() - 0.5) * 22;
+        const noise = (Math.random() - 0.5) * 18;
+        data[i] = Math.max(0, Math.min(255, data[i] + noise));
+        data[i + 1] = Math.max(0, Math.min(255, data[i + 1] + noise + 1));
+        data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + noise + 3));
+      }
+      ctx.putImageData(imgData, 0, 0);
+
+      // Bandes de roulement patinées par le trafic (2 voies principales)
+      const laneGradL = ctx.createLinearGradient(60, 0, 220, 0);
+      laneGradL.addColorStop(0, 'rgba(10, 13, 18, 0)');
+      laneGradL.addColorStop(0.28, 'rgba(10, 13, 18, 0.42)');
+      laneGradL.addColorStop(0.5, 'rgba(28, 34, 44, 0.15)');
+      laneGradL.addColorStop(0.72, 'rgba(10, 13, 18, 0.42)');
+      laneGradL.addColorStop(1, 'rgba(10, 13, 18, 0)');
+      ctx.fillStyle = laneGradL;
+      ctx.fillRect(60, 0, 160, 1024);
+
+      const laneGradR = ctx.createLinearGradient(292, 0, 452, 0);
+      laneGradR.addColorStop(0, 'rgba(10, 13, 18, 0)');
+      laneGradR.addColorStop(0.28, 'rgba(10, 13, 18, 0.42)');
+      laneGradR.addColorStop(0.5, 'rgba(28, 34, 44, 0.15)');
+      laneGradR.addColorStop(0.72, 'rgba(10, 13, 18, 0.42)');
+      laneGradR.addColorStop(1, 'rgba(10, 13, 18, 0)');
+      ctx.fillStyle = laneGradR;
+      ctx.fillRect(292, 0, 160, 1024);
+
+      // Subtiles micro-fissures et raccords de bitume réalistes
+      ctx.strokeStyle = 'rgba(10, 12, 16, 0.45)';
+      ctx.lineWidth = 1.5;
+      for (let c = 0; c < 6; c++) {
+        let cx = 80 + (c * 65);
+        ctx.beginPath();
+        ctx.moveTo(cx, c * 160);
+        for (let y = c * 160 + 30; y < c * 160 + 150; y += 30) {
+          cx += (Math.random() - 0.5) * 14;
+          ctx.lineTo(cx, y);
+        }
+        ctx.stroke();
+      }
+
+      // Caniveaux urbains en dalles de granit gris sombre sur les bords (gauche & droite)
+      const gutterW = 24;
+      ctx.fillStyle = '#2b313c';
+      ctx.fillRect(0, 0, gutterW, 1024);
+      ctx.fillRect(512 - gutterW, 0, gutterW, 1024);
+
+      // Joints des dalles de caniveau et grilles d'évacuation pluviale
+      ctx.strokeStyle = 'rgba(12, 15, 20, 0.65)';
+      ctx.lineWidth = 2;
+      for (let y = 0; y < 1024; y += 48) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(gutterW, y);
+        ctx.moveTo(512 - gutterW, y);
+        ctx.lineTo(512, y);
+        ctx.stroke();
+
+        // Grille d'égout en fonte tous les 288px
+        if (y % 288 === 0) {
+          ctx.fillStyle = '#12151b';
+          ctx.fillRect(3, y + 6, gutterW - 6, 32);
+          ctx.fillRect(512 - gutterW + 3, y + 6, gutterW - 6, 32);
+          ctx.fillStyle = '#384152';
+          for (let gy = y + 10; gy < y + 34; gy += 6) {
+            ctx.fillRect(5, gy, gutterW - 10, 2);
+            ctx.fillRect(512 - gutterW + 5, gy, gutterW - 10, 2);
+          }
+        }
+      }
+
+      // Lignes de rive latérales blanches/ivoire continues avec liseré réfléchissant
+      ctx.fillStyle = 'rgba(232, 238, 245, 0.88)';
+      ctx.fillRect(gutterW + 4, 0, 7, 1024);
+      ctx.fillRect(512 - gutterW - 11, 0, 7, 1024);
+
+      // Plots rétro-réfléchissants LED cyber-cyan le long des rives
+      for (let y = 32; y < 1024; y += 128) {
+        ctx.fillStyle = '#00f2fe';
+        ctx.fillRect(gutterW + 14, y, 4, 12);
+        ctx.fillRect(512 - gutterW - 18, y, 4, 12);
+      }
+    });
+  }
+
+  // 1b. Dalle centrale de grand carrefour urbain (Box-Junction damier jaune/blanc, courbes de braquage & fonte)
+  getIntersectionBoxTexture() {
+    return this.getOrCreate('intersection_box_hd_v2', (canvas) => {
+      canvas.width = 512;
+      canvas.height = 512;
+      const ctx = canvas.getContext('2d');
+
+      // Fond bitume d'intersection dense
+      ctx.fillStyle = '#1d222b';
+      ctx.fillRect(0, 0, 512, 512);
+
+      // Grain minéral d'usure
+      const imgData = ctx.getImageData(0, 0, 512, 512);
+      const data = imgData.data;
+      for (let i = 0; i < data.length; i += 4) {
+        const noise = (Math.random() - 0.5) * 16;
         data[i] = Math.max(0, Math.min(255, data[i] + noise));
         data[i + 1] = Math.max(0, Math.min(255, data[i + 1] + noise));
         data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + noise + 2));
       }
       ctx.putImageData(imgData, 0, 0);
 
-      // Bandes de roulement usées par les pneus (traces plus sombres et lisses)
-      ctx.fillStyle = 'rgba(15, 17, 21, 0.45)';
-      ctx.fillRect(95, 0, 110, 1024);
-      ctx.fillRect(305, 0, 110, 1024);
+      // Traces courbes de pneumatiques dans le carrefour
+      ctx.strokeStyle = 'rgba(10, 12, 16, 0.35)';
+      ctx.lineWidth = 28;
+      [[0, 0], [512, 0], [512, 512], [0, 512]].forEach(([cx, cy]) => {
+        ctx.beginPath();
+        ctx.arc(cx, cy, 210, 0, Math.PI * 2);
+        ctx.stroke();
+      });
 
-      // Vibreurs de course latéraux bicolores (Rouge vif & Blanc pur) sur les bordures
-      const kerbWidth = 32;
-      const kerbSegmentH = 64;
-      for (let y = 0; y < 1024; y += kerbSegmentH) {
-        const isRed = (y / kerbSegmentH) % 2 === 0;
-        ctx.fillStyle = isRed ? '#e74c3c' : '#ffffff';
-        // Bord gauche
-        ctx.fillRect(0, y, kerbWidth, kerbSegmentH);
-        // Bord droit
-        ctx.fillRect(512 - kerbWidth, y, kerbWidth, kerbSegmentH);
+      // Marquage Box-Junction (Croisillons jaunes ambrés réglementaires au cœur du croisement)
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(68, 68, 376, 376);
+      ctx.clip();
 
-        // Ombrage biseauté du vibreur
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
-        ctx.fillRect(kerbWidth - 4, y, 4, kerbSegmentH);
-        ctx.fillRect(512 - kerbWidth, y, 4, kerbSegmentH);
+      ctx.strokeStyle = 'rgba(243, 156, 18, 0.52)';
+      ctx.lineWidth = 6;
+      for (let d = -400; d <= 800; d += 56) {
+        ctx.beginPath();
+        ctx.moveTo(d, 68);
+        ctx.lineTo(d + 376, 444);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(d + 376, 68);
+        ctx.lineTo(d, 444);
+        ctx.stroke();
       }
+      ctx.restore();
 
-      // Lignes de séparation de voie blanches continues le long des vibreurs
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-      ctx.fillRect(kerbWidth + 4, 0, 6, 1024);
-      ctx.fillRect(512 - kerbWidth - 10, 0, 6, 1024);
+      // Cadre périphérique du Box-Junction
+      ctx.strokeStyle = 'rgba(243, 156, 18, 0.72)';
+      ctx.lineWidth = 8;
+      ctx.strokeRect(68, 68, 376, 376);
+
+      // Double plaque d'égout centrale en fonte ciselée
+      [196, 316].forEach(mx => {
+        ctx.fillStyle = '#2d343e';
+        ctx.beginPath();
+        ctx.arc(mx, 256, 20, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#11151c';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+      });
+    });
+  }
+
+  // 1c. Plaque de rue émaillée haute lisibilité avec nom de l'artère
+  getStreetPlateTexture(streetName = 'BD SAINT-GERMAIN') {
+    const key = `street_plate_${streetName}`;
+    return this.getOrCreate(key, (canvas) => {
+      canvas.width = 256;
+      canvas.height = 64;
+      const ctx = canvas.getContext('2d');
+
+      // Fond bleu émail parisien profond
+      const grad = ctx.createLinearGradient(0, 0, 0, 64);
+      grad.addColorStop(0, '#0f2b66');
+      grad.addColorStop(1, '#081a42');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 256, 64);
+
+      // Double filet blanc et cyan
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(4, 4, 248, 56);
+      ctx.strokeStyle = '#00f2fe';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(8, 8, 240, 48);
+
+      ctx.fillStyle = '#ffffff';
+      const fontSize = streetName.length > 20 ? 13 : (streetName.length > 16 ? 15 : 17);
+      ctx.font = `900 ${fontSize}px "Segoe UI", Arial, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(streetName, 128, 33);
+    });
+  }
+
+  // 1d. Panneau de virage dynamique à chevrons fluorescents (<<< ou >>>)
+  getCurveChevronTexture(dir = 1) {
+    const key = `curve_chevron_${dir > 0 ? 'R' : 'L'}`;
+    return this.getOrCreate(key, (canvas) => {
+      canvas.width = 256;
+      canvas.height = 128;
+      const ctx = canvas.getContext('2d');
+
+      // Fond obsidienne haute visibilité
+      ctx.fillStyle = '#0b101d';
+      ctx.fillRect(0, 0, 256, 128);
+
+      // Bordure néon or/cyan
+      ctx.strokeStyle = '#ffd32a';
+      ctx.lineWidth = 6;
+      ctx.strokeRect(3, 3, 250, 122);
+
+      // 3 Chevrons directionnels vifs
+      ctx.fillStyle = '#ffd32a';
+      const positions = [42, 118, 194];
+      positions.forEach((px, idx) => {
+        ctx.fillStyle = idx === 1 ? '#00f2fe' : '#ffd32a';
+        ctx.beginPath();
+        if (dir > 0) {
+          // Virage à droite (>>>)
+          ctx.moveTo(px - 22, 20);
+          ctx.lineTo(px + 8, 20);
+          ctx.lineTo(px + 34, 64);
+          ctx.lineTo(px + 8, 108);
+          ctx.lineTo(px - 22, 108);
+          ctx.lineTo(px + 4, 64);
+        } else {
+          // Virage à gauche (<<<)
+          ctx.moveTo(px + 22, 20);
+          ctx.lineTo(px - 8, 20);
+          ctx.lineTo(px - 34, 64);
+          ctx.lineTo(px - 8, 108);
+          ctx.lineTo(px + 22, 108);
+          ctx.lineTo(px - 4, 64);
+        }
+        ctx.closePath();
+        ctx.fill();
+      });
     });
   }
 
@@ -108,7 +305,7 @@ class TextureFactoryService {
       canvas.height = 512;
       const ctx = canvas.getContext('2d');
 
-      ctx.fillStyle = '#b2bec3';
+      ctx.fillStyle = '#9aa6b2';
       ctx.fillRect(0, 0, 512, 512);
 
       const rows = 16;
@@ -122,18 +319,18 @@ class TextureFactoryService {
           const x = c * pW + offset;
           const y = r * pH;
 
-          // Teinte de pavé avec légère variation naturelle
-          const brightness = 190 + Math.floor((Math.random() - 0.5) * 35);
-          ctx.fillStyle = `rgb(${brightness}, ${brightness - 5}, ${brightness - 12})`;
+          // Teinte de pavé granit avec variation naturelle douce
+          const brightness = 168 + Math.floor((Math.random() - 0.5) * 28);
+          ctx.fillStyle = `rgb(${brightness}, ${brightness - 3}, ${brightness - 8})`;
           ctx.fillRect(x + 2, y + 2, pW - 4, pH - 4);
 
           // Biseau lumineux (haut/gauche)
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.32)';
           ctx.fillRect(x + 2, y + 2, pW - 4, 2);
           ctx.fillRect(x + 2, y + 2, 2, pH - 4);
 
           // Biseau ombre (bas/droite)
-          ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.28)';
           ctx.fillRect(x + 2, y + pH - 4, pW - 4, 2);
           ctx.fillRect(x + pW - 4, y + 2, 2, pH - 4);
         }
@@ -141,133 +338,214 @@ class TextureFactoryService {
     });
   }
 
-  // 3. Façade Haussmannienne en pierre de taille, corniches et fenêtres rétroéclairées
-  getHaussmannFacadeTexture(baseColorHex = '#dfe4ea', roofColorHex = '#576574') {
-    const key = `haussmann_${baseColorHex}_${roofColorHex}`;
+  // 3. Façades Architecturales Haute Définition (4 Styles distincts sans toit doublonné dans la texture)
+  getHaussmannFacadeTexture(baseColorHex = '#dfe4ea', roofColorHex = '#576574', styleVariant = 0) {
+    const key = `facade_v2_${baseColorHex}_${roofColorHex}_${styleVariant % 4}`;
     return this.getOrCreate(key, (canvas) => {
       canvas.width = 512;
       canvas.height = 1024;
       const ctx = canvas.getContext('2d');
+      const v = styleVariant % 4;
 
-      // 1. Fond pierre de taille
+      // 1. Fond mural selon le style architectural
       ctx.fillStyle = baseColorHex;
       ctx.fillRect(0, 0, 512, 1024);
 
-      // Lignes de refend horizontales (bossage français)
-      ctx.strokeStyle = 'rgba(0, 0, 0, 0.15)';
-      ctx.lineWidth = 2;
-      for (let y = 0; y < 1024; y += 32) {
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(512, y);
-        ctx.stroke();
-      }
+      if (v === 1) {
+        // Style 1 : Immeuble Néo-Moderne & Verre Saphir / Pierre Claire
+        const glassGrad = ctx.createLinearGradient(0, 0, 512, 1024);
+        glassGrad.addColorStop(0, '#1e293b');
+        glassGrad.addColorStop(0.5, '#0f172a');
+        glassGrad.addColorStop(1, '#1e293b');
+        ctx.fillStyle = glassGrad;
+        ctx.fillRect(28, 60, 456, 790);
 
-      // 2. Toiture en zinc supérieure
-      ctx.fillStyle = roofColorHex;
-      ctx.fillRect(0, 0, 512, 180);
-      // Lucarnes mansardées
-      for (let lx = 60; lx < 512; lx += 130) {
-        ctx.fillStyle = '#2c3e50';
-        ctx.fillRect(lx, 50, 48, 80);
-        ctx.fillStyle = '#fffa65';
-        ctx.fillRect(lx + 6, 60, 36, 60);
-      }
-
-      // Corniche magistrale moulurée sous le toit
-      ctx.fillStyle = '#f1f2f6';
-      ctx.fillRect(0, 180, 512, 24);
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
-      ctx.fillRect(0, 204, 512, 8);
-
-      // 3. Étages et fenêtres stylisées
-      const floors = [250, 420, 590, 760];
-      const winCols = [50, 170, 290, 410];
-
-      floors.forEach((fy, fIdx) => {
-        // Balcon filant en fer forgé au 2ème étage (étage noble) et 5ème étage
-        const isNoble = (fIdx === 0 || fIdx === 2);
-        if (isNoble) {
-          ctx.fillStyle = '#2f3542';
-          ctx.fillRect(0, fy + 95, 512, 18);
-          // Motifs de grille
-          ctx.fillStyle = '#1e272e';
-          for (let gx = 0; gx < 512; gx += 12) {
-            ctx.fillRect(gx, fy + 80, 3, 30);
+        // Piliers verticaux en pierre de taille
+        ctx.fillStyle = baseColorHex;
+        [0, 120, 244, 368, 484].forEach(px => ctx.fillRect(px, 0, 28, 880));
+        // Bandeaux horizontaux avec liseré LED cyan
+        [52, 210, 370, 530, 690, 845].forEach((py, idx) => {
+          ctx.fillStyle = baseColorHex;
+          ctx.fillRect(0, py, 512, 20);
+          if (idx === 0 || idx === 5) {
+            ctx.fillStyle = '#00f2fe';
+            ctx.fillRect(16, py + 8, 480, 3);
           }
-        }
-
-        winCols.forEach(wx => {
-          // Encadrement de fenêtre mouluré
-          ctx.fillStyle = '#ffffff';
-          ctx.fillRect(wx - 6, fy - 6, 64, 102);
-
-          // Fronton classique au-dessus de la fenêtre
-          ctx.beginPath();
-          ctx.moveTo(wx - 8, fy - 6);
-          ctx.lineTo(wx + 26, fy - 26);
-          ctx.lineTo(wx + 60, fy - 6);
-          ctx.closePath();
-          ctx.fillStyle = '#ced6e0';
-          ctx.fill();
-
-          // Vitre (alternance chaleureuse lumière / pénombre)
-          const isLit = (wx * fy) % 3 !== 0;
-          ctx.fillStyle = isLit ? '#ffeaa7' : '#222f3e';
-          ctx.fillRect(wx, fy, 52, 90);
-
-          // Rideaux élégants
-          if (isLit) {
-            ctx.fillStyle = 'rgba(235, 77, 75, 0.7)';
-            ctx.fillRect(wx, fy, 14, 90);
-            ctx.fillRect(wx + 38, fy, 14, 90);
-          }
-
-          // Croisillons de fenêtres en bois
-          ctx.fillStyle = '#ffffff';
-          ctx.fillRect(wx + 24, fy, 4, 90);
-          ctx.fillRect(wx, fy + 45, 52, 4);
         });
+
+        // Baies vitrées illuminées (bureaux & lofts)
+        const floors = [82, 240, 400, 560, 720];
+        const cols = [34, 154, 278, 402];
+        floors.forEach((fy, fIdx) => {
+          cols.forEach((wx, cIdx) => {
+            const lit = ((fIdx * 3 + cIdx * 5) % 4) !== 0;
+            ctx.fillStyle = lit ? (cIdx % 2 === 0 ? '#ffeaa7' : '#bae6fd') : '#0f172a';
+            ctx.fillRect(wx, fy, 78, 118);
+            // Reflet oblique
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.16)';
+            ctx.fillRect(wx + 6, fy, 18, 118);
+            // Meneaux aluminium
+            ctx.strokeStyle = '#64748b';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(wx, fy, 78, 118);
+          });
+        });
+      } else if (v === 2) {
+        // Style 2 : Architecture Patrimoniale Brique & Chaînages d'angle en Pierre
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.14)';
+        ctx.lineWidth = 2;
+        for (let y = 0; y < 880; y += 24) {
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(512, y);
+          ctx.stroke();
+        }
+        // Chaînages d'angle en pierre blonde (Quoins)
+        ctx.fillStyle = '#f5f6fa';
+        for (let y = 40; y < 860; y += 48) {
+          const wQ = (y / 48) % 2 === 0 ? 34 : 22;
+          ctx.fillRect(0, y, wQ, 22);
+          ctx.fillRect(512 - wQ, y, wQ, 22);
+        }
+      } else {
+        // Style 0 & 3 : Pierre de taille Haussmannienne / Art-Déco avec joints de bossage
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.15)';
+        ctx.lineWidth = 2;
+        for (let y = 0; y < 880; y += 28) {
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(512, y);
+          ctx.stroke();
+        }
+      }
+
+      // Corniche sommitale moulurée sous la toiture 3D
+      ctx.fillStyle = '#f8fafc';
+      ctx.fillRect(0, 0, 512, 34);
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.32)';
+      ctx.fillRect(0, 34, 512, 10);
+      // Corbeaux sculptés sous la corniche
+      ctx.fillStyle = '#cbd5e1';
+      for (let cx = 16; cx < 512; cx += 32) {
+        ctx.fillRect(cx, 12, 12, 22);
+      }
+
+      // Si Styles 0, 2 ou 3 : 5 niveaux de fenêtres architecturales richement détaillées
+      if (v !== 1) {
+        const floors = [70, 230, 390, 550, 710];
+        const winCols = [46, 166, 286, 406];
+
+        floors.forEach((fy, fIdx) => {
+          const isNoble = (fIdx === 1 || fIdx === 3);
+          if (isNoble) {
+            // Corniche d'étage noble
+            ctx.fillStyle = '#e2e8f0';
+            ctx.fillRect(0, fy + 114, 512, 12);
+            // Garde-corps en fer forgé ouvragé
+            ctx.fillStyle = '#1e272e';
+            ctx.fillRect(0, fy + 86, 512, 28);
+            ctx.fillStyle = v === 3 ? '#f1c40f' : '#475569';
+            for (let gx = 8; gx < 512; gx += 14) {
+              ctx.fillRect(gx, fy + 88, 4, 24);
+            }
+          }
+
+          winCols.forEach((wx, cIdx) => {
+            // Encadrement mouluré en pierre blanche
+            ctx.fillStyle = '#f8fafc';
+            ctx.fillRect(wx - 6, fy - 6, 70, 120);
+
+            if (v === 3) {
+              // Arche Art-Déco dorée au sommet
+              ctx.fillStyle = '#f59e0b';
+              ctx.fillRect(wx - 6, fy - 14, 70, 8);
+            } else {
+              // Fronton triangulaire classique
+              ctx.beginPath();
+              ctx.moveTo(wx - 10, fy - 6);
+              ctx.lineTo(wx + 29, fy - 24);
+              ctx.lineTo(wx + 68, fy - 6);
+              ctx.closePath();
+              ctx.fillStyle = '#cbd5e1';
+              ctx.fill();
+            }
+
+            // Volets persiennes latéraux sur le style 2
+            if (v === 2) {
+              ctx.fillStyle = '#1e372f';
+              ctx.fillRect(wx - 16, fy, 10, 110);
+              ctx.fillRect(wx + 64, fy, 10, 110);
+            }
+
+            // Vitrage intérieur (alternance chaleureuse ambrée / bleu nuit profond)
+            const isLit = ((wx + fy + v * 17) % 3) !== 0;
+            ctx.fillStyle = isLit ? '#fde68a' : '#1e293b';
+            ctx.fillRect(wx, fy, 58, 108);
+
+            if (isLit) {
+              // Lustre / halo intérieur et rideaux drapés
+              ctx.fillStyle = 'rgba(245, 158, 11, 0.45)';
+              ctx.fillRect(wx, fy, 14, 108);
+              ctx.fillRect(wx + 44, fy, 14, 108);
+            }
+
+            // Croisillons de menuiserie
+            ctx.fillStyle = '#f1f5f9';
+            ctx.fillRect(wx + 27, fy, 4, 108);
+            ctx.fillRect(wx, fy + 48, 58, 4);
+
+            // Jardinière fleurie au bord de la fenêtre sur le style 2
+            if (v === 2 && fIdx % 2 === 0) {
+              ctx.fillStyle = '#c2410c';
+              ctx.fillRect(wx + 4, fy + 98, 50, 12);
+              ctx.fillStyle = '#ef4444';
+              ctx.fillRect(wx + 8, fy + 92, 42, 8);
+            }
+          });
+        });
+      }
+
+      // 4. Rez-de-chaussée : Devanture commerciale de prestige & Grande arche d'entrée
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(0, 875, 512, 149);
+
+      // Bandeau de séparation mouluré avec filet lumineux
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(0, 870, 512, 14);
+      ctx.fillStyle = v === 1 ? '#00f2fe' : '#fbbf24';
+      ctx.fillRect(0, 882, 512, 3);
+
+      // Pilastres en granit / bronze
+      ctx.fillStyle = '#1e293b';
+      [0, 238, 484].forEach(px => ctx.fillRect(px, 884, 28, 140));
+
+      // Deux grandes vitrines éclairées chaleureuses
+      [34, 272].forEach(sx => {
+        const winGrad = ctx.createLinearGradient(sx, 900, sx, 1005);
+        winGrad.addColorStop(0, '#fef08a');
+        winGrad.addColorStop(1, '#f59e0b');
+        ctx.fillStyle = winGrad;
+        ctx.fillRect(sx, 900, 198, 104);
+
+        // Silhouettes intérieures de vitrine
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.25)';
+        ctx.fillRect(sx + 20, 945, 42, 59);
+        ctx.fillRect(sx + 85, 935, 55, 69);
+
+        // Reflet diagonal vitré
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.28)';
+        ctx.beginPath();
+        ctx.moveTo(sx + 15, 1004);
+        ctx.lineTo(sx + 65, 1004);
+        ctx.lineTo(sx + 135, 900);
+        ctx.lineTo(sx + 85, 900);
+        ctx.closePath();
+        ctx.fill();
+
+        // Soubassement en marbre noir
+        ctx.fillStyle = '#090d16';
+        ctx.fillRect(sx, 1004, 198, 20);
       });
-
-      // 4. Rez-de-chaussée : Vitrine de boutique chaleureuse et porte d'immeuble moulurée (neutre, sans texte figé)
-      ctx.fillStyle = '#222f3e';
-      ctx.fillRect(0, 890, 512, 134);
-
-      // Pilastres et corniches en bois précieux
-      ctx.fillStyle = '#3d261d';
-      ctx.fillRect(0, 890, 512, 16);
-      ctx.fillRect(0, 890, 24, 134);
-      ctx.fillRect(244, 890, 24, 134);
-      ctx.fillRect(488, 890, 24, 134);
-
-      // Vitrines éclairées de part et d'autre avec reflet
-      ctx.fillStyle = '#ffeaa7';
-      ctx.fillRect(32, 915, 202, 95);
-      ctx.fillRect(278, 915, 202, 95);
-
-      // Reflets lumineux diagonaux réalistes sur la vitre
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.22)';
-      ctx.beginPath();
-      ctx.moveTo(32, 1010);
-      ctx.lineTo(92, 1010);
-      ctx.lineTo(172, 915);
-      ctx.lineTo(112, 915);
-      ctx.closePath();
-      ctx.fill();
-
-      ctx.beginPath();
-      ctx.moveTo(278, 1010);
-      ctx.lineTo(338, 1010);
-      ctx.lineTo(418, 915);
-      ctx.lineTo(358, 915);
-      ctx.closePath();
-      ctx.fill();
-
-      // Soubassements et moulures
-      ctx.fillStyle = '#1e1511';
-      ctx.fillRect(32, 1000, 202, 14);
-      ctx.fillRect(278, 1000, 202, 14);
     });
   }
 

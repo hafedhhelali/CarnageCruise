@@ -53,91 +53,121 @@ export class IntersectionManager {
     this.streetNameIndex = 0;
   }
 
-  // --- CRÉATION DU MÂT DE FEUX TRICOLORES FRANÇAIS RÉALISTE ANCRÉ AU SOL ---
-  createTrafficLightMesh(isLeft = true) {
+  // --- CRÉATION DU PORTIQUE DE FEUX TRICOLORES FRANÇAIS HAUTE FIDÉLITÉ (MÂT + POTENCE SURPLOMBANTE + PLAQUE DE RUE LISIBLE) ---
+  createTrafficLightMesh(isLeft = true, streetName = 'BD SAINT-GERMAIN') {
     const group = new THREE.Group();
-    const poleMat = new THREE.MeshToonMaterial({ color: 0x2d3436 });
+    const sign = isLeft ? 1 : -1;
+    const poleMat = new THREE.MeshStandardMaterial({ color: 0x1e272e, roughness: 0.42, metalness: 0.65 });
+    const trimGoldMat = new THREE.MeshStandardMaterial({ color: 0xd4af37, roughness: 0.3, metalness: 0.85 });
+    const boxMat = new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.5, metalness: 0.4 });
 
-    // 1. Socle en fonte ancré dans le trottoir (zéro flottement)
-    const baseGeo = new THREE.CylinderGeometry(0.18, 0.26, 0.6, 10);
+    // 1. Socle octogonal en fonte ciselée ancré dans le trottoir (zéro flottement)
+    const baseGeo = new THREE.CylinderGeometry(0.22, 0.30, 0.75, 10);
     const base = new THREE.Mesh(baseGeo, poleMat);
-    base.position.y = 0.25;
+    base.position.y = 0.35;
     group.add(base);
 
-    // 2. Mât principal en acier laqué gris anthracite à hauteur urbaine réaliste
-    const poleGeo = new THREE.CylinderGeometry(0.09, 0.12, 3.6, 10);
+    const baseRing = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.24, 0.08, 10), trimGoldMat);
+    baseRing.position.y = 0.72;
+    group.add(baseRing);
+
+    // 2. Mât principal élancé avec potence horizontale surplombant la voie
+    const poleGeo = new THREE.CylinderGeometry(0.09, 0.13, 4.9, 10);
     const pole = new THREE.Mesh(poleGeo, poleMat);
-    pole.position.y = 1.8;
+    pole.position.y = 2.45;
     group.add(pole);
 
-    // 3. Boîtier principal supérieur (3 feux verticaux) fixé directement sur le mât
-    const boxX = isLeft ? 0.26 : -0.26;
-    const boxGeo = new THREE.BoxGeometry(0.42, 1.35, 0.42);
-    const boxMat = new THREE.MeshToonMaterial({ color: 0x1e272e });
-    const mainBox = new THREE.Mesh(boxGeo, boxMat);
+    // Potence en console (Cantilever arm) s'avançant au-dessus de la chaussée
+    const armLen = 2.35;
+    const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.08, armLen, 8), poleMat);
+    arm.rotation.z = Math.PI / 2;
+    arm.position.set(sign * (armLen / 2), 4.72, 0);
+    group.add(arm);
+
+    // Gousset de renfort diagonal sous la potence
+    const strut = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 1.1, 6), poleMat);
+    strut.rotation.z = sign * (Math.PI / 4);
+    strut.position.set(sign * 0.42, 4.35, 0);
+    group.add(strut);
+
+    // 3. Boîtier principal latéral à hauteur d'œil (3 feux verticaux + cadre contrasté blanc/anthracite)
+    const boxX = sign * 0.28;
+    const backplate = new THREE.Mesh(
+      new THREE.BoxGeometry(0.54, 1.48, 0.06),
+      new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.8 })
+    );
+    backplate.position.set(boxX, 3.0, -0.14);
+    group.add(backplate);
+
+    const mainBox = new THREE.Mesh(new THREE.BoxGeometry(0.44, 1.36, 0.38), boxMat);
     mainBox.position.set(boxX, 3.0, 0);
     group.add(mainBox);
 
     // Visières pare-soleil incurvées au-dessus de chaque feu
-    const visorMat = new THREE.MeshToonMaterial({ color: 0x111111 });
+    const visorMat = new THREE.MeshStandardMaterial({ color: 0x090d16, roughness: 0.6 });
     [-0.42, 0, 0.42].forEach(yOff => {
-      const visorGeo = new THREE.CylinderGeometry(0.16, 0.16, 0.14, 8, 1, true, 0, Math.PI);
+      const visorGeo = new THREE.CylinderGeometry(0.16, 0.16, 0.16, 10, 1, true, 0, Math.PI);
       const visor = new THREE.Mesh(visorGeo, visorMat);
       visor.rotation.x = Math.PI / 2;
-      visor.position.set(boxX, 3.0 + yOff + 0.08, 0.21);
+      visor.position.set(boxX, 3.0 + yOff + 0.08, 0.22);
       group.add(visor);
     });
 
-    // 4. Optiques principales (Rouge, Orange, Vert) — couleurs HDR > 1.0
-    const lampGeo = new THREE.SphereGeometry(0.12, 10, 8);
+    // 4. Optiques principales + Répétiteur haut sur potence (partagent le même matériau dynamique par couleur)
+    const lampGeo = new THREE.SphereGeometry(0.13, 12, 10);
     const redMat = new THREE.MeshBasicMaterial({ color: 0x441111 });
     const orangeMat = new THREE.MeshBasicMaterial({ color: 0x442200 });
     const greenMat = new THREE.MeshBasicMaterial({ color: 0x243b2a });
-    greenMat.color.setRGB(0.5, 2.4, 0.6);
+    greenMat.color.setRGB(0.18, 1.0, 0.24);
 
     const lampRed = new THREE.Mesh(lampGeo, redMat);
-    lampRed.position.set(boxX, 3.42, 0.21);
-    group.add(lampRed);
-
+    lampRed.position.set(boxX, 3.42, 0.20);
     const lampOrange = new THREE.Mesh(lampGeo, orangeMat);
-    lampOrange.position.set(boxX, 3.0, 0.21);
-    group.add(lampOrange);
-
+    lampOrange.position.set(boxX, 3.0, 0.20);
     const lampGreen = new THREE.Mesh(lampGeo, greenMat);
-    lampGreen.position.set(boxX, 2.58, 0.21);
-    group.add(lampGreen);
+    lampGreen.position.set(boxX, 2.58, 0.20);
+    group.add(lampRed, lampOrange, lampGreen);
 
-    // 5. Répétiteur bas pour motos/vélos (caractéristique française)
-    const repBoxGeo = new THREE.BoxGeometry(0.22, 0.6, 0.22);
-    const repBox = new THREE.Mesh(repBoxGeo, boxMat);
-    repBox.position.set(isLeft ? 0.2 : -0.2, 1.35, 0);
+    // 4b. Boîtier supérieur suspendu sur la potence (haute visibilité de loin)
+    const overheadX = sign * 1.85;
+    const overBackplate = new THREE.Mesh(
+      new THREE.BoxGeometry(0.56, 1.42, 0.06),
+      new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.8 })
+    );
+    overBackplate.position.set(overheadX, 4.55, -0.14);
+    const overBox = new THREE.Mesh(new THREE.BoxGeometry(0.46, 1.30, 0.36), boxMat);
+    overBox.position.set(overheadX, 4.55, 0);
+    const overRed = new THREE.Mesh(lampGeo, redMat);
+    overRed.position.set(overheadX, 4.95, 0.19);
+    const overOrange = new THREE.Mesh(lampGeo, orangeMat);
+    overOrange.position.set(overheadX, 4.55, 0.19);
+    const overGreen = new THREE.Mesh(lampGeo, greenMat);
+    overGreen.position.set(overheadX, 4.15, 0.19);
+    group.add(overBackplate, overBox, overRed, overOrange, overGreen);
+
+    // 5. Répétiteur bas pour deux-roues (spécificité urbaine française)
+    const repBox = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.62, 0.24), boxMat);
+    repBox.position.set(sign * 0.2, 1.38, 0);
     group.add(repBox);
 
-    const repRed = new THREE.Mesh(new THREE.SphereGeometry(0.055, 8, 6), redMat);
-    repRed.position.set(isLeft ? 0.2 : -0.2, 1.53, 0.12);
-    group.add(repRed);
+    const repRed = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 6), redMat);
+    repRed.position.set(sign * 0.2, 1.56, 0.13);
+    const repOrange = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 6), orangeMat);
+    repOrange.position.set(sign * 0.2, 1.38, 0.13);
+    const repGreen = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 6), greenMat);
+    repGreen.position.set(sign * 0.2, 1.20, 0.13);
+    group.add(repRed, repOrange, repGreen);
 
-    const repOrange = new THREE.Mesh(new THREE.SphereGeometry(0.055, 8, 6), orangeMat);
-    repOrange.position.set(isLeft ? 0.2 : -0.2, 1.35, 0.12);
-    group.add(repOrange);
-
-    const repGreen = new THREE.Mesh(new THREE.SphereGeometry(0.055, 8, 6), greenMat);
-    repGreen.position.set(isLeft ? 0.2 : -0.2, 1.17, 0.12);
-    group.add(repGreen);
-
-    // 6. Plaque de rue émaillée bleue parisienne avec liseré blanc
-    const streetPlateGeo = new THREE.BoxGeometry(1.1, 0.34, 0.05);
-    const plateMat = new THREE.MeshToonMaterial({ color: 0x0c2461 });
-    const streetPlate = new THREE.Mesh(streetPlateGeo, plateMat);
-    streetPlate.position.set(isLeft ? 0.38 : -0.38, 2.05, 0.1);
+    // 6. Plaque de rue émaillée haute définition avec vrai texte lisible
+    const plateTex = textureFactory.getStreetPlateTexture(streetName);
+    const plateMat = new THREE.MeshStandardMaterial({
+      map: plateTex,
+      roughness: 0.35,
+      metalness: 0.15
+    });
+    const streetPlate = new THREE.Mesh(new THREE.BoxGeometry(1.45, 0.38, 0.06), plateMat);
+    streetPlate.position.set(sign * 0.65, 2.08, 0.10);
     group.add(streetPlate);
-
-    // Bordure blanche discrète de la plaque (zéro éclat spéculaire)
-    const plateBorderGeo = new THREE.BoxGeometry(1.16, 0.4, 0.03);
-    const plateBorderMat = new THREE.MeshStandardMaterial({ color: 0xc8d6e5, roughness: 0.85 });
-    const plateBorder = new THREE.Mesh(plateBorderGeo, plateBorderMat);
-    plateBorder.position.set(isLeft ? 0.38 : -0.38, 2.05, 0.08);
-    group.add(plateBorder);
 
     return {
       group,
@@ -440,7 +470,7 @@ export class IntersectionManager {
     return carGroup;
   }
 
-  // --- GÉNÉRATION D'UN GRAND CARREFOUR URBAIN FRANÇAIS RÉALISTE ---
+  // --- GÉNÉRATION D'UN GRAND CARREFOUR URBAIN FRANÇAIS HAUTE FIDÉLITÉ (AVENUE TRANSVERSALE HD, ROTONDES D'ANGLE & BOX-JUNCTION) ---
   spawnIntersection(zPos, roadCurveFunc = null, roadAngleFunc = null) {
     const nodeGroup = new THREE.Group();
     const curveX = roadCurveFunc ? roadCurveFunc(zPos) : 0;
@@ -449,176 +479,301 @@ export class IntersectionManager {
     nodeGroup.position.set(curveX, 0, zPos);
     nodeGroup.rotation.y = curveAngle;
 
-    // 1. Chaussée transversale large (Avenue perpendiculaire prolongée 96m x 18m)
-    const crossRoadGeo = new THREE.PlaneGeometry(96, 18);
-    const crossRoadMat = new THREE.MeshToonMaterial({ color: 0x222a35 });
-    const crossRoad = new THREE.Mesh(crossRoadGeo, crossRoadMat);
-    crossRoad.rotation.x = -Math.PI / 2;
-    crossRoad.position.y = 0.02;
-    crossRoad.receiveShadow = true;
-    nodeGroup.add(crossRoad);
+    const streetName = STREET_NAMES[this.streetNameIndex % STREET_NAMES.length];
+    this.streetNameIndex++;
 
-    // Ligne centrale discontinue jaune/blanche sur l'avenue transversale
-    const crossCenterLineMat = new THREE.MeshBasicMaterial({ color: 0xf1c40f, transparent: true, opacity: 0.85 });
-    for (let cX = -44; cX <= 44; cX += 4.5) {
-      if (Math.abs(cX) < 6.0) continue; // Laisser le centre du carrefour ouvert
-      const dash = new THREE.Mesh(new THREE.PlaneGeometry(2.5, 0.3), crossCenterLineMat);
-      dash.rotation.x = -Math.PI / 2;
-      dash.position.set(cX, 0.025, 0);
-      nodeGroup.add(dash);
-    }
+    // Matériaux partagés / mémoïsés haute définition
+    const roadTex = textureFactory.getRoadTexture();
+    const crossRoadMat = new THREE.MeshStandardMaterial({
+      map: roadTex,
+      roughness: 0.84,
+      metalness: 0.06,
+      polygonOffset: true,
+      polygonOffsetFactor: -1
+    });
 
-    // 1b. Immeubles et façades haussmanniennes longeant l'avenue perpendiculaire
-    // Les voitures traversent entre de vrais immeubles au lieu de surgir du vide !
-    const crossBldgColors = [0xdfd5c6, 0xeee3d3, 0xd4c5b3, 0xc8b8a6, 0xede4d3];
-    const roofMat = new THREE.MeshToonMaterial({ color: 0x2f3542 });
-    const shopColors = [0x800020, 0x1e372f, 0x0c2461, 0xb33939];
-    const shopWindowMat = new THREE.MeshBasicMaterial({ color: 0xffe6a2, transparent: true, opacity: 0.85 });
-    const crossSidewalkMat = new THREE.MeshToonMaterial({ color: 0x95a5a6 });
-    const crossCurbMat = new THREE.MeshToonMaterial({ color: 0xdcdde1 });
+    const boxTex = textureFactory.getIntersectionBoxTexture();
+    const boxJunctionMat = new THREE.MeshStandardMaterial({
+      map: boxTex,
+      roughness: 0.80,
+      metalness: 0.08,
+      polygonOffset: true,
+      polygonOffsetFactor: -2
+    });
 
-    [-1, 1].forEach(zSide => {
-      const bldgZ = zSide * 15.5;
-      const walkZ = zSide * 10.0;
-      const curbZ = zSide * 8.6;
+    const sidewalkTex = textureFactory.getSidewalkTexture();
+    const crossSidewalkMat = new THREE.MeshStandardMaterial({
+      map: sidewalkTex,
+      roughness: 0.88,
+      metalness: 0.05
+    });
+    const graniteCurbMat = new THREE.MeshStandardMaterial({ color: 0x8d99ae, roughness: 0.65, metalness: 0.1 });
+    const darkIronMat = new THREE.MeshStandardMaterial({ color: 0x1e272e, roughness: 0.4, metalness: 0.75 });
+    const zincRoofMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.45, metalness: 0.45 });
+    const goldAccentMat = new THREE.MeshStandardMaterial({ color: 0xfbbf24, roughness: 0.25, metalness: 0.85 });
+    const stopLineMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.9, metalness: 0.0 });
 
-      // Trottoirs continus de l'avenue transversale
-      [-29.5, 29.5].forEach(walkX => {
-        const walkMesh = new THREE.Mesh(new THREE.BoxGeometry(30, 0.32, 2.8), crossSidewalkMat);
-        walkMesh.position.set(walkX, 0.16, walkZ);
-        nodeGroup.add(walkMesh);
+    // 1. Dalle centrale Box-Junction (coeur du croisement 10.6m x 17.6m sans conflit de textures)
+    const centerPlaza = new THREE.Mesh(new THREE.PlaneGeometry(10.6, 17.6), boxJunctionMat);
+    centerPlaza.rotation.x = -Math.PI / 2;
+    centerPlaza.position.y = 0.024;
+    centerPlaza.receiveShadow = true;
+    nodeGroup.add(centerPlaza);
 
-        const curbMesh = new THREE.Mesh(new THREE.BoxGeometry(30, 0.36, 0.3), crossCurbMat);
-        curbMesh.position.set(walkX, 0.18, curbZ);
-        nodeGroup.add(curbMesh);
+    // 1b. Deux bras de l'avenue perpendiculaire (Ouest & Est) avec bitume HD orienté à 90°
+    [-28.5, 28.5].forEach(armX => {
+      const armRoad = new THREE.Mesh(new THREE.PlaneGeometry(16.8, 46.8), crossRoadMat);
+      armRoad.rotation.x = -Math.PI / 2;
+      armRoad.rotation.z = Math.PI / 2;
+      armRoad.position.set(armX, 0.02, 0);
+      armRoad.receiveShadow = true;
+      nodeGroup.add(armRoad);
+    });
+
+    // 1c. Terre-pleins centraux directionnels en granit sur l'avenue transversale (avec balises lumineuses et arbres)
+    [-16.5, 16.5].forEach(islandX => {
+      const islandGroup = new THREE.Group();
+      islandGroup.position.set(islandX, 0, 0);
+
+      const islandBase = new THREE.Mesh(new THREE.BoxGeometry(8.5, 0.24, 1.3), graniteCurbMat);
+      islandBase.position.y = 0.12;
+      islandGroup.add(islandBase);
+
+      // Extrémités semi-circulaires de l'îlot
+      [-4.25, 4.25].forEach(endX => {
+        const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 0.65, 0.24, 12), graniteCurbMat);
+        cap.position.set(endX, 0.12, 0);
+        islandGroup.add(cap);
       });
 
-      // Alignement de 6 immeubles haussmanniens de chaque côté
-      [-39, -30, -21, 21, 30, 39].forEach((bX, idx) => {
-        const bHeight = 11.0 + ((idx * 3 + Math.abs(bX)) % 6);
-        const bMat = new THREE.MeshToonMaterial({ color: crossBldgColors[(idx + Math.abs(bX)) % crossBldgColors.length] });
-        const bldg = new THREE.Mesh(new THREE.BoxGeometry(8.4, bHeight, 8.5), bMat);
+      // Borne lumineuse directionnelle (tête de refuge ambrée/cyan) côté carrefour
+      const bollardX = islandX < 0 ? 3.8 : -3.8;
+      const bollardPost = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.20, 0.75, 10), darkIronMat);
+      bollardPost.position.set(bollardX, 0.55, 0);
+      const bollardGlow = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.17, 0.17, 0.28, 10),
+        new THREE.MeshBasicMaterial({ color: 0x00f2fe })
+      );
+      bollardGlow.position.set(bollardX, 0.82, 0);
+      islandGroup.add(bollardPost, bollardGlow);
+
+      nodeGroup.add(islandGroup);
+    });
+
+    // 2. 4 Esplanades d'angles arrondies en granit & pavés (ZÉRO TROU entre le trottoir principal et l'avenue !)
+    // La chaussée principale va de x = -4.2 à +4.2 ; la chaussée transversale va de z = -8.4 à +8.4.
+    const cornerSigns = [
+      { sx: -1, sz: -1 },
+      { sx: 1, sz: -1 },
+      { sx: 1, sz: 1 },
+      { sx: -1, sz: 1 }
+    ];
+
+    const facadeMats = [0, 1, 2, 3].map(v => {
+      const cols = ['#e8dfd1', '#dfe4ea', '#e2d4c4', '#d8e2dc'];
+      return new THREE.MeshStandardMaterial({
+        map: textureFactory.getHaussmannFacadeTexture(cols[v], '#334155', v),
+        roughness: 0.78,
+        metalness: 0.06
+      });
+    });
+    const stoneWallMat = new THREE.MeshStandardMaterial({ color: 0xe5dec9, roughness: 0.82, metalness: 0.05 });
+
+    cornerSigns.forEach((c, cIdx) => {
+      const { sx, sz } = c;
+
+      // 2a. Trottoir continu le long de l'avenue transversale (de |x| = 6.2m jusqu'à |x| = 50m, z = ±11.2m)
+      const walkMesh = new THREE.Mesh(new THREE.BoxGeometry(44.0, 0.26, 5.6), crossSidewalkMat);
+      walkMesh.position.set(sx * 28.2, 0.13, sz * 11.2);
+      walkMesh.receiveShadow = true;
+      nodeGroup.add(walkMesh);
+
+      const curbMesh = new THREE.Mesh(new THREE.BoxGeometry(44.0, 0.30, 0.28), graniteCurbMat);
+      curbMesh.position.set(sx * 28.2, 0.15, sz * 8.45);
+      nodeGroup.add(curbMesh);
+
+      // 2b. Museau d'angle arrondi en granit (relie x = ±4.2m et z = ±8.4m sans aucun vide géométrique)
+      const bullnose = new THREE.Mesh(new THREE.CylinderGeometry(2.4, 2.4, 0.26, 16), crossSidewalkMat);
+      bullnose.position.set(sx * 6.6, 0.13, sz * 10.8);
+      nodeGroup.add(bullnose);
+
+      const bullnoseCurb = new THREE.Mesh(new THREE.CylinderGeometry(2.48, 2.48, 0.29, 16, 1, true), graniteCurbMat);
+      bullnoseCurb.position.set(sx * 6.6, 0.145, sz * 10.8);
+      nodeGroup.add(bullnoseCurb);
+
+      // Dalle de jonction intérieure pour boucher l'angle entre x = 4.2..7.8 et z = 8.4..14.0
+      const cornerFill = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.26, 5.6), crossSidewalkMat);
+      cornerFill.position.set(sx * 6.3, 0.13, sz * 11.2);
+      nodeGroup.add(cornerFill);
+
+      // 2c. Potelets parisiens en fonte avec anneau doré & barrière Croix de Saint-André sur le pan coupé
+      for (let b = 0; b < 3; b++) {
+        const ang = (b / 2) * (Math.PI / 2);
+        const bx = sx * (6.6 - Math.cos(ang) * 2.15);
+        const bz = sz * (10.8 - Math.sin(ang) * 2.15);
+        const bollard = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.08, 0.88, 8), darkIronMat);
+        bollard.position.set(bx, 0.56, bz);
+        const topBall = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 8), goldAccentMat);
+        topBall.position.set(bx, 1.02, bz);
+        nodeGroup.add(bollard, topBall);
+      }
+
+      const barrier = this.createSaintAndreBarrierMesh();
+      barrier.position.set(sx * 9.5, 0.26, sz * 8.75);
+      nodeGroup.add(barrier);
+
+      // Candélabre d'angle ancré sur le trottoir
+      const cornerLamp = this.createStreetLampMesh();
+      cornerLamp.position.set(sx * 8.2, 0.13, sz * 10.2);
+      nodeGroup.add(cornerLamp);
+
+      // 2d. GRAND IMMEUBLE D'ANGLE À ROTONDE HAUSSMANNIENNE & COUPOLE EN ZINC
+      const rotundaGroup = new THREE.Group();
+      const rotX = sx * 12.2;
+      const rotZ = sz * 16.6;
+      rotundaGroup.position.set(rotX, 0, rotZ);
+
+      const towerH = 16.5;
+      // Tour cylindrique d'angle (Rotonde)
+      const towerBody = new THREE.Mesh(new THREE.CylinderGeometry(3.8, 3.8, towerH, 16), stoneWallMat);
+      towerBody.position.set(-sx * 2.2, towerH / 2, -sz * 2.2);
+      towerBody.castShadow = true;
+      rotundaGroup.add(towerBody);
+
+      // Anneaux de balcons filants en fer forgé autour de la rotonde
+      [4.5, 8.8, 13.0].forEach(by => {
+        const ringBalc = new THREE.Mesh(new THREE.CylinderGeometry(4.05, 4.05, 0.42, 16), darkIronMat);
+        ringBalc.position.set(-sx * 2.2, by, -sz * 2.2);
+        rotundaGroup.add(ringBalc);
+      });
+
+      // Dôme en zinc nervuré au sommet de la rotonde + lanterneau doré
+      const dome = new THREE.Mesh(
+        new THREE.SphereGeometry(3.75, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2),
+        zincRoofMat
+      );
+      dome.position.set(-sx * 2.2, towerH, -sz * 2.2);
+      dome.scale.set(1, 1.15, 1);
+      rotundaGroup.add(dome);
+
+      const lanternBase = new THREE.Mesh(new THREE.CylinderGeometry(0.85, 1.05, 1.8, 10), zincRoofMat);
+      lanternBase.position.set(-sx * 2.2, towerH + 4.3, -sz * 2.2);
+      const spire = new THREE.Mesh(new THREE.ConeGeometry(0.45, 2.8, 8), goldAccentMat);
+      spire.position.set(-sx * 2.2, towerH + 6.4, -sz * 2.2);
+      rotundaGroup.add(lanternBase, spire);
+
+      // Corps de bâtiment principal attenant à la rotonde avec vraies textures de façade HD
+      const wingMat = facadeMats[cIdx % facadeMats.length];
+      const wingBox = new THREE.Mesh(new THREE.BoxGeometry(10.5, towerH - 0.5, 9.2), stoneWallMat);
+      wingBox.position.set(sx * 2.2, (towerH - 0.5) / 2, 0);
+      wingBox.castShadow = true;
+      rotundaGroup.add(wingBox);
+
+      const wingRoof = new THREE.Mesh(new THREE.BoxGeometry(10.2, 2.6, 8.9), zincRoofMat);
+      wingRoof.position.set(sx * 2.2, towerH + 0.8, 0);
+      rotundaGroup.add(wingRoof);
+
+      // Façade texturée donnant sur l'avenue transversale
+      const wingFacadeZ = new THREE.Mesh(new THREE.PlaneGeometry(10.4, towerH - 0.5), wingMat);
+      wingFacadeZ.position.set(sx * 2.2, (towerH - 0.5) / 2, -sz * 4.66);
+      wingFacadeZ.rotation.y = sz > 0 ? Math.PI : 0;
+      rotundaGroup.add(wingFacadeZ);
+
+      // Façade texturée donnant sur l'artère principale
+      const wingFacadeX = new THREE.Mesh(new THREE.PlaneGeometry(9.1, towerH - 0.5), wingMat);
+      wingFacadeX.position.set(-sx * 3.12, (towerH - 0.5) / 2, 0);
+      wingFacadeX.rotation.y = sx > 0 ? -Math.PI / 2 : Math.PI / 2;
+      rotundaGroup.add(wingFacadeX);
+
+      nodeGroup.add(rotundaGroup);
+    });
+
+    // 2e. Alignement d'immeubles texturés et d'arbres le long de l'avenue perpendiculaire
+    [-1, 1].forEach(zSide => {
+      const bldgZ = zSide * 17.5;
+      const walkZ = zSide * 10.4;
+
+      [-39, -27.5, 27.5, 39].forEach((bX, idx) => {
+        const bHeight = 14.0 + ((idx * 3 + Math.abs(bX)) % 5);
+        const bWidth = 10.8;
+        const bDepth = 9.0;
+        const fMat = facadeMats[(idx + (zSide > 0 ? 1 : 0)) % facadeMats.length];
+
+        const bldg = new THREE.Mesh(new THREE.BoxGeometry(bWidth, bHeight, bDepth), stoneWallMat);
         bldg.position.set(bX, bHeight / 2, bldgZ);
+        bldg.castShadow = true;
         nodeGroup.add(bldg);
 
-        // Toit mansardé en zinc
-        const roof = new THREE.Mesh(new THREE.BoxGeometry(8.3, 2.6, 8.4), roofMat);
-        roof.position.set(bX, bHeight + 1.3, bldgZ);
+        // Façade HD orientée vers l'avenue transversale
+        const facePlane = new THREE.Mesh(new THREE.PlaneGeometry(bWidth - 0.1, bHeight), fMat);
+        facePlane.position.set(bX, bHeight / 2, bldgZ - zSide * (bDepth / 2 + 0.06));
+        facePlane.rotation.y = zSide > 0 ? Math.PI : 0;
+        nodeGroup.add(facePlane);
+
+        // Toiture mansardée en zinc
+        const roof = new THREE.Mesh(new THREE.BoxGeometry(bWidth - 0.3, 2.5, bDepth - 0.3), zincRoofMat);
+        roof.position.set(bX, bHeight + 1.25, bldgZ);
         nodeGroup.add(roof);
-
-        // Auvent de boutique rez-de-chaussée
-        const awningMat = new THREE.MeshToonMaterial({ color: shopColors[(idx + 2) % shopColors.length] });
-        const awning = new THREE.Mesh(new THREE.BoxGeometry(7.2, 0.4, 1.4), awningMat);
-        awning.rotation.x = zSide > 0 ? -0.25 : 0.25;
-        awning.position.set(bX, 2.6, bldgZ - (zSide * 4.4));
-        nodeGroup.add(awning);
-
-        // Vitrine chaleureuse de commerce
-        const shopWin = new THREE.Mesh(new THREE.PlaneGeometry(6.6, 2.0), shopWindowMat);
-        shopWin.rotation.y = zSide > 0 ? Math.PI : 0;
-        shopWin.position.set(bX, 1.2, bldgZ - (zSide * 4.26));
-        nodeGroup.add(shopWin);
       });
 
-      // Candélabres sur l'avenue perpendiculaire (posés directement sur le trottoir)
-      [-35, -23, 23, 35].forEach(lampX => {
+      // Candélabres sur l'avenue perpendiculaire
+      [-34, -21, 21, 34].forEach(lampX => {
         const cLamp = this.createStreetLampMesh();
-        cLamp.position.set(lampX, 0.12, walkZ);
+        cLamp.position.set(lampX, 0.13, walkZ);
         nodeGroup.add(cLamp);
       });
     });
 
-    // 2. 4 Trottoirs d'angles arrondis réalistes en granit gris clair avec chanfrein
-    const sidewalkMat = new THREE.MeshToonMaterial({ color: 0x95a5a6 });
-    const cornerOffsets = [
-      { x: -14.5, z: -14.5, rot: 0 },
-      { x: 14.5, z: -14.5, rot: Math.PI / 2 },
-      { x: 14.5, z: 14.5, rot: Math.PI },
-      { x: -14.5, z: 14.5, rot: -Math.PI / 2 }
-    ];
-
-    cornerOffsets.forEach(pos => {
-      // Dalle de trottoir d'angle surélevée
-      const cornerGeo = new THREE.BoxGeometry(15, 0.32, 13);
-      const corner = new THREE.Mesh(cornerGeo, sidewalkMat);
-      corner.position.set(pos.x, 0.16, pos.z);
-      nodeGroup.add(corner);
-
-      // Bordure biseautée
-      const curbGeo = new THREE.BoxGeometry(15.2, 0.36, 0.4);
-      const curbMat = new THREE.MeshToonMaterial({ color: 0xdcdde1 });
-      const curbZ = new THREE.Mesh(curbGeo, curbMat);
-      curbZ.position.set(pos.x, 0.18, pos.z > 0 ? pos.z - 6.5 : pos.z + 6.5);
-      nodeGroup.add(curbZ);
-
-      // Barrières Croix de Saint-André sur les angles
-      const barrier = this.createSaintAndreBarrierMesh();
-      barrier.position.set(pos.x > 0 ? pos.x - 5.5 : pos.x + 5.5, 0.32, pos.z > 0 ? pos.z - 5.5 : pos.z + 5.5);
-      nodeGroup.add(barrier);
-
-      // Candélabre d'éclairage urbain ancré dans le trottoir
-      const lamp = this.createStreetLampMesh();
-      lamp.position.set(pos.x > 0 ? pos.x - 3.5 : pos.x + 3.5, 0.12, pos.z > 0 ? pos.z - 4.5 : pos.z + 4.5);
-      nodeGroup.add(lamp);
-    });
-
-    // 3. Lignes blanches continues d'arrêt (Stop Line) avant chaque passage piéton (peinture routière mate, zéro bloom parasite)
-    const stopLineMat = new THREE.MeshStandardMaterial({ color: 0xd8dde6, roughness: 0.95, metalness: 0.0 });
-    const stopLineSouth = new THREE.Mesh(new THREE.PlaneGeometry(9.2, 0.55), stopLineMat);
+    // 3. Lignes blanches continues d'arrêt (Stop Line) avant chaque passage piéton
+    const stopLineSouth = new THREE.Mesh(new THREE.PlaneGeometry(8.2, 0.50), stopLineMat);
     stopLineSouth.rotation.x = -Math.PI / 2;
-    stopLineSouth.position.set(0, 0.03, -8.6);
+    stopLineSouth.position.set(0, 0.028, -8.8);
     nodeGroup.add(stopLineSouth);
 
-    const stopLineNorth = new THREE.Mesh(new THREE.PlaneGeometry(9.2, 0.55), stopLineMat);
+    const stopLineNorth = new THREE.Mesh(new THREE.PlaneGeometry(8.2, 0.50), stopLineMat);
     stopLineNorth.rotation.x = -Math.PI / 2;
-    stopLineNorth.position.set(0, 0.03, 8.6);
+    stopLineNorth.position.set(0, 0.028, 8.8);
     nodeGroup.add(stopLineNorth);
 
-    // 4. Passages piétons zébrés normalisés sur les 4 branches du carrefour
-    const stripeGeo = new THREE.PlaneGeometry(0.55, 3.8);
-
-    // Passages piétons Nord et Sud (traversée de la voie principale)
-    for (let s = -4.2; s <= 4.2; s += 0.95) {
+    // 4. Passages piétons zébrés haute visibilité sur les 4 branches du carrefour
+    const stripeGeo = new THREE.PlaneGeometry(0.52, 3.4);
+    for (let s = -3.6; s <= 3.6; s += 0.9) {
       const zSouth = new THREE.Mesh(stripeGeo, stopLineMat);
       zSouth.rotation.x = -Math.PI / 2;
-      zSouth.position.set(s, 0.026, -9.8);
+      zSouth.position.set(s, 0.027, -10.8);
       nodeGroup.add(zSouth);
 
       const zNorth = new THREE.Mesh(stripeGeo, stopLineMat);
       zNorth.rotation.x = -Math.PI / 2;
-      zNorth.position.set(s, 0.026, 9.8);
+      zNorth.position.set(s, 0.027, 10.8);
       nodeGroup.add(zNorth);
     }
 
-    // Passages piétons Est et Ouest (traversée de l'avenue perpendiculaire)
-    const stripeCrossGeo = new THREE.PlaneGeometry(3.8, 0.55);
-    for (let s = -6.5; s <= 6.5; s += 1.1) {
+    const stripeCrossGeo = new THREE.PlaneGeometry(3.4, 0.52);
+    for (let s = -6.8; s <= 6.8; s += 1.05) {
+      if (Math.abs(s) < 1.0) continue; // Ouverture au niveau de l'îlot central
       const zWest = new THREE.Mesh(stripeCrossGeo, stopLineMat);
       zWest.rotation.x = -Math.PI / 2;
-      zWest.position.set(-6.8, 0.026, s);
+      zWest.position.set(-7.2, 0.027, s);
       nodeGroup.add(zWest);
 
       const zEast = new THREE.Mesh(stripeCrossGeo, stopLineMat);
       zEast.rotation.x = -Math.PI / 2;
-      zEast.position.set(6.8, 0.026, s);
+      zEast.position.set(7.2, 0.027, s);
       nodeGroup.add(zEast);
     }
 
-    // 5. Mâts de Feux Tricolores réalistes ancrés au sol (gauche et droite)
-    const tlLeft = this.createTrafficLightMesh(true);
-    tlLeft.group.position.set(-4.8, 0, -8.6);
+    // 5. Portiques de Feux Tricolores français avec potence surplombante et plaque de rue lisible
+    const tlLeft = this.createTrafficLightMesh(true, streetName);
+    tlLeft.group.position.set(-4.65, 0, -8.8);
     nodeGroup.add(tlLeft.group);
 
-    const tlRight = this.createTrafficLightMesh(false);
-    tlRight.group.position.set(4.8, 0, -8.6);
+    const tlRight = this.createTrafficLightMesh(false, streetName);
+    tlRight.group.position.set(4.65, 0, -8.8);
     nodeGroup.add(tlRight.group);
 
-    // 6. Suppression du portique suspendu en hauteur pour éviter tout effet de feu flottant dans le ciel
     const overheadGantry = this.createOverheadGantryMesh();
     overheadGantry.group.visible = false;
-
-    const streetName = STREET_NAMES[this.streetNameIndex % STREET_NAMES.length];
-    this.streetNameIndex++;
 
     this.intersections.push({
       group: nodeGroup,

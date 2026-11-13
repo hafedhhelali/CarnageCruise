@@ -301,7 +301,7 @@ export class Engine {
     }
   }
 
-  updateCameraGameplay(delta, bikePosition, bikeSpeed) {
+  updateCameraGameplay(delta, bikePosition, bikeSpeed, lookAheadRoadX = null, roadAngle = 0) {
     this.updateDynamicLights(delta);
 
     // Mise à jour du dôme céleste
@@ -324,11 +324,12 @@ export class Engine {
     }
 
     // Amortissement exponentiel indépendant du framerate (zéro saccade, confort visuel optimal)
-    const dampX = 1.0 - Math.exp(-12.5 * delta);
+    const dampX = 1.0 - Math.exp(-13.5 * delta);
     const dampY = 1.0 - Math.exp(-9.5 * delta);
     const dampZ = 1.0 - Math.exp(-18.0 * delta);
 
-    const targetCamX = bikePosition.x * 0.92;
+    // Placement caméra dans l'axe tangentiel du virage derrière le véhicule
+    const targetCamX = bikePosition.x - Math.sin(roadAngle) * 1.45;
     const targetCamY = bikePosition.y + this.cameraOffset.y;
     const targetCamZ = bikePosition.z + this.cameraOffset.z;
 
@@ -347,9 +348,11 @@ export class Engine {
       this.shakeIntensity = 0;
     }
 
-    // LookAt lissé avec anticipation dynamique selon la vitesse (confort oculaire longue session)
-    const lookAheadZ = 16.0 + Math.min(4.5, (bikeSpeed / 28.0) * 3.5);
-    const lookTargetX = bikePosition.x * 0.96;
+    // LookAt lissé avec anticipation de la courbe routière à 18m devant le pilote
+    const lookAheadZ = 16.5 + Math.min(4.5, (bikeSpeed / 28.0) * 3.5);
+    const lookTargetX = lookAheadRoadX !== null
+      ? (bikePosition.x * 0.55 + lookAheadRoadX * 0.45)
+      : bikePosition.x * 0.96;
     const lookTargetY = bikePosition.y + 1.25;
     const lookTargetZ = bikePosition.z + lookAheadZ;
 
@@ -358,6 +361,10 @@ export class Engine {
     this.lookAtCurrent.y += (lookTargetY - this.lookAtCurrent.y) * dampLook;
     this.lookAtCurrent.z = lookTargetZ;
     this.camera.lookAt(this.lookAtCurrent.x, this.lookAtCurrent.y, this.lookAtCurrent.z);
+
+    // Inclinaison cinématique subtile de l'horizon (banking) dans les virages rapides
+    const bankFactor = Math.min(1.0, bikeSpeed / 22.0);
+    this.camera.rotation.z = -roadAngle * 0.16 * bankFactor;
 
     // Élargissement dynamique et progressif du champ de vision (FOV) selon la vitesse
     const speedBonusFov = Math.min(11.0, (bikeSpeed / 30.0) * 9.5);

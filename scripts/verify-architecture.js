@@ -62,6 +62,15 @@ assert(particlesContent.includes('sharedMats'), 'Pooling de matériaux partagés
 // 5. Test de présence de Tween.js
 assert(packageJson.dependencies['@tweenjs/tween.js'] !== undefined, 'Bibliothèque d\'animation @tweenjs/tween.js installée');
 
+// 6. Test de refonte des Carrefours 3D, Virages & Rythme d'Objectif 100%
+const envContent = fs.readFileSync(path.join(rootDir, 'src', 'entities', 'Environment.js'), 'utf8');
+const interContent = fs.readFileSync(path.join(rootDir, 'src', 'entities', 'Intersections.js'), 'utf8');
+const texContent = fs.readFileSync(path.join(rootDir, 'src', 'gfx', 'TextureFactory.js'), 'utf8');
+assert(envContent.includes('alignChunkToCurve') && envContent.includes('getRoadCurvature'), 'Rubans routiers courbés subdivisés et calcul de courbure actifs');
+assert(interContent.includes('getIntersectionBoxTexture') && interContent.includes('getStreetPlateTexture'), 'Carrefours 3D architecturaux avec Box-Junction et plaques de rue HD');
+assert(texContent.includes('getCurveChevronTexture') && texContent.includes('styleVariant'), '4 styles de façades architecturales et panneaux chevrons de virage actifs');
+assert(gameStateContent.includes('comboMultiplier = 1 + (this.combo - 1) * 0.25'), 'Progression vers l\'objectif 100% recalibrée et progressive');
+
 console.log(`\n📊 RÉSULTAT DU CONTRÔLE QUALITÉ : ${passedTests}/${totalTests} tests réussis.`);
 if (passedTests === totalTests) {
   console.log('✨ Architecture certifiée propre, modulaire et conforme SOLID.');

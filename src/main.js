@@ -555,15 +555,22 @@ class GameApp {
       // 2. Déplacement de la moto vers l'avant selon la vitesse réelle
       this.bike.z += currentSpeed * delta;
 
-      // 3. Suivi de la courbure de la route (virages gauche/droite réalistes)
+      // 3. Suivi de la courbure de la route (virages gauche/droite réalistes et déport centrifuge)
       const roadCenterX = this.environment.getRoadCenterX(this.bike.z);
       const roadAngle = this.environment.getRoadAngle(this.bike.z);
+      const roadCurvature = this.environment.getRoadCurvature ? this.environment.getRoadCurvature(this.bike.z) : 0;
+
+      // Force centrifuge réaliste dans les virages : pousse progressivement vers l'extérieur de la courbe
+      if (!isFlyingCraft && currentSpeed > 2.5 && !this.bike.isCrashed) {
+        const centrifugalDrift = -roadCurvature * currentSpeed * delta * 14.5;
+        this.bike.x = THREE.MathUtils.clamp(this.bike.x + centrifugalDrift, -5.85, 5.85);
+      }
 
       // 4. Physique de direction, suspension et inclinaison
       this.bike.update(delta, currentSteer, currentSpeed);
       this.bike.mesh.position.x = roadCenterX + this.bike.x;
       this.bike.mesh.position.z = this.bike.z;
-      this.bike.mesh.rotation.y = roadAngle;
+      this.bike.mesh.rotation.y = roadAngle - currentSteer * 0.14;
 
       // 4b. EFFETS DE SURFACE : montée de trottoir & frôlement des façades
       // Montée sur le trottoir (|x| > 4.25m) : gerbe d'étincelles de bordure,
@@ -721,10 +728,9 @@ class GameApp {
                 this.engine.triggerCameraShake(0.65);
                 soundManager.playCrash();
                 this.particles.spawnCrashBurst(car.position);
-                gameState.score += 500;
-                gameState.recordKill(500, 'CARAMBOLAGE', 'car');
-                this.particles.spawnComicBurst(car.position, 500, gameState.combo);
-                if (this.ui) this.ui.spawnFloatingCombatText('+500', 'WRECKAGE !', '#ffa502', 50, 40);
+                gameState.recordKill(280, 'CARAMBOLAGE', 'car');
+                this.particles.spawnComicBurst(car.position, 280, gameState.combo);
+                if (this.ui) this.ui.spawnFloatingCombatText('+280', 'WRECKAGE !', '#ffa502', 50, 40);
                 Haptic.impactHeavy();
               } else {
                 // Collision avec un véhicule de circulation
@@ -762,9 +768,9 @@ class GameApp {
               b.userData.active = false;
               b.visible = false;
               this.characters.triggerSlapstickFlight(char, this.bike.mesh.position.x, 42);
-              this.particles.spawnComicBurst(char.group.position, 500, gameState.combo);
+              this.particles.spawnComicBurst(char.group.position, 220, gameState.combo);
               this.particles.spawnBloodBurst(char.group.position);
-              gameState.recordKill(500, 'WEAPON_SHOOT', char.typeDef.category);
+              gameState.recordKill(220, 'WEAPON_SHOOT', char.typeDef.category);
             }
           });
 
@@ -779,8 +785,8 @@ class GameApp {
                 b.visible = false;
                 this.traffic.triggerCrash(v, 28, (b.position.x > v.position.x ? 1 : -1));
                 this.particles.spawnCrashBurst(v.position);
-                gameState.score += 350;
-                this.particles.spawnComicBurst(v.position, 350, gameState.combo);
+                gameState.score += 180;
+                this.particles.spawnComicBurst(v.position, 180, gameState.combo);
               }
             });
           }
@@ -792,7 +798,7 @@ class GameApp {
         this.environment.chunks.forEach(chunk => {
           if (chunk.userData && chunk.userData.props) {
             chunk.userData.props.forEach(prop => {
-              if (prop.userData.isHit) return;
+              if (!prop.visible || prop.userData.isHit) return;
               const worldZ = chunk.position.z + prop.position.z;
               const worldX = chunk.position.x + prop.position.x;
               const dZ = Math.abs(worldZ - this.bike.z);
@@ -939,10 +945,9 @@ class GameApp {
               soundManager.playCrash();
               soundManager.playExplosion();
               this.particles.spawnCrashBurst(crossingCar.mesh.position);
-              gameState.score += 1500;
-              gameState.recordKill(1500, 'CARAMBOLAGE T-BONE', 'car');
-              this.particles.spawnComicBurst(crossingCar.mesh.position, 1500, gameState.combo);
-              if (this.ui) this.ui.spawnFloatingCombatText('+1500', 'T-BONE CARAMBOLAGE ! 💥', '#ff9f43', 50, 42);
+              gameState.recordKill(450, 'CARAMBOLAGE T-BONE', 'car');
+              this.particles.spawnComicBurst(crossingCar.mesh.position, 450, gameState.combo);
+              if (this.ui) this.ui.spawnFloatingCombatText('+450', 'T-BONE CARAMBOLAGE ! 💥', '#ff9f43', 50, 42);
               Haptic.impactHeavy();
             } else {
               // Accident transversal violent au carrefour !
@@ -1050,8 +1055,9 @@ class GameApp {
         }
       }
 
-      // 11. Caméra dynamique en poursuite douce
-      this.engine.updateCameraGameplay(delta, this.bike.mesh.position, currentSpeed);
+      // 11. Caméra dynamique en poursuite douce avec anticipation de la courbe routière
+      const lookAheadRoadX = this.environment.getRoadCenterX(this.bike.z + 18.0) + this.bike.x * 0.7;
+      this.engine.updateCameraGameplay(delta, this.bike.mesh.position, currentSpeed, lookAheadRoadX, roadAngle);
 
       // 12. Mise à jour de l'état de course (accélération, décélération, combo, vitesse arrêtée lors d'un crash)
       gameState.update(delta, this.bike.isCrashed);

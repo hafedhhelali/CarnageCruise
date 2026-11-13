@@ -1976,6 +1976,19 @@ export const BIKES = [
   }
 ];
 
+// Recalibrage global de la progression vers l'objectif 100% (x2.15) :
+// Un rythme d'arcade exigeant où atteindre 100% demande une course soutenue sur la durée.
+CITIES.forEach(city => {
+  city.targetScore = Math.round((city.targetScore * 2.15) / 500) * 500;
+  if (Array.isArray(city.starThresholds)) {
+    city.starThresholds = [
+      city.targetScore,
+      Math.round((city.targetScore * 1.65) / 500) * 500,
+      Math.round((city.targetScore * 2.4) / 500) * 500
+    ];
+  }
+});
+
 export const COMBO_TITLES = [
   "PREMIER CONTACT !",
   "DOUBLE CARNAGE !",
@@ -2285,25 +2298,27 @@ export class GameState {
     // le prochain reset du combo — plancher 2.0s pour rester jouable
     this.comboDecayBase = Math.max(this.comboDecayMin, this.comboDecayBase - 0.22);
 
-    // Bonus de catégorie spécialisé & popups de score dynamiques
+    // Bonus de catégorie spécialisé & popups de score dynamiques (calibrés pour une progression 100% équilibrée)
     let categoryBonus = 0;
     let specialLabel = '';
     if (category === 'stroller') {
-      categoryBonus = 180;
+      categoryBonus = 90;
       specialLabel = '👶 POUSSETTE STRIKE !';
     } else if (category === 'elderly') {
-      categoryBonus = 150;
+      categoryBonus = 75;
       specialLabel = '👴 PAPY & CANNE RENVERSÉ !';
     } else if (category === 'child') {
-      categoryBonus = 120;
+      categoryBonus = 60;
       specialLabel = '🛴 ENFANT DÉBOULONNÉ !';
     } else if (itemType.startsWith('WEAPON_')) {
-      categoryBonus = 100;
+      categoryBonus = 45;
       specialLabel = '💥 ARME CARNAGE !';
     }
 
     const basePoints = points + categoryBonus;
-    const totalAdded = basePoints * this.combo;
+    // Multiplicateur de combo progressif (plafonné à x3.25 au lieu de x10 pour éviter d'atteindre 100% en quelques secondes)
+    const comboMultiplier = 1 + (this.combo - 1) * 0.25;
+    const totalAdded = Math.round(basePoints * comboMultiplier);
     this.score += totalAdded;
 
     // Barème équilibré et gratifiant : 1 pièce par cible, 2 pièces si multi-kill / combo >= 3
@@ -2338,7 +2353,7 @@ export class GameState {
   addNearMiss() {
     if (this.currentMode !== 'PLAYING') return;
 
-    const nearMissPoints = 50 * this.combo;
+    const nearMissPoints = Math.round(35 * (1 + (this.combo - 1) * 0.2));
     this.score += nearMissPoints;
     this.coinsEarned += 1;
     // Les frôlements risqués rechargent le Nitro plus rapidement (+15%)
@@ -2504,8 +2519,8 @@ export class GameState {
     // Points de conduite continue arcade : rouler vite fait monter le score (doublé sous Nitro) !
     // LE SCORE N'AVANCE PAS À L'ARRÊT : Strictement si la vitesse > 3.5 m/s (~13 km/h), sans freinage et hors crash
     if (this.speed > 3.5 && !this.isBraking) {
-      const nitroScoreMult = this.isNitroActive ? 2.0 : 1.0;
-      this.drivingScoreAccumulator += this.speed * delta * 1.0 * nitroScoreMult;
+      const nitroScoreMult = this.isNitroActive ? 1.6 : 1.0;
+      this.drivingScoreAccumulator += this.speed * delta * 0.42 * nitroScoreMult;
       if (this.drivingScoreAccumulator >= 10) {
         const pts = Math.floor(this.drivingScoreAccumulator);
         this.score += pts;

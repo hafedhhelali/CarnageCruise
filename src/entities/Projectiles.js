@@ -165,7 +165,7 @@ export class ProjectileManager {
       startZ: muzzlePos.z,
       maxDistance: 95.0,
       damageRadius: 5.5,
-      points: 1500,
+      points: 380,
       trailTimer: 0,
       isExplosive: true
     });
@@ -197,8 +197,8 @@ export class ProjectileManager {
         startX: pos.x,
         startZ: pos.z,
         maxDistance: 120.0,
-        damageRadius: 8.5,
-        points: 1800,
+        damageRadius: 7.5,
+        points: 420,
         trailTimer: 0,
         isExplosive: true
       });
@@ -226,7 +226,7 @@ export class ProjectileManager {
       startZ: muzzlePos.z,
       maxDistance: 85.0,
       damageRadius: 6.5,
-      points: 1600,
+      points: 400,
       trailTimer: 0,
       isExplosive: true
     });
@@ -291,7 +291,7 @@ export class ProjectileManager {
             this.particles.spawnBloodBurst(char.group.position);
           }
           if (gameState?.recordKill) {
-            gameState.recordKill(850, 'PROJECTILE_' + p.type.toUpperCase(), char.typeDef?.category || 'default');
+            gameState.recordKill(220, 'PROJECTILE_' + p.type.toUpperCase(), char.typeDef?.category || 'default');
           }
         }
       });

@@ -8,7 +8,7 @@ Ce document fournit l'ensemble des informations de conception, d'architecture lo
 ## 1. VISION DU PROJET & SPÉCIFICATIONS
 
 - **Genre** : Jeu de course d'arcade urbain / Runner 3D burlesque
-- **Version actuelle** : **0.9.48-beta** (Build / versionCode 58 - Canal 0.x.x BETA)
+- **Version actuelle** : **0.9.49-beta** (Build / versionCode 59 - Canal 0.x.x BETA)
 - **Signature & Clé** : Keystore permanent dédié `android/app/CarnageCruise.keystore` (validité 10 000 jours, EOMedia Paris)
 - **Plateforme cible** : Android (Smartphones & Tablettes) + WebGL Mobile/Desktop
 - **Direction artistique** : Cartoon 3D éclatant, physique burlesque (slapstick), animations hilarantes et dynamiques, identité française affirmée.
@@ -386,9 +386,40 @@ Ce document fournit l'ensemble des informations de conception, d'architecture lo
 - **Icônes Launcher Android (`scripts/generate-icons.ps1` & `android/app/src/main/res/mipmap-*`)** :
   - Génération haute résolution sur les 5 densités (`mdpi` à `xxxhdpi`) de `ic_launcher.png`, `ic_launcher_round.png` et `ic_launcher_foreground.png` (bouclier hexagonal futuriste, anneau cyan néon, visière laser magenta et monogramme « CC » or solaire sur fond `#080e1c`).
 
+---
 
+## 13. REFONTE DES CARREFOURS 3D, GRAPHISMES URBAINS, VRAIS VIRAGES & PROGRESSION 100% (v0.9.49-beta / Build 59)
 
+### A. Refonte Totale des Croisements 3D Architecturaux (`src/entities/Intersections.js` & `src/entities/Environment.js`)
+- **Dégagement Dynamique au Recyclage des Tronçons (`alignChunkToCurve`)** :
+  - Correction du bug où les tronçons de 60m recyclés au-delà de 200m superposaient des trottoirs, bordures et façades en travers des carrefours situés tous les 160m (`Z = 95 + k*160`).
+  - Les rubans de trottoirs et bordures s'abaissent dynamiquement sous la chaussée (`y = -0.28`) dans l'ouverture du carrefour (`±9.2m`), et les immeubles/mobilier/bandes dans le couloir transversal sont automatiquement masqués.
+  - Suppression des passages piétons et feux tricolores primitifs redondants qui apparaissaient tous les 60m en milieu de bloc.
+- **Architecture de Carrefour Réaliste & Monumentale** :
+  - **Chaussée Box-Junction HD (`getIntersectionBoxTexture`)** : bitume urbain avec quadrillage réglementaire jaune/ambre anti-blocage, traces de braquage courbes et regards de chaussée en fonte.
+  - **Îlots Directionnels & Bornes Lumineuses** : terre-pleins centraux en granit avec bornes rétro-éclairées cyan cyber aux débouchés de l'avenue transversale.
+  - **Angles de Trottoirs en Granit Arrondi & Immeubles d'Angle à Rotonde Haussmannienne** : 4 immeubles d'angle dotés de tours cylindriques en pierre de taille, balcons annulaires en fer forgé, coupoles en zinc à nervures et flèches dorées.
+  - **Portiques de Feux Tricolores Surplombants & Plaques de Rue Lisibles (`getStreetPlateTexture`)** : mâts octogonaux en fonte avec bras cantilever de 2,35m au-dessus de la voie, double bloc optique (haut + répétiteur bas) et plaque de rue émaillée bleue/cyan avec le vrai nom de l'avenue.
 
+### B. Évolution Graphique 3D de la Chaussée, des Façades & des Boulevards (`src/gfx/TextureFactory.js` & `src/entities/Environment.js`)
+- **Bitume Urbain Next-Gen (`getRoadTexture`)** : suppression des vibreurs rouge/blanc de circuit F1 au profit d'un véritable asphalte urbain anthracite avec traces de roulement, micro-fissures, caniveaux en pierre, grilles d'égout en fonte et plots LED cyan.
+- **4 Styles d'Architecture de Façades (`getHaussmannFacadeTexture(..., styleVariant)`)** :
+  - Variante 0 : Pierre de taille Haussmannienne à refends, garde-corps ouvragés et vitrines chaudes.
+  - Variante 1 : Édifice Cyber-Verre & Pierre à verrière néon cyan et baies contemporaines.
+  - Variante 2 : Briques Patrimoine & Chaînages d'angle en pierre avec jardinières fleuries.
+  - Variante 3 : Grand Magasin Art-Déco à grandes arcades vitrées et frises dorées.
+  - Ajout de lucarnes 3D et cheminées sur les toitures mansardées (suppression du faux toit peint en doublon sur la texture de mur).
+- **Arbres d'Alignement de Boulevard** : platanes touffus à triple houppier organique (et palmiers sur les villes méditerranéennes) entourés de grilles d'arbre circulaires en fonte sur les trottoirs.
 
+### C. Vrais Virages Sinueux, Rubans 3D Subdivisés & Force Centrifuge (`src/entities/Environment.js`, `src/main.js`, `src/core/Engine.js`)
+- **Courbes en S et Chicanes Amples (`getRoadCenterX` & `getRoadCurvature`)** : amplitude portée de `±1.8m` à `±15.6m` combinant grandes courbes rapides, longues dérives et chicanes.
+- **Rubans Routiers Subdivisés (28 segments par tronçon)** : déformation géométrique continue garantissant 0mm de cassure ou d'écart entre les tronçons successifs.
+- **Panneaux Chevrons de Virage (`getCurveChevronTexture`)** : panneaux `<<<` et `>>>` haute visibilité implantés automatiquement à l'extérieur des courbes prononcées.
+- **Pilotage Actif & Caméra Dynamique** : déport centrifuge dans les virages rapides (`centrifugalDrift`) obligeant à braquer dans la courbe, suivi caméra tangentiel avec anticipation à 18m et léger roulis d'horizon (`banking`).
+
+### D. Recalibrage de la Progression vers l'Objectif 100% (`src/core/GameState.js` & `src/entities/Projectiles.js`)
+- **Distance de Course Étendue** : portée de `1400m` à `2400m` (`1800m` en mission cataclysme).
+- **Multiplicateur de Combo Progressif** : `1 + (combo - 1) * 0.25` (plafonné à `×3.25` en combo ×10 au lieu de `×10`), évitant l'explosion instantanée du score.
+- **Équilibrage des Armes Explosives & Cibles** : réduction des points bruts d'obus/missiles/plasma (`380..420` sur véhicule, `220` sur piéton AoE), suppression du double comptage sur les carambolages et rehaussement des `targetScore` de toutes les villes (`×2.15`), demandant ~45 à 65 secondes d'action soutenue pour atteindre les 100%.
 
 
