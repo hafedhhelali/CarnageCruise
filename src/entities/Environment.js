@@ -50,8 +50,11 @@ export class Environment {
       })(),
       palmTrunk: new THREE.CylinderGeometry(0.18, 0.26, 4.0, 6),
       palmLeaf: new THREE.BoxGeometry(0.3, 0.05, 2.2),
-      lampPost: new THREE.CylinderGeometry(0.06, 0.08, 4.2, 6),
-      lampBulb: new THREE.SphereGeometry(0.2, 8, 8),
+      lampBase: new THREE.CylinderGeometry(0.18, 0.24, 0.7, 8),
+      lampPost: new THREE.CylinderGeometry(0.06, 0.09, 3.6, 8),
+      lampArm: new THREE.CylinderGeometry(0.04, 0.04, 0.65, 6),
+      lampCap: new THREE.ConeGeometry(0.22, 0.14, 6),
+      lampBulb: new THREE.CylinderGeometry(0.14, 0.10, 0.26, 6),
       mailbox: new THREE.BoxGeometry(0.4, 0.7, 0.35),
       romanColumn: new THREE.CylinderGeometry(0.28, 0.32, 4.2, 8),
       romanCapital: new THREE.BoxGeometry(0.85, 0.35, 0.85),
@@ -173,7 +176,7 @@ export class Environment {
       foliage2: new THREE.MeshToonMaterial({ color: 0x1e8449, gradientMap: textureFactory.getToonGradientMap() }),
       wood: new THREE.MeshToonMaterial({ color: 0x5d4037, gradientMap: textureFactory.getToonGradientMap() }),
       lamp: new THREE.MeshToonMaterial({ color: 0x2d3740, gradientMap: textureFactory.getToonGradientMap() }),
-      lampBulb: new THREE.MeshBasicMaterial({ color: 0xfffae6 }),
+      lampBulb: new THREE.MeshBasicMaterial({ color: 0xfff1d0 }),
       yellow: new THREE.MeshToonMaterial({ color: 0xf1c40f, gradientMap: textureFactory.getToonGradientMap() }),
       marble: new THREE.MeshToonMaterial({ color: 0xf5f6fa, gradientMap: textureFactory.getToonGradientMap() }),
       terracotta: new THREE.MeshToonMaterial({ color: 0xd35400, gradientMap: textureFactory.getToonGradientMap() })
@@ -1669,45 +1672,35 @@ export class Environment {
       const side = (idx % 2 === 0 ? 1 : -1);
       const xSidewalk = side * 5.2;
 
-      // Réverbère parisien ou lanterne méditerranéenne
+      // Réverbère haussmannien élégant et sobre
       const lamp = new THREE.Group();
       lamp.position.set(side * 4.6, 0, z);
       lamp.userData = { type: 'lamp', isHit: false };
 
+      // 1. Socle cannelé en fonte
+      const baseMesh = new THREE.Mesh(this.sharedGeos.lampBase, lampMat);
+      baseMesh.position.y = 0.35;
+      lamp.add(baseMesh);
+
+      // 2. Colonne fuselée
       const pole = new THREE.Mesh(this.sharedGeos.lampPost, lampMat);
-      pole.position.y = 2.1;
+      pole.position.y = 2.4;
       lamp.add(pole);
 
+      // 3. Crosse courbée en col de cygne surplombant le trottoir
+      const arm = new THREE.Mesh(this.sharedGeos.lampArm, lampMat);
+      arm.rotation.z = side > 0 ? 0.45 : -0.45;
+      arm.position.set(-side * 0.22, 4.3, 0);
+      lamp.add(arm);
+
+      // 4. Lanterne parisienne avec chapeau en fonte et diffuseur chaud
+      const cap = new THREE.Mesh(this.sharedGeos.lampCap, lampMat);
+      cap.position.set(-side * 0.45, 4.45, 0);
+      lamp.add(cap);
+
       const bulb = new THREE.Mesh(this.sharedGeos.lampBulb, glowMat);
-      bulb.position.set(-side * 0.4, 4.0, 0);
+      bulb.position.set(-side * 0.45, 4.25, 0);
       lamp.add(bulb);
-
-      // Cône lumineux volumétrique descendant (Éclairage nocturne arcade chaleureux)
-      if (!this.sharedGeos.lampLightCone) {
-        this.sharedGeos.lampLightCone = new THREE.ConeGeometry(1.4, 3.8, 8, 1, true);
-        this.sharedMats.lampLightCone = new THREE.MeshBasicMaterial({
-          color: 0xfffa65,
-          transparent: true,
-          opacity: 0.08,
-          depthWrite: false,
-          side: THREE.DoubleSide
-        });
-        this.sharedGeos.lampGroundPool = new THREE.CircleGeometry(1.6, 10);
-        this.sharedMats.lampGroundPool = new THREE.MeshBasicMaterial({
-          color: 0xfff275,
-          transparent: true,
-          opacity: 0.14,
-          depthWrite: false
-        });
-      }
-      const lightCone = new THREE.Mesh(this.sharedGeos.lampLightCone, this.sharedMats.lampLightCone);
-      lightCone.position.set(-side * 0.4, 2.0, 0);
-      lamp.add(lightCone);
-
-      const groundPool = new THREE.Mesh(this.sharedGeos.lampGroundPool, this.sharedMats.lampGroundPool);
-      groundPool.rotation.x = -Math.PI / 2;
-      groundPool.position.set(-side * 0.4, 0.03, 0);
-      lamp.add(groundPool);
 
       chunk.add(lamp);
       chunk.userData.props.push(lamp);

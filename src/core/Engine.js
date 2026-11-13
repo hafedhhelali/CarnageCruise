@@ -96,12 +96,12 @@ export class Engine {
 
     // Caméra perspective grand angle arcade
     this.camera = new THREE.PerspectiveCamera(
-      70,
+      66,
       window.innerWidth / window.innerHeight,
       0.1,
       600
     );
-    this.baseFov = 70;
+    this.baseFov = 66;
 
     // Pool de PointLights dynamiques pour flashs d'armes et d'explosions (Zéro lag mobile)
     this.dynamicLights = [];
@@ -166,7 +166,7 @@ export class Engine {
 
     // Propriétés de caméra dynamique (Zoom-out panoramique arcade)
     this.cameraTarget = new THREE.Vector3(0, 1.4, 0);
-    this.cameraOffset = new THREE.Vector3(0, 4.6, -9.2); // Position arcade surélevée et reculée pour vue grandiose
+    this.cameraOffset = new THREE.Vector3(0, 4.3, -8.8); // Position arcade surélevée, reculée et stable
     this.shakeIntensity = 0;
     this.shakeDecay = 6.0;
 
@@ -322,40 +322,40 @@ export class Engine {
       }
     }
 
-    // Calcul de la secousse d'impact comique
-    let shakeX = 0;
-    let shakeY = 0;
-    if (this.shakeIntensity > 0) {
-      shakeX = (Math.random() - 0.5) * this.shakeIntensity;
-      shakeY = (Math.random() - 0.5) * this.shakeIntensity;
-      this.shakeIntensity = Math.max(0, this.shakeIntensity - this.shakeDecay * delta);
-    }
-
-    // Suivi fluide dynamique de la moto : la caméra suit parfaitement latéralement
-    // pour garder le pilote 100% visible même à l'extrémité des trottoirs gauche et droite
-    const targetCamX = bikePosition.x * 0.88 + shakeX;
-    const targetCamY = bikePosition.y + this.cameraOffset.y + shakeY;
+    // Position cible fluide : caméra strictement alignée sur l'axe du joueur (zéro inclinaison oblique)
+    const targetCamX = bikePosition.x;
+    const targetCamY = bikePosition.y + this.cameraOffset.y;
     const targetCamZ = bikePosition.z + this.cameraOffset.z;
 
-    this.camera.position.x += (targetCamX - this.camera.position.x) * Math.min(1.0, delta * 9.5);
-    this.camera.position.y += (targetCamY - this.camera.position.y) * Math.min(1.0, delta * 8.0);
-    this.camera.position.z += (targetCamZ - this.camera.position.z) * Math.min(1.0, delta * 15.0);
+    this.camera.position.x += (targetCamX - this.camera.position.x) * Math.min(1.0, delta * 12.0);
+    this.camera.position.y += (targetCamY - this.camera.position.y) * Math.min(1.0, delta * 9.0);
+    this.camera.position.z += (targetCamZ - this.camera.position.z) * Math.min(1.0, delta * 16.0);
 
-    // LookAt centré précisément sur le couloir du joueur avec visibilité lointaine anticipée
+    // Secousse comique appliquée proprement uniquement lors d'impacts avérés (zéro tremblement continu)
+    if (this.shakeIntensity > 0.001) {
+      const shakeX = (Math.random() - 0.5) * this.shakeIntensity;
+      const shakeY = (Math.random() - 0.5) * this.shakeIntensity;
+      this.camera.position.x += shakeX;
+      this.camera.position.y += shakeY;
+      this.shakeIntensity = Math.max(0, this.shakeIntensity - this.shakeDecay * delta);
+    } else {
+      this.shakeIntensity = 0;
+    }
+
+    // LookAt centré précisément sur l'axe du joueur avec visibilité anticipée
     const lookTargetX = bikePosition.x;
-    const lookTargetY = bikePosition.y + 1.5;
-    const lookTargetZ = bikePosition.z + 16.0;
+    const lookTargetY = bikePosition.y + 1.4;
+    const lookTargetZ = bikePosition.z + 14.0;
     this.camera.lookAt(lookTargetX, lookTargetY, lookTargetZ);
 
-    // Élargissement du champ de vision (FOV) selon la vitesse pour booster les sensations
-    const speedBonusFov = (bikeSpeed / 30.0) * 14.0;
+    // Élargissement dynamique du champ de vision (FOV) selon la vitesse
+    const speedBonusFov = (bikeSpeed / 30.0) * 10.0;
     const targetFov = this.baseFov + speedBonusFov;
     this.camera.fov += (targetFov - this.camera.fov) * delta * 5.0;
     this.camera.updateProjectionMatrix();
 
-    // Roulis dynamique de caméra dans les virages
-    const targetRoll = -Math.max(-0.05, Math.min(0.05, (this.camera.position.x - bikePosition.x) * 0.025));
-    this.camera.rotation.z += (targetRoll - this.camera.rotation.z) * delta * 6.0;
+    // Règle d'or : orientation strictement horizontale et stable, zéro roulis ni vibration
+    this.camera.rotation.z = 0;
   }
 
   updateCameraCinematic(delta, bikePosition) {

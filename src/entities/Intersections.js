@@ -276,17 +276,34 @@ export class IntersectionManager {
   // --- CRÉATION DE CANDÉLABRE URBAIN RÉALISTE ---
   createStreetLampMesh() {
     const lampGroup = new THREE.Group();
-    const ironMat = new THREE.MeshToonMaterial({ color: 0x2f3542 });
+    const ironMat = new THREE.MeshToonMaterial({ color: 0x242a30 });
+    const glowMat = new THREE.MeshBasicMaterial({ color: 0xfff1d0 });
 
-    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.14, 5.8, 8), ironMat);
-    post.position.y = 2.9;
+    // Socle
+    const base = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.25, 0.7, 8), ironMat);
+    base.position.y = 0.35;
+    lampGroup.add(base);
+
+    // Mât élancé
+    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.1, 3.8, 8), ironMat);
+    post.position.y = 2.5;
     lampGroup.add(post);
 
-    const globeGeo = new THREE.SphereGeometry(0.25, 10, 8);
-    const globeMat = new THREE.MeshBasicMaterial({ color: 0xfffa65 });
-    const globe = new THREE.Mesh(globeGeo, globeMat);
-    globe.position.set(0, 5.7, 0);
-    lampGroup.add(globe);
+    // Crosse arquée
+    const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.7, 6), ironMat);
+    arm.rotation.z = 0.45;
+    arm.position.set(-0.25, 4.5, 0);
+    lampGroup.add(arm);
+
+    // Chapeau de lanterne
+    const cap = new THREE.Mesh(new THREE.ConeGeometry(0.24, 0.15, 6), ironMat);
+    cap.position.set(-0.5, 4.65, 0);
+    lampGroup.add(cap);
+
+    // Corps de lanterne
+    const lantern = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.1, 0.28, 6), glowMat);
+    lantern.position.set(-0.5, 4.45, 0);
+    lampGroup.add(lantern);
 
     return lampGroup;
   }
@@ -430,22 +447,7 @@ export class IntersectionManager {
     lightR.position.set(chassisL / 2 + 0.02, chassisY + 0.12, -chassisW * 0.32);
     carGroup.add(lightL, lightR);
 
-    // Faisceaux volumétriques de phares (Headlight Beams projetés vers l'avant)
-    const beamGeo = new THREE.ConeGeometry(0.65, 8.5, 8, 1, true);
-    const beamMat = new THREE.MeshBasicMaterial({
-      color: 0xfff9c4,
-      transparent: true,
-      opacity: 0.18,
-      depthWrite: false,
-      side: THREE.DoubleSide
-    });
-    const beamL = new THREE.Mesh(beamGeo, beamMat);
-    beamL.rotation.z = -Math.PI / 2;
-    beamL.position.set(chassisL / 2 + 4.25, chassisY + 0.1, chassisW * 0.32);
-    const beamR = new THREE.Mesh(beamGeo, beamMat);
-    beamR.rotation.z = -Math.PI / 2;
-    beamR.position.set(chassisL / 2 + 4.25, chassisY + 0.1, -chassisW * 0.32);
-    carGroup.add(beamL, beamR);
+
 
     // Barre LED rouge continue à l'arrière
     const lightbar = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.12, chassisW * 0.85), tailMat);
