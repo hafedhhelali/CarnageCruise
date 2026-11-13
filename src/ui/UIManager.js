@@ -3151,8 +3151,8 @@ export class UIManager {
           <div class="ruins-hud-banner" style="display: flex; align-items: center; gap: 10px; background: rgba(14, 8, 8, 0.94); border: 2px solid #ff4757; padding: 8px 14px; border-radius: 12px; box-shadow: 0 4px 18px rgba(0,0,0,0.85); pointer-events: auto;">
             <span style="font-size: 1.5rem;">☢️</span>
             <div>
-              <div style="font-size: 0.88rem; font-weight: 950; color: #ff7675; letter-spacing: 0.5px;">RECONNAISSANCE RUINES • ${gameState.selectedCity.name.toUpperCase()}</div>
-              <div style="font-size: 0.68rem; color: #ced6e0; font-weight: 800;">540 Sv/h • 0 SURVIVANT (VILLE CONDAMNÉE)</div>
+              <div style="font-size: 0.88rem; font-weight: 950; color: #ff7675; letter-spacing: 0.5px;">MODE BALLADE • RUINES DE ${gameState.selectedCity.name.toUpperCase()}</div>
+              <div style="font-size: 0.68rem; color: #ced6e0; font-weight: 800;">Promenade libre à petite allure • Zéro circulation</div>
             </div>
           </div>
           <button id="btn-hud-exit-ruins" class="btn-arcade interactive" style="background: linear-gradient(135deg, #eb4d4b, #c0392b); border: 2.5px solid #ff7675; color: #ffffff; font-weight: 950; font-size: 0.92rem; padding: 12px 20px; border-radius: 14px; cursor: pointer; box-shadow: 0 6px 20px rgba(235,77,75,0.7); pointer-events: auto !important; z-index: 9999;" title="Quitter la reconnaissance et retourner à l'accueil / carte">
@@ -3213,17 +3213,17 @@ export class UIManager {
           <div class="speed-track-gauge">
             <div class="speed-fill-gauge" id="hud-speed-gauge"></div>
           </div>
-          <div class="hud-carnage-badge" id="hud-carnage-badge" title="Victimes exterminées / Objectif de carnage">
+${gameState.isRuinsMode ? '' : `          <div class="hud-carnage-badge" id="hud-carnage-badge" title="Victimes exterminées / Objectif de carnage">
             <span class="carnage-icon">💀</span>
             <span class="carnage-count" id="hud-kills-val">${gameState.killsCount || 0}</span>
             <span class="carnage-sep">/</span>
             <span class="carnage-quota" id="hud-quota-val">${gameState.selectedCity.killQuota || 30}</span>
-          </div>
+          </div>`}
         </div>
 
         <!-- Groupe de commandes droit ergonomique (Nitro / Energy Drink + Arme/Klaxon) -->
         <div class="hud-right-cluster">
-          <div class="hud-nitro-group">
+${gameState.isRuinsMode ? '' : `          <div class="hud-nitro-group">
             <button class="btn-nitro-pedal ${isFootOrHorse ? 'btn-energy-drink' : ''} ${isFootOrHorse && gameState.energyDrinkCans > 0 ? 'ready' : ''}" id="btn-hud-nitro" title="${boostTitle}">
               <div class="nitro-fill-track">
                 <div class="nitro-fill-bar ${isFootOrHorse ? 'energy-fill-bar' : ''}" id="hud-nitro-fill" style="width: ${isFootOrHorse ? (gameState.energyDrinkCans > 0 ? '100%' : '0%') : '0%'};"></div>
@@ -3232,7 +3232,7 @@ export class UIManager {
               <span class="nitro-label" id="hud-nitro-label">${boostLabel}</span>
               <span class="nitro-sub" id="hud-nitro-sub">${isFootOrHorse ? `${gameState.energyDrinkCans} DISPO` : '0%'}</span>
             </button>
-          </div>
+          </div>`}
 
           ${isWeapon ? `
             <!-- Bouton d'Attaque / Frappe / Tir Arme Spécifique (pouce droit) -->

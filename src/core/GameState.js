@@ -1701,9 +1701,10 @@ export const BIKES = [
     cost: 0,
     unlocked: true,
     scale: 1.25,
-    maxSpeed: 23,
-    accel: 16,
-    steerSpeed: 18,
+    maxSpeed: 17.5,
+    accel: 8.5,
+    steerSpeed: 14,
+    accelProfile: 'heavy',
     isTank: true
   },
   {
@@ -1721,9 +1722,10 @@ export const BIKES = [
     cost: 5000,
     unlocked: true,
     scale: 1.15,
-    maxSpeed: 28,
-    accel: 20,
-    steerSpeed: 22,
+    maxSpeed: 36,
+    accel: 25,
+    steerSpeed: 23,
+    accelProfile: 'supersonic',
     isFlyingCraft: true
   },
   {
@@ -1741,9 +1743,10 @@ export const BIKES = [
     cost: 3500,
     unlocked: true,
     scale: 1.2,
-    maxSpeed: 26,
-    accel: 18,
+    maxSpeed: 27.5,
+    accel: 16,
     steerSpeed: 20,
+    accelProfile: 'glide',
     isHovercraft: true,
     terrainSpecialty: 'DAM'
   },
@@ -1762,9 +1765,10 @@ export const BIKES = [
     cost: 4200,
     unlocked: true,
     scale: 1.25,
-    maxSpeed: 24,
-    accel: 17,
-    steerSpeed: 19,
+    maxSpeed: 21,
+    accel: 12,
+    steerSpeed: 17,
+    accelProfile: 'heavy',
     isRadRover: true,
     terrainSpecialty: 'NUCLEAR'
   },
@@ -1785,7 +1789,8 @@ export const BIKES = [
     scale: 1.15,
     maxSpeed: 25,
     accel: 19,
-    steerSpeed: 22,
+    steerSpeed: 21,
+    accelProfile: 'grip',
     isSnowmobile: true,
     terrainSpecialty: 'MOUNTAIN'
   },
@@ -1804,9 +1809,10 @@ export const BIKES = [
     cost: 0,
     unlocked: true,
     scale: 1.0,
-    maxSpeed: 17,
-    accel: 11,
-    steerSpeed: 16
+    maxSpeed: 14.5,
+    accel: 14,
+    steerSpeed: 25,
+    accelProfile: 'peppy'
   },
   {
     id: 'chopper',
@@ -1823,9 +1829,10 @@ export const BIKES = [
     cost: 800,
     unlocked: false,
     scale: 1.15,
-    maxSpeed: 19,
-    accel: 13,
-    steerSpeed: 14
+    maxSpeed: 22,
+    accel: 13.5,
+    steerSpeed: 15,
+    accelProfile: 'torque'
   },
   {
     id: 'decapotable',
@@ -1842,9 +1849,10 @@ export const BIKES = [
     cost: 1600,
     unlocked: false,
     scale: 1.22,
-    maxSpeed: 23,
-    accel: 15,
-    steerSpeed: 16
+    maxSpeed: 27,
+    accel: 16.5,
+    steerSpeed: 17,
+    accelProfile: 'muscle'
   },
   {
     id: 'trottinette_hache',
@@ -1861,9 +1869,10 @@ export const BIKES = [
     cost: 2600,
     unlocked: false,
     scale: 1.05,
-    maxSpeed: 20,
-    accel: 13,
-    steerSpeed: 22
+    maxSpeed: 16,
+    accel: 18,
+    steerSpeed: 27,
+    accelProfile: 'electric'
   },
   {
     id: 'cheval',
@@ -1880,9 +1889,10 @@ export const BIKES = [
     cost: 3800,
     unlocked: false,
     scale: 1.12,
-    maxSpeed: 21,
-    accel: 14,
-    steerSpeed: 20
+    maxSpeed: 19.5,
+    accel: 17,
+    steerSpeed: 23,
+    accelProfile: 'gallop'
   },
   {
     id: 'run_ak47',
@@ -1899,9 +1909,10 @@ export const BIKES = [
     cost: 5200,
     unlocked: false,
     scale: 1.08,
-    maxSpeed: 22,
-    accel: 15,
-    steerSpeed: 24
+    maxSpeed: 16.5,
+    accel: 20,
+    steerSpeed: 29,
+    accelProfile: 'sprint'
   },
   {
     id: 'run_chainsaw',
@@ -1918,9 +1929,10 @@ export const BIKES = [
     cost: 6800,
     unlocked: false,
     scale: 1.08,
-    maxSpeed: 22,
-    accel: 15,
-    steerSpeed: 23
+    maxSpeed: 16.5,
+    accel: 20,
+    steerSpeed: 28,
+    accelProfile: 'sprint'
   },
   {
     id: 'rouleau',
@@ -1937,9 +1949,10 @@ export const BIKES = [
     cost: 8500,
     unlocked: false,
     scale: 1.25,
-    maxSpeed: 18,
-    accel: 11,
-    steerSpeed: 14
+    maxSpeed: 13.5,
+    accel: 6,
+    steerSpeed: 11,
+    accelProfile: 'titan'
   },
   {
     id: 'dragster',
@@ -1956,9 +1969,10 @@ export const BIKES = [
     cost: 11000,
     unlocked: false,
     scale: 1.28,
-    maxSpeed: 25,
-    accel: 17,
-    steerSpeed: 13
+    maxSpeed: 33,
+    accel: 29,
+    steerSpeed: 11,
+    accelProfile: 'drag'
   }
 ];
 
@@ -2090,8 +2104,8 @@ export class GameState {
     // Démarrage : Reconnaissance immédiate en mode ruines ou compte à rebours 3, 2, 1, GO en course classique
     if (this.isRuinsMode) {
       this.currentMode = 'PLAYING';
-      this.targetSpeed = this.selectedBike ? this.selectedBike.maxSpeed : 22;
-      this.speed = Math.max(14, this.targetSpeed * 0.65);
+      this.targetSpeed = 7.0; // Ballade tranquille à petite vitesse (25 km/h)
+      this.speed = 7.0;
     } else {
       this.currentMode = 'COUNTDOWN';
     }
@@ -2423,16 +2437,66 @@ export class GameState {
       }
     }
 
-    // 2. Gestion du frein et de la reprise de circulation avec Nitro Boost (vitesse calibrée & contrôlable)
+    // 2. Mode Exploration Ruines : Ballade douce à petite vitesse sans compétition
+    if (this.isRuinsMode) {
+      const ruinsCruiseSpeed = 7.0;
+      if (this.isBraking) {
+        this.speed = Math.max(0, this.speed - delta * 15.0);
+      } else {
+        this.speed = Math.min(ruinsCruiseSpeed, this.speed + delta * 5.0);
+      }
+      this.distance += this.speed * delta;
+      this.notify('stats_tick', {
+        distance: Math.floor(this.distance),
+        speed: Math.floor(this.speed * 3.6),
+        score: this.score,
+        targetScore: this.selectedCity.targetScore,
+        scoreRatio: 1.0
+      });
+      return;
+    }
+
+    // 2b. Évolution dynamique de la vitesse selon le profil unique de chaque engin
     const maxSpeedCap = this.isNitroActive ? (this.targetSpeed * 1.35) : this.targetSpeed;
-    const accelRate = this.isNitroActive ? (this.selectedBike.accel * 1.6) : this.selectedBike.accel;
+    let baseAccel = this.isNitroActive ? (this.selectedBike.accel * 1.6) : this.selectedBike.accel;
 
     if (this.isBraking) {
       // Décélération rapide jusqu'à l'arrêt complet
       this.speed = Math.max(0, this.speed - delta * 30.0);
     } else {
-      // Réaccélération progressive vers la vitesse de croisière
-      this.speed = Math.min(maxSpeedCap, this.speed + delta * accelRate);
+      const speedRatio = Math.max(0, Math.min(1.0, this.speed / Math.max(1, maxSpeedCap)));
+      let curveFactor = 1.0;
+
+      const profile = this.selectedBike.accelProfile || 'muscle';
+      switch (profile) {
+        case 'electric':
+        case 'sprint':
+        case 'peppy':
+          // Couple immédiat à basse vitesse, s'adoucit à l'approche du plafond
+          curveFactor = Math.max(0.35, 1.4 - speedRatio * 1.05);
+          break;
+        case 'drag':
+        case 'supersonic':
+          // Puissance phénoménale explosive soutenue
+          curveFactor = Math.max(0.85, 1.6 - speedRatio * 0.4);
+          break;
+        case 'heavy':
+        case 'titan':
+          // Inertie colossale : départ progressif puis élan inarrêtable
+          curveFactor = Math.max(0.45, 0.4 + speedRatio * 0.8);
+          break;
+        case 'torque':
+        case 'muscle':
+        case 'glide':
+        case 'gallop':
+        default:
+          // Montée progressive avec crête de couple à mi-régime
+          curveFactor = 0.75 + Math.sin(speedRatio * Math.PI) * 0.45;
+          break;
+      }
+
+      const effectiveAccel = baseAccel * curveFactor;
+      this.speed = Math.min(maxSpeedCap, this.speed + delta * effectiveAccel);
     }
 
     // Points de conduite continue arcade : rouler vite fait monter le score (doublé sous Nitro) !

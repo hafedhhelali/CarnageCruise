@@ -342,7 +342,7 @@ export class Engine {
       this.shakeIntensity = 0;
     }
 
-    // LookAt centré précisément sur l'axe du joueur avec visibilité anticipée
+    // LookAt centré précisément sur l'axe du joueur avec visibilité anticipée (orientation naturelle stable)
     const lookTargetX = bikePosition.x;
     const lookTargetY = bikePosition.y + 1.4;
     const lookTargetZ = bikePosition.z + 14.0;
@@ -353,9 +353,6 @@ export class Engine {
     const targetFov = this.baseFov + speedBonusFov;
     this.camera.fov += (targetFov - this.camera.fov) * delta * 5.0;
     this.camera.updateProjectionMatrix();
-
-    // Règle d'or : orientation strictement horizontale et stable, zéro roulis ni vibration
-    this.camera.rotation.z = 0;
   }
 
   updateCameraCinematic(delta, bikePosition) {

@@ -248,8 +248,10 @@ class GameApp {
         if (gameState.isRuinsMode) {
           soundManager.stopMusic();
           soundManager.playGeigerClick();
+          if (this.intersections) this.intersections.reset();
+          if (this.traffic) this.traffic.reset();
           if (this.ui) {
-            this.ui.showToastUnlock({ name: '☢️ EXPLORATION DES RUINES — ZONE CONDAMNÉE' });
+            this.ui.showToastUnlock({ name: '🏚️ BALLADE LIBRE — RUINES DE LA VILLE ANÉANTIE' });
           }
         } else {
           // MODE NUIT ALÉATOIRE (~35% des runs) : bascule l'ambiance 3D après
@@ -839,8 +841,8 @@ class GameApp {
         });
       }
 
-      // 9. Gestion des carrefours réalistes, feux et verbalisations (désactivés en plein vol)
-      if (!isFlyingCraft) {
+      // 9. Gestion des carrefours réalistes, feux et verbalisations (désactivés en plein vol et en mode ballade ruines)
+      if (!isFlyingCraft && !gameState.isRuinsMode) {
         this.intersections.update(
           delta,
           this.bike.z,
