@@ -360,11 +360,8 @@ export class Engine {
     this.lookAtCurrent.x += (lookTargetX - this.lookAtCurrent.x) * dampLook;
     this.lookAtCurrent.y += (lookTargetY - this.lookAtCurrent.y) * dampLook;
     this.lookAtCurrent.z = lookTargetZ;
+    this.camera.up.set(0, 1, 0);
     this.camera.lookAt(this.lookAtCurrent.x, this.lookAtCurrent.y, this.lookAtCurrent.z);
-
-    // Inclinaison cinématique subtile de l'horizon (banking) dans les virages rapides
-    const bankFactor = Math.min(1.0, bikeSpeed / 22.0);
-    this.camera.rotation.z = -roadAngle * 0.16 * bankFactor;
 
     // Élargissement dynamique et progressif du champ de vision (FOV) selon la vitesse
     const speedBonusFov = Math.min(11.0, (bikeSpeed / 30.0) * 9.5);

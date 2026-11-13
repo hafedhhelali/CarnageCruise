@@ -1,6 +1,6 @@
 {
   "name": "carnage-cruise",
-  "version": "0.9.49-beta",
+  "version": "0.9.50-beta",
   "type": "module",
   "main": "index.js",
   "scripts": {

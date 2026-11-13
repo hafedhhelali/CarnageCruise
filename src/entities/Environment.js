@@ -272,17 +272,21 @@ export class Environment {
     this.createFinishArch(this.finishDistance);
   }
 
-  // Calcul mathématique de la courbure de la rue selon Z (grands virages en S et chicanes dynamiques)
+  // Calcul mathématique de la courbure de la rue selon Z (grands virages en S et chicanes synchronisés avec les carrefours)
   getRoadCenterX(z) {
     // Villes à route droite explicite : pas de virages
     if (this.cityTheme && this.cityTheme.roadStraight) return 0;
     // Transition progressive sur les 35 premiers mètres au départ pour un lancement fluide
     const ramp = Math.min(1.0, Math.max(0.0, (z - 10) / 35.0));
-    // Combinaison harmonique : grandes courbes rapides (+/- 8.2m), longues dérives (+/- 5.2m) et chicanes (+/- 2.2m)
+    // Phase calée sur l'espacement des carrefours (Z = 95 + k*160) :
+    // À chaque carrefour, u = k*PI donc sin(u) = 0 et la tangente dX/dZ = 0 (carrefour parfaitement droit et d'équerre),
+    // tandis qu'entre deux carrefours la chaussée décrit de grands virages en S et chicanes (+/- 13.5m) !
+    const u = (Math.PI * (z - 95.0)) / 160.0;
+    const s = Math.sin(u);
     return ramp * (
-      Math.sin(z * 0.016) * 8.2 +
-      Math.sin(z * 0.007) * 5.2 +
-      Math.sin(z * 0.029) * 2.2
+      (Math.cos(u) - 1.0) * 6.5 +
+      Math.sin(u * 2.0) * s * 3.8 +
+      s * s * Math.sin(z * 0.009) * 5.2
     );
   }
 
@@ -1290,16 +1294,19 @@ export class Environment {
     chunk.add(road);
     chunk.userData.ribbons.push(road);
 
-    // Bandes blanches centrales qui suivent la tangente de la courbe et s'effacent automatiquement aux carrefours
+    // Bandes blanches centrales subdivisées en rubans (déformées point par point avec la chaussée : 100% parallèles aux trottoirs dans tous les virages !)
     if (!this.isRuinsMode) {
+      const stripeTemplate = new THREE.PlaneGeometry(0.18, 3.4, 1, 8);
+      stripeTemplate.rotateX(-Math.PI / 2);
       const numStripes = Math.floor(this.chunkLength / 7);
       for (let i = 0; i < numStripes; i++) {
         const localZ = -this.chunkLength / 2 + i * 7 + 3.5;
-        const stripe = new THREE.Mesh(this.sharedGeos.stripe, stripeMat);
-        stripe.rotation.x = -Math.PI / 2;
-        stripe.position.set(0, 0.015, localZ);
-        stripe.userData = { baseX: 0, localZ, baseRotY: 0, isFlatDecal: true, hideAtIntersection: true, interClearance: 9.8 };
+        const sGeo = stripeTemplate.clone();
+        sGeo.translate(0, 0.016, localZ);
+        sGeo.userData = { basePos: Float32Array.from(sGeo.attributes.position.array), isSidewalkOrCurb: true };
+        const stripe = new THREE.Mesh(sGeo, stripeMat);
         chunk.add(stripe);
+        chunk.userData.ribbons.push(stripe);
       }
     }
 
@@ -1390,8 +1397,8 @@ export class Environment {
       child.position.x = (child.userData.baseX || 0) + roadX;
       child.position.z = child.userData.localZ;
 
-      if (child.userData.isFlatDecal) {
-        child.rotation.z = -roadAngle;
+      if (child.userData.skipAngle) {
+        child.rotation.y = child.userData.baseRotY || 0;
       } else if (!child.userData.isHit) {
         child.rotation.y = (child.userData.baseRotY || 0) + roadAngle;
       }
@@ -1422,7 +1429,7 @@ export class Environment {
   addSpeedBump(chunk, localZ) {
     const bumpGroup = new THREE.Group();
     bumpGroup.position.set(0, 0, localZ);
-    bumpGroup.userData = { baseX: 0, localZ, baseRotY: 0, hideAtIntersection: true, interClearance: 13.5 };
+    bumpGroup.userData = { baseX: 0, localZ, baseRotY: 0, skipAngle: true, hideAtIntersection: true, interClearance: 13.5 };
 
     // 1. Corps trapézoïdal du ralentisseur (dos d'âne asphalté surélevé de 18cm)
     const bumpGeo = new THREE.BoxGeometry(8.4, 0.18, 2.6);
@@ -1476,7 +1483,7 @@ export class Environment {
       return;
     }
 
-    const xBase = side * 8.5;
+    const xBase = side * 7.85;
     let currentZ = -this.chunkLength / 2;
     let parcelIndex = chunkIdx * 7 + (side > 0 ? 3 : 0);
 
@@ -1508,11 +1515,12 @@ export class Environment {
         continue;
       }
 
+      // Pivot placé directement sur l'alignement de la façade (bord extérieur du trottoir)
+      // pour que la façade reste 100% parallèle et collée au trottoir dans tous les virages !
       const buildingGroup = new THREE.Group();
-      const centerX = xBase + side * (bDepth / 2);
-      buildingGroup.position.set(centerX, 0, centerZ);
+      buildingGroup.position.set(xBase, 0, centerZ);
       buildingGroup.userData = {
-        baseX: centerX,
+        baseX: xBase,
         localZ: centerZ,
         baseRotY: 0,
         hideAtIntersection: true,
@@ -1525,7 +1533,7 @@ export class Environment {
 
       const bGeo = new THREE.BoxGeometry(bDepth, bHeight, bWidth);
       const bMesh = new THREE.Mesh(bGeo, randomMat);
-      bMesh.position.set(0, bHeight / 2, 0);
+      bMesh.position.set(side * (bDepth / 2), bHeight / 2, 0);
       bMesh.castShadow = true;
       buildingGroup.add(bMesh);
 
@@ -1533,24 +1541,24 @@ export class Environment {
       const roofH = styleIdx === 1 ? 0.9 : 2.6;
       const roofGeo = new THREE.BoxGeometry(bDepth * 0.94, roofH, bWidth * 0.96);
       const roof = new THREE.Mesh(roofGeo, roofMat);
-      roof.position.set(0, bHeight + roofH / 2, 0);
+      roof.position.set(side * (bDepth / 2), bHeight + roofH / 2, 0);
       buildingGroup.add(roof);
 
       // Lucarnes 3D et cheminées sur les toits mansardés
       if (styleIdx !== 1) {
         [-bWidth * 0.26, bWidth * 0.26].forEach(dz => {
           const dormer = new THREE.Mesh(new THREE.BoxGeometry(0.9, 1.3, 1.0), randomMat);
-          dormer.position.set(-side * (bDepth / 2 - 0.35), bHeight + 0.9, dz);
+          dormer.position.set(side * 0.45, bHeight + 0.9, dz);
           buildingGroup.add(dormer);
         });
         const chimney = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1.4, 1.2), this.sharedMats?.terracotta || roofMat);
-        chimney.position.set(0, bHeight + roofH + 0.5, -bWidth * 0.2);
+        chimney.position.set(side * (bDepth / 2), bHeight + roofH + 0.5, -bWidth * 0.2);
         buildingGroup.add(chimney);
       }
 
       // Façade Architecturale HD (4 styles variés : Haussmann, Cyber-Verre, Brique Patrimoine, Art-Déco)
       const facadeMesh = new THREE.Mesh(new THREE.PlaneGeometry(bWidth, bHeight), chosenFacadeMat);
-      facadeMesh.position.set(-side * (bDepth / 2 + 0.08), bHeight / 2, 0);
+      facadeMesh.position.set(-side * 0.06, bHeight / 2, 0);
       facadeMesh.rotation.y = side > 0 ? -Math.PI / 2 : Math.PI / 2;
       buildingGroup.add(facadeMesh);
 
@@ -1558,11 +1566,11 @@ export class Environment {
       [4.2, 8.0].forEach(by => {
         if (by < bHeight - 1.5) {
           const balcBBox = new THREE.Mesh(this.sharedGeos.balconyBase, balconyMat);
-          balcBBox.position.set(-side * (bDepth / 2 + 0.38), by, 0);
+          balcBBox.position.set(-side * 0.35, by, 0);
           buildingGroup.add(balcBBox);
 
           const balcRail = new THREE.Mesh(this.sharedGeos.balconyRailing, balconyMat);
-          balcRail.position.set(-side * (bDepth / 2 + 0.65), by + 0.35, 0);
+          balcRail.position.set(-side * 0.62, by + 0.35, 0);
           buildingGroup.add(balcRail);
         }
       });
@@ -1572,14 +1580,14 @@ export class Environment {
         const awningGeo = new THREE.BoxGeometry(1.7, 0.32, bWidth * 0.74);
         const awning = new THREE.Mesh(awningGeo, awningMat);
         awning.rotation.z = side * 0.32;
-        awning.position.set(-side * (bDepth / 2 + 0.68), 3.2, 0);
+        awning.position.set(-side * 0.65, 3.2, 0);
         buildingGroup.add(awning);
 
         const storeSignMat = (this.sharedMats?.storeSigns && this.sharedMats.storeSigns.length)
           ? this.sharedMats.storeSigns[parcelIndex % this.sharedMats.storeSigns.length]
           : (this.sharedMats?.storeSign || new THREE.MeshStandardMaterial({ color: 0xff4757, roughness: 0.4 }));
         const signMesh = new THREE.Mesh(this.sharedGeos.storeSign, storeSignMat);
-        signMesh.position.set(-side * (bDepth / 2 + 0.58), 3.82, 0);
+        signMesh.position.set(-side * 0.55, 3.82, 0);
         signMesh.rotation.y = side > 0 ? -Math.PI / 2 : Math.PI / 2;
         buildingGroup.add(signMesh);
       }

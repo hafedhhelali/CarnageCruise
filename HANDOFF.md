@@ -8,7 +8,7 @@ Ce document fournit l'ensemble des informations de conception, d'architecture lo
 ## 1. VISION DU PROJET & SPÉCIFICATIONS
 
 - **Genre** : Jeu de course d'arcade urbain / Runner 3D burlesque
-- **Version actuelle** : **0.9.49-beta** (Build / versionCode 59 - Canal 0.x.x BETA)
+- **Version actuelle** : **0.9.50-beta** (Build / versionCode 60 - Canal 0.x.x BETA)
 - **Signature & Clé** : Keystore permanent dédié `android/app/CarnageCruise.keystore` (validité 10 000 jours, EOMedia Paris)
 - **Plateforme cible** : Android (Smartphones & Tablettes) + WebGL Mobile/Desktop
 - **Direction artistique** : Cartoon 3D éclatant, physique burlesque (slapstick), animations hilarantes et dynamiques, identité française affirmée.
@@ -388,7 +388,7 @@ Ce document fournit l'ensemble des informations de conception, d'architecture lo
 
 ---
 
-## 13. REFONTE DES CARREFOURS 3D, GRAPHISMES URBAINS, VRAIS VIRAGES & PROGRESSION 100% (v0.9.49-beta / Build 59)
+## 13. REFONTE DES CARREFOURS 3D, GRAPHISMES URBAINS, VRAIS VIRAGES & PROGRESSION 100% (v0.9.50-beta / Build 60)
 
 ### A. Refonte Totale des Croisements 3D Architecturaux (`src/entities/Intersections.js` & `src/entities/Environment.js`)
 - **Dégagement Dynamique au Recyclage des Tronçons (`alignChunkToCurve`)** :
@@ -415,7 +415,8 @@ Ce document fournit l'ensemble des informations de conception, d'architecture lo
 - **Courbes en S et Chicanes Amples (`getRoadCenterX` & `getRoadCurvature`)** : amplitude portée de `±1.8m` à `±15.6m` combinant grandes courbes rapides, longues dérives et chicanes.
 - **Rubans Routiers Subdivisés (28 segments par tronçon)** : déformation géométrique continue garantissant 0mm de cassure ou d'écart entre les tronçons successifs.
 - **Panneaux Chevrons de Virage (`getCurveChevronTexture`)** : panneaux `<<<` et `>>>` haute visibilité implantés automatiquement à l'extérieur des courbes prononcées.
-- **Pilotage Actif & Caméra Dynamique** : déport centrifuge dans les virages rapides (`centrifugalDrift`) obligeant à braquer dans la courbe, suivi caméra tangentiel avec anticipation à 18m et léger roulis d'horizon (`banking`).
+- **Pilotage Actif & Caméra Dynamique Stable** : déport centrifuge dans les virages rapides (`centrifugalDrift`) obligeant à braquer dans la courbe, suivi caméra tangentiel avec anticipation à 18m et vecteur `camera.up = (0, 1, 0)` verrouillé avant `lookAt()` (suppression de l'écrasement `camera.rotation.z` post-`lookAt` qui inversait la vue 3D à 180° en regardant vers `+Z`).
+- **Bandes Blanches Centrales & Façades 100% Parallèles aux Trottoirs** : les bandes blanches axiales sont désormais des rubans subdivisés (8 segments) déformés point par point par la même équation `bx + getRoadCenterX(worldZ)` que les trottoirs et bordures, garantissant un parallélisme parfait dans tous les virages. Pivot des façades recalé sur le bord extérieur du trottoir (`xBase = ±7.85m`) et phase des courbes synchronisée sur l'espacement des carrefours (`Z = 95 + k*160`).
 
 ### D. Recalibrage de la Progression vers l'Objectif 100% (`src/core/GameState.js` & `src/entities/Projectiles.js`)
 - **Distance de Course Étendue** : portée de `1400m` à `2400m` (`1800m` en mission cataclysme).
