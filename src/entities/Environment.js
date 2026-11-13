@@ -166,7 +166,7 @@ export class Environment {
         emissiveIntensity: 0.35,
         roughness: 0.4
       }),
-      storeSigns: Array.from({ length: 6 }, (_, i) => new THREE.MeshStandardMaterial({
+      storeSigns: Array.from({ length: 10 }, (_, i) => new THREE.MeshStandardMaterial({
         map: textureFactory.getStoreSignTexture(cityDef.id || 'paris', i),
         roughness: 0.4,
         emissive: 0xffffff,
@@ -179,7 +179,16 @@ export class Environment {
       lampBulb: new THREE.MeshBasicMaterial({ color: 0xfff1d0 }),
       yellow: new THREE.MeshToonMaterial({ color: 0xf1c40f, gradientMap: textureFactory.getToonGradientMap() }),
       marble: new THREE.MeshToonMaterial({ color: 0xf5f6fa, gradientMap: textureFactory.getToonGradientMap() }),
-      terracotta: new THREE.MeshToonMaterial({ color: 0xd35400, gradientMap: textureFactory.getToonGradientMap() })
+      terracotta: new THREE.MeshToonMaterial({ color: 0xd35400, gradientMap: textureFactory.getToonGradientMap() }),
+      lawn: new THREE.MeshStandardMaterial({ color: 0x27ae60, roughness: 0.85 }),
+      fence: new THREE.MeshStandardMaterial({ color: 0x1e372f, roughness: 0.5, metalness: 0.5 }),
+      granite: new THREE.MeshStandardMaterial({ color: 0x95a5a6, roughness: 0.8 }),
+      fountainWater: new THREE.MeshStandardMaterial({ color: 0x0984e3, roughness: 0.2, metalness: 0.3 }),
+      flower1: new THREE.MeshStandardMaterial({ color: 0xe84393, roughness: 0.7 }),
+      flower2: new THREE.MeshStandardMaterial({ color: 0xfdcb6e, roughness: 0.7 }),
+      plaza: new THREE.MeshStandardMaterial({ color: 0xdcdde1, roughness: 0.8 }),
+      bronzeStatue: new THREE.MeshStandardMaterial({ color: 0x4a3728, metalness: 0.75, roughness: 0.35 }),
+      benchWood: new THREE.MeshStandardMaterial({ color: 0x8b4513, roughness: 0.6 })
     };
   }
 
@@ -1292,22 +1301,57 @@ export class Environment {
       chunk.add(createTrafficLight(1));
     }
 
-    // Trottoirs gauche et droite
-    const sidewalkL = new THREE.Mesh(this.sharedGeos.sidewalk, sidewalkMat);
-    sidewalkL.position.set(-5.95, 0.125, 0);
-    chunk.add(sidewalkL);
+    // Trottoirs gauche et droite avec dégagement TOTAL au carrefour (zéro trottoir barrant l'avenue perpendiculaire !)
+    const nearestInterZ = Math.round((zPos - 95) / 160) * 160 + 95;
+    const interLocalZ = nearestInterZ - zPos;
+    const hasIntersection = (interLocalZ >= -39.5 && interLocalZ <= 39.5);
 
-    const curbL = new THREE.Mesh(this.sharedGeos.curb, curbMat);
-    curbL.position.set(-4.25, 0.15, 0);
-    chunk.add(curbL);
+    const addSidewalkSegment = (centerZ, length) => {
+      if (length <= 0.6) return;
+      const walkGeo = new THREE.BoxGeometry(3.5, 0.25, length);
+      const curbGeo = new THREE.BoxGeometry(0.15, 0.3, length);
 
-    const sidewalkR = new THREE.Mesh(this.sharedGeos.sidewalk, sidewalkMat);
-    sidewalkR.position.set(5.95, 0.125, 0);
-    chunk.add(sidewalkR);
+      const sL = new THREE.Mesh(walkGeo, sidewalkMat);
+      sL.position.set(-5.95, 0.125, centerZ);
+      const cL = new THREE.Mesh(curbGeo, curbMat);
+      cL.position.set(-4.25, 0.15, centerZ);
 
-    const curbR = new THREE.Mesh(this.sharedGeos.curb, curbMat);
-    curbR.position.set(4.25, 0.15, 0);
-    chunk.add(curbR);
+      const sR = new THREE.Mesh(walkGeo, sidewalkMat);
+      sR.position.set(5.95, 0.125, centerZ);
+      const cR = new THREE.Mesh(curbGeo, curbMat);
+      cR.position.set(4.25, 0.15, centerZ);
+
+      chunk.add(sL, cL, sR, cR);
+    };
+
+    if (hasIntersection) {
+      const openStart = Math.max(-30, interLocalZ - 9.5);
+      const openEnd = Math.min(30, interLocalZ + 9.5);
+
+      // Segment avant le carrefour
+      if (openStart > -29.5) {
+        const len1 = openStart - (-30);
+        addSidewalkSegment(-30 + len1 / 2, len1);
+      }
+      // Segment après le carrefour
+      if (openEnd < 29.5) {
+        const len2 = 30 - openEnd;
+        addSidewalkSegment(openEnd + len2 / 2, len2);
+      }
+      // Entre openStart et openEnd : AUCUN TROTTOIR NI BORDURE, chaussée transversale parfaitement ouverte et plane !
+    } else {
+      const sidewalkL = new THREE.Mesh(this.sharedGeos.sidewalk, sidewalkMat);
+      sidewalkL.position.set(-5.95, 0.125, 0);
+      const curbL = new THREE.Mesh(this.sharedGeos.curb, curbMat);
+      curbL.position.set(-4.25, 0.15, 0);
+
+      const sidewalkR = new THREE.Mesh(this.sharedGeos.sidewalk, sidewalkMat);
+      sidewalkR.position.set(5.95, 0.125, 0);
+      const curbR = new THREE.Mesh(this.sharedGeos.curb, curbMat);
+      curbR.position.set(4.25, 0.15, 0);
+
+      chunk.add(sidewalkL, curbL, sidewalkR, curbR);
+    }
 
     // Bâtiments (avec dégagement des carrefours)
     this.populateBuildings(chunk, -1);
@@ -1412,6 +1456,18 @@ export class Environment {
         continue;
       }
 
+      // Diversité architecturale & urbaine : Squares publics verdoyants & Esplanades avec statues commémoratives
+      const parcelRand = Math.random();
+      if (!this.isCataclysmMission && parcelRand < 0.15 && bWidth >= 9.0) {
+        this.createUrbanSquare(chunk, side, xBase, currentZ, bWidth, bDepth);
+        currentZ += bWidth;
+        continue;
+      } else if (!this.isCataclysmMission && parcelRand < 0.26 && bWidth >= 9.0) {
+        this.createUrbanMonument(chunk, side, xBase, currentZ, bWidth, bDepth);
+        currentZ += bWidth;
+        continue;
+      }
+
       const randomMat = buildingMatPalette[Math.floor(Math.random() * buildingMatPalette.length)];
       const bGeo = new THREE.BoxGeometry(bDepth, bHeight, bWidth);
       const bMesh = new THREE.Mesh(bGeo, randomMat);
@@ -1472,6 +1528,141 @@ export class Environment {
     }
   }
 
+  // --- CRÉATION DE JARDINS PUBLICS & SQUARES URBAINS ---
+  createUrbanSquare(chunk, side, xBase, currentZ, bWidth, bDepth = 10.0) {
+    const squareGroup = new THREE.Group();
+    const centerZ = currentZ + bWidth / 2;
+    const centerX = xBase + side * (bDepth / 2);
+    squareGroup.position.set(centerX, 0, centerZ);
+
+    const lawnMat = this.sharedMats?.lawn || new THREE.MeshStandardMaterial({ color: 0x27ae60, roughness: 0.85 });
+    const fenceMat = this.sharedMats?.fence || new THREE.MeshStandardMaterial({ color: 0x1e372f, roughness: 0.5, metalness: 0.5 });
+    const stoneMat = this.sharedMats?.granite || new THREE.MeshStandardMaterial({ color: 0x95a5a6, roughness: 0.8 });
+    const waterMat = this.sharedMats?.fountainWater || new THREE.MeshStandardMaterial({ color: 0x0984e3, roughness: 0.2, metalness: 0.3 });
+    const flowerMat1 = this.sharedMats?.flower1 || new THREE.MeshStandardMaterial({ color: 0xe84393, roughness: 0.7 });
+    const flowerMat2 = this.sharedMats?.flower2 || new THREE.MeshStandardMaterial({ color: 0xfdcb6e, roughness: 0.7 });
+    const benchWoodMat = this.sharedMats?.benchWood || new THREE.MeshStandardMaterial({ color: 0x8b4513, roughness: 0.6 });
+
+    // 1. Dalle de pelouse verdoyante
+    const lawn = new THREE.Mesh(new THREE.BoxGeometry(bDepth, 0.22, bWidth), lawnMat);
+    lawn.position.y = 0.11;
+    lawn.receiveShadow = true;
+    squareGroup.add(lawn);
+
+    // 2. Grille décorative en fer forgé le long de la rue (avec ouverture centrale)
+    const fenceFrontZ = (bWidth / 2) - 0.4;
+    [-fenceFrontZ * 0.65, fenceFrontZ * 0.65].forEach(fz => {
+      const rail = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.9, bWidth * 0.35), fenceMat);
+      rail.position.set(-side * (bDepth / 2 - 0.2), 0.55, fz);
+      squareGroup.add(rail);
+
+      const post = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 1.1, 8), fenceMat);
+      post.position.set(-side * (bDepth / 2 - 0.2), 0.65, fz);
+      squareGroup.add(post);
+    });
+
+    // 3. Fontaine circulaire centrale en pierre sculptée
+    const basin = new THREE.Mesh(new THREE.CylinderGeometry(2.0, 2.2, 0.5, 16), stoneMat);
+    basin.position.set(0, 0.35, 0);
+    const water = new THREE.Mesh(new THREE.CylinderGeometry(1.8, 1.8, 0.08, 16), waterMat);
+    water.position.set(0, 0.54, 0);
+    const fountainCol = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.45, 1.3, 12), stoneMat);
+    fountainCol.position.set(0, 1.05, 0);
+    const upperBasin = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 1.0, 0.26, 12), stoneMat);
+    upperBasin.position.set(0, 1.6, 0);
+    const finial = new THREE.Mesh(new THREE.ConeGeometry(0.25, 0.5, 8), stoneMat);
+    finial.position.set(0, 1.95, 0);
+    squareGroup.add(basin, water, fountainCol, upperBasin, finial);
+
+    // 4. Deux massifs de fleurs colorées
+    [-bWidth * 0.3, bWidth * 0.3].forEach((fz, i) => {
+      const bed = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.9, 0.22, 10), i % 2 === 0 ? flowerMat1 : flowerMat2);
+      bed.position.set(-side * 1.5, 0.22, fz);
+      squareGroup.add(bed);
+    });
+
+    // 5. Bancs de parc parisiens en fonte et bois
+    [-bWidth * 0.26, bWidth * 0.26].forEach(bz => {
+      const bench = new THREE.Group();
+      bench.position.set(side * 1.6, 0.11, bz);
+      bench.rotation.y = side > 0 ? -Math.PI / 2 : Math.PI / 2;
+      const seat = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.08, 1.6), benchWoodMat);
+      seat.position.y = 0.4;
+      const back = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.42, 1.6), benchWoodMat);
+      back.position.set(-0.2, 0.62, 0);
+      const leg1 = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.4, 0.08), fenceMat);
+      leg1.position.set(0, 0.2, -0.6);
+      const leg2 = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.4, 0.08), fenceMat);
+      leg2.position.set(0, 0.2, 0.6);
+      bench.add(seat, back, leg1, leg2);
+      squareGroup.add(bench);
+    });
+
+    chunk.add(squareGroup);
+  }
+
+  // --- CRÉATION DE PLACES MONUMENTALES AVEC STATUES COMMÉMORATIVES ---
+  createUrbanMonument(chunk, side, xBase, currentZ, bWidth, bDepth = 10.0) {
+    const monGroup = new THREE.Group();
+    const centerZ = currentZ + bWidth / 2;
+    const centerX = xBase + side * (bDepth / 2);
+    monGroup.position.set(centerX, 0, centerZ);
+
+    const plazaMat = this.sharedMats?.plaza || new THREE.MeshStandardMaterial({ color: 0xdcdde1, roughness: 0.8 });
+    const graniteMat = this.sharedMats?.granite || new THREE.MeshStandardMaterial({ color: 0x7f8c8d, roughness: 0.7 });
+    const bronzeMat = this.sharedMats?.bronzeStatue || new THREE.MeshStandardMaterial({ color: 0x4a3728, metalness: 0.75, roughness: 0.35 });
+    const goldMat = this.sharedMats?.yellow || new THREE.MeshStandardMaterial({ color: 0xf1c40f, metalness: 0.85, roughness: 0.25 });
+
+    // 1. Esplanade pavée surélevée
+    const plaza = new THREE.Mesh(new THREE.BoxGeometry(bDepth, 0.22, bWidth), plazaMat);
+    plaza.position.y = 0.11;
+    plaza.receiveShadow = true;
+    monGroup.add(plaza);
+
+    // 2. Piédestal à degrés en granit
+    const step1 = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.32, 3.4), graniteMat);
+    step1.position.y = 0.32;
+    const step2 = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.38, 2.6), graniteMat);
+    step2.position.y = 0.65;
+    const pedestalShaft = new THREE.Mesh(new THREE.BoxGeometry(1.9, 2.0, 1.9), graniteMat);
+    pedestalShaft.position.y = 1.8;
+    const cornice = new THREE.Mesh(new THREE.BoxGeometry(2.3, 0.24, 2.3), graniteMat);
+    cornice.position.y = 2.92;
+
+    // Plaque commémorative dorée sur la face visible depuis la rue
+    const plaque = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.65, 1.1), goldMat);
+    plaque.position.set(-side * 0.98, 1.85, 0);
+    monGroup.add(step1, step2, pedestalShaft, cornice, plaque);
+
+    // 3. Statue en bronze héroïque sculptée
+    const statueGroup = new THREE.Group();
+    statueGroup.position.set(0, 3.05, 0);
+    statueGroup.rotation.y = side > 0 ? -Math.PI / 2 : Math.PI / 2;
+
+    const torso = new THREE.Mesh(new THREE.BoxGeometry(0.65, 1.0, 0.42), bronzeMat);
+    torso.position.y = 0.95;
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.22, 10, 8), bronzeMat);
+    head.position.y = 1.7;
+    const cape = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.1, 0.22), bronzeMat);
+    cape.position.set(0, 0.85, -0.22);
+    const armL = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.07, 0.85, 8), bronzeMat);
+    armL.position.set(-0.46, 0.95, 0.1);
+    armL.rotation.z = 0.35;
+    const armR = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.07, 1.0, 8), bronzeMat);
+    armR.position.set(0.46, 1.25, 0.28);
+    armR.rotation.x = -0.45;
+    armR.rotation.z = -0.45;
+    const sword = new THREE.Mesh(new THREE.BoxGeometry(0.05, 1.0, 0.05), goldMat);
+    sword.position.set(0.7, 1.8, 0.45);
+    const legs = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.7, 0.32), bronzeMat);
+    legs.position.y = 0.35;
+
+    statueGroup.add(torso, head, cape, armL, armR, sword, legs);
+    monGroup.add(statueGroup);
+
+    chunk.add(monGroup);
+  }
+
   populateRuinsBuildings(chunk, side) {
     const xBase = side * 8.5;
     let currentZ = -this.chunkLength / 2;
@@ -1515,6 +1706,141 @@ export class Environment {
 
       currentZ += bWidth;
     }
+  }
+
+  // --- CRÉATION DE JARDINS PUBLICS & SQUARES URBAINS ---
+  createUrbanSquare(chunk, side, xBase, currentZ, bWidth, bDepth = 10.0) {
+    const squareGroup = new THREE.Group();
+    const centerZ = currentZ + bWidth / 2;
+    const centerX = xBase + side * (bDepth / 2);
+    squareGroup.position.set(centerX, 0, centerZ);
+
+    const lawnMat = this.sharedMats?.lawn || new THREE.MeshStandardMaterial({ color: 0x27ae60, roughness: 0.85 });
+    const fenceMat = this.sharedMats?.fence || new THREE.MeshStandardMaterial({ color: 0x1e372f, roughness: 0.5, metalness: 0.5 });
+    const stoneMat = this.sharedMats?.granite || new THREE.MeshStandardMaterial({ color: 0x95a5a6, roughness: 0.8 });
+    const waterMat = this.sharedMats?.fountainWater || new THREE.MeshStandardMaterial({ color: 0x0984e3, roughness: 0.2, metalness: 0.3 });
+    const flowerMat1 = this.sharedMats?.flower1 || new THREE.MeshStandardMaterial({ color: 0xe84393, roughness: 0.7 });
+    const flowerMat2 = this.sharedMats?.flower2 || new THREE.MeshStandardMaterial({ color: 0xfdcb6e, roughness: 0.7 });
+    const benchWoodMat = this.sharedMats?.benchWood || new THREE.MeshStandardMaterial({ color: 0x8b4513, roughness: 0.6 });
+
+    // 1. Dalle de pelouse verdoyante
+    const lawn = new THREE.Mesh(new THREE.BoxGeometry(bDepth, 0.22, bWidth), lawnMat);
+    lawn.position.y = 0.11;
+    lawn.receiveShadow = true;
+    squareGroup.add(lawn);
+
+    // 2. Grille décorative en fer forgé le long de la rue (avec ouverture centrale)
+    const fenceFrontZ = (bWidth / 2) - 0.4;
+    [-fenceFrontZ * 0.65, fenceFrontZ * 0.65].forEach(fz => {
+      const rail = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.9, bWidth * 0.35), fenceMat);
+      rail.position.set(-side * (bDepth / 2 - 0.2), 0.55, fz);
+      squareGroup.add(rail);
+
+      const post = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 1.1, 8), fenceMat);
+      post.position.set(-side * (bDepth / 2 - 0.2), 0.65, fz);
+      squareGroup.add(post);
+    });
+
+    // 3. Fontaine circulaire centrale en pierre sculptée
+    const basin = new THREE.Mesh(new THREE.CylinderGeometry(2.0, 2.2, 0.5, 16), stoneMat);
+    basin.position.set(0, 0.35, 0);
+    const water = new THREE.Mesh(new THREE.CylinderGeometry(1.8, 1.8, 0.08, 16), waterMat);
+    water.position.set(0, 0.54, 0);
+    const fountainCol = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.45, 1.3, 12), stoneMat);
+    fountainCol.position.set(0, 1.05, 0);
+    const upperBasin = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 1.0, 0.26, 12), stoneMat);
+    upperBasin.position.set(0, 1.6, 0);
+    const finial = new THREE.Mesh(new THREE.ConeGeometry(0.25, 0.5, 8), stoneMat);
+    finial.position.set(0, 1.95, 0);
+    squareGroup.add(basin, water, fountainCol, upperBasin, finial);
+
+    // 4. Deux massifs de fleurs colorées
+    [-bWidth * 0.3, bWidth * 0.3].forEach((fz, i) => {
+      const bed = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.9, 0.22, 10), i % 2 === 0 ? flowerMat1 : flowerMat2);
+      bed.position.set(-side * 1.5, 0.22, fz);
+      squareGroup.add(bed);
+    });
+
+    // 5. Bancs de parc parisiens en fonte et bois
+    [-bWidth * 0.26, bWidth * 0.26].forEach(bz => {
+      const bench = new THREE.Group();
+      bench.position.set(side * 1.6, 0.11, bz);
+      bench.rotation.y = side > 0 ? -Math.PI / 2 : Math.PI / 2;
+      const seat = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.08, 1.6), benchWoodMat);
+      seat.position.y = 0.4;
+      const back = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.42, 1.6), benchWoodMat);
+      back.position.set(-0.2, 0.62, 0);
+      const leg1 = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.4, 0.08), fenceMat);
+      leg1.position.set(0, 0.2, -0.6);
+      const leg2 = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.4, 0.08), fenceMat);
+      leg2.position.set(0, 0.2, 0.6);
+      bench.add(seat, back, leg1, leg2);
+      squareGroup.add(bench);
+    });
+
+    chunk.add(squareGroup);
+  }
+
+  // --- CRÉATION DE PLACES MONUMENTALES AVEC STATUES COMMÉMORATIVES ---
+  createUrbanMonument(chunk, side, xBase, currentZ, bWidth, bDepth = 10.0) {
+    const monGroup = new THREE.Group();
+    const centerZ = currentZ + bWidth / 2;
+    const centerX = xBase + side * (bDepth / 2);
+    monGroup.position.set(centerX, 0, centerZ);
+
+    const plazaMat = this.sharedMats?.plaza || new THREE.MeshStandardMaterial({ color: 0xdcdde1, roughness: 0.8 });
+    const graniteMat = this.sharedMats?.granite || new THREE.MeshStandardMaterial({ color: 0x7f8c8d, roughness: 0.7 });
+    const bronzeMat = this.sharedMats?.bronzeStatue || new THREE.MeshStandardMaterial({ color: 0x4a3728, metalness: 0.75, roughness: 0.35 });
+    const goldMat = this.sharedMats?.yellow || new THREE.MeshStandardMaterial({ color: 0xf1c40f, metalness: 0.85, roughness: 0.25 });
+
+    // 1. Esplanade pavée surélevée
+    const plaza = new THREE.Mesh(new THREE.BoxGeometry(bDepth, 0.22, bWidth), plazaMat);
+    plaza.position.y = 0.11;
+    plaza.receiveShadow = true;
+    monGroup.add(plaza);
+
+    // 2. Piédestal à degrés en granit
+    const step1 = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.32, 3.4), graniteMat);
+    step1.position.y = 0.32;
+    const step2 = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.38, 2.6), graniteMat);
+    step2.position.y = 0.65;
+    const pedestalShaft = new THREE.Mesh(new THREE.BoxGeometry(1.9, 2.0, 1.9), graniteMat);
+    pedestalShaft.position.y = 1.8;
+    const cornice = new THREE.Mesh(new THREE.BoxGeometry(2.3, 0.24, 2.3), graniteMat);
+    cornice.position.y = 2.92;
+
+    // Plaque commémorative dorée sur la face visible depuis la rue
+    const plaque = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.65, 1.1), goldMat);
+    plaque.position.set(-side * 0.98, 1.85, 0);
+    monGroup.add(step1, step2, pedestalShaft, cornice, plaque);
+
+    // 3. Statue en bronze héroïque sculptée
+    const statueGroup = new THREE.Group();
+    statueGroup.position.set(0, 3.05, 0);
+    statueGroup.rotation.y = side > 0 ? -Math.PI / 2 : Math.PI / 2;
+
+    const torso = new THREE.Mesh(new THREE.BoxGeometry(0.65, 1.0, 0.42), bronzeMat);
+    torso.position.y = 0.95;
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.22, 10, 8), bronzeMat);
+    head.position.y = 1.7;
+    const cape = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.1, 0.22), bronzeMat);
+    cape.position.set(0, 0.85, -0.22);
+    const armL = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.07, 0.85, 8), bronzeMat);
+    armL.position.set(-0.46, 0.95, 0.1);
+    armL.rotation.z = 0.35;
+    const armR = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.07, 1.0, 8), bronzeMat);
+    armR.position.set(0.46, 1.25, 0.28);
+    armR.rotation.x = -0.45;
+    armR.rotation.z = -0.45;
+    const sword = new THREE.Mesh(new THREE.BoxGeometry(0.05, 1.0, 0.05), goldMat);
+    sword.position.set(0.7, 1.8, 0.45);
+    const legs = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.7, 0.32), bronzeMat);
+    legs.position.y = 0.35;
+
+    statueGroup.add(torso, head, cape, armL, armR, sword, legs);
+    monGroup.add(statueGroup);
+
+    chunk.add(monGroup);
   }
 
   populateRuinsProps(chunk) {
@@ -1705,53 +2031,7 @@ export class Environment {
       chunk.add(lamp);
       chunk.userData.props.push(lamp);
 
-      // Végétation volumétrique riche
-      if (idx % 2 === 1) {
-        if (isRiviera || isMed) {
-          const palm = new THREE.Group();
-          palm.position.set(xSidewalk, 0, z + 5);
-          palm.userData = { type: 'tree', isHit: false };
-
-          const trunk = new THREE.Mesh(this.sharedGeos.palmTrunk, woodMat);
-          trunk.position.y = 2.0;
-          palm.add(trunk);
-
-          for (let l = 0; l < 6; l++) {
-            const leaf = new THREE.Mesh(this.sharedGeos.palmLeaf, foliageMat1);
-            leaf.position.set(0, 4.0, 0);
-            leaf.rotation.y = (l * Math.PI) / 3;
-            leaf.rotation.z = 0.55;
-            palm.add(leaf);
-          }
-          chunk.add(palm);
-          chunk.userData.props.push(palm);
-        } else {
-          // Arbre étagé touffu cartoon (multi-sphères volumétriques)
-          const tree = new THREE.Group();
-          tree.position.set(xSidewalk, 0, z + 5);
-          tree.userData = { type: 'tree', isHit: false };
-
-          const trunk = new THREE.Mesh(this.sharedGeos.treeTrunk, woodMat);
-          trunk.position.y = 0.9;
-          tree.add(trunk);
-
-          const fol1 = new THREE.Mesh(this.sharedGeos.treeFoliage, foliageMat1);
-          fol1.position.set(0, 2.3, 0);
-          const fol2 = new THREE.Mesh(this.sharedGeos.treeFoliage, foliageMat2);
-          fol2.scale.set(0.85, 0.85, 0.85);
-          fol2.position.set(0.3, 2.8, -0.2);
-          // 3è touffe décentrée pour un couvert feuillu plein
-          const fol3 = new THREE.Mesh(this.sharedGeos.treeFoliage, foliageMat1);
-          fol3.scale.setScalar(0.62);
-          fol3.position.set(-0.35, 2.6, 0.25);
-          tree.add(fol1, fol2, fol3);
-
-          chunk.add(tree);
-          chunk.userData.props.push(tree);
-        }
-      }
-
-      // Spécificités par Pays / Région au trottoir
+      // Spécificités par Pays / Région au trottoir (sans objets verts bizarres sur les côtés de la rue)
       if (idx === 0) {
         if (isItaly) {
           // Colonne antique romaine sculptée avec amphore en terre cuite

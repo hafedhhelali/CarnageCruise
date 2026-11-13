@@ -3148,15 +3148,15 @@ export class UIManager {
     hud.innerHTML = `
       <div class="hud-top-bar ${gameState.isRuinsMode ? 'hud-top-bar-ruins' : ''}">
         ${gameState.isRuinsMode ? `
-          <div class="ruins-hud-banner" style="display: flex; align-items: center; gap: 10px; background: rgba(14, 8, 8, 0.94); border: 2px solid #ff4757; padding: 8px 14px; border-radius: 12px; box-shadow: 0 4px 18px rgba(0,0,0,0.85); pointer-events: auto;">
-            <span style="font-size: 1.5rem;">☢️</span>
-            <div>
-              <div style="font-size: 0.88rem; font-weight: 950; color: #ff7675; letter-spacing: 0.5px;">MODE BALLADE • RUINES DE ${gameState.selectedCity.name.toUpperCase()}</div>
-              <div style="font-size: 0.68rem; color: #ced6e0; font-weight: 800;">Promenade libre à petite allure • Zéro circulation</div>
+          <div class="ruins-hud-banner" style="display: flex; align-items: center; gap: 8px; background: rgba(14, 8, 8, 0.94); border: 2px solid #ff4757; padding: 6px 12px; border-radius: 12px; box-shadow: 0 4px 18px rgba(0,0,0,0.85); pointer-events: auto; flex: 1; min-width: 0;">
+            <span style="font-size: 1.3rem;">☢️</span>
+            <div style="min-width: 0; overflow: hidden;">
+              <div style="font-size: 0.78rem; font-weight: 950; color: #ff7675; letter-spacing: 0.5px; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">EXPLORATION • ${gameState.selectedCity.name.toUpperCase()}</div>
+              <div style="font-size: 0.62rem; color: #ced6e0; font-weight: 800;">Promenade libre • Zéro obstacle</div>
             </div>
           </div>
-          <button id="btn-hud-exit-ruins" class="btn-arcade interactive" style="background: linear-gradient(135deg, #eb4d4b, #c0392b); border: 2.5px solid #ff7675; color: #ffffff; font-weight: 950; font-size: 0.92rem; padding: 12px 20px; border-radius: 14px; cursor: pointer; box-shadow: 0 6px 20px rgba(235,77,75,0.7); pointer-events: auto !important; z-index: 9999;" title="Quitter la reconnaissance et retourner à l'accueil / carte">
-            <span>🗺️ RETOURNER À L'ACCUEIL</span>
+          <button id="btn-hud-exit-ruins" class="btn-arcade btn-ruins-exit-top interactive" style="background: linear-gradient(135deg, #eb4d4b, #c0392b); border: 2.5px solid #ff7675; color: #ffffff; font-weight: 950; font-size: 0.88rem; padding: 10px 14px; border-radius: 14px; cursor: pointer; box-shadow: 0 6px 20px rgba(235,77,75,0.7); pointer-events: auto !important; z-index: 99999; display: flex; align-items: center; gap: 6px; flex-shrink: 0;" title="Quitter la reconnaissance et retourner à la carte">
+            <span>🗺️ QUITTER</span>
           </button>
         ` : `
           <!-- Badge Score Lumineux Arcade -->
@@ -3221,9 +3221,15 @@ ${gameState.isRuinsMode ? '' : `          <div class="hud-carnage-badge" id="hud
           </div>`}
         </div>
 
-        <!-- Groupe de commandes droit ergonomique (Nitro / Energy Drink + Arme/Klaxon) -->
+        <!-- Groupe de commandes droit ergonomique -->
         <div class="hud-right-cluster">
-${gameState.isRuinsMode ? '' : `          <div class="hud-nitro-group">
+${gameState.isRuinsMode ? `
+          <!-- Bouton ergonomique pouce droit pour quitter le mode exploration -->
+          <button class="btn-arcade btn-ruins-exit-thumb interactive" id="btn-hud-exit-ruins-thumb" style="width: 82px; height: 82px; border-radius: 50%; background: linear-gradient(135deg, #eb4d4b, #c0392b); border: 3px solid #ff7675; box-shadow: 0 8px 24px rgba(235,77,75,0.85); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: #ffffff; cursor: pointer; pointer-events: auto !important; z-index: 99999;" title="Quitter l'exploration et revenir à la carte">
+            <span style="font-size: 1.6rem; line-height: 1;">🗺️</span>
+            <span style="font-size: 0.68rem; font-weight: 950; letter-spacing: 0.5px;">QUITTER</span>
+          </button>
+` : `          <div class="hud-nitro-group">
             <button class="btn-nitro-pedal ${isFootOrHorse ? 'btn-energy-drink' : ''} ${isFootOrHorse && gameState.energyDrinkCans > 0 ? 'ready' : ''}" id="btn-hud-nitro" title="${boostTitle}">
               <div class="nitro-fill-track">
                 <div class="nitro-fill-bar ${isFootOrHorse ? 'energy-fill-bar' : ''}" id="hud-nitro-fill" style="width: ${isFootOrHorse ? (gameState.energyDrinkCans > 0 ? '100%' : '0%') : '0%'};"></div>
@@ -3234,7 +3240,7 @@ ${gameState.isRuinsMode ? '' : `          <div class="hud-nitro-group">
             </button>
           </div>`}
 
-          ${isWeapon ? `
+          ${(!gameState.isRuinsMode && isWeapon) ? `
             <!-- Bouton d'Attaque / Frappe / Tir Arme Spécifique (pouce droit) -->
             <button class="btn-horn-pedal btn-attack-pedal" id="btn-hud-horn" title="${actionTitle}">
               <span class="horn-icon">${actionIcon}</span>
@@ -3290,23 +3296,30 @@ ${gameState.isRuinsMode ? '' : `          <div class="hud-nitro-group">
     }
 
     const exitRuinsBtn = hud.querySelector('#btn-hud-exit-ruins');
+    const exitRuinsThumbBtn = hud.querySelector('#btn-hud-exit-ruins-thumb');
+    const handleExitRuins = (e) => {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      soundManager.playClick();
+      gameState.isRuinsMode = false;
+      if (this.onAction) {
+        this.onAction('EXIT_RUINS');
+      } else {
+        this.setScreen('MAP');
+      }
+    };
+
     if (exitRuinsBtn) {
-      const handleExitRuins = (e) => {
-        if (e) {
-          e.preventDefault();
-          e.stopPropagation();
-        }
-        soundManager.playClick();
-        gameState.isRuinsMode = false;
-        if (this.onAction) {
-          this.onAction('EXIT_RUINS');
-        } else {
-          this.setScreen('MAP');
-        }
-      };
       exitRuinsBtn.addEventListener('pointerdown', handleExitRuins);
       exitRuinsBtn.addEventListener('touchstart', handleExitRuins, { passive: false });
       exitRuinsBtn.addEventListener('click', handleExitRuins);
+    }
+    if (exitRuinsThumbBtn) {
+      exitRuinsThumbBtn.addEventListener('pointerdown', handleExitRuins);
+      exitRuinsThumbBtn.addEventListener('touchstart', handleExitRuins, { passive: false });
+      exitRuinsThumbBtn.addEventListener('click', handleExitRuins);
     }
 
     const returnMap100 = hud.querySelector('#btn-hud-return-map-100');

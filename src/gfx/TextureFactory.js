@@ -242,49 +242,164 @@ class TextureFactoryService {
     });
   }
 
-  // 4. Store banne rayé français pour bistrots et terrasses
+  // 4. Store banne rayé français pour bistrots et terrasses & Enseignes culturelles authentiques
   getStoreSignTexture(cityId = 'paris', index = 0) {
-    const key = `storesign_${cityId}_${index % 6}`;
+    const key = `storesign_${cityId}_${index % 10}`;
     return this.getOrCreate(key, (canvas) => {
       canvas.width = 256;
       canvas.height = 64;
       const ctx = canvas.getContext('2d');
-      // Fond de l'enseigne (couleur selon la ville)
-      const palettes = {
-        paris: ['#e74c3c', '#c0392b'],
-        rio: ['#ff5252', '#d32f2f'],
-        reykjavik: ['#00cec9', '#0097a7'],
-        route66: ['#ff9800', '#e65100'],
-        default: ['#e74c3c', '#c0392b']
+
+      // Identification de la culture régionale pour enseignes réalistes
+      const c = (cityId || '').toLowerCase();
+      let culture = 'france';
+      if (['londres', 'dublin', 'newcastle'].includes(c)) culture = 'uk';
+      else if (['reykjavik', 'oslo', 'stockholm', 'copenhague', 'helsinki'].includes(c)) culture = 'nordic';
+      else if (['berlin', 'bonn', 'francfort', 'vienne', 'innsbruck', 'geneve', 'zurich'].includes(c)) culture = 'german';
+      else if (['amsterdam'].includes(c)) culture = 'dutch';
+      else if (['venise', 'milan', 'rome', 'napoli'].includes(c)) culture = 'italy';
+      else if (['barcelone', 'saragosse', 'madrid', 'seville', 'lisbonne'].includes(c)) culture = 'iberia';
+      else if (['tallinn', 'riga', 'vilnius', 'saint_petersbourg', 'moscou', 'minsk', 'kiev', 'varsovie', 'prague', 'bratislava', 'budapest', 'chisinau', 'bucarest', 'sofia'].includes(c)) culture = 'east';
+      else if (['athenes', 'crete', 'nicosie', 'istanbul', 'ljubljana', 'zagreb', 'sarajevo', 'belgrade', 'podgorica', 'tirana', 'skopje'].includes(c)) culture = 'balkans';
+      else if (['casablanca', 'alger', 'annaba', 'tunis', 'tripoli', 'benghazi', 'le_caire'].includes(c)) culture = 'north_africa';
+
+      const cultureData = {
+        france: {
+          palettes: [
+            ['#6b1426', '#4a0e1a'], // Bordeaux velours
+            ['#1e372f', '#12251f'], // Vert empire bistrot
+            ['#102b4e', '#0b1d35'], // Bleu marine République
+            ['#4a235a', '#30163b']  // Prune prestige
+          ],
+          border: '#f1c40f',
+          shops: ['BOULANGERIE-PÂTISSERIE', 'PHARMACIE CENTRALE', 'CAFÉ DES ARTISTES', 'BRASSERIE DU BOULEVARD', 'LIBRAIRIE ANCIENNE', 'BOUCHERIE TRADITION', 'CHOCOLATIER ARTISAN', 'FLEURISTE DE SAISON', 'TABAC PRESSE', 'FROMAGERIE DU COEUR']
+        },
+        uk: {
+          palettes: [
+            ['#004225', '#002817'], // British Racing Green
+            ['#1b2a4a', '#0f172a'], // Royal Navy
+            ['#5c1d24', '#3d1217'], // Heritage Crimson
+            ['#3e2723', '#271714']  // Victorian Walnut
+          ],
+          border: '#ffd700',
+          shops: ['THE ROYAL OAK PUB', 'QUEEN TEA ROOM', 'VINTAGE BOOKSHOP', 'OLD APOTHECARY', 'FISH & CHIPS', 'GENTLEMAN TAILOR', 'COFFEE ROASTER', 'FLOWER MARKET', 'BAKERY & SCONES', 'ANTIQUE DEALER']
+        },
+        nordic: {
+          palettes: [
+            ['#0f4c5c', '#092d37'], // Fjord Teal
+            ['#2f3e46', '#1a2327'], // Birch Slate
+            ['#b05a2f', '#783c1e'], // Nordic Ochre
+            ['#354f52', '#203032']  // Pine Charcoal
+          ],
+          border: '#e0d5b5',
+          shops: ['BAKARÍ & KAFFI', 'KONDITORI CENTRAL', 'APOTEK NORDIC', 'GAMLA BÓKABÚÐ', 'FISKMARKAÐUR', 'KAFFE & KANELBULLAR', 'SMØRREBRØD DELI', 'BLOMSTERHANDEL', 'ROASTERY & BEANS', 'NORDIC KNITS']
+        },
+        german: {
+          palettes: [
+            ['#1b3b6f', '#0f2344'], // Bavarian Navy
+            ['#204028', '#142719'], // Schwarzwald Green
+            ['#3b3028', '#251e19'], // Altstadt Walnut
+            ['#7b241c', '#511812']  // Kaiser Ruby
+          ],
+          border: '#d4af37',
+          shops: ['BÄCKEREI & KONDITOREI', 'RATHAUS APOTHEKE', 'GASTHOF ZUM ADLER', 'BUCHHANDLUNG', 'BIERGARTEN TRADITION', 'CAFÉ SACHERTORTE', 'UHRMACHER ATELIER', 'BLUMENHAUS', 'METZGEREI MEISTER', 'RÖSTEREI KAFFEE']
+        },
+        dutch: {
+          palettes: [
+            ['#c44512', '#8c2f0a'], // Dutch Amber
+            ['#183059', '#0d1c35'], // Delft Blue
+            ['#274735', '#172c20']  // Canal Green
+          ],
+          border: '#f5cd79',
+          shops: ['BAKKERIJ DE KROON', 'KOFFIEHUIS CENTRAAL', 'APOTHEEK DE WAAG', 'OUDE BOEKHANDEL', 'BLOEMENMARKT', 'HOLLANDSE KAAS', 'STROOPWAFEL HUIS', 'PANCAKE BAKERY']
+        },
+        italy: {
+          palettes: [
+            ['#a03823', '#6f2617'], // Siena Terracotta
+            ['#1e4620', '#132c14'], // Tuscan Cypress
+            ['#2c2018', '#1a130e'], // Espresso Dark
+            ['#1a365d', '#0f2038']  // Azzurro Notte
+          ],
+          border: '#ffd32a',
+          shops: ['TRATTORIA DA MARCO', 'GELATERIA ARTIGIANALE', 'ANTICA FARMACIA', 'ESPRESSO BAR', 'PASTICCERIA SICILIANA', 'PIZZERIA NAPOLETANA', 'ENOTECA & VINI', 'LIBRERIA MODERNA', 'PANIFICIO STORICO', 'CAFFÈ DELLA PIAZZA']
+        },
+        iberia: {
+          palettes: [
+            ['#9c2828', '#6b1a1a'], // Sevilla Crimson
+            ['#c28414', '#8a5c0b'], // Saffron Ochre
+            ['#164478', '#0e2b4d'], // Azulejo Cobalt
+            ['#24523b', '#163325']  // Andalusian Olive
+          ],
+          border: '#f6b93b',
+          shops: ['TABERNA DE TAPAS', 'PANADERÍA Y DULCES', 'FARMACIA CENTRAL', 'PASTÉIS TRADICIONAIS', 'BODEGA HISTÓRICA', 'CERVECERÍA ARTESANA', 'CAFÉ CON LECHE', 'FLORISTERÍA DEL SOL', 'JAMONERÍA IBÉRICA', 'CHURRERÍA DE LA VILLA']
+        },
+        east: {
+          palettes: [
+            ['#1e3d59', '#112233'], // Danube Deep Blue
+            ['#7a2021', '#4d1415'], // Bohemian Garnet
+            ['#2b4736', '#18291f'], // Carpathian Pine
+            ['#4a3728', '#2e2219']  // Amber Roast
+          ],
+          border: '#e5b869',
+          shops: ['KÁVÁZÓ & CUKRÁSZDA', 'PEKÁRNA TRADICE', 'LÉKÁRNA APOTHEKE', 'PIVOVAR & HOSPODA', 'STARÉ KNIHKUPECTVÍ', 'KAFANA CENTRUM', 'PEKARA CENTRAL', 'APTEKA 24H', 'RESTAURACE U ZLATA', 'PRAŽÍRNA KÁVY']
+        },
+        balkans: {
+          palettes: [
+            ['#0d47a1', '#06285c'], // Aegean Cobalt
+            ['#b25e15', '#7a3e0b'], // Terracotta Med
+            ['#2d4030', '#1b261d']  // Olive Grove
+          ],
+          border: '#f5cd79',
+          shops: ['TAVERNA ACROPOLIS', 'KAFENEIO TRADITION', 'BAKLAVA & KATAIFI', 'LOKANTA & MEZE', 'KAHVEHANE OTTOMAN', 'PEKARA BALKAN', 'FARMACIA AEGEAN', 'GRILL TRADITION', 'OLIVE OIL & WINE', 'CAFE DEL SOL']
+        },
+        north_africa: {
+          palettes: [
+            ['#b84a2d', '#7d301c'], // Sahara Terracotta
+            ['#0b6e4f', '#064330'], // Emerald Palm
+            ['#026873', '#013e45'], // Atlas Turquoise
+            ['#8c501e', '#593212']  // Spice Amber
+          ],
+          border: '#ffd700',
+          shops: ['CAFÉ MAURE TRADITION', 'PÂTISSERIE ORIENTALE', 'SOUK DES ÉPICES', 'HERBORISTERIE PHARMACIE', 'SALON DE THÉ À LA MENTHE', 'BOULANGERIE ARTISANALE', 'ARTISANAT DU CUIR', 'HUILES & ESSENCES', 'MARCHÉ DES DATTES', 'COMPTOIR DES SAVEURS']
+        }
       };
-      const pal = palettes[cityId] || palettes.default;
+
+      const cData = cultureData[culture] || cultureData.france;
+      const pal = cData.palettes[index % cData.palettes.length];
+
+      // Dégradé luxueux
       const grad = ctx.createLinearGradient(0, 0, 0, 64);
       grad.addColorStop(0, pal[0]);
       grad.addColorStop(1, pal[1]);
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, 256, 64);
-      // Bordure dorée
-      ctx.strokeStyle = '#ffd700';
-      ctx.lineWidth = 3;
-      ctx.strokeRect(2, 2, 252, 60);
-      // Texte de boutique (variété selon l'index)
-      const shops = {
-        paris: ['BOULANGERIE', 'PHARMACIE', 'TABAC-PRESSE', 'ÉPICERIE', 'LIBRAIRIE', 'CAFÉ DE PARIS', 'BOUCHERIE', 'FLEURISTE'],
-        rio: ['PADARIA', 'FARMÁCIA', 'BAR', 'MERCADO', 'LIVRARIA', 'CAFÉ', 'AÇAÍ', 'BOTECO'],
-        reykjavik: ['BAKARÍ', 'APÓTEK', 'KIOSKI', 'MATVRUVER', 'BÓKABÚÐ', 'KAFFIHÚS', 'FISKMARKAÐUR'],
-        route66: ['DINER', 'GAS STATION', 'MOTEL', 'BARBER', 'SALOON', 'GENERAL STORE', 'CAFE', 'GARAGE'],
-        default: ['SHOP', 'STORE', 'MARKET', 'CAFE', 'BAKERY', 'PHARMACY']
-      };
-      const list = shops[cityId] || shops.default;
-      const name = list[index % list.length];
+
+      // Bordure ornée élégante
+      ctx.strokeStyle = cData.border;
+      ctx.lineWidth = 2.5;
+      ctx.strokeRect(3, 3, 250, 58);
+      ctx.lineWidth = 1;
+      ctx.strokeRect(6, 6, 244, 52);
+
+      // Nom de boutique avec dimensionnement dynamique de police
+      const name = cData.shops[index % cData.shops.length];
+      let fontSize = 17;
+      if (name.length > 22) fontSize = 13.5;
+      else if (name.length > 18) fontSize = 15;
+      else if (name.length > 14) fontSize = 16.5;
+
       ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 18px Arial';
+      ctx.font = `bold ${fontSize}px "Segoe UI", Arial, sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.shadowColor = 'rgba(0,0,0,0.6)';
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.75)';
       ctx.shadowBlur = 4;
+      ctx.shadowOffsetX = 1;
+      ctx.shadowOffsetY = 1;
       ctx.fillText(name, 128, 32);
       ctx.shadowBlur = 0;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
     });
   }
 

@@ -101,7 +101,7 @@ export class Engine {
       0.1,
       600
     );
-    this.baseFov = 66;
+    this.baseFov = 72;
 
     // Pool de PointLights dynamiques pour flashs d'armes et d'explosions (Zéro lag mobile)
     this.dynamicLights = [];
@@ -164,9 +164,9 @@ export class Engine {
       this.postProcessing = null;
     }
 
-    // Propriétés de caméra dynamique (Zoom-out panoramique arcade)
+    // Propriétés de caméra dynamique (Zoom-out panoramique arcade équilibré)
     this.cameraTarget = new THREE.Vector3(0, 1.4, 0);
-    this.cameraOffset = new THREE.Vector3(0, 4.3, -8.8); // Position arcade surélevée, reculée et stable
+    this.cameraOffset = new THREE.Vector3(0, 5.2, -11.2); // Position arcade reculée et surélevée offrant une visibilité dégagée
     this.shakeIntensity = 0;
     this.shakeDecay = 6.0;
 
@@ -344,8 +344,8 @@ export class Engine {
 
     // LookAt centré précisément sur l'axe du joueur avec visibilité anticipée (orientation naturelle stable)
     const lookTargetX = bikePosition.x;
-    const lookTargetY = bikePosition.y + 1.4;
-    const lookTargetZ = bikePosition.z + 14.0;
+    const lookTargetY = bikePosition.y + 1.2;
+    const lookTargetZ = bikePosition.z + 16.0;
     this.camera.lookAt(lookTargetX, lookTargetY, lookTargetZ);
 
     // Élargissement dynamique du champ de vision (FOV) selon la vitesse

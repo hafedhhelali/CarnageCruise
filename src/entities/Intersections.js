@@ -134,9 +134,9 @@ export class IntersectionManager {
     streetPlate.position.set(isLeft ? 0.4 : -0.4, 2.7, 0.1);
     group.add(streetPlate);
 
-    // Bordure blanche de la plaque
+    // Bordure blanche discrète de la plaque (zéro éclat spéculaire)
     const plateBorderGeo = new THREE.BoxGeometry(1.26, 0.44, 0.03);
-    const plateBorderMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    const plateBorderMat = new THREE.MeshStandardMaterial({ color: 0xc8d6e5, roughness: 0.85 });
     const plateBorder = new THREE.Mesh(plateBorderGeo, plateBorderMat);
     plateBorder.position.set(isLeft ? 0.4 : -0.4, 2.7, 0.08);
     group.add(plateBorder);
@@ -153,77 +153,48 @@ export class IntersectionManager {
     };
   }
 
-  // --- PORTIQUE GÉANT LUMINEUX AU-DESSUS DE LA VOIE DU CARREFOUR ---
+  // --- PORTIQUE SUSPENDU DISCRET AVEC FEUX DE SIGNALISATION DU CARREFOUR ---
+  // Élimine définitivement les panneaux autoroutiers géants blancs qui brillent et aveuglent
   createOverheadGantryMesh() {
     const gantry = new THREE.Group();
-    const postMat = new THREE.MeshStandardMaterial({ color: 0x2d3436, metalness: 0.85, roughness: 0.25 });
-    const signBlueMat = new THREE.MeshStandardMaterial({ color: 0x0984e3, roughness: 0.35 });
-    const signBorderMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-    const boxMat = new THREE.MeshStandardMaterial({ color: 0x1e272e, roughness: 0.5 });
+    const postMat = new THREE.MeshStandardMaterial({ color: 0x2d3436, metalness: 0.8, roughness: 0.4 });
+    const boxMat = new THREE.MeshStandardMaterial({ color: 0x1e272e, roughness: 0.6 });
 
-    // 1. Deux poteaux tubulaires profilés en acier anthracite
-    const postGeo = new THREE.CylinderGeometry(0.14, 0.16, 6.2, 12);
+    // 1. Deux poteaux tubulaires discrets en acier anthracite
+    const postGeo = new THREE.CylinderGeometry(0.1, 0.12, 5.8, 10);
     const postL = new THREE.Mesh(postGeo, postMat);
-    postL.position.set(-6.2, 3.1, 0);
+    postL.position.set(-5.6, 2.9, 0);
     const postR = new THREE.Mesh(postGeo, postMat);
-    postR.position.set(6.2, 3.1, 0);
+    postR.position.set(5.6, 2.9, 0);
     gantry.add(postL, postR);
 
-    // 2. Traverse supérieure profilée avec platelage
-    const beamGeo = new THREE.BoxGeometry(12.8, 0.38, 0.42);
+    // 2. Traverse supérieure fine en treillis d'acier
+    const beamGeo = new THREE.BoxGeometry(11.4, 0.22, 0.26);
     const beam = new THREE.Mesh(beamGeo, postMat);
-    beam.position.set(0, 5.7, 0);
+    beam.position.set(0, 5.4, 0);
     gantry.add(beam);
 
-    // 3. Panneaux de signalisation routière européens bleu & blanc
-    // Panneau Gauche : ⬆ CENTRE-VILLE
-    const signLeft = new THREE.Group();
-    signLeft.position.set(-2.8, 4.8, 0.25);
-    const plateL = new THREE.Mesh(new THREE.BoxGeometry(4.2, 1.25, 0.08), signBlueMat);
-    const borderL = new THREE.Mesh(new THREE.BoxGeometry(4.32, 1.35, 0.04), signBorderMat);
-    borderL.position.z = -0.02;
-    const arrowStem = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.6, 0.1), signBorderMat);
-    arrowStem.position.set(-1.6, 0, 0.06);
-    const arrowHead = new THREE.Mesh(new THREE.ConeGeometry(0.28, 0.4, 3), signBorderMat);
-    arrowHead.position.set(-1.6, 0.35, 0.06);
-    signLeft.add(borderL, plateL, arrowStem, arrowHead);
-
-    // Panneau Droit : ➡ PÉRIPHÉRIQUE / ROCADE
-    const signRight = new THREE.Group();
-    signRight.position.set(2.8, 4.8, 0.25);
-    const plateR = new THREE.Mesh(new THREE.BoxGeometry(4.2, 1.25, 0.08), signBlueMat);
-    const borderR = new THREE.Mesh(new THREE.BoxGeometry(4.32, 1.35, 0.04), signBorderMat);
-    borderR.position.z = -0.02;
-    const arrowStemR = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.15, 0.1), signBorderMat);
-    arrowStemR.position.set(1.5, 0, 0.06);
-    const arrowHeadR = new THREE.Mesh(new THREE.ConeGeometry(0.25, 0.35, 3), signBorderMat);
-    arrowHeadR.rotation.z = -Math.PI / 2;
-    arrowHeadR.position.set(1.8, 0, 0.06);
-    signRight.add(borderR, plateR, arrowStemR, arrowHeadR);
-
-    gantry.add(signLeft, signRight);
-
-    // 4. Boîtier central de feux suspendu au-dessus des voies
-    const centerBox = new THREE.Mesh(new THREE.BoxGeometry(0.72, 1.7, 0.42), boxMat);
-    centerBox.position.set(0, 4.2, 0.1);
+    // 3. Boîtier central de feux suspendu au-dessus des voies (format urbain discret)
+    const centerBox = new THREE.Mesh(new THREE.BoxGeometry(0.55, 1.4, 0.35), boxMat);
+    centerBox.position.set(0, 4.3, 0.1);
     gantry.add(centerBox);
 
-    // Optiques 3D LED (Rouge, Orange, Vert)
-    const lampGeo = new THREE.SphereGeometry(0.18, 12, 10);
+    // Optiques LED calibrées (Rouge, Orange, Vert) — zéro éblouissement
+    const lampGeo = new THREE.SphereGeometry(0.14, 10, 8);
     const lampRed = new THREE.Mesh(lampGeo, new THREE.MeshBasicMaterial({ color: 0xff2d55 }));
-    lampRed.position.set(0, 4.75, 0.32);
+    lampRed.position.set(0, 4.75, 0.28);
     const lampOrange = new THREE.Mesh(lampGeo, new THREE.MeshBasicMaterial({ color: 0x442200 }));
-    lampOrange.position.set(0, 4.2, 0.32);
+    lampOrange.position.set(0, 4.3, 0.28);
     const lampGreen = new THREE.Mesh(lampGeo, new THREE.MeshBasicMaterial({ color: 0x004400 }));
-    lampGreen.position.set(0, 3.65, 0.32);
+    lampGreen.position.set(0, 3.85, 0.28);
     gantry.add(lampRed, lampOrange, lampGreen);
 
     // Visières pare-soleil incurvées
     const visorMat = new THREE.MeshToonMaterial({ color: 0x111111 });
-    [4.75, 4.2, 3.65].forEach(y => {
-      const visor = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.18, 8, 1, true, 0, Math.PI), visorMat);
+    [4.75, 4.3, 3.85].forEach(y => {
+      const visor = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.14, 8, 1, true, 0, Math.PI), visorMat);
       visor.rotation.x = Math.PI / 2;
-      visor.position.set(0, y + 0.1, 0.32);
+      visor.position.set(0, y + 0.08, 0.28);
       gantry.add(visor);
     });
 
@@ -593,8 +564,8 @@ export class IntersectionManager {
       nodeGroup.add(lamp);
     });
 
-    // 3. Lignes blanches continues d'arrêt (Stop Line) avant chaque passage piéton
-    const stopLineMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    // 3. Lignes blanches continues d'arrêt (Stop Line) avant chaque passage piéton (peinture routière mate, zéro bloom parasite)
+    const stopLineMat = new THREE.MeshStandardMaterial({ color: 0xd8dde6, roughness: 0.95, metalness: 0.0 });
     const stopLineSouth = new THREE.Mesh(new THREE.PlaneGeometry(9.2, 0.55), stopLineMat);
     stopLineSouth.rotation.x = -Math.PI / 2;
     stopLineSouth.position.set(0, 0.03, -8.6);
