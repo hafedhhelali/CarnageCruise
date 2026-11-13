@@ -1283,35 +1283,42 @@ export class Environment {
         chunk.add(cw);
       }
 
-      // Feux tricolores (Feu rouge piétons/voitures)
+      // Feux tricolores (Feu rouge piétons/voitures) parfaitement ancrés au trottoir
       const createTrafficLight = (side) => {
         const tlGroup = new THREE.Group();
         tlGroup.position.set(side * 4.35, 0, 1.8);
-        tlGroup.userData = { type: 'lamp', isHit: false };
+        tlGroup.userData = { type: 'lamp', isHit: false, initialY: 0 };
 
-        // Mât gris anthracite
-        const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 4.6, 8), this.sharedMats?.mast || new THREE.MeshStandardMaterial({ color: 0x2d3436 }));
-        mast.position.y = 2.3;
+        const mastMat = this.sharedMats?.mast || new THREE.MeshStandardMaterial({ color: 0x2d3436 });
+
+        // Socle en fonte ancré dans le trottoir
+        const base = new THREE.Mesh(this.sharedGeos.lampBase, mastMat);
+        base.position.y = 0.25;
+        tlGroup.add(base);
+
+        // Mât gris anthracite à hauteur urbaine réaliste
+        const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 3.4, 8), mastMat);
+        mast.position.y = 1.7;
         tlGroup.add(mast);
 
-        // Boîtier noir à 3 feux
+        // Boîtier noir à 3 feux solidaire du mât
         const box = new THREE.Mesh(new THREE.BoxGeometry(0.35, 1.1, 0.32), this.sharedMats?.trafficBox || new THREE.MeshToonMaterial({ color: 0x1e272e }));
-        box.position.set(0, 3.8, 0);
+        box.position.set(0, 2.85, 0);
         tlGroup.add(box);
 
         // Feu ROUGE éclatant au sommet (Interdit aux véhicules quand piétons traversent)
         const redLight = new THREE.Mesh(new THREE.CircleGeometry(0.12, 10), this.sharedMats?.redLight || new THREE.MeshBasicMaterial({ color: 0xff3838 }));
-        redLight.position.set(0, 4.15, -0.17);
+        redLight.position.set(0, 3.2, -0.17);
         redLight.rotation.y = Math.PI;
 
         // Feu ORANGE
         const amberLight = new THREE.Mesh(new THREE.CircleGeometry(0.1, 8), this.sharedMats?.amberLight || new THREE.MeshBasicMaterial({ color: 0x57606f }));
-        amberLight.position.set(0, 3.8, -0.17);
+        amberLight.position.set(0, 2.85, -0.17);
         amberLight.rotation.y = Math.PI;
 
         // Feu VERT
         const greenLight = new THREE.Mesh(new THREE.CircleGeometry(0.1, 8), this.sharedMats?.greenLight || new THREE.MeshBasicMaterial({ color: 0x2f3542 }));
-        greenLight.position.set(0, 3.45, -0.17);
+        greenLight.position.set(0, 2.5, -0.17);
         greenLight.rotation.y = Math.PI;
 
         tlGroup.add(redLight, amberLight, greenLight);
@@ -2224,34 +2231,34 @@ export class Environment {
       const side = (idx % 2 === 0 ? 1 : -1);
       const xSidewalk = side * 5.2;
 
-      // Réverbère haussmannien élégant et sobre
+      // Réverbère haussmannien élégant et parfaitement ancré au sol
       const lamp = new THREE.Group();
       lamp.position.set(side * 4.6, 0, z);
-      lamp.userData = { type: 'lamp', isHit: false };
+      lamp.userData = { type: 'lamp', isHit: false, initialY: 0 };
 
-      // 1. Socle cannelé en fonte
+      // 1. Socle cannelé en fonte ancré dans le trottoir
       const baseMesh = new THREE.Mesh(this.sharedGeos.lampBase, lampMat);
-      baseMesh.position.y = 0.35;
+      baseMesh.position.y = 0.25;
       lamp.add(baseMesh);
 
-      // 2. Colonne fuselée
+      // 2. Colonne fuselée à hauteur urbaine réaliste
       const pole = new THREE.Mesh(this.sharedGeos.lampPost, lampMat);
-      pole.position.y = 2.4;
+      pole.position.y = 1.85;
       lamp.add(pole);
 
-      // 3. Crosse courbée en col de cygne surplombant le trottoir
+      // 3. Crosse horizontale reliant physiquement le mât à la lanterne (zéro élément flottant)
       const arm = new THREE.Mesh(this.sharedGeos.lampArm, lampMat);
-      arm.rotation.z = side > 0 ? 0.45 : -0.45;
-      arm.position.set(-side * 0.22, 4.3, 0);
+      arm.rotation.z = Math.PI / 2;
+      arm.position.set(-side * 0.24, 3.55, 0);
       lamp.add(arm);
 
-      // 4. Lanterne parisienne avec chapeau en fonte et diffuseur chaud
+      // 4. Lanterne parisienne avec chapeau en fonte et diffuseur chaud solidaires de la crosse
       const cap = new THREE.Mesh(this.sharedGeos.lampCap, lampMat);
-      cap.position.set(-side * 0.45, 4.45, 0);
+      cap.position.set(-side * 0.42, 3.62, 0);
       lamp.add(cap);
 
       const bulb = new THREE.Mesh(this.sharedGeos.lampBulb, glowMat);
-      bulb.position.set(-side * 0.45, 4.25, 0);
+      bulb.position.set(-side * 0.42, 3.42, 0);
       lamp.add(bulb);
 
       chunk.add(lamp);
@@ -2263,7 +2270,7 @@ export class Environment {
           // Colonne antique romaine sculptée avec amphore en terre cuite
           const colGroup = new THREE.Group();
           colGroup.position.set(xSidewalk + side * 0.3, 0, z + 2);
-          colGroup.userData = { type: 'lamp', isHit: false };
+          colGroup.userData = { type: 'lamp', isHit: false, initialY: 0 };
           const colShaft = new THREE.Mesh(this.sharedGeos.romanColumn, marbleMat);
           colShaft.position.y = 2.1;
           const colCap = new THREE.Mesh(this.sharedGeos.romanCapital, marbleMat);
@@ -2282,7 +2289,7 @@ export class Environment {
           // Terracotta amphore géante et palmette d'oasis
           const oaseGroup = new THREE.Group();
           oaseGroup.position.set(xSidewalk + side * 0.3, 0, z + 2);
-          oaseGroup.userData = { type: 'lamp', isHit: false };
+          oaseGroup.userData = { type: 'lamp', isHit: false, initialY: 0 };
           const aBody = new THREE.Mesh(this.sharedGeos.amphoraBelly, terracottaMat);
           aBody.scale.set(1.4, 1.4, 1.4);
           aBody.position.y = 0.55;
@@ -2296,6 +2303,7 @@ export class Environment {
           // Mobilier de trottoir authentique & diversifié selon la ville (bancs en fonte, boîtes postales nationales)
           const propGroup = new THREE.Group();
           propGroup.position.set(xSidewalk + side * 0.4, 0, z + 2);
+          propGroup.userData = { type: 'lamp', isHit: false, initialY: 0 };
 
           if (idx === 0) {
             // Boîte postale aux couleurs officielles du pays
@@ -2363,14 +2371,12 @@ export class Environment {
         }
 
         // Réinitialiser les accessoires urbains (feux tricolores, lampadaires, arbres, stands de rue)
-        // afin d'éliminer définitivement les feux couchés ou stands invisibles après recyclage !
+        // afin d'éliminer définitivement les feux surélevés, couchés ou stands invisibles après recyclage !
         if (chunk.userData && chunk.userData.props) {
           chunk.userData.props.forEach(prop => {
             prop.userData.isHit = false;
             prop.visible = true;
-            if (prop.userData.initialY !== undefined) {
-              prop.position.y = prop.userData.initialY;
-            }
+            prop.position.y = prop.userData.initialY !== undefined ? prop.userData.initialY : 0;
             if (prop.userData.initialRot) {
               prop.rotation.copy(prop.userData.initialRot);
             } else {

@@ -53,92 +53,90 @@ export class IntersectionManager {
     this.streetNameIndex = 0;
   }
 
-  // --- CRÉATION DU MÂT DE FEUX TRICOLORES FRANÇAIS RÉALISTE ---
+  // --- CRÉATION DU MÂT DE FEUX TRICOLORES FRANÇAIS RÉALISTE ANCRÉ AU SOL ---
   createTrafficLightMesh(isLeft = true) {
     const group = new THREE.Group();
-
-    // 1. Mât principal en acier laqué gris anthracite
-    const poleGeo = new THREE.CylinderGeometry(0.09, 0.12, 5.2, 10);
     const poleMat = new THREE.MeshToonMaterial({ color: 0x2d3436 });
+
+    // 1. Socle en fonte ancré dans le trottoir (zéro flottement)
+    const baseGeo = new THREE.CylinderGeometry(0.18, 0.26, 0.6, 10);
+    const base = new THREE.Mesh(baseGeo, poleMat);
+    base.position.y = 0.25;
+    group.add(base);
+
+    // 2. Mât principal en acier laqué gris anthracite à hauteur urbaine réaliste
+    const poleGeo = new THREE.CylinderGeometry(0.09, 0.12, 3.6, 10);
     const pole = new THREE.Mesh(poleGeo, poleMat);
-    pole.position.y = 2.6;
+    pole.position.y = 1.8;
     group.add(pole);
 
-    // 2. Crosse / potence surplombant la chaussée
-    const armGeo = new THREE.CylinderGeometry(0.06, 0.06, 2.2, 8);
-    const arm = new THREE.Mesh(armGeo, poleMat);
-    arm.rotation.z = isLeft ? -Math.PI / 2.8 : Math.PI / 2.8;
-    arm.position.set(isLeft ? 0.9 : -0.9, 4.8, 0);
-    group.add(arm);
-
-    // 3. Boîtier principal supérieur (3 feux verticaux)
-    const boxGeo = new THREE.BoxGeometry(0.44, 1.45, 0.44);
+    // 3. Boîtier principal supérieur (3 feux verticaux) fixé directement sur le mât
+    const boxX = isLeft ? 0.26 : -0.26;
+    const boxGeo = new THREE.BoxGeometry(0.42, 1.35, 0.42);
     const boxMat = new THREE.MeshToonMaterial({ color: 0x1e272e });
     const mainBox = new THREE.Mesh(boxGeo, boxMat);
-    mainBox.position.set(isLeft ? 1.7 : -1.7, 4.3, 0);
+    mainBox.position.set(boxX, 3.0, 0);
     group.add(mainBox);
 
     // Visières pare-soleil incurvées au-dessus de chaque feu
     const visorMat = new THREE.MeshToonMaterial({ color: 0x111111 });
-    [-0.45, 0, 0.45].forEach(yOff => {
-      const visorGeo = new THREE.CylinderGeometry(0.18, 0.18, 0.16, 8, 1, true, 0, Math.PI);
+    [-0.42, 0, 0.42].forEach(yOff => {
+      const visorGeo = new THREE.CylinderGeometry(0.16, 0.16, 0.14, 8, 1, true, 0, Math.PI);
       const visor = new THREE.Mesh(visorGeo, visorMat);
       visor.rotation.x = Math.PI / 2;
-      visor.position.set(isLeft ? 1.7 : -1.7, 4.3 + yOff + 0.1, 0.22);
+      visor.position.set(boxX, 3.0 + yOff + 0.08, 0.21);
       group.add(visor);
     });
 
     // 4. Optiques principales (Rouge, Orange, Vert) — couleurs HDR > 1.0
-    // pour déclencher le halo UnrealBloom quand le feu est actif
-    const lampGeo = new THREE.SphereGeometry(0.13, 10, 8);
+    const lampGeo = new THREE.SphereGeometry(0.12, 10, 8);
     const redMat = new THREE.MeshBasicMaterial({ color: 0x441111 });
     const orangeMat = new THREE.MeshBasicMaterial({ color: 0x442200 });
     const greenMat = new THREE.MeshBasicMaterial({ color: 0x243b2a });
-    // État initial verts HDR
     greenMat.color.setRGB(0.5, 2.4, 0.6);
 
     const lampRed = new THREE.Mesh(lampGeo, redMat);
-    lampRed.position.set(isLeft ? 1.7 : -1.7, 4.75, 0.22);
+    lampRed.position.set(boxX, 3.42, 0.21);
     group.add(lampRed);
 
     const lampOrange = new THREE.Mesh(lampGeo, orangeMat);
-    lampOrange.position.set(isLeft ? 1.7 : -1.7, 4.3, 0.22);
+    lampOrange.position.set(boxX, 3.0, 0.21);
     group.add(lampOrange);
 
     const lampGreen = new THREE.Mesh(lampGeo, greenMat);
-    lampGreen.position.set(isLeft ? 1.7 : -1.7, 3.85, 0.22);
+    lampGreen.position.set(boxX, 2.58, 0.21);
     group.add(lampGreen);
 
     // 5. Répétiteur bas pour motos/vélos (caractéristique française)
-    const repBoxGeo = new THREE.BoxGeometry(0.24, 0.65, 0.24);
+    const repBoxGeo = new THREE.BoxGeometry(0.22, 0.6, 0.22);
     const repBox = new THREE.Mesh(repBoxGeo, boxMat);
-    repBox.position.set(isLeft ? 0.25 : -0.25, 1.6, 0);
+    repBox.position.set(isLeft ? 0.2 : -0.2, 1.35, 0);
     group.add(repBox);
 
-    const repRed = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 6), redMat);
-    repRed.position.set(isLeft ? 0.25 : -0.25, 1.8, 0.13);
+    const repRed = new THREE.Mesh(new THREE.SphereGeometry(0.055, 8, 6), redMat);
+    repRed.position.set(isLeft ? 0.2 : -0.2, 1.53, 0.12);
     group.add(repRed);
 
-    const repOrange = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 6), orangeMat);
-    repOrange.position.set(isLeft ? 0.25 : -0.25, 1.6, 0.13);
+    const repOrange = new THREE.Mesh(new THREE.SphereGeometry(0.055, 8, 6), orangeMat);
+    repOrange.position.set(isLeft ? 0.2 : -0.2, 1.35, 0.12);
     group.add(repOrange);
 
-    const repGreen = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 6), greenMat);
-    repGreen.position.set(isLeft ? 0.25 : -0.25, 1.4, 0.13);
+    const repGreen = new THREE.Mesh(new THREE.SphereGeometry(0.055, 8, 6), greenMat);
+    repGreen.position.set(isLeft ? 0.2 : -0.2, 1.17, 0.12);
     group.add(repGreen);
 
     // 6. Plaque de rue émaillée bleue parisienne avec liseré blanc
-    const streetPlateGeo = new THREE.BoxGeometry(1.2, 0.38, 0.05);
+    const streetPlateGeo = new THREE.BoxGeometry(1.1, 0.34, 0.05);
     const plateMat = new THREE.MeshToonMaterial({ color: 0x0c2461 });
     const streetPlate = new THREE.Mesh(streetPlateGeo, plateMat);
-    streetPlate.position.set(isLeft ? 0.4 : -0.4, 2.7, 0.1);
+    streetPlate.position.set(isLeft ? 0.38 : -0.38, 2.05, 0.1);
     group.add(streetPlate);
 
     // Bordure blanche discrète de la plaque (zéro éclat spéculaire)
-    const plateBorderGeo = new THREE.BoxGeometry(1.26, 0.44, 0.03);
+    const plateBorderGeo = new THREE.BoxGeometry(1.16, 0.4, 0.03);
     const plateBorderMat = new THREE.MeshStandardMaterial({ color: 0xc8d6e5, roughness: 0.85 });
     const plateBorder = new THREE.Mesh(plateBorderGeo, plateBorderMat);
-    plateBorder.position.set(isLeft ? 0.4 : -0.4, 2.7, 0.08);
+    plateBorder.position.set(isLeft ? 0.38 : -0.38, 2.05, 0.08);
     group.add(plateBorder);
 
     return {
@@ -244,36 +242,36 @@ export class IntersectionManager {
     return bGroup;
   }
 
-  // --- CRÉATION DE CANDÉLABRE URBAIN RÉALISTE ---
+  // --- CRÉATION DE CANDÉLABRE URBAIN RÉALISTE ANCRÉ AU SOL ---
   createStreetLampMesh() {
     const lampGroup = new THREE.Group();
     const ironMat = new THREE.MeshToonMaterial({ color: 0x242a30 });
     const glowMat = new THREE.MeshBasicMaterial({ color: 0xfff1d0 });
 
-    // Socle
-    const base = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.25, 0.7, 8), ironMat);
-    base.position.y = 0.35;
+    // Socle ancré dans le trottoir
+    const base = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.25, 0.65, 8), ironMat);
+    base.position.y = 0.25;
     lampGroup.add(base);
 
-    // Mât élancé
-    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.1, 3.8, 8), ironMat);
-    post.position.y = 2.5;
+    // Mât à hauteur urbaine réaliste
+    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.1, 3.2, 8), ironMat);
+    post.position.y = 1.75;
     lampGroup.add(post);
 
-    // Crosse arquée
-    const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.7, 6), ironMat);
-    arm.rotation.z = 0.45;
-    arm.position.set(-0.25, 4.5, 0);
+    // Crosse horizontale reliant physiquement le mât à la lanterne
+    const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.55, 6), ironMat);
+    arm.rotation.z = Math.PI / 2;
+    arm.position.set(-0.24, 3.35, 0);
     lampGroup.add(arm);
 
-    // Chapeau de lanterne
+    // Chapeau de lanterne solidaire de la crosse
     const cap = new THREE.Mesh(new THREE.ConeGeometry(0.24, 0.15, 6), ironMat);
-    cap.position.set(-0.5, 4.65, 0);
+    cap.position.set(-0.42, 3.42, 0);
     lampGroup.add(cap);
 
     // Corps de lanterne
     const lantern = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.1, 0.28, 6), glowMat);
-    lantern.position.set(-0.5, 4.45, 0);
+    lantern.position.set(-0.42, 3.22, 0);
     lampGroup.add(lantern);
 
     return lampGroup;
@@ -522,10 +520,10 @@ export class IntersectionManager {
         nodeGroup.add(shopWin);
       });
 
-      // Candélabres sur l'avenue perpendiculaire
+      // Candélabres sur l'avenue perpendiculaire (posés directement sur le trottoir)
       [-35, -23, 23, 35].forEach(lampX => {
         const cLamp = this.createStreetLampMesh();
-        cLamp.position.set(lampX, 0.32, walkZ);
+        cLamp.position.set(lampX, 0.12, walkZ);
         nodeGroup.add(cLamp);
       });
     });
@@ -558,9 +556,9 @@ export class IntersectionManager {
       barrier.position.set(pos.x > 0 ? pos.x - 5.5 : pos.x + 5.5, 0.32, pos.z > 0 ? pos.z - 5.5 : pos.z + 5.5);
       nodeGroup.add(barrier);
 
-      // Candélabre d'éclairage urbain
+      // Candélabre d'éclairage urbain ancré dans le trottoir
       const lamp = this.createStreetLampMesh();
-      lamp.position.set(pos.x > 0 ? pos.x - 3.5 : pos.x + 3.5, 0.32, pos.z > 0 ? pos.z - 4.5 : pos.z + 4.5);
+      lamp.position.set(pos.x > 0 ? pos.x - 3.5 : pos.x + 3.5, 0.12, pos.z > 0 ? pos.z - 4.5 : pos.z + 4.5);
       nodeGroup.add(lamp);
     });
 
@@ -606,19 +604,18 @@ export class IntersectionManager {
       nodeGroup.add(zEast);
     }
 
-    // 5. Mâts de Feux Tricolores réalistes (gauche et droite)
+    // 5. Mâts de Feux Tricolores réalistes ancrés au sol (gauche et droite)
     const tlLeft = this.createTrafficLightMesh(true);
-    tlLeft.group.position.set(-5.6, 0, -8.6);
+    tlLeft.group.position.set(-4.8, 0, -8.6);
     nodeGroup.add(tlLeft.group);
 
     const tlRight = this.createTrafficLightMesh(false);
-    tlRight.group.position.set(5.6, 0, -8.6);
+    tlRight.group.position.set(4.8, 0, -8.6);
     nodeGroup.add(tlRight.group);
 
-    // 6. Portique monumental au-dessus des voies avec signalisation européenne et feux
+    // 6. Suppression du portique suspendu en hauteur pour éviter tout effet de feu flottant dans le ciel
     const overheadGantry = this.createOverheadGantryMesh();
-    overheadGantry.group.position.set(0, 0, -8.6);
-    nodeGroup.add(overheadGantry.group);
+    overheadGantry.group.visible = false;
 
     const streetName = STREET_NAMES[this.streetNameIndex % STREET_NAMES.length];
     this.streetNameIndex++;

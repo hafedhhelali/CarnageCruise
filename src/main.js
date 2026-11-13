@@ -19,7 +19,6 @@ import { ProjectileManager } from './entities/Projectiles.js';
 import { Traffic } from './entities/Traffic.js';
 import { PigeonSystem } from './entities/Pigeons.js';
 import { UIManager } from './ui/UIManager.js';
-import { tycoonManager } from './core/TycoonManager.js';
 import { Haptic } from './services/HapticFeedback.js';
 import * as TWEEN from '@tweenjs/tween.js';
 import './ui/style.css';
@@ -100,18 +99,6 @@ class GameApp {
     // 7. Horloge d'animation Three.js
     this.clock = new THREE.Clock();
 
-    // 8. Rapport de Crise Hors-Ligne Tycoon (si absence > 60s et gains existants)
-    try {
-      const offlineEarnings = tycoonManager.checkOfflineEarnings();
-      if (offlineEarnings && (offlineEarnings.cashEarned > 0 || offlineEarnings.killsEarned > 0)) {
-        setTimeout(() => {
-          if (this.ui) this.ui.showOfflineReportModal(offlineEarnings);
-        }, 1200);
-      }
-    } catch (e) {
-      console.warn('[App] offlineEarnings error:', e);
-    }
-
     // Démarrer la boucle principale à 60 FPS
     requestAnimationFrame((t) => this.loop(t));
 
@@ -145,7 +132,8 @@ class GameApp {
     // --- CONTRÔLES TACTILES MOBILES (TOUCH & POINTER) ---
     window.addEventListener('pointerdown', (e) => {
       soundManager.resumeContext();
-      if (storage.data.settings.music && !soundManager.musicPlaying && (gameState.currentMode === 'SPLASH' || gameState.currentMode === 'MAP' || gameState.currentMode === 'GARAGE')) {
+      // Ne pas relancer la musique si l'utilisateur appuie sur le bouton Son de l'accueil
+      if (!e.target.closest('#btn-splash-audio') && !soundManager.isMutedMusic && storage.data.settings.music && !soundManager.musicPlaying && (gameState.currentMode === 'SPLASH' || gameState.currentMode === 'MAP' || gameState.currentMode === 'GARAGE')) {
         soundManager.startMusic('MENU');
       }
 
@@ -549,9 +537,6 @@ class GameApp {
 
     const delta = Math.min(this.clock.getDelta(), 0.1); // Sécurité contre les sauts de frame
     TWEEN.update();
-
-    // Simulation passive continue de l'Empire Tycoon
-    tycoonManager.tick(delta);
 
     // Calcul du braquage final (tactile ou clavier)
     let currentSteer = this.steerInput;

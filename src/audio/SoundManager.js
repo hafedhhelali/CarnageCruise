@@ -2156,8 +2156,17 @@ export class SoundManager {
     if (this.isMutedMusic || !this.ctx || this.isDestroyed) return;
     this.resumeContext();
 
+    if (this.musicBus && this.ctx) {
+      this.musicBus.gain.cancelScheduledValues(this.ctx.currentTime);
+      this.musicBus.gain.setValueAtTime(1.0, this.ctx.currentTime);
+    }
+    if (this.masterGain && this.ctx && (!this.isMutedMusic || !this.isMutedSfx)) {
+      this.masterGain.gain.cancelScheduledValues(this.ctx.currentTime);
+      this.masterGain.gain.setValueAtTime(0.92, this.ctx.currentTime);
+    }
+
     if (this.musicPlaying && this.currentTrack === track) return;
-    this.stopMusic();
+    this.stopMusic(false);
 
     this.musicPlaying = true;
     this.currentTrack = track;
@@ -3947,30 +3956,86 @@ export class SoundManager {
     }
   }
 
-  stopMusic() {
+  get mutedMusic() {
+    return this.isMutedMusic;
+  }
+
+  get mutedSfx() {
+    return this.isMutedSfx;
+  }
+
+  stopMusic(silenceBus = true) {
     this.musicPlaying = false;
     if (this.musicTimer) {
       clearTimeout(this.musicTimer);
       this.musicTimer = null;
     }
+    if (silenceBus && this.musicBus && this.ctx) {
+      try {
+        this.musicBus.gain.cancelScheduledValues(this.ctx.currentTime);
+        this.musicBus.gain.setValueAtTime(0.0001, this.ctx.currentTime);
+      } catch (e) {}
+    }
   }
 
   toggleSfx(enabled) {
+    if (enabled === undefined) {
+      enabled = this.isMutedSfx;
+    }
     this.isMutedSfx = !enabled;
     storage.updateSettings({ sfx: enabled });
     if (!enabled) {
       this.stopEngine();
     }
+    if (this.masterGain && this.ctx) {
+      const allMuted = this.isMutedMusic && this.isMutedSfx;
+      this.masterGain.gain.cancelScheduledValues(this.ctx.currentTime);
+      this.masterGain.gain.setValueAtTime(allMuted ? 0.0001 : 0.92, this.ctx.currentTime);
+    }
+    return enabled;
   }
 
   toggleMusic(enabled) {
+    if (enabled === undefined) {
+      enabled = this.isMutedMusic;
+    }
     this.isMutedMusic = !enabled;
     storage.updateSettings({ music: enabled });
     if (!enabled) {
-      this.stopMusic();
+      this.stopMusic(true);
     } else {
-      this.startMusic();
+      this.startMusic(this.currentTrack || 'MENU');
     }
+    if (this.masterGain && this.ctx) {
+      const allMuted = this.isMutedMusic && this.isMutedSfx;
+      this.masterGain.gain.cancelScheduledValues(this.ctx.currentTime);
+      this.masterGain.gain.setValueAtTime(allMuted ? 0.0001 : 0.92, this.ctx.currentTime);
+    }
+    return enabled;
+  }
+
+  toggleAllAudio() {
+    const isCurrentlyOn = !this.isMutedMusic || !this.isMutedSfx;
+    const nextState = !isCurrentlyOn;
+    this.isMutedMusic = !nextState;
+    this.isMutedSfx = !nextState;
+    storage.updateSettings({ music: nextState, sfx: nextState });
+
+    if (!nextState) {
+      this.stopMusic(true);
+      this.stopEngine();
+      if (this.masterGain && this.ctx) {
+        this.masterGain.gain.cancelScheduledValues(this.ctx.currentTime);
+        this.masterGain.gain.setValueAtTime(0.0001, this.ctx.currentTime);
+      }
+    } else {
+      if (this.masterGain && this.ctx) {
+        this.masterGain.gain.cancelScheduledValues(this.ctx.currentTime);
+        this.masterGain.gain.setValueAtTime(0.92, this.ctx.currentTime);
+      }
+      this.startMusic(this.currentTrack || 'MENU');
+    }
+    return nextState;
   }
 }
 
