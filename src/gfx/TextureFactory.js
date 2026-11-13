@@ -230,15 +230,44 @@ class TextureFactoryService {
         });
       });
 
-      // 4. Rez-de-chaussée : Devanture de commerce chic
-      ctx.fillStyle = '#1e272e';
+      // 4. Rez-de-chaussée : Vitrine de boutique chaleureuse et porte d'immeuble moulurée (neutre, sans texte figé)
+      ctx.fillStyle = '#222f3e';
       ctx.fillRect(0, 890, 512, 134);
-      ctx.fillStyle = '#ffd700';
-      ctx.font = 'bold 26px "Segoe UI", sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('CAFÉ DE PARIS ★ BISTROT', 256, 940);
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
-      ctx.fillRect(30, 960, 452, 60);
+
+      // Pilastres et corniches en bois précieux
+      ctx.fillStyle = '#3d261d';
+      ctx.fillRect(0, 890, 512, 16);
+      ctx.fillRect(0, 890, 24, 134);
+      ctx.fillRect(244, 890, 24, 134);
+      ctx.fillRect(488, 890, 24, 134);
+
+      // Vitrines éclairées de part et d'autre avec reflet
+      ctx.fillStyle = '#ffeaa7';
+      ctx.fillRect(32, 915, 202, 95);
+      ctx.fillRect(278, 915, 202, 95);
+
+      // Reflets lumineux diagonaux réalistes sur la vitre
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.22)';
+      ctx.beginPath();
+      ctx.moveTo(32, 1010);
+      ctx.lineTo(92, 1010);
+      ctx.lineTo(172, 915);
+      ctx.lineTo(112, 915);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.moveTo(278, 1010);
+      ctx.lineTo(338, 1010);
+      ctx.lineTo(418, 915);
+      ctx.lineTo(358, 915);
+      ctx.closePath();
+      ctx.fill();
+
+      // Soubassements et moulures
+      ctx.fillStyle = '#1e1511';
+      ctx.fillRect(32, 1000, 202, 14);
+      ctx.fillRect(278, 1000, 202, 14);
     });
   }
 

@@ -1243,17 +1243,19 @@ export class Environment {
     road.receiveShadow = true;
     chunk.add(road);
 
-    // Bandes blanches centrales
-    const numStripes = Math.floor(this.chunkLength / 7);
-    for (let i = 0; i < numStripes; i++) {
-      const stripe = new THREE.Mesh(this.sharedGeos.stripe, stripeMat);
-      stripe.rotation.x = -Math.PI / 2;
-      stripe.position.set(0, 0.01, -this.chunkLength / 2 + i * 7 + 3.5);
-      chunk.add(stripe);
+    // Bandes blanches centrales (uniquement en mode urbain classique, bitume brut fracturé en ruines)
+    if (!this.isRuinsMode) {
+      const numStripes = Math.floor(this.chunkLength / 7);
+      for (let i = 0; i < numStripes; i++) {
+        const stripe = new THREE.Mesh(this.sharedGeos.stripe, stripeMat);
+        stripe.rotation.x = -Math.PI / 2;
+        stripe.position.set(0, 0.01, -this.chunkLength / 2 + i * 7 + 3.5);
+        chunk.add(stripe);
+      }
     }
 
-    // Passage piéton tous les 60m avec FEUX TRICOLORES RÉALISTES (Uniquement en mission urbaine classique)
-    if (!this.isCataclysmMission && Math.abs(zPos) % 60 === 0) {
+    // Passage piéton tous les 60m avec FEUX TRICOLORES (Uniquement en course classique, ZÉRO feux en ruines !)
+    if (!this.isCataclysmMission && !this.isRuinsMode && Math.abs(zPos) % 60 === 0) {
       for (let s = -3.2; s <= 3.2; s += 0.9) {
         const cw = new THREE.Mesh(this.sharedGeos.crosswalkStripe, stripeMat);
         cw.rotation.x = -Math.PI / 2;
@@ -1353,18 +1355,24 @@ export class Environment {
       chunk.add(sidewalkL, curbL, sidewalkR, curbR);
     }
 
-    // Bâtiments (avec dégagement des carrefours)
-    this.populateBuildings(chunk, -1);
-    this.populateBuildings(chunk, 1);
-
-    // Ralentisseur / Dos d'âne 3D avec marquages dents de requin & panneau 30 km/h
-    // Placer à des chunks réguliers (tous les ~160m en alternance avec les carrefours)
-    const relBump = ((zPos - 35) % 160 + 160) % 160;
-    if (relBump < 20 && zPos > 40) {
-      this.addSpeedBump(chunk, 0);
+    // Bâtiments : Décombres effondrés en mode Ruines, Architecture vivante en course classique
+    if (this.isRuinsMode) {
+      this.populateRuinsBuildings(chunk, -1);
+      this.populateRuinsBuildings(chunk, 1);
+    } else {
+      this.populateBuildings(chunk, -1);
+      this.populateBuildings(chunk, 1);
     }
 
-    // Accessoires urbains et terrasses
+    // Ralentisseur / Dos d'âne 3D (Uniquement en course urbaine normale)
+    if (!this.isRuinsMode && !this.isCataclysmMission) {
+      const relBump = ((zPos - 35) % 160 + 160) % 160;
+      if (relBump < 20 && zPos > 40) {
+        this.addSpeedBump(chunk, 0);
+      }
+    }
+
+    // Accessoires urbains et décombres
     this.populateStreetProps(chunk);
 
     return chunk;
@@ -2067,45 +2075,38 @@ export class Environment {
           chunk.add(oaseGroup);
           chunk.userData.props.push(oaseGroup);
         } else {
-          // Terrasse de bistrot / tapas bar
-          const terrace = new THREE.Group();
-          terrace.position.set(xSidewalk + side * 0.4, 0, z + 2);
-          terrace.userData = { type: 'terrace', isHit: false };
+          // Mobilier de trottoir authentique & diversifié selon la ville (bancs en fonte, boîtes postales nationales)
+          const propGroup = new THREE.Group();
+          propGroup.position.set(xSidewalk + side * 0.4, 0, z + 2);
 
-          const tableLeg = new THREE.Mesh(this.sharedGeos.tableLeg, lampMat);
-          tableLeg.position.y = 0.35;
-          terrace.add(tableLeg);
+          if (idx === 0) {
+            // Boîte postale aux couleurs officielles du pays
+            const isUK = ['londres', 'dublin', 'newcastle'].includes(this.cityTheme.id);
+            const isNordic = ['reykjavik', 'oslo', 'stockholm', 'copenhague', 'helsinki'].includes(this.cityTheme.id);
+            const boxColor = isUK ? 0xd63031 : (isNordic ? 0x0984e3 : 0xf1c40f);
+            const mailMat = new THREE.MeshToonMaterial({ color: boxColor });
+            const postPillar = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.8, 8), lampMat);
+            postPillar.position.y = 0.4;
+            const mailBox = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.55, 0.32), mailMat);
+            mailBox.position.y = 0.95;
+            propGroup.add(postPillar, mailBox);
+          } else {
+            // Banc de repos élégant en bois et fonte
+            const benchMat = this.sharedMats?.benchWood || new THREE.MeshStandardMaterial({ color: 0x8b4513, roughness: 0.6 });
+            const seat = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.07, 1.4), benchMat);
+            seat.position.y = 0.38;
+            const back = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.38, 1.4), benchMat);
+            back.position.set(-side * 0.18, 0.58, 0);
+            const leg1 = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.38, 0.07), lampMat);
+            leg1.position.set(0, 0.19, -0.55);
+            const leg2 = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.38, 0.07), lampMat);
+            leg2.position.set(0, 0.19, 0.55);
+            propGroup.add(seat, back, leg1, leg2);
+          }
 
-          const tableTop = new THREE.Mesh(this.sharedGeos.table, woodMat);
-          tableTop.position.y = 0.7;
-          terrace.add(tableTop);
-
-          const parasolPole = new THREE.Mesh(this.sharedGeos.parasolPole, lampMat);
-          parasolPole.position.set(0.3, 1.0, 0);
-          terrace.add(parasolPole);
-
-          const parasolColor = isIberia ? (side > 0 ? 0xf1c40f : 0xe74c3c) : 0xe74c3c;
-          const parasol = new THREE.Mesh(this.sharedGeos.parasol, new THREE.MeshToonMaterial({ color: parasolColor }));
-          parasol.position.set(0.3, 2.1, 0);
-          terrace.add(parasol);
-          chunk.add(terrace);
-          chunk.userData.props.push(terrace);
+          chunk.add(propGroup);
+          chunk.userData.props.push(propGroup);
         }
-      }
-
-      // Colonne Morris ou boîte aux lettres
-      if (idx === 2) {
-        // Colonne Morris parisienne
-        const morris = new THREE.Group();
-        morris.position.set(side * 4.9, 0, z - 3);
-        const colBase = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.4, 0.4, 12), lampMat);
-        colBase.position.y = 0.2;
-        const colBody = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 2.0, 12), new THREE.MeshBasicMaterial({ color: 0x006266 }));
-        colBody.position.y = 1.4;
-        const colRoof = new THREE.Mesh(new THREE.ConeGeometry(0.42, 0.6, 12), lampMat);
-        colRoof.position.y = 2.7;
-        morris.add(colBase, colBody, colRoof);
-        chunk.add(morris);
       }
     });
   }

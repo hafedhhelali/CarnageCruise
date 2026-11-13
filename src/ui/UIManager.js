@@ -55,6 +55,8 @@ export class UIManager {
         this.resetHUDCombo();
       } else if (event === 'run_started') {
         this.setScreen('HUD');
+      } else if (event === 'exit_ruins') {
+        this.setScreen('MAP');
       } else if (event === 'run_ended') {
         this.showResultsModal(data);
       } else if (event === 'city_unlocked') {

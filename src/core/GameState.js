@@ -2016,7 +2016,7 @@ export class GameState {
     this.isNitroActive = false;
     this.nitroTimer = 0;
     this.energyDrinkCans = 2; // Stock limité de 2 canettes pour la course (cheval / à pied)
-    this.isRuinsMode = this.isRuinsMode || !!this.selectedCity?.isRuinsMode || (this.selectedCity?.id ? storage.isCityExterminated(this.selectedCity.id) : false);
+    this.isRuinsMode = !!this.isRuinsMode;
     this.nitroDuration = 5.0; // Durée nitro standard
 
 
@@ -2088,7 +2088,7 @@ export class GameState {
     this.isNitroActive = false;
     this.nitroTimer = 0;
     this.energyDrinkCans = 2; // Stock limité de 2 canettes pour la course (cheval / à pied)
-    this.isRuinsMode = this.isRuinsMode || !!this.selectedCity?.isRuinsMode || (this.selectedCity?.id ? storage.isCityExterminated(this.selectedCity.id) : false);
+    this.isRuinsMode = !!this.isRuinsMode;
 
     // Gestion des Cataclysmes & Modes d'Extermination Worldmageddon
     this.disasterType = this.selectedCity?.disasterType || (this.selectedCity?.isNuclearMission ? 'NUCLEAR' : (this.selectedCity?.isDamMission ? 'DAM' : (this.selectedCity?.isMountainMission ? 'MOUNTAIN' : 'STREET')));
@@ -2437,8 +2437,10 @@ export class GameState {
       }
     }
 
-    // 2. Mode Exploration Ruines : Ballade douce à petite vitesse sans compétition
+    // 2. Mode Exploration Ruines : Ballade douce à petite vitesse sans compétition (ZÉRO SCORE)
     if (this.isRuinsMode) {
+      this.score = 0;
+      this.drivingScoreAccumulator = 0;
       const ruinsCruiseSpeed = 7.0;
       if (this.isBraking) {
         this.speed = Math.max(0, this.speed - delta * 15.0);
@@ -2449,9 +2451,9 @@ export class GameState {
       this.notify('stats_tick', {
         distance: Math.floor(this.distance),
         speed: Math.floor(this.speed * 3.6),
-        score: this.score,
-        targetScore: this.selectedCity.targetScore,
-        scoreRatio: 1.0
+        score: 0,
+        targetScore: 0,
+        scoreRatio: 0
       });
       return;
     }
@@ -2558,7 +2560,14 @@ export class GameState {
   endRun() {
     if (this.currentMode !== 'PLAYING') return;
 
-    this.currentMode = 'RESULTS';
+    if (this.isRuinsMode) {
+      this.isRuinsMode = false;
+      this.currentMode = 'MAP';
+      this.isGameOver = true;
+      soundManager.stopAllGameplaySounds();
+      this.notify('exit_ruins', {});
+      return;
+    }
     this.isGameOver = true;
     soundManager.stopAllGameplaySounds(); // Coupe immédiatement tous les sons persistants de l'épreuve
 

@@ -268,6 +268,13 @@ class GameApp {
       } else if (action === 'EXIT_RUINS' || action === 'RETURN_MAP') {
         gameState.isRuinsMode = false;
         gameState.currentMode = 'MAP';
+        if (this.bike) {
+          this.bike.speed = 0;
+          this.bike.targetSpeed = 0;
+          this.bike.x = 0;
+          this.bike.z = 0;
+        }
+        soundManager.stopAllGameplaySounds();
         soundManager.stopEngine();
         if (storage.data.settings.music) soundManager.startMusic('MENU');
         this.setupCity(gameState.selectedCity);
