@@ -8,7 +8,7 @@ Ce document fournit l'ensemble des informations de conception, d'architecture lo
 ## 1. VISION DU PROJET & SPÉCIFICATIONS
 
 - **Genre** : Jeu de course d'arcade urbain / Runner 3D burlesque
-- **Version actuelle** : **0.9.47-beta** (Build / versionCode 57 - Canal 0.x.x BETA)
+- **Version actuelle** : **0.9.48-beta** (Build / versionCode 58 - Canal 0.x.x BETA)
 - **Signature & Clé** : Keystore permanent dédié `android/app/CarnageCruise.keystore` (validité 10 000 jours, EOMedia Paris)
 - **Plateforme cible** : Android (Smartphones & Tablettes) + WebGL Mobile/Desktop
 - **Direction artistique** : Cartoon 3D éclatant, physique burlesque (slapstick), animations hilarantes et dynamiques, identité française affirmée.
@@ -353,6 +353,39 @@ Ce document fournit l'ensemble des informations de conception, d'architecture lo
 
 ### D. Rééquilibrage du Score
 - Cibles et seuils d'étoiles ×1.25, quotas de kills ×1.5, points par piéton ×0.7, conduite 1.6→1.0, near-miss 75→50, air time 150+8→100+5. Le score n'est plus triviallement atteignable.
+
+---
+
+## 12. RÉVOLUTION GRAPHIQUE, ANIMATIONS, CONFORT FUTURISTE & ARCHITECTURE (v0.9.48-beta / Build 58)
+
+### A. Direction Artistique « Cyber-Arcade Overdrive » & Confort Visuel
+- **Palette Cyber-Glass Anti-Fatigue (`src/ui/style.css`)** :
+  - Surfaces en verre saphir-obsidienne profond (`rgba(10, 16, 30, 0.88)` à `rgba(17, 26, 46, 0.92)`), bordures luminescentes subtiles et contrastes doux reposants pour les yeux.
+  - Accents : Cyan Cyber (`#00f2fe`), Pourpre Électrique (`#ff2e63`), Or Solaire (`#ffd32a`), Vert Émeraude (`#00f5a0`).
+  - Refonte des boutons (`.btn-arcade`, `.btn-secondary`, `.btn-accent`, `.btn-ghost`, `.hero-play-btn`), cartes véhicules (`.splash-vehicle-card`), badges de score et typographie futuriste.
+- **Ergonomie & Textes des Menus (`src/ui/UIManager.js`)** :
+  - Libellés futuristes et lisibles sur l'écran d'accueil (`⚡ CYBER ARCADE & ASSAUT URBAIN ⚡`, `⚡ ENGIN PRÊT AU DÉPLOIEMENT`, `CHANGER ▾`) et la carte (`⚡ ENGIN D'ASSAUT ACTIF`).
+
+### B. Fluidité 3D, Caméra Amortie, Horizon Atmosphérique & Underglow Véhicule
+- **Caméra Exponentiellement Amortie Indépendante du Framerate (`src/core/Engine.js`)** :
+  - Remplacement des `lerp` linéaires dépendants du framerate par un amortissement exponentiel (`1 - Math.exp(-k * delta)`) sur la position caméra, la cible de regard dynamique (`lookAtCurrent` avec anticipation de vitesse) et le FOV (`dampFov`).
+  - Orbite showroom cinématique adoucie sur l'écran d'accueil et le garage (`updateCameraCinematic`).
+- **Dôme Céleste & Nuages Vivants (`src/gfx/SkyDome.js`)** :
+  - Shader atmosphérique à 3 bandes avec halo d'horizon (`horizonGlow`) et respiration verticale sinusoïdale douce des nuages volumétriques.
+- **Halo Néon Underglow Dynamique (`src/entities/Bike.js`)** :
+  - Ajout d'un halo lumineux au sol sous le véhicule (`underglowMesh` / `underglowMat`) qui pulse en cyan électrique (`0x00f2fe`) sous Nitro et s'adapte dynamiquement à la vitesse de course (`0x00d2d3`).
+
+### C. Architecture Senior & Élimination des Fuites Mémoire (`src/entities/Particles.js`)
+- **Zéro Fuite GPU sur les Fumées & Dérapages** :
+  - Marquage `ownsMaterial: true` sur les matériaux clonés (`spawnExhaustSmoke`, `spawnSkidSmoke`) avec libération `.dispose()` automatique à l'expiration et au `reset()`.
+  - Protection `sharedMatSet` empêchant `smokePuffs` de muter ou de détruire par erreur les matériaux partagés (`smokeDark`, `skidSmoke`, `smoke`).
+
+### D. Nouveau Logo Appli & Icône d'Installation Téléphone Futuriste
+- **Logo Vectoriel In-App (`public/logo.svg`)** :
+  - Emblème hexagonal Cyber-Arcade 512×512 avec grille synthwave en perspective, cœur plasma cyan/magenta, bolide intercepteur futuriste blindé avec jantes néon, sillages laser et typographie dorée/cyan.
+- **Icônes Launcher Android (`scripts/generate-icons.ps1` & `android/app/src/main/res/mipmap-*`)** :
+  - Génération haute résolution sur les 5 densités (`mdpi` à `xxxhdpi`) de `ic_launcher.png`, `ic_launcher_round.png` et `ic_launcher_foreground.png` (bouclier hexagonal futuriste, anneau cyan néon, visière laser magenta et monogramme « CC » or solaire sur fond `#080e1c`).
+
 
 
 

@@ -21,16 +21,16 @@ export class SkyDome {
   }
 
   initDome() {
-    // Dôme hémisphérique géant avec dégradé vertical
-    const domeGeo = new THREE.SphereGeometry(380, 24, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+    // Dôme hémisphérique géant avec dégradé atmosphérique tri-bande et lueur d'horizon
+    const domeGeo = new THREE.SphereGeometry(380, 28, 18, 0, Math.PI * 2, 0, Math.PI / 2);
     
-    // Shader de dégradé céleste doux
     const domeMat = new THREE.ShaderMaterial({
       uniforms: {
-        topColor: { value: new THREE.Color(0x3867d6) },
+        topColor: { value: new THREE.Color(0x1e3799) },
         bottomColor: { value: new THREE.Color(0xdff9fb) },
-        offset: { value: 15 },
-        exponent: { value: 0.6 }
+        horizonGlow: { value: new THREE.Color(0x74b9ff) },
+        offset: { value: 14 },
+        exponent: { value: 0.58 }
       },
       vertexShader: `
         varying vec3 vWorldPosition;
@@ -43,12 +43,16 @@ export class SkyDome {
       fragmentShader: `
         uniform vec3 topColor;
         uniform vec3 bottomColor;
+        uniform vec3 horizonGlow;
         uniform float offset;
         uniform float exponent;
         varying vec3 vWorldPosition;
         void main() {
-          float h = normalize(vWorldPosition + offset).y;
-          gl_FragColor = vec4(mix(bottomColor, topColor, max(pow(max(h, 0.0), exponent), 0.0)), 1.0);
+          float h = clamp(normalize(vWorldPosition + vec3(0.0, offset, 0.0)).y, 0.0, 1.0);
+          float curve = pow(h, exponent);
+          vec3 skyGrad = mix(bottomColor, topColor, curve);
+          float horizonBand = exp(-h * 9.0) * 0.28;
+          gl_FragColor = vec4(skyGrad + horizonGlow * horizonBand, 1.0);
         }
       `,
       side: THREE.BackSide,
@@ -92,7 +96,9 @@ export class SkyDome {
       );
       cloud.userData = {
         speed: 1.5 + Math.random() * 2.0,
-        driftX: (Math.random() - 0.5) * 0.4
+        driftX: (Math.random() - 0.5) * 0.4,
+        baseY: cloud.position.y,
+        phase: Math.random() * Math.PI * 2
       };
 
       this.group.add(cloud);
@@ -104,6 +110,9 @@ export class SkyDome {
     if (this.domeMesh && this.domeMesh.material.uniforms) {
       this.domeMesh.material.uniforms.topColor.value.set(topColorHex);
       this.domeMesh.material.uniforms.bottomColor.value.set(bottomColorHex);
+      if (this.domeMesh.material.uniforms.horizonGlow) {
+        this.domeMesh.material.uniforms.horizonGlow.value.set(bottomColorHex).lerp(new THREE.Color(0x00f2fe), 0.18);
+      }
     }
   }
 
@@ -122,6 +131,9 @@ export class SkyDome {
     this.clouds.forEach(cloud => {
       cloud.position.x += cloud.userData.driftX * delta;
       cloud.position.z += cloud.userData.speed * delta;
+      if (cloud.userData.baseY !== undefined) {
+        cloud.position.y = cloud.userData.baseY + Math.sin(this.animTime * 0.8 + cloud.userData.phase) * 0.65;
+      }
 
       // Boucle infinie des nuages autour du joueur
       if (cloud.position.z > playerZ + 250) {

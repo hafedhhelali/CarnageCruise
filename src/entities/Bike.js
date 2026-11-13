@@ -65,6 +65,21 @@ export class Bike {
     this.contactShadow.position.y = 0.025;
     this.mesh.add(this.contactShadow);
 
+    // Halo Underglow Néo-Arcade Futuriste sous le véhicule (modulé selon la vitesse et le Nitro)
+    const underglowRingGeo = new THREE.RingGeometry(0.45, 1.38, 24);
+    this.underglowMat = new THREE.MeshBasicMaterial({
+      color: 0x00f2fe,
+      transparent: true,
+      opacity: 0.24,
+      side: THREE.DoubleSide,
+      depthWrite: false
+    });
+    this.underglowMesh = new THREE.Mesh(underglowRingGeo, this.underglowMat);
+    this.underglowMesh.rotation.x = -Math.PI / 2;
+    this.underglowMesh.position.y = 0.032;
+    this.underglowMesh.scale.set(1.0, 1.45, 1.0);
+    this.mesh.add(this.underglowMesh);
+
     // Flammes Nitro (propulseurs NOS bleus éclatants)
     this.nitroFlames = new THREE.Group();
     const flameMat = new THREE.MeshBasicMaterial({ color: 0x00d2d3, transparent: true, opacity: 0.9 });
@@ -2488,19 +2503,27 @@ export class Bike {
       }
     }
 
-    // --- GESTION VISUELLE DYNAMIQUE DU NITRO 5 SECONDES ---
+    // --- GESTION VISUELLE DYNAMIQUE DU NITRO & DU HALO UNDERGLOW FUTURISTE ---
     if (gameState && gameState.isNitroActive) {
       this.nitroFlames.visible = true;
       const jitterZ = 1.0 + Math.random() * 0.45;
       const jitterX = 1.0 + Math.random() * 0.25;
       this.flameL.scale.set(jitterX, jitterX, jitterZ);
       this.flameR.scale.set(jitterX, jitterX, jitterZ);
-      // Scintillement chaud de la flamme (importance du boost ressenti)
       if (this.nitroFlameMat) {
         this.nitroFlameMat.opacity = 0.75 + Math.random() * 0.25;
       }
+      if (this.underglowMat) {
+        this.underglowMat.color.setHex(0x00f2fe);
+        this.underglowMat.opacity = 0.42 + Math.sin(this.bouncePhase * 6.0) * 0.08;
+      }
     } else {
       this.nitroFlames.visible = false;
+      if (this.underglowMat) {
+        this.underglowMat.color.setHex(0x00d2d3);
+        const speedGlow = Math.min(0.28, 0.14 + (speed / 35.0) * 0.14);
+        this.underglowMat.opacity = speedGlow;
+      }
     }
 
     // --- GESTION DES BALLES TRAÇANTES AK-47 ---

@@ -5,16 +5,16 @@
  */
 
 :root {
-  --primary: #ff4757;
-  --primary-glow: rgba(255, 71, 87, 0.45);
-  --secondary: #2ed573;
-  --accent: #ffa502;
-  --gold: #ffd700;
-  --dark-bg: rgba(18, 20, 32, 0.94);
-  --glass-bg: rgba(25, 28, 44, 0.85);
-  --border-light: rgba(255, 255, 255, 0.16);
-  --text-main: #ffffff;
-  --text-muted: #a4b0be;
+  --primary: #ff2e63;
+  --primary-glow: rgba(255, 46, 99, 0.45);
+  --secondary: #00f2fe;
+  --accent: #ffd32a;
+  --gold: #ffd32a;
+  --dark-bg: rgba(9, 14, 26, 0.92);
+  --glass-bg: rgba(13, 21, 38, 0.84);
+  --border-light: rgba(0, 242, 254, 0.24);
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
   --font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
 }
 
@@ -116,29 +116,29 @@ html, body {
   100% { transform: scale(1); box-shadow: 0 6px 20px rgba(235, 77, 75, 0.7); }
 }
 
-/* --- BOUTONS ARCADE DE LUXE (DESIGN JAPONAIS 3D MULTI-COUCHE) --- */
+/* --- BOUTONS NÉO-ARCADE FUTURISTES & CONFORTABLES (DESIGN CYBER-GLASS 3D) --- */
 .btn-arcade {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 12px;
-  background: linear-gradient(180deg, #ff6b81 0%, #ff4757 50%, #ee2238 100%);
-  color: #fff;
-  border: 2px solid rgba(255, 255, 255, 0.45);
-  border-radius: 50px;
-  padding: 14px 28px;
-  font-size: 1.08rem;
+  background: linear-gradient(135deg, #ff2e63 0%, #e11d48 55%, #be123c 100%);
+  color: #f8fafc;
+  border: 1.5px solid rgba(255, 255, 255, 0.48);
+  border-radius: 18px;
+  padding: 14px 26px;
+  font-size: 1.04rem;
   font-weight: 900;
   text-transform: uppercase;
-  letter-spacing: 0.8px;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.45);
+  letter-spacing: 0.9px;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
   box-shadow: 
-    0 8px 24px rgba(255, 71, 87, 0.45),
-    0 3px 6px rgba(0, 0, 0, 0.35),
-    inset 0 2px 2px rgba(255, 255, 255, 0.65),
-    inset 0 -3px 3px rgba(0, 0, 0, 0.3);
+    0 8px 22px rgba(255, 46, 99, 0.38),
+    0 2px 6px rgba(0, 0, 0, 0.4),
+    inset 0 1.5px 1px rgba(255, 255, 255, 0.55),
+    inset 0 -2px 3px rgba(0, 0, 0, 0.3);
   cursor: pointer;
-  transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.15s ease, box-shadow 0.15s ease;
+  transition: transform 0.14s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.15s ease, filter 0.15s ease;
   pointer-events: auto;
   white-space: normal;
   text-align: center;
@@ -156,46 +156,46 @@ html, body {
   top: 0;
   left: 0;
   right: 0;
-  height: 48%;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.38) 0%, rgba(255, 255, 255, 0) 100%);
-  border-radius: 50px 50px 0 0;
+  height: 46%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.26) 0%, rgba(255, 255, 255, 0) 100%);
+  border-radius: 18px 18px 0 0;
   pointer-events: none;
 }
 
 .btn-arcade:active {
-  transform: translateY(3px) scale(0.96);
+  transform: translateY(2px) scale(0.97);
   box-shadow: 
-    0 2px 8px rgba(255, 71, 87, 0.35),
-    inset 0 1px 1px rgba(255, 255, 255, 0.3),
-    inset 0 2px 4px rgba(0, 0, 0, 0.4);
-  filter: brightness(0.92);
+    0 3px 10px rgba(255, 46, 99, 0.3),
+    inset 0 1px 2px rgba(0, 0, 0, 0.4);
+  filter: brightness(0.95);
 }
 
 .btn-secondary {
-  background: linear-gradient(180deg, #2ed573 0%, #20bf6b 50%, #10ac84 100%);
-  border-color: rgba(255, 255, 255, 0.45);
+  background: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%);
+  border-color: rgba(0, 242, 254, 0.65);
   box-shadow: 
-    0 8px 24px rgba(46, 213, 115, 0.45),
-    0 3px 6px rgba(0, 0, 0, 0.35),
-    inset 0 2px 2px rgba(255, 255, 255, 0.65),
-    inset 0 -3px 3px rgba(0, 0, 0, 0.3);
+    0 8px 22px rgba(0, 198, 255, 0.34),
+    0 2px 6px rgba(0, 0, 0, 0.38),
+    inset 0 1.5px 1px rgba(255, 255, 255, 0.55),
+    inset 0 -2px 3px rgba(0, 0, 0, 0.28);
 }
 
 .btn-accent {
-  background: linear-gradient(180deg, #fed330 0%, #ffa502 50%, #fa8231 100%);
-  border-color: rgba(255, 255, 255, 0.55);
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  border: 1.5px solid rgba(0, 242, 254, 0.55);
+  color: #f8fafc;
   box-shadow: 
-    0 8px 24px rgba(255, 165, 2, 0.5),
-    0 3px 6px rgba(0, 0, 0, 0.35),
-    inset 0 2px 2px rgba(255, 255, 255, 0.7),
-    inset 0 -3px 3px rgba(0, 0, 0, 0.3);
+    0 8px 22px rgba(0, 242, 254, 0.22),
+    0 2px 6px rgba(0, 0, 0, 0.45),
+    inset 0 1px 1px rgba(0, 242, 254, 0.35);
 }
 
 .btn-ghost {
-  background: rgba(255, 255, 255, 0.14);
+  background: rgba(15, 23, 42, 0.72);
   backdrop-filter: blur(14px);
-  border: 1.5px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.35);
+  border: 1.5px solid rgba(148, 163, 184, 0.32);
+  color: #e2e8f0;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.18);
 }
 
 .btn-sm {
@@ -319,81 +319,82 @@ html, body {
 
 .logo-glow-ring {
   position: absolute;
-  top: 35%;
+  top: 38%;
   left: 50%;
   transform: translate(-50%, -50%);
   width: 260px;
   height: 260px;
-  background: radial-gradient(ellipse at center, rgba(255, 71, 87, 0.45) 0%, rgba(255, 211, 42, 0) 70%);
-  filter: blur(24px);
+  background: radial-gradient(ellipse at center, rgba(0, 242, 254, 0.35) 0%, rgba(255, 46, 99, 0.18) 45%, rgba(0, 0, 0, 0) 72%);
+  filter: blur(26px);
   pointer-events: none;
   z-index: -1;
 }
 
 .game-logo-img {
-  width: clamp(150px, 42vw, 230px);
+  width: clamp(140px, 38vw, 210px);
   height: auto;
-  filter: drop-shadow(0 6px 18px rgba(255, 71, 87, 0.55));
-  margin-bottom: 4px;
+  border-radius: 28px;
+  filter: drop-shadow(0 8px 24px rgba(0, 242, 254, 0.42));
+  margin-bottom: 6px;
 }
 
 .game-title {
-  font-size: clamp(2.3rem, 7.5vw, 4.4rem);
-  font-weight: 900;
+  font-size: clamp(2.1rem, 7vw, 4.0rem);
+  font-weight: 950;
   font-style: italic;
   text-transform: uppercase;
-  color: #fffa65;
-  text-shadow:
-    0 3px 0 #e74c3c,
-    0 6px 0 #c0392b,
-    0 10px 0 #962d22,
-    0 14px 28px rgba(0,0,0,0.85);
-  letter-spacing: 2px;
+  background: linear-gradient(180deg, #ffffff 0%, #ffd32a 55%, #f59e0b 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 4px 16px rgba(0, 242, 254, 0.35)) drop-shadow(0 6px 12px rgba(0, 0, 0, 0.85));
+  letter-spacing: 2.5px;
   text-align: center;
-  line-height: 1.05;
+  line-height: 1.06;
   margin: 0;
 }
 
 .game-subtitle {
-  font-size: clamp(0.78rem, 2.3vw, 1.1rem);
-  font-weight: 800;
+  font-size: clamp(0.74rem, 2.2vw, 1.02rem);
+  font-weight: 850;
   text-transform: uppercase;
-  color: #ffffff;
-  background: linear-gradient(90deg, #ff4757, #fed330, #2ed573);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: #00f2fe;
+  background: rgba(9, 15, 28, 0.72);
+  border: 1px solid rgba(0, 242, 254, 0.38);
+  padding: 4px 14px;
+  border-radius: 999px;
   letter-spacing: 2.5px;
-  margin-top: 4px;
+  margin-top: 6px;
+  box-shadow: 0 4px 14px rgba(0, 242, 254, 0.18);
 }
 
-/* Carte de statut du Véhicule Équipé */
+/* Carte de statut du Véhicule Équipé (Cyber-Glass Confortable) */
 .splash-vehicle-card {
   width: 100%;
   max-width: 420px;
-  background: rgba(18, 24, 38, 0.78);
-  backdrop-filter: blur(14px);
-  border: 1.5px solid rgba(255, 215, 0, 0.4);
+  background: linear-gradient(135deg, rgba(11, 19, 36, 0.86), rgba(17, 28, 52, 0.82));
+  backdrop-filter: blur(16px);
+  border: 1.5px solid rgba(0, 242, 254, 0.42);
   border-radius: 20px;
-  padding: 10px 16px;
+  padding: 11px 16px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   gap: 4px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.16);
   transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .splash-vehicle-card:active {
   transform: scale(0.97);
-  border-color: #ffd32a;
-  box-shadow: 0 0 16px rgba(255, 211, 42, 0.4);
+  border-color: #00f2fe;
+  box-shadow: 0 0 20px rgba(0, 242, 254, 0.4);
 }
 
 .vehicle-card-badge {
-  font-size: 0.65rem;
+  font-size: 0.64rem;
   font-weight: 900;
-  color: #fed330;
-  letter-spacing: 1px;
+  color: #00f2fe;
+  letter-spacing: 1.3px;
   text-transform: uppercase;
 }
 
@@ -433,11 +434,11 @@ html, body {
 .vehicle-card-cta {
   font-size: 0.74rem;
   font-weight: 900;
-  color: #ffd32a;
-  background: rgba(255, 211, 42, 0.15);
-  border: 1px solid rgba(255, 211, 42, 0.4);
-  padding: 4px 8px;
-  border-radius: 8px;
+  color: #00f2fe;
+  background: rgba(0, 242, 254, 0.14);
+  border: 1px solid rgba(0, 242, 254, 0.45);
+  padding: 5px 10px;
+  border-radius: 10px;
 }
 
 /* Zone Ergonomique Inférieure pour Pouces */
@@ -450,22 +451,23 @@ html, body {
   max-width: 440px;
 }
 
-/* Bouton Héros Principal de Lancement */
+/* Bouton Héros Principal de Lancement Futuriste */
 .hero-play-btn {
   width: 100%;
   min-height: 58px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 22px;
-  font-size: 1.25rem;
-  letter-spacing: 1.2px;
+  padding: 14px 24px;
+  font-size: 1.2rem;
+  letter-spacing: 1.4px;
   border-radius: 20px;
-  border: 2px solid rgba(255, 255, 255, 0.6);
+  background: linear-gradient(135deg, #ff2e63 0%, #e11d48 50%, #ff6b81 100%);
+  border: 2px solid rgba(255, 211, 42, 0.78);
   box-shadow:
-    0 10px 30px rgba(255, 71, 87, 0.6),
-    0 0 20px rgba(254, 211, 48, 0.4),
-    inset 0 2px 3px rgba(255, 255, 255, 0.7);
+    0 10px 28px rgba(255, 46, 99, 0.52),
+    0 0 22px rgba(0, 242, 254, 0.25),
+    inset 0 2px 3px rgba(255, 255, 255, 0.65);
 }
 
 .hero-play-icon {
@@ -558,43 +560,42 @@ html, body {
   z-index: 20;
 }
 
-/* 1. BADGE SCORE LUMINEUX ARCADE */
+/* 1. BADGE SCORE LUMINEUX CYBER-ARCADE CONFORTABLE */
 .score-box-arcade {
   display: flex;
   flex-direction: column;
-  background: linear-gradient(135deg, rgba(20, 24, 40, 0.95), rgba(10, 12, 22, 0.95));
-  /* backdrop-filter retiré : panneau déjà opaque, floutage GPU inutile en pleine course */
+  background: linear-gradient(135deg, rgba(10, 16, 30, 0.92), rgba(15, 23, 42, 0.92));
   padding: 8px 16px;
   border-radius: 18px;
-  border: 2px solid rgba(255, 215, 0, 0.6);
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5), inset 0 0 12px rgba(255, 215, 0, 0.15);
-  min-width: 110px;
+  border: 1.5px solid rgba(0, 242, 254, 0.55);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5), inset 0 0 12px rgba(0, 242, 254, 0.14);
+  min-width: 112px;
 }
 
 .score-badge-header {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
 }
 
 .score-badge-icon {
-  font-size: 0.8rem;
-  color: #ffd700;
+  font-size: 0.82rem;
+  color: #00f2fe;
 }
 
 .score-badge-label {
-  font-size: 0.68rem;
+  font-size: 0.66rem;
   font-weight: 900;
-  letter-spacing: 1px;
-  color: #fffa65;
+  letter-spacing: 1.2px;
+  color: #00f2fe;
 }
 
 .score-box-arcade .score-value {
-  font-size: 1.7rem;
-  font-weight: 900;
-  color: #ffffff;
+  font-size: 1.68rem;
+  font-weight: 950;
+  color: #f8fafc;
   letter-spacing: 1px;
-  text-shadow: 0 0 12px rgba(255, 215, 0, 0.5);
+  text-shadow: 0 0 12px rgba(0, 242, 254, 0.45);
   margin-top: 1px;
   transition: transform 0.1s ease;
 }

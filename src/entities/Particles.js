@@ -129,7 +129,7 @@ export class ParticleSystem {
     }
   }
 
-  // Volutes de fumée d'échappement cartoon volumétriques
+  // Volutes de fumée d'échappement cartoon volumétriques (Zéro fuite GPU)
   spawnExhaustSmoke(pos, speedRatio = 1.0) {
     if (Math.random() > 0.4) return;
 
@@ -143,6 +143,7 @@ export class ParticleSystem {
     this.scene.add(mesh);
     this.particles.push({
       mesh,
+      ownsMaterial: true,
       velX: (Math.random() - 0.5) * 0.35,
       velY: 0.7 + Math.random() * 0.5,
       velZ: -1.6 * speedRatio,
@@ -153,7 +154,7 @@ export class ParticleSystem {
     });
   }
 
-  // Fumée de dérapage et freinage au sol
+  // Fumée de dérapage et freinage au sol (Zéro fuite GPU)
   spawnSkidSmoke(pos) {
     const mesh = new THREE.Mesh(this.sharedGeos.smokeSphere, this.sharedMats.skidSmoke.clone());
     mesh.scale.setScalar(0.18 + Math.random() * 0.1);
@@ -162,6 +163,7 @@ export class ParticleSystem {
     this.scene.add(mesh);
     this.particles.push({
       mesh,
+      ownsMaterial: true,
       velX: (Math.random() - 0.5) * 0.8,
       velY: 0.4 + Math.random() * 0.4,
       velZ: (Math.random() - 0.5) * 0.6,
@@ -949,6 +951,9 @@ export class ParticleSystem {
 
       if (p.life <= 0) {
         this.scene.remove(p.mesh);
+        if (p.ownsMaterial && p.mesh.material) {
+          p.mesh.material.dispose();
+        }
         this.particles.splice(i, 1);
         continue;
       }
@@ -1082,13 +1087,16 @@ export class ParticleSystem {
       }
     }
 
-    // 7. Mettre à jour les volutes de fumée noire
+    // 7. Mettre à jour les volutes de fumée noire (sans disposer les matériaux partagés !)
+    const sharedMatSet = new Set(Object.values(this.sharedMats));
     for (let p = this.smokePuffs.length - 1; p >= 0; p--) {
       const smk = this.smokePuffs[p];
       smk.life -= delta;
       if (smk.life <= 0) {
         this.scene.remove(smk.mesh);
-        if (smk.mesh.material) smk.mesh.material.dispose();
+        if (smk.mesh.material && !sharedMatSet.has(smk.mesh.material)) {
+          smk.mesh.material.dispose();
+        }
         this.smokePuffs.splice(p, 1);
         continue;
       }
@@ -1097,7 +1105,7 @@ export class ParticleSystem {
       smk.mesh.position.z += (smk.velZ || 0) * delta;
       smk.mesh.scale.addScalar(delta * (smk.growRate || 2.0));
       const prog = 1 - (smk.life / smk.maxLife);
-      if (smk.mesh.material) {
+      if (smk.mesh.material && !sharedMatSet.has(smk.mesh.material)) {
         smk.mesh.material.opacity = (1 - prog) * 0.75;
       }
     }
@@ -1176,7 +1184,13 @@ export class ParticleSystem {
   }
 
   reset() {
-    this.particles.forEach(p => this.scene.remove(p.mesh));
+    const sharedMatSet = new Set(Object.values(this.sharedMats));
+    this.particles.forEach(p => {
+      this.scene.remove(p.mesh);
+      if (p.ownsMaterial && p.mesh?.material && !sharedMatSet.has(p.mesh.material)) {
+        p.mesh.material.dispose();
+      }
+    });
     this.shockwaves.forEach(w => {
       this.scene.remove(w.mesh);
       w.mesh.material.dispose();
@@ -1185,21 +1199,21 @@ export class ParticleSystem {
     this.bloodDrops.forEach(b => this.scene.remove(b.mesh));
     this.bloodSplats.forEach(s => {
       this.scene.remove(s.mesh);
-      s.mesh.material.dispose();
+      if (s.mesh.material && !sharedMatSet.has(s.mesh.material)) s.mesh.material.dispose();
     });
     this.debris.forEach(d => this.scene.remove(d.mesh));
     this.smokePuffs.forEach(sm => {
       this.scene.remove(sm.mesh);
-      if (sm.mesh.material) sm.mesh.material.dispose();
+      if (sm.mesh.material && !sharedMatSet.has(sm.mesh.material)) sm.mesh.material.dispose();
     });
     this.fireballs.forEach(f => {
       this.scene.remove(f.group);
-      if (f.outer?.material) f.outer.material.dispose();
-      if (f.core?.material) f.core.material.dispose();
+      if (f.outer?.material && !sharedMatSet.has(f.outer.material)) f.outer.material.dispose();
+      if (f.core?.material && !sharedMatSet.has(f.core.material)) f.core.material.dispose();
     });
     this.scorchMarks.forEach(sc => {
       this.scene.remove(sc.mesh);
-      if (sc.mesh.material) sc.mesh.material.dispose();
+      if (sc.mesh.material && !sharedMatSet.has(sc.mesh.material)) sc.mesh.material.dispose();
     });
 
     this.particles = [];

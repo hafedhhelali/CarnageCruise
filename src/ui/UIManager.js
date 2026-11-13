@@ -216,12 +216,12 @@ export class UIManager {
         </div>
       </div>
 
-      <!-- Hero Titre & Logo Arcade Stylisé 3D -->
+      <!-- Hero Titre & Logo Cyber-Arcade Futuriste 3D -->
       <div class="logo-container">
         <div class="logo-glow-ring"></div>
-        <img src="./logo.svg" alt="CarnageCruise" class="game-logo-img" width="220" height="220" />
+        <img src="./logo.svg" alt="CarnageCruise" class="game-logo-img" width="210" height="210" />
         <h1 class="game-title">CARNAGE CRUISE</h1>
-        <div class="game-subtitle">⚡ CARNAGE URBAIN & ASSAUT TOTAL ⚡</div>
+        <div class="game-subtitle">⚡ CYBER ARCADE & ASSAUT URBAIN ⚡</div>
       </div>
 
       <!-- Missions Quotidiennes (Rétention D1-D7) -->
@@ -229,7 +229,7 @@ export class UIManager {
 
       <!-- Carte d'Aperçu du Véhicule Équipé (Accès Rapide Garage) -->
       <div class="splash-vehicle-card clickable" id="btn-splash-quick-garage" title="Personnaliser et équiper dans le Garage">
-        <div class="vehicle-card-badge">VÉHICULE PRÊT AU DÉPART</div>
+        <div class="vehicle-card-badge">⚡ ENGIN PRÊT AU DÉPLOIEMENT</div>
         <div class="vehicle-card-main">
           <span class="vehicle-card-icon">${equippedBike.icon}</span>
           <div class="vehicle-card-text">
@@ -979,11 +979,11 @@ export class UIManager {
         <div class="veh-dock-left">
           <span class="veh-dock-icon">${currentBike.icon || '🪖'}</span>
           <div class="veh-dock-texts">
-            <span class="veh-dock-sub">ENGIN SÉLECTIONNÉ POUR L'ASSAUT</span>
+            <span class="veh-dock-sub">⚡ ENGIN D'ASSAUT ACTIF</span>
             <span class="veh-dock-name">${(currentBike.shortName || currentBike.name).toUpperCase()}</span>
           </div>
         </div>
-        <span class="veh-dock-action">GARAGE ▾</span>
+        <span class="veh-dock-action">CHANGER ▾</span>
       </button>
 
       <!-- 4. DOCK D'ACTIONS PRINCIPAL ERGONOMIQUE HAUTE VISIBILITÉ -->

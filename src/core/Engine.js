@@ -164,11 +164,12 @@ export class Engine {
       this.postProcessing = null;
     }
 
-    // Propriétés de caméra dynamique (Zoom-out panoramique arcade équilibré)
+    // Propriétés de caméra dynamique (Zoom-out panoramique arcade équilibré & ultra-fluide)
     this.cameraTarget = new THREE.Vector3(0, 1.4, 0);
+    this.lookAtCurrent = new THREE.Vector3(0, 1.2, 16.0);
     this.cameraOffset = new THREE.Vector3(0, 5.2, -11.2); // Position arcade reculée et surélevée offrant une visibilité dégagée
     this.shakeIntensity = 0;
-    this.shakeDecay = 6.0;
+    this.shakeDecay = 6.5;
 
     // Caméra cinématique pour le menu / garage
     this.cinematicAngle = 0;
@@ -322,16 +323,20 @@ export class Engine {
       }
     }
 
-    // Position cible fluide : caméra strictement alignée sur l'axe du joueur (zéro inclinaison oblique)
-    const targetCamX = bikePosition.x;
+    // Amortissement exponentiel indépendant du framerate (zéro saccade, confort visuel optimal)
+    const dampX = 1.0 - Math.exp(-12.5 * delta);
+    const dampY = 1.0 - Math.exp(-9.5 * delta);
+    const dampZ = 1.0 - Math.exp(-18.0 * delta);
+
+    const targetCamX = bikePosition.x * 0.92;
     const targetCamY = bikePosition.y + this.cameraOffset.y;
     const targetCamZ = bikePosition.z + this.cameraOffset.z;
 
-    this.camera.position.x += (targetCamX - this.camera.position.x) * Math.min(1.0, delta * 12.0);
-    this.camera.position.y += (targetCamY - this.camera.position.y) * Math.min(1.0, delta * 9.0);
-    this.camera.position.z += (targetCamZ - this.camera.position.z) * Math.min(1.0, delta * 16.0);
+    this.camera.position.x += (targetCamX - this.camera.position.x) * dampX;
+    this.camera.position.y += (targetCamY - this.camera.position.y) * dampY;
+    this.camera.position.z += (targetCamZ - this.camera.position.z) * dampZ;
 
-    // Secousse comique appliquée proprement uniquement lors d'impacts avérés (zéro tremblement continu)
+    // Secousse comique amortie proprement uniquement lors d'impacts avérés
     if (this.shakeIntensity > 0.001) {
       const shakeX = (Math.random() - 0.5) * this.shakeIntensity;
       const shakeY = (Math.random() - 0.5) * this.shakeIntensity;
@@ -342,16 +347,23 @@ export class Engine {
       this.shakeIntensity = 0;
     }
 
-    // LookAt centré précisément sur l'axe du joueur avec visibilité anticipée (orientation naturelle stable)
-    const lookTargetX = bikePosition.x;
-    const lookTargetY = bikePosition.y + 1.2;
-    const lookTargetZ = bikePosition.z + 16.0;
-    this.camera.lookAt(lookTargetX, lookTargetY, lookTargetZ);
+    // LookAt lissé avec anticipation dynamique selon la vitesse (confort oculaire longue session)
+    const lookAheadZ = 16.0 + Math.min(4.5, (bikeSpeed / 28.0) * 3.5);
+    const lookTargetX = bikePosition.x * 0.96;
+    const lookTargetY = bikePosition.y + 1.25;
+    const lookTargetZ = bikePosition.z + lookAheadZ;
 
-    // Élargissement dynamique du champ de vision (FOV) selon la vitesse
-    const speedBonusFov = (bikeSpeed / 30.0) * 10.0;
+    const dampLook = 1.0 - Math.exp(-15.0 * delta);
+    this.lookAtCurrent.x += (lookTargetX - this.lookAtCurrent.x) * dampLook;
+    this.lookAtCurrent.y += (lookTargetY - this.lookAtCurrent.y) * dampLook;
+    this.lookAtCurrent.z = lookTargetZ;
+    this.camera.lookAt(this.lookAtCurrent.x, this.lookAtCurrent.y, this.lookAtCurrent.z);
+
+    // Élargissement dynamique et progressif du champ de vision (FOV) selon la vitesse
+    const speedBonusFov = Math.min(11.0, (bikeSpeed / 30.0) * 9.5);
     const targetFov = this.baseFov + speedBonusFov;
-    this.camera.fov += (targetFov - this.camera.fov) * delta * 5.0;
+    const dampFov = 1.0 - Math.exp(-6.0 * delta);
+    this.camera.fov += (targetFov - this.camera.fov) * dampFov;
     this.camera.updateProjectionMatrix();
   }
 
@@ -360,20 +372,20 @@ export class Engine {
       this.skyDome.update(delta, bikePosition.z);
     }
 
-    // Rotation lente 360° cinématographique autour de la moto pour le Splash / Menu / Garage
-    this.cinematicAngle += delta * 0.6;
-    const radius = 4.2;
-    const height = 1.6 + Math.sin(this.cinematicAngle * 0.8) * 0.3;
+    // Rotation fluide showroom 360° autour du véhicule pour l'Accueil et le Garage
+    this.cinematicAngle += delta * 0.48;
+    const radius = 4.35;
+    const height = 1.65 + Math.sin(this.cinematicAngle * 0.75) * 0.22;
 
     this.camera.position.x = bikePosition.x + Math.sin(this.cinematicAngle) * radius;
     this.camera.position.y = bikePosition.y + height;
     this.camera.position.z = bikePosition.z + Math.cos(this.cinematicAngle) * radius;
 
-    this.camera.lookAt(bikePosition.x, bikePosition.y + 0.8, bikePosition.z);
-    this.camera.fov = 55;
+    this.camera.lookAt(bikePosition.x, bikePosition.y + 0.78, bikePosition.z);
+    this.camera.fov = 54;
     this.camera.updateProjectionMatrix();
 
-    this.dirLight.position.set(10, 25, 10);
+    this.dirLight.position.set(12, 26, 12);
   }
 
   onResize() {

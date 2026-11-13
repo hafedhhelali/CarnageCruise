@@ -1,85 +1,151 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <defs>
-    <radialGradient id="bg" cx="50%" cy="45%" r="65%">
-      <stop offset="0%" stop-color="#1e293b"/>
-      <stop offset="100%" stop-color="#0c0d14"/>
+    <!-- Fond Cyber-Obsidienne Profond & Confortable -->
+    <radialGradient id="cyberBg" cx="50%" cy="42%" r="68%">
+      <stop offset="0%" stop-color="#132238"/>
+      <stop offset="55%" stop-color="#0a1120"/>
+      <stop offset="100%" stop-color="#050811"/>
     </radialGradient>
-    <radialGradient id="burst" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#fffa65" stop-opacity="0.9"/>
-      <stop offset="40%" stop-color="#ff4757" stop-opacity="0.6"/>
-      <stop offset="100%" stop-color="#ff4757" stop-opacity="0"/>
+
+    <!-- Halo Néo-Plasma Cyan / Magenta -->
+    <radialGradient id="plasmaCore" cx="50%" cy="46%" r="48%">
+      <stop offset="0%" stop-color="#00f2fe" stop-opacity="0.55"/>
+      <stop offset="45%" stop-color="#7c3aed" stop-opacity="0.28"/>
+      <stop offset="78%" stop-color="#ff2e63" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#050811" stop-opacity="0"/>
     </radialGradient>
-    <linearGradient id="moto" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#ff6b81"/>
-      <stop offset="100%" stop-color="#d63031"/>
+
+    <!-- Dégradé Bouclier Hexagonal Futuriste -->
+    <linearGradient id="hexBorder" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00f2fe"/>
+      <stop offset="50%" stop-color="#ffd32a"/>
+      <stop offset="100%" stop-color="#ff2e63"/>
     </linearGradient>
-    <linearGradient id="chrome" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#f5f6fa"/>
-      <stop offset="100%" stop-color="#747d8c"/>
+
+    <!-- Carrosserie Hyper-Moto Futuriste -->
+    <linearGradient id="hyperBody" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff2e63"/>
+      <stop offset="55%" stop-color="#e11d48"/>
+      <stop offset="100%" stop-color="#881337"/>
     </linearGradient>
-    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
-      <feGaussianBlur stdDeviation="6" result="blur"/>
-      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+
+    <!-- Armure Titane & Chrome Cyber -->
+    <linearGradient id="cyberChrome" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f8fafc"/>
+      <stop offset="45%" stop-color="#94a3b8"/>
+      <stop offset="100%" stop-color="#334155"/>
+    </linearGradient>
+
+    <!-- Jantes Plasma Cyan -->
+    <linearGradient id="neonCyan" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#00f2fe"/>
+      <stop offset="100%" stop-color="#4facfe"/>
+    </linearGradient>
+
+    <!-- Texte Or Solaire Futuriste -->
+    <linearGradient id="goldTitle" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fffbeb"/>
+      <stop offset="45%" stop-color="#ffd32a"/>
+      <stop offset="100%" stop-color="#f59e0b"/>
+    </linearGradient>
+
+    <filter id="neonGlow" x="-25%" y="-25%" width="150%" height="150%">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
     </filter>
-    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#000" flood-opacity="0.6"/>
+
+    <filter id="deepShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#000000" flood-opacity="0.7"/>
     </filter>
   </defs>
 
-  <!-- Fond sombre arcade -->
-  <rect width="512" height="512" fill="url(#bg)"/>
+  <!-- 1. Icône App Arrondie Moderne -->
+  <rect width="512" height="512" rx="108" fill="url(#cyberBg)"/>
 
-  <!-- Halo de l'explosion (derrière la moto) -->
-  <circle cx="256" cy="230" r="150" fill="url(#burst)"/>
-
-  <!-- Onde de choc circulaire -->
-  <circle cx="256" cy="230" r="170" fill="none" stroke="#fffa65" stroke-width="6" opacity="0.85" filter="url(#glow)"/>
-  <circle cx="256" cy="230" r="200" fill="none" stroke="#ff4757" stroke-width="3" opacity="0.5"/>
-
-  <!-- Étincelles radiales (8 directions) -->
-  <g fill="#fffa65" filter="url(#glow)">
-    <polygon points="256,60 262,80 250,80"/>
-    <polygon points="380,100 365,115 375,125"/>
-    <polygon points="426,230 406,224 406,236"/>
-    <polygon points="380,360 365,345 375,335"/>
-    <polygon points="256,400 250,380 262,380"/>
-    <polygon points="132,360 147,345 137,335"/>
-    <polygon points="86,230 106,224 106,236"/>
-    <polygon points="132,100 147,115 137,125"/>
+  <!-- 2. Grille de Perspective Synthwave / Futuriste en Bas -->
+  <g stroke="#00f2fe" stroke-opacity="0.16" stroke-width="1.5">
+    <line x1="36" y1="360" x2="476" y2="360"/>
+    <line x1="20" y1="392" x2="492" y2="392"/>
+    <line x1="12" y1="426" x2="500" y2="426"/>
+    <line x1="256" y1="310" x2="64" y2="465"/>
+    <line x1="256" y1="310" x2="160" y2="465"/>
+    <line x1="256" y1="310" x2="256" y2="465"/>
+    <line x1="256" y1="310" x2="352" y2="465"/>
+    <line x1="256" y1="310" x2="448" y2="465"/>
   </g>
 
-  <!-- Silhouette de moto de guerre (stylisée, inclinée) -->
-  <g transform="translate(256,230) rotate(-8) scale(1.05)" filter="url(#shadow)">
-    <!-- Roue arrière -->
-    <ellipse cx="-95" cy="40" rx="34" ry="34" fill="#1a1a2e" stroke="#f5f6fa" stroke-width="4"/>
-    <ellipse cx="-95" cy="40" rx="18" ry="18" fill="url(#chrome)"/>
-    <!-- Roue avant -->
-    <ellipse cx="95" cy="40" rx="30" ry="30" fill="#1a1a2e" stroke="#f5f6fa" stroke-width="4"/>
-    <ellipse cx="95" cy="40" rx="16" ry="16" fill="url(#chrome)"/>
-    <!-- Cadre / châssis -->
-    <path d="M -70 30 L -30 -25 L 40 -30 L 80 10 L 70 30 Z" fill="url(#moto)" stroke="#fffa65" stroke-width="3"/>
-    <!-- Réservoir -->
-    <ellipse cx="0" cy="-20" rx="40" ry="18" fill="url(#moto)" stroke="#fffa65" stroke-width="2"/>
-    <!-- Fourche avant -->
-    <line x1="70" y1="10" x2="95" y2="40" stroke="#f5f6fa" stroke-width="5"/>
-    <!-- Bras oscillant arrière -->
-    <line x1="-70" y1="30" x2="-95" y2="40" stroke="#f5f6fa" stroke-width="5"/>
-    <!-- Tête de fourche / phare -->
-    <circle cx="78" cy="-5" r="9" fill="#fffa65" filter="url(#glow)"/>
-    <!-- Pot d'échappement -->
-    <rect x="-50" y="28" width="30" height="6" rx="3" fill="#747d8c"/>
-    <!-- Rider (silhouette simplifiée) -->
-    <circle cx="-10" cy="-45" r="14" fill="#2d3436"/>
-    <path d="M -10 -31 L -10 5" stroke="#2d3436" stroke-width="8"/>
-    <path d="M -10 -20 L -40 0" stroke="#2d3436" stroke-width="6"/>
-    <path d="M -10 -20 L 25 0" stroke="#2d3436" stroke-width="6"/>
-    <path d="M -10 5 L -30 35" stroke="#2d3436" stroke-width="6"/>
-    <path d="M -10 5 L 20 35" stroke="#2d3436" stroke-width="6"/>
+  <!-- 3. Coeur Énergétique Plasma -->
+  <circle cx="256" cy="224" r="176" fill="url(#plasmaCore)"/>
+
+  <!-- 4. Bouclier Hexagonal Futuriste Multi-Couche -->
+  <polygon points="256,36 418,128 418,312 256,404 94,312 94,128"
+           fill="#0b1325" fill-opacity="0.72"
+           stroke="url(#hexBorder)" stroke-width="6"
+           filter="url(#neonGlow)"/>
+  <polygon points="256,52 404,136 404,304 256,388 108,304 108,136"
+           fill="none" stroke="#00f2fe" stroke-opacity="0.35" stroke-width="2" stroke-dasharray="18 10"/>
+
+  <!-- 5. Sillages de Vitesse Lasers (Light Trails) -->
+  <g filter="url(#neonGlow)">
+    <path d="M 65 245 L 185 245" stroke="#00f2fe" stroke-width="5" stroke-linecap="round" opacity="0.85"/>
+    <path d="M 48 215 L 155 215" stroke="#ff2e63" stroke-width="4" stroke-linecap="round" opacity="0.8"/>
+    <path d="M 82 185 L 175 185" stroke="#ffd32a" stroke-width="3.5" stroke-linecap="round" opacity="0.75"/>
   </g>
 
-  <!-- Titre CARNAGE CRUISE -->
-  <g filter="url(#shadow)">
-    <text x="256" y="440" text-anchor="middle" font-family="Arial Black, sans-serif" font-size="46" font-weight="900" fill="#fffa65" letter-spacing="2" stroke="#d63031" stroke-width="1.5" paint-order="stroke fill">CARNAGECRUISE</text>
+  <!-- 6. Hyper-Moto Blindée Futuriste (Cyber-Interceptor) -->
+  <g transform="translate(262, 224) rotate(-6) scale(1.08)" filter="url(#deepShadow)">
+    <!-- Ombre de contact néon sous la moto -->
+    <ellipse cx="0" cy="58" rx="125" ry="12" fill="#00f2fe" opacity="0.32" filter="url(#neonGlow)"/>
+
+    <!-- Roue Arrière Cyber-Plasma -->
+    <circle cx="-88" cy="36" r="36" fill="#090d16" stroke="#334155" stroke-width="7"/>
+    <circle cx="-88" cy="36" r="25" fill="none" stroke="#00f2fe" stroke-width="4.5" filter="url(#neonGlow)"/>
+    <circle cx="-88" cy="36" r="11" fill="url(#cyberChrome)"/>
+
+    <!-- Roue Avant Cyber-Plasma -->
+    <circle cx="88" cy="36" r="34" fill="#090d16" stroke="#334155" stroke-width="7"/>
+    <circle cx="88" cy="36" r="23" fill="none" stroke="#00f2fe" stroke-width="4.5" filter="url(#neonGlow)"/>
+    <circle cx="88" cy="36" r="10" fill="url(#cyberChrome)"/>
+
+    <!-- Bras oscillant & Fourche aérodynamique -->
+    <path d="M -88 36 L -32 18 L -38 32 Z" fill="url(#cyberChrome)"/>
+    <path d="M 52 -8 L 88 36 L 76 38 L 40 -2 Z" fill="url(#cyberChrome)"/>
+
+    <!-- Châssis Monocoque Blindé Futuriste -->
+    <path d="M -76 18 L -36 -26 L 34 -32 L 86 -4 L 64 26 L -42 30 Z"
+          fill="url(#hyperBody)" stroke="#ffd32a" stroke-width="2.2"/>
+
+    <!-- Ligne d'énergie Cyan sur le carénage -->
+    <path d="M -52 10 L -15 -14 L 54 -14" fill="none" stroke="#00f2fe" stroke-width="3.5" stroke-linecap="round" filter="url(#neonGlow)"/>
+
+    <!-- Réacteur / Propulseur Nitro Arrière -->
+    <polygon points="-78,8 -114,-2 -106,18 -72,22" fill="url(#neonCyan)" filter="url(#neonGlow)"/>
+
+    <!-- Phare Laser Cyber-Optique Avant -->
+    <polygon points="74,-12 106,-6 78,4" fill="#00f2fe" filter="url(#neonGlow)"/>
+    <circle cx="80" cy="-6" r="5" fill="#ffffff"/>
+
+    <!-- Pilote Cyber-Casqué Aérodynamique -->
+    <path d="M -28 -22 Q -8 -56 20 -34 L 8 -14 L -22 -12 Z" fill="#1e293b" stroke="#94a3b8" stroke-width="1.5"/>
+    <!-- Casque Futuriste + Visière Lumineuse Cyan -->
+    <circle cx="12" cy="-42" r="15" fill="#0f172a" stroke="#f8fafc" stroke-width="2"/>
+    <path d="M 14 -46 L 27 -41 L 16 -36 Z" fill="#00f2fe" filter="url(#neonGlow)"/>
   </g>
-  <text x="256" y="470" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#00cec9" letter-spacing="4">⚡ CARNAGE URBAIN ⚡</text>
+
+  <!-- 7. Typographie Néo-Arcade Futuriste Haute Lisibilité -->
+  <g filter="url(#deepShadow)">
+    <text x="256" y="442" text-anchor="middle"
+          font-family="'Segoe UI', 'Arial Black', sans-serif"
+          font-size="42" font-weight="900" font-style="italic"
+          fill="url(#goldTitle)" letter-spacing="2.5"
+          stroke="#090d16" stroke-width="5" paint-order="stroke fill">CARNAGE CRUISE</text>
+  </g>
+  <rect x="136" y="458" width="240" height="22" rx="11" fill="#00f2fe" fill-opacity="0.14" stroke="#00f2fe" stroke-opacity="0.45" stroke-width="1.2"/>
+  <text x="256" y="473" text-anchor="middle"
+        font-family="'Segoe UI', Arial, sans-serif"
+        font-size="11.5" font-weight="800"
+        fill="#00f2fe" letter-spacing="3.5">⚡ CYBER ARCADE OVERDRIVE ⚡</text>
 </svg>
