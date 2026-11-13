@@ -1381,10 +1381,87 @@ export class SoundManager {
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
 
     osc.connect(gain);
-    gain.connect(this.ctx.destination);
+    gain.connect(this.getMasterOutput());
     osc.onended = () => this.cleanupNodes(osc, gain);
     osc.start(now);
     osc.stop(now + 0.25);
+  }
+
+  playMarketStallCrash(stallType = 'primeur') {
+    if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
+    this.resumeContext();
+
+    const now = this.ctx.currentTime;
+    const dest = this.getMasterOutput();
+
+    // 1. Percussion principale bois / métal
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    if (stallType === 'cart') {
+      // Clang métallique pour chariot ambulant
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(520, now);
+      osc.frequency.exponentialRampToValueAtTime(110, now + 0.32);
+      gain.gain.setValueAtTime(0.55, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+
+      // Petite clochette tintante (glaces / street food)
+      const bellOsc = this.ctx.createOscillator();
+      const bellGain = this.ctx.createGain();
+      bellOsc.type = 'sine';
+      bellOsc.frequency.setValueAtTime(1320, now);
+      bellOsc.frequency.exponentialRampToValueAtTime(880, now + 0.25);
+      bellGain.gain.setValueAtTime(0.3, now);
+      bellGain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+      bellOsc.connect(bellGain);
+      bellGain.connect(dest);
+      bellOsc.onended = () => this.cleanupNodes(bellOsc, bellGain);
+      bellOsc.start(now);
+      bellOsc.stop(now + 0.25);
+    } else if (stallType === 'primeur') {
+      // Impact bois + splat juteux de fruits
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(320, now);
+      osc.frequency.exponentialRampToValueAtTime(75, now + 0.25);
+      gain.gain.setValueAtTime(0.5, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+
+      // Squelch liquide / jus
+      const squishOsc = this.ctx.createOscillator();
+      const squishGain = this.ctx.createGain();
+      squishOsc.type = 'sawtooth';
+      squishOsc.frequency.setValueAtTime(180, now);
+      squishOsc.frequency.linearRampToValueAtTime(450, now + 0.08);
+      squishOsc.frequency.exponentialRampToValueAtTime(80, now + 0.2);
+      squishGain.gain.setValueAtTime(0.35, now);
+      squishGain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+      squishOsc.connect(squishGain);
+      squishGain.connect(dest);
+      squishOsc.onended = () => this.cleanupNodes(squishOsc, squishGain);
+      squishOsc.start(now);
+      squishOsc.stop(now + 0.22);
+    } else if (stallType === 'books') {
+      // Écrasement étal bois + envol de reliures
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(260, now);
+      osc.frequency.exponentialRampToValueAtTime(65, now + 0.26);
+      gain.gain.setValueAtTime(0.45, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+    } else {
+      // Fleuriste / céramique et terre cuite
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(440, now);
+      osc.frequency.exponentialRampToValueAtTime(90, now + 0.2);
+      gain.gain.setValueAtTime(0.42, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+    }
+
+    osc.connect(gain);
+    gain.connect(dest);
+    osc.onended = () => this.cleanupNodes(osc, gain);
+    osc.start(now);
+    osc.stop(now + 0.35);
   }
 
   playSteamrollerHorn() {

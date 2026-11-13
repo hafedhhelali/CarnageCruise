@@ -35,7 +35,12 @@ export class ParticleSystem {
       ring: new THREE.RingGeometry(0.4, 0.6, 20),
       confetti: new THREE.PlaneGeometry(0.18, 0.28),
       splatCircle: new THREE.CircleGeometry(0.3, 8),
-      speedCylinder: new THREE.CylinderGeometry(0.018, 0.018, 6.5, 4)
+      speedCylinder: new THREE.CylinderGeometry(0.018, 0.018, 6.5, 4),
+      // Accessoires réalistes de stands de rue & marchands ambulants
+      fruitSphere: new THREE.SphereGeometry(0.15, 6, 6),
+      bookBox: new THREE.BoxGeometry(0.24, 0.08, 0.32),
+      pagePlane: new THREE.PlaneGeometry(0.22, 0.28),
+      petalPlane: new THREE.PlaneGeometry(0.14, 0.18)
     };
 
     // --- MATÉRIAUX PARTAGÉS & CACHE ---
@@ -74,7 +79,22 @@ export class ParticleSystem {
         return m;
       })(),
       rockGray: new THREE.MeshBasicMaterial({ color: 0x57606f }),
-      speedLine: new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.4 })
+      speedLine: new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.4 }),
+      // Matériaux de destruction et éclats de stands ambulants
+      appleRed: new THREE.MeshBasicMaterial({ color: 0xe74c3c }),
+      orangeFruit: new THREE.MeshBasicMaterial({ color: 0xe67e22 }),
+      lemonYellow: new THREE.MeshBasicMaterial({ color: 0xf1c40f }),
+      melonGreen: new THREE.MeshBasicMaterial({ color: 0x27ae60 }),
+      fruitJuiceRed: new THREE.MeshBasicMaterial({ color: 0xd63031, transparent: true, opacity: 0.75, depthWrite: false }),
+      fruitJuiceOrange: new THREE.MeshBasicMaterial({ color: 0xe67e22, transparent: true, opacity: 0.75, depthWrite: false }),
+      bookCoverBlue: new THREE.MeshBasicMaterial({ color: 0x1e3799 }),
+      bookCoverBurgundy: new THREE.MeshBasicMaterial({ color: 0x800000 }),
+      bookCoverGreen: new THREE.MeshBasicMaterial({ color: 0x1b4332 }),
+      bookPageWhite: new THREE.MeshBasicMaterial({ color: 0xf8f9fa, side: THREE.DoubleSide }),
+      petalRose: new THREE.MeshBasicMaterial({ color: 0xff4757, side: THREE.DoubleSide }),
+      petalSunflower: new THREE.MeshBasicMaterial({ color: 0xfffa65, side: THREE.DoubleSide }),
+      petalLavender: new THREE.MeshBasicMaterial({ color: 0x9b59b6, side: THREE.DoubleSide }),
+      terracotta: new THREE.MeshBasicMaterial({ color: 0xd35400 })
     };
 
     this.confettiColors = [0x0984e3, 0xffffff, 0xd63031, 0xf1c40f, 0x2ed573, 0x9b59b6, 0xff6b81];
@@ -412,12 +432,18 @@ export class ParticleSystem {
     }
   }
 
-  // Animation de destruction physique complète du mobilier urbain (poteaux, arbres, terrasses)
+  // Animation de destruction physique complète du mobilier urbain (poteaux, arbres, terrasses, stands)
   spawnPropShatter(pos, propType = 'lamp') {
     this.spawnShockwave(pos, propType === 'lamp' ? 0xfffa65 : 0xa4b0be);
 
-    const mat = propType === 'tree' ? (this.sharedMats.woodBrown || this.sharedMats.rockGray) :
-                (propType === 'terrace' ? this.sharedMats.woodBrown : this.sharedMats.metalGray);
+    let mat = this.sharedMats.metalGray;
+    if (propType === 'tree' || propType === 'terrace' || propType === 'wood') {
+      mat = this.sharedMats.woodBrown || this.sharedMats.rockGray;
+    } else if (propType === 'terracotta') {
+      mat = this.sharedMats.terracotta || this.sharedMats.woodBrown;
+    } else if (propType === 'metal') {
+      mat = this.sharedMats.metalGray;
+    }
 
     // 16 fragments physiques projetés dans les airs avec gravité et rebonds
     for (let i = 0; i < 16; i++) {
@@ -441,6 +467,8 @@ export class ParticleSystem {
         velZ: Math.sin(angle) * speed + 6.0,
         rotVelX: (Math.random() - 0.5) * 26,
         rotVelY: (Math.random() - 0.5) * 26,
+        bounce: 0.28,
+        gravity: 18.0,
         life: 1.2,
         maxLife: 1.2
       });
@@ -458,6 +486,252 @@ export class ParticleSystem {
         growRate: 0.9,
         life: 0.65,
         maxLife: 0.65
+      });
+    }
+  }
+
+  // Destruction spectaculaire de stand de Primeurs (éclatement cagettes, fruits bondissants & jus au sol)
+  spawnFruitSplatter(pos) {
+    this.spawnShockwave(pos, 0xff7675);
+
+    const fruitMats = [
+      this.sharedMats.appleRed,
+      this.sharedMats.orangeFruit,
+      this.sharedMats.lemonYellow,
+      this.sharedMats.melonGreen
+    ];
+
+    for (let i = 0; i < 18; i++) {
+      const mat = fruitMats[i % fruitMats.length];
+      const mesh = new THREE.Mesh(this.sharedGeos.fruitSphere, mat);
+      const s = 0.85 + Math.random() * 0.45;
+      mesh.scale.set(s, s * (mat === this.sharedMats.lemonYellow ? 1.3 : 1.0), s);
+      mesh.position.copy(pos);
+      mesh.position.y += 0.4 + Math.random() * 0.6;
+      mesh.position.x += (Math.random() - 0.5) * 0.6;
+      mesh.position.z += (Math.random() - 0.5) * 0.6;
+
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 4.5 + Math.random() * 9.5;
+
+      this.scene.add(mesh);
+      this.debris.push({
+        mesh,
+        velX: Math.cos(angle) * speed,
+        velY: 5.5 + Math.random() * 7.5,
+        velZ: Math.sin(angle) * speed + 5.0,
+        rotVelX: (Math.random() - 0.5) * 24,
+        rotVelY: (Math.random() - 0.5) * 24,
+        bounce: 0.45, // rebond vigoureux de fruits
+        gravity: 19.0,
+        life: 2.2,
+        maxLife: 2.2
+      });
+    }
+
+    // Éclaboussures de jus de fruits coloré au sol
+    for (let s = 0; s < 4; s++) {
+      const splatMat = s % 2 === 0 ? this.sharedMats.fruitJuiceRed : this.sharedMats.fruitJuiceOrange;
+      const splat = new THREE.Mesh(this.sharedGeos.splatCircle, splatMat);
+      splat.rotation.x = -Math.PI / 2;
+      splat.position.set(
+        pos.x + (Math.random() - 0.5) * 2.2,
+        0.04,
+        pos.z + (Math.random() - 0.5) * 2.2
+      );
+      const radius = 0.5 + Math.random() * 0.6;
+      splat.scale.set(radius, radius, 1);
+      this.scene.add(splat);
+      this.bloodSplats.push({
+        mesh: splat,
+        life: 2.8,
+        maxLife: 2.8
+      });
+    }
+
+    // Brume fruitée
+    for (let j = 0; j < 4; j++) {
+      const smoke = new THREE.Mesh(this.sharedGeos.smokeSphere, this.sharedMats.smoke);
+      smoke.position.set(pos.x + (Math.random() - 0.5) * 1.0, pos.y + 0.5, pos.z + (Math.random() - 0.5) * 1.0);
+      smoke.scale.setScalar(0.45 + Math.random() * 0.4);
+      this.scene.add(smoke);
+      this.smokePuffs.push({
+        mesh: smoke,
+        velY: 1.2 + Math.random() * 1.0,
+        growRate: 1.1,
+        life: 0.75,
+        maxLife: 0.75
+      });
+    }
+  }
+
+  // Destruction spectaculaire de Bouquiniste (livres projetés & nuée de pages flottant au vent)
+  spawnBookFlutter(pos) {
+    this.spawnShockwave(pos, 0x74b9ff);
+
+    const bookMats = [
+      this.sharedMats.bookCoverBlue,
+      this.sharedMats.bookCoverBurgundy,
+      this.sharedMats.bookCoverGreen
+    ];
+
+    for (let i = 0; i < 10; i++) {
+      const mat = bookMats[i % bookMats.length];
+      const mesh = new THREE.Mesh(this.sharedGeos.bookBox, mat);
+      mesh.position.copy(pos);
+      mesh.position.y += 0.5 + Math.random() * 0.5;
+
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 3.5 + Math.random() * 7.0;
+
+      this.scene.add(mesh);
+      this.debris.push({
+        mesh,
+        velX: Math.cos(angle) * speed,
+        velY: 4.5 + Math.random() * 6.0,
+        velZ: Math.sin(angle) * speed + 4.5,
+        rotVelX: (Math.random() - 0.5) * 18,
+        rotVelY: (Math.random() - 0.5) * 18,
+        bounce: 0.22,
+        gravity: 17.0,
+        life: 2.0,
+        maxLife: 2.0
+      });
+    }
+
+    // Pages et feuilles volantes tourbillonnant dans les airs
+    for (let p = 0; p < 22; p++) {
+      const pageMesh = new THREE.Mesh(this.sharedGeos.pagePlane, this.sharedMats.bookPageWhite);
+      pageMesh.position.set(
+        pos.x + (Math.random() - 0.5) * 1.2,
+        pos.y + 0.8 + Math.random() * 0.8,
+        pos.z + (Math.random() - 0.5) * 1.2
+      );
+      pageMesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 2.5 + Math.random() * 5.0;
+
+      this.scene.add(pageMesh);
+      this.debris.push({
+        mesh: pageMesh,
+        velX: Math.cos(angle) * speed,
+        velY: 3.5 + Math.random() * 5.5,
+        velZ: Math.sin(angle) * speed + 3.0,
+        rotVelX: (Math.random() - 0.5) * 8,
+        rotVelY: (Math.random() - 0.5) * 8,
+        gravity: 4.5, // flottement doux dans l'air
+        flutter: true,
+        flutterPhase: Math.random() * Math.PI * 2,
+        bounce: 0,
+        life: 3.2,
+        maxLife: 3.2
+      });
+    }
+  }
+
+  // Destruction spectaculaire de Marché aux Fleurs (pots éclatés & cascade de pétales)
+  spawnFlowerBurst(pos) {
+    this.spawnShockwave(pos, 0xff6b81);
+
+    // Débris de pots en terre cuite
+    for (let c = 0; c < 8; c++) {
+      const mesh = new THREE.Mesh(this.sharedGeos.cubeDebris, this.sharedMats.terracotta);
+      mesh.scale.setScalar(0.2 + Math.random() * 0.2);
+      mesh.position.copy(pos);
+      mesh.position.y += 0.3;
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 3.5 + Math.random() * 6.5;
+
+      this.scene.add(mesh);
+      this.debris.push({
+        mesh,
+        velX: Math.cos(angle) * speed,
+        velY: 4.5 + Math.random() * 5.5,
+        velZ: Math.sin(angle) * speed + 4.0,
+        rotVelX: (Math.random() - 0.5) * 22,
+        rotVelY: (Math.random() - 0.5) * 22,
+        bounce: 0.3,
+        gravity: 19.0,
+        life: 1.5,
+        maxLife: 1.5
+      });
+    }
+
+    // Nuée de pétales de fleurs tourbillonnant
+    const petalMats = [
+      this.sharedMats.petalRose,
+      this.sharedMats.petalSunflower,
+      this.sharedMats.petalLavender
+    ];
+
+    for (let f = 0; f < 28; f++) {
+      const mat = petalMats[f % petalMats.length];
+      const petal = new THREE.Mesh(this.sharedGeos.petalPlane, mat);
+      petal.position.set(
+        pos.x + (Math.random() - 0.5) * 1.0,
+        pos.y + 0.6 + Math.random() * 0.8,
+        pos.z + (Math.random() - 0.5) * 1.0
+      );
+      petal.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 2.0 + Math.random() * 4.5;
+
+      this.scene.add(petal);
+      this.debris.push({
+        mesh: petal,
+        velX: Math.cos(angle) * speed,
+        velY: 4.0 + Math.random() * 6.0,
+        velZ: Math.sin(angle) * speed + 3.0,
+        rotVelX: (Math.random() - 0.5) * 10,
+        rotVelY: (Math.random() - 0.5) * 10,
+        gravity: 4.2, // flottement poétique
+        flutter: true,
+        flutterPhase: Math.random() * Math.PI * 2,
+        bounce: 0,
+        life: 2.8,
+        maxLife: 2.8
+      });
+    }
+  }
+
+  // Destruction de Chariot Ambulant (étincelles dorées, parasol envolé, fumée)
+  spawnCartCrash(pos) {
+    this.spawnShockwave(pos, 0xffa502);
+
+    for (let s = 0; s < 14; s++) {
+      const spark = new THREE.Mesh(this.sharedGeos.sparkBox, this.sharedMats.sparkAmber);
+      spark.position.copy(pos);
+      spark.position.y += 0.6;
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 6.0 + Math.random() * 10.0;
+      this.scene.add(spark);
+      this.debris.push({
+        mesh: spark,
+        velX: Math.cos(angle) * speed,
+        velY: 5.5 + Math.random() * 8.0,
+        velZ: Math.sin(angle) * speed + 5.0,
+        rotVelX: 15,
+        rotVelY: 15,
+        gravity: 20.0,
+        bounce: 0.15,
+        life: 0.85,
+        maxLife: 0.85
+      });
+    }
+
+    for (let p = 0; p < 5; p++) {
+      const smoke = new THREE.Mesh(this.sharedGeos.smokeSphere, this.sharedMats.smoke);
+      smoke.position.set(pos.x + (Math.random() - 0.5) * 1.2, pos.y + 0.6, pos.z + (Math.random() - 0.5) * 1.2);
+      smoke.scale.setScalar(0.5 + Math.random() * 0.4);
+      this.scene.add(smoke);
+      this.smokePuffs.push({
+        mesh: smoke,
+        velY: 1.4 + Math.random() * 1.0,
+        growRate: 1.2,
+        life: 0.8,
+        maxLife: 0.8
       });
     }
   }
@@ -775,7 +1049,7 @@ export class ParticleSystem {
       star.velY -= 15.0 * delta;
     }
 
-    // 6. Mettre à jour les débris et étincelles incandescents
+    // 6. Mettre à jour les débris, fruits, livres et pétales incandescents
     for (let d = this.debris.length - 1; d >= 0; d--) {
       const deb = this.debris[d];
       deb.life -= delta;
@@ -787,12 +1061,22 @@ export class ParticleSystem {
       deb.mesh.position.x += deb.velX * delta;
       deb.mesh.position.y += deb.velY * delta;
       deb.mesh.position.z += deb.velZ * delta;
-      deb.velY -= 18.0 * delta; // Gravité réaliste
+
+      if (deb.flutter) {
+        deb.flutterPhase = (deb.flutterPhase || 0) + delta * 5.0;
+        deb.mesh.position.x += Math.sin(deb.flutterPhase) * 1.6 * delta;
+        deb.mesh.rotation.z += Math.cos(deb.flutterPhase) * 2.2 * delta;
+      }
+
+      deb.velY -= (deb.gravity !== undefined ? deb.gravity : 18.0) * delta;
       deb.mesh.rotation.x += (deb.rotVelX || 10) * delta;
       deb.mesh.rotation.y += (deb.rotVelY || 10) * delta;
-      if (deb.mesh.position.y <= 0.05) {
-        deb.mesh.position.y = 0.05;
-        deb.velY = -deb.velY * 0.25; // Rebond amorti
+
+      const groundY = deb.groundY || 0.05;
+      if (deb.mesh.position.y <= groundY) {
+        deb.mesh.position.y = groundY;
+        const b = deb.bounce !== undefined ? deb.bounce : 0.25;
+        deb.velY = -deb.velY * b;
         deb.velX *= 0.6;
         deb.velZ *= 0.6;
       }

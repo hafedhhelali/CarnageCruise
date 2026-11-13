@@ -62,7 +62,16 @@ export class Environment {
       amphoraBelly: new THREE.SphereGeometry(0.35, 8, 8),
       balconyBase: new THREE.BoxGeometry(0.5, 0.1, 3.2),
       balconyRailing: new THREE.BoxGeometry(0.08, 0.55, 3.2),
-      storeSign: new THREE.BoxGeometry(2.4, 0.45, 0.12)
+      storeSign: new THREE.BoxGeometry(2.4, 0.45, 0.12),
+      // Stands de rue (primeurs, bouquinistes, marchand ambulant, fleuriste)
+      stallCrate: new THREE.BoxGeometry(0.55, 0.22, 0.4),
+      stallCounter: new THREE.BoxGeometry(1.0, 0.76, 1.8),
+      stallAwning: new THREE.BoxGeometry(1.2, 0.06, 2.0),
+      stallAwningPole: new THREE.CylinderGeometry(0.025, 0.025, 1.9, 6),
+      stallWheel: new THREE.CylinderGeometry(0.32, 0.32, 0.06, 12),
+      stallCloche: new THREE.SphereGeometry(0.18, 8, 8),
+      bookRow: new THREE.BoxGeometry(0.24, 0.35, 1.8),
+      flowerBucket: new THREE.CylinderGeometry(0.16, 0.11, 0.42, 8)
     };
     this.sharedMats = null;
   }
@@ -188,7 +197,18 @@ export class Environment {
       flower2: new THREE.MeshStandardMaterial({ color: 0xfdcb6e, roughness: 0.7 }),
       plaza: new THREE.MeshStandardMaterial({ color: 0xdcdde1, roughness: 0.8 }),
       bronzeStatue: new THREE.MeshStandardMaterial({ color: 0x4a3728, metalness: 0.75, roughness: 0.35 }),
-      benchWood: new THREE.MeshStandardMaterial({ color: 0x8b4513, roughness: 0.6 })
+      benchWood: new THREE.MeshStandardMaterial({ color: 0x8b4513, roughness: 0.6 }),
+      metalCart: new THREE.MeshStandardMaterial({ color: 0x10ac84, roughness: 0.35, metalness: 0.5 }),
+      metalZinc: new THREE.MeshStandardMaterial({ color: 0x95a5a6, roughness: 0.4, metalness: 0.6 }),
+      chromeCloche: new THREE.MeshStandardMaterial({ color: 0xdfe4ea, roughness: 0.2, metalness: 0.9 }),
+      fruitApple: new THREE.MeshToonMaterial({ color: 0xe74c3c, gradientMap: textureFactory.getToonGradientMap() }),
+      fruitOrange: new THREE.MeshToonMaterial({ color: 0xe67e22, gradientMap: textureFactory.getToonGradientMap() }),
+      fruitLemon: new THREE.MeshToonMaterial({ color: 0xf1c40f, gradientMap: textureFactory.getToonGradientMap() }),
+      flowerRed: new THREE.MeshToonMaterial({ color: 0xff4757, gradientMap: textureFactory.getToonGradientMap() }),
+      flowerYellow: new THREE.MeshToonMaterial({ color: 0xfffa65, gradientMap: textureFactory.getToonGradientMap() }),
+      flowerPurple: new THREE.MeshToonMaterial({ color: 0xa55eea, gradientMap: textureFactory.getToonGradientMap() }),
+      bookCovers: new THREE.MeshToonMaterial({ color: 0x2c3e50, gradientMap: textureFactory.getToonGradientMap() }),
+      chalkboard: new THREE.MeshStandardMaterial({ color: 0x222f3e, roughness: 0.9 })
     };
   }
 
@@ -1913,6 +1933,204 @@ export class Environment {
     });
   }
 
+  // --- CRÉATION DE STANDS DE RUE RÉALISTES & PITTORESQUES (PRIMEURS, BOUQUINISTES, STREET FOOD, FLEURISTES) ---
+  createMarketStall(chunk, side, z, stallType = 'stall_primeur') {
+    const stallGroup = new THREE.Group();
+    // Position sur la moitié avant du trottoir, face à la rue (largeur chaussée = 8.4m, trottoir = 3.5m)
+    const xPos = side * 4.8;
+    stallGroup.position.set(xPos, 0, z);
+    // Légère orientation vers la rue pour une excellente visibilité par le pilote
+    stallGroup.rotation.y = side > 0 ? -Math.PI / 2 + 0.12 : Math.PI / 2 - 0.12;
+
+    const woodMat = this.sharedMats?.wood || new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.85 });
+    const lampMat = this.sharedMats?.lamp || new THREE.MeshStandardMaterial({ color: 0x2d3436, roughness: 0.7 });
+
+    if (stallType === 'stall_primeur') {
+      stallGroup.userData = { type: 'stall_primeur', isHit: false, initialY: 0, initialRot: stallGroup.rotation.clone() };
+
+      // 1. Table de marché en bois
+      const table = new THREE.Mesh(this.sharedGeos.stallCounter, woodMat);
+      table.position.y = 0.38;
+      stallGroup.add(table);
+
+      // 2. Cagettes de fruits inclinées vers l'avant
+      const appleMat = this.sharedMats?.fruitApple || new THREE.MeshToonMaterial({ color: 0xe74c3c });
+      const orangeMat = this.sharedMats?.fruitOrange || new THREE.MeshToonMaterial({ color: 0xe67e22 });
+      const lemonMat = this.sharedMats?.fruitLemon || new THREE.MeshToonMaterial({ color: 0xf1c40f });
+      const crateMat = this.sharedMats?.benchWood || woodMat;
+
+      [-0.55, 0, 0.55].forEach((zOff, i) => {
+        const crateFront = new THREE.Mesh(this.sharedGeos.stallCrate, crateMat);
+        crateFront.position.set(-0.15, 0.85, zOff);
+        crateFront.rotation.z = -0.32;
+        stallGroup.add(crateFront);
+
+        const fMat = i === 0 ? appleMat : (i === 1 ? orangeMat : lemonMat);
+        for (let fx = -0.15; fx <= 0.15; fx += 0.15) {
+          for (let fz = -0.12; fz <= 0.12; fz += 0.12) {
+            const fruit = new THREE.Mesh(this.sharedGeos.amphoraBelly, fMat);
+            fruit.scale.set(0.26, 0.26, 0.26);
+            fruit.position.set(-0.15 + fx * 0.5, 0.96, zOff + fz);
+            stallGroup.add(fruit);
+          }
+        }
+      });
+
+      // 3. Poteaux fins et auvent rayé protecteur
+      [[-0.45, -0.85], [-0.45, 0.85], [0.45, -0.85], [0.45, 0.85]].forEach(([px, pz]) => {
+        const pole = new THREE.Mesh(this.sharedGeos.stallAwningPole, lampMat);
+        pole.position.set(px, 1.25, pz);
+        stallGroup.add(pole);
+      });
+
+      const awningTex = textureFactory.getAwningTexture('#e74c3c');
+      const awningMat = new THREE.MeshStandardMaterial({ map: awningTex, roughness: 0.7 });
+      const awning = new THREE.Mesh(this.sharedGeos.stallAwning, awningMat);
+      awning.position.set(0, 2.15, 0);
+      awning.rotation.z = -0.15;
+      stallGroup.add(awning);
+
+      // 4. Ardoise de prix
+      const slateMat = this.sharedMats?.chalkboard || new THREE.MeshStandardMaterial({ color: 0x222f3e, roughness: 0.9 });
+      const slate = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.22, 0.04), slateMat);
+      slate.position.set(-0.52, 0.65, 0.6);
+      slate.rotation.y = 0.2;
+      stallGroup.add(slate);
+
+    } else if (stallType === 'stall_bouquiniste') {
+      stallGroup.userData = { type: 'stall_bouquiniste', isHit: false, initialY: 0, initialRot: stallGroup.rotation.clone() };
+
+      // Meuble / Boîte de bouquiniste vert sombre
+      const bouquinisteMat = new THREE.MeshStandardMaterial({ color: 0x1b4332, roughness: 0.8 });
+      const trough = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.45, 2.0), bouquinisteMat);
+      trough.position.y = 0.8;
+      stallGroup.add(trough);
+
+      // Piètement en tréteaux fer forgé
+      const leg1 = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.8, 0.08), lampMat);
+      leg1.position.set(0, 0.4, -0.75);
+      const leg2 = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.8, 0.08), lampMat);
+      leg2.position.set(0, 0.4, 0.75);
+      stallGroup.add(leg1, leg2);
+
+      // Couvercle relevé typique avec tige de maintien
+      const lid = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.05, 2.0), bouquinisteMat);
+      lid.position.set(0.32, 1.35, 0);
+      lid.rotation.z = -Math.PI / 3;
+      const propStay = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.7, 6), lampMat);
+      propStay.position.set(0.18, 1.25, -0.85);
+      stallGroup.add(lid, propStay);
+
+      // Rangées de livres colorés
+      const bookMat = this.sharedMats?.bookCovers || new THREE.MeshToonMaterial({ color: 0x2c3e50 });
+      const pageMat = this.sharedMats?.marble || new THREE.MeshToonMaterial({ color: 0xf5f6fa });
+      [-0.18, 0.12].forEach((xOff) => {
+        const row = new THREE.Mesh(this.sharedGeos.bookRow, bookMat);
+        row.position.set(xOff, 1.05, 0);
+        const pages = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.08, 1.76), pageMat);
+        pages.position.set(xOff, 1.22, 0);
+        stallGroup.add(row, pages);
+      });
+
+    } else if (stallType === 'stall_streetfood') {
+      stallGroup.userData = { type: 'stall_streetfood', isHit: false, initialY: 0, initialRot: stallGroup.rotation.clone() };
+
+      // Chariot ambulant rétro (street food, glaces, crêpes)
+      const cartBodyMat = this.sharedMats?.metalCart || new THREE.MeshStandardMaterial({ color: 0x10ac84, roughness: 0.35 });
+      const body = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.72, 1.5), cartBodyMat);
+      body.position.y = 0.65;
+      stallGroup.add(body);
+
+      // Comptoir inox brillant
+      const steelMat = this.sharedMats?.chromeCloche || new THREE.MeshStandardMaterial({ color: 0xdfe4ea, roughness: 0.2, metalness: 0.9 });
+      const top = new THREE.Mesh(new THREE.BoxGeometry(0.92, 0.06, 1.56), steelMat);
+      top.position.y = 1.03;
+      stallGroup.add(top);
+
+      // Cloches gastronormes argentées
+      [-0.4, 0.1, 0.4].forEach(zOff => {
+        const cloche = new THREE.Mesh(this.sharedGeos.stallCloche, steelMat);
+        cloche.position.set(0, 1.15, zOff);
+        stallGroup.add(cloche);
+      });
+
+      // 2 Grandes roues à rayons rétro
+      const wheelMat = lampMat;
+      [-0.5, 0.5].forEach(zOff => {
+        const wheel = new THREE.Mesh(this.sharedGeos.stallWheel, wheelMat);
+        wheel.rotation.z = Math.PI / 2;
+        wheel.position.set(-0.46, 0.32, zOff);
+        stallGroup.add(wheel);
+      });
+
+      // Poignée de poussée en métal chromé
+      const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.7, 6), steelMat);
+      handle.position.set(0, 1.05, 0.88);
+      stallGroup.add(handle);
+
+      // Grand parasol de marchand ambulant
+      const umbrellaPole = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 2.3, 6), woodMat);
+      umbrellaPole.position.set(0, 1.35, 0);
+      const umbrellaTex = textureFactory.getAwningTexture('#f39c12');
+      const umbrellaMat = new THREE.MeshStandardMaterial({ map: umbrellaTex, roughness: 0.65 });
+      const umbrella = new THREE.Mesh(new THREE.ConeGeometry(1.25, 0.45, 8), umbrellaMat);
+      umbrella.position.set(0, 2.45, 0);
+      stallGroup.add(umbrellaPole, umbrella);
+
+    } else if (stallType === 'stall_fleuriste') {
+      stallGroup.userData = { type: 'stall_fleuriste', isHit: false, initialY: 0, initialRot: stallGroup.rotation.clone() };
+
+      // Étagère fleuriste 3 niveaux en bois
+      [0.35, 0.65, 0.95].forEach((yStep, idx) => {
+        const shelf = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.05, 1.8), woodMat);
+        shelf.position.set(-0.25 + idx * 0.22, yStep, 0);
+        stallGroup.add(shelf);
+      });
+
+      // Seaux en zinc et pots en terre cuite remplis de fleurs éclatantes
+      const zincMat = this.sharedMats?.metalZinc || new THREE.MeshStandardMaterial({ color: 0x95a5a6, roughness: 0.4 });
+      const flowerMats = [
+        this.sharedMats?.flowerRed || new THREE.MeshToonMaterial({ color: 0xff4757 }),
+        this.sharedMats?.flowerYellow || new THREE.MeshToonMaterial({ color: 0xfffa65 }),
+        this.sharedMats?.flowerPurple || new THREE.MeshToonMaterial({ color: 0xa55eea })
+      ];
+
+      [-0.55, 0, 0.55].forEach((zOff, i) => {
+        const bucket = new THREE.Mesh(this.sharedGeos.flowerBucket, zincMat);
+        bucket.position.set(-0.15, 0.6, zOff);
+        stallGroup.add(bucket);
+
+        const bouquet = new THREE.Mesh(this.sharedGeos.amphoraBelly, flowerMats[i % 3]);
+        bouquet.scale.set(0.42, 0.35, 0.42);
+        bouquet.position.set(-0.15, 0.95, zOff);
+        stallGroup.add(bouquet);
+
+        const pot = new THREE.Mesh(this.sharedGeos.amphora, this.sharedMats?.terracotta || woodMat);
+        pot.scale.set(0.6, 0.6, 0.6);
+        pot.position.set(0.15, 1.15, zOff);
+        const topBouquet = new THREE.Mesh(this.sharedGeos.amphoraBelly, flowerMats[(i + 1) % 3]);
+        topBouquet.scale.set(0.32, 0.28, 0.32);
+        topBouquet.position.set(0.15, 1.45, zOff);
+        stallGroup.add(pot, topBouquet);
+      });
+
+      // Auvent léger au-dessus du stand
+      const flowerAwningTex = textureFactory.getAwningTexture('#27ae60');
+      const flowerAwningMat = new THREE.MeshStandardMaterial({ map: flowerAwningTex, roughness: 0.7 });
+      const awning = new THREE.Mesh(this.sharedGeos.stallAwning, flowerAwningMat);
+      awning.position.set(0, 2.2, 0);
+      awning.rotation.z = -0.18;
+      const pole = new THREE.Mesh(this.sharedGeos.stallAwningPole, lampMat);
+      pole.position.set(0, 1.3, -0.85);
+      const pole2 = new THREE.Mesh(this.sharedGeos.stallAwningPole, lampMat);
+      pole2.position.set(0, 1.3, 0.85);
+      stallGroup.add(awning, pole, pole2);
+    }
+
+    chunk.add(stallGroup);
+    chunk.userData.props.push(stallGroup);
+  }
+
   populateStreetProps(chunk) {
     if (this.isRuinsMode) {
       this.populateRuinsProps(chunk);
@@ -2109,6 +2327,14 @@ export class Environment {
         }
       }
     });
+
+    // 5. Stand de rue authentique et pittoresque (primeurs, bouquinistes, marchand ambulant, fleuriste)
+    // Placé sur le trottoir le long de la rue avec alternance et variété
+    const stallTypes = ['stall_primeur', 'stall_bouquiniste', 'stall_streetfood', 'stall_fleuriste'];
+    const chunkHash = Math.abs(Math.round(chunk.position.z / 60));
+    const stallType = stallTypes[chunkHash % stallTypes.length];
+    const stallSide = (chunkHash % 2 === 0) ? 1 : -1;
+    this.createMarketStall(chunk, stallSide, 8, stallType);
   }
 
   update(playerZ, delta = 0.016) {
@@ -2136,12 +2362,20 @@ export class Environment {
           });
         }
 
-        // Réinitialiser les accessoires urbains (feux tricolores, lampadaires, arbres)
-        // afin d'éliminer définitivement les feux rouges inclinés ou couchés après recyclage !
+        // Réinitialiser les accessoires urbains (feux tricolores, lampadaires, arbres, stands de rue)
+        // afin d'éliminer définitivement les feux couchés ou stands invisibles après recyclage !
         if (chunk.userData && chunk.userData.props) {
           chunk.userData.props.forEach(prop => {
             prop.userData.isHit = false;
-            prop.rotation.set(0, 0, 0);
+            prop.visible = true;
+            if (prop.userData.initialY !== undefined) {
+              prop.position.y = prop.userData.initialY;
+            }
+            if (prop.userData.initialRot) {
+              prop.rotation.copy(prop.userData.initialRot);
+            } else {
+              prop.rotation.set(0, 0, 0);
+            }
           });
         }
       }

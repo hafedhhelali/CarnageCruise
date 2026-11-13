@@ -802,7 +802,7 @@ class GameApp {
         });
       }
 
-      // 8d. Collisions avec le mobilier urbain (Poteaux, Arbres, Terrasses) sur trottoir
+      // 8d. Collisions avec le mobilier urbain et stands de rue (Poteaux, Arbres, Primeurs, Bouquinistes, Chariots) sur trottoir
       if (!isFlyingCraft && this.environment.chunks) {
         this.environment.chunks.forEach(chunk => {
           if (chunk.userData && chunk.userData.props) {
@@ -813,34 +813,96 @@ class GameApp {
               const dZ = Math.abs(worldZ - this.bike.z);
               const dX = Math.abs(worldX - this.bike.mesh.position.x);
 
-              if (dZ < 1.8 && dX < 1.35) {
+              const isStall = prop.userData.type && prop.userData.type.startsWith('stall_');
+              const hitRadiusZ = isStall ? 2.1 : 1.8;
+              const hitRadiusX = isStall ? 1.6 : 1.35;
+
+              if (dZ < hitRadiusZ && dX < hitRadiusX) {
                 prop.userData.isHit = true;
-                this.engine.triggerCameraShake(0.52);
-                soundManager.playPropSmash();
-                Haptic.impactLight();
                 dailyMissions.onPropSmash();
 
                 const propPos = new THREE.Vector3(worldX, 1.2, worldZ);
-                this.particles.spawnPropShatter(propPos, prop.userData.type || 'lamp');
 
-                // Animation physique d'éjection et fracas de l'objet
-                prop.position.y += 2.2;
-                prop.rotation.x = Math.PI * 0.85;
-                prop.rotation.z = (prop.position.x > 0 ? 1 : -1) * 1.2;
-                setTimeout(() => { prop.visible = false; }, 550);
+                if (isStall) {
+                  this.engine.triggerCameraShake(0.65);
+                  const sType = prop.userData.type;
 
-                if (prop.userData.type === 'lamp') {
-                  gameState.score += 180;
-                  this.particles.spawnComicBurst(propPos, 180, gameState.combo);
-                  if (this.ui) this.ui.spawnFloatingCombatText('+180', 'LAMPADAIRE BROYÉ !', '#fffa65', 50, 40);
-                } else if (prop.userData.type === 'tree') {
-                  gameState.score += 200;
-                  this.particles.spawnComicBurst(propPos, 200, gameState.combo);
-                  if (this.ui) this.ui.spawnFloatingCombatText('+200', 'ARBRE DÉRACINÉ !', '#2ed573', 50, 40);
-                } else if (prop.userData.type === 'terrace') {
-                  gameState.score += 300;
-                  this.particles.spawnComicBurst(propPos, 300, gameState.combo);
-                  if (this.ui) this.ui.spawnFloatingCombatText('+300', 'TERRASSE PULVÉRISÉE !', '#ff9f43', 50, 40);
+                  if (sType === 'stall_primeur') {
+                    soundManager.playMarketStallCrash('primeur');
+                    Haptic.impactHeavy();
+                    this.particles.spawnFruitSplatter(propPos);
+                    this.particles.spawnPropShatter(propPos, 'wood');
+                    if (!gameState.isRuinsMode) {
+                      gameState.score += 260;
+                      this.particles.spawnComicBurst(propPos, 260, gameState.combo);
+                      if (this.ui) this.ui.spawnFloatingCombatText('+260', 'PRIMEUR DÉVASTÉ ! 🍎🍊', '#ff4757', 52, 42);
+                    }
+                  } else if (sType === 'stall_bouquiniste') {
+                    soundManager.playMarketStallCrash('books');
+                    Haptic.impactMedium();
+                    this.particles.spawnBookFlutter(propPos);
+                    this.particles.spawnPropShatter(propPos, 'wood');
+                    if (!gameState.isRuinsMode) {
+                      gameState.score += 280;
+                      this.particles.spawnComicBurst(propPos, 280, gameState.combo);
+                      if (this.ui) this.ui.spawnFloatingCombatText('+280', 'BOUQUINISTE PULVÉRISÉ ! 📚📖', '#70a1ff', 52, 42);
+                    }
+                  } else if (sType === 'stall_streetfood') {
+                    soundManager.playMarketStallCrash('cart');
+                    Haptic.impactHeavy();
+                    this.particles.spawnCartCrash(propPos);
+                    this.particles.spawnPropShatter(propPos, 'metal');
+                    if (!gameState.isRuinsMode) {
+                      gameState.score += 320;
+                      this.particles.spawnComicBurst(propPos, 320, gameState.combo);
+                      if (this.ui) this.ui.spawnFloatingCombatText('+320', 'CHARIOT RENVERSÉ ! 🍦🌭', '#ffa502', 54, 44);
+                    }
+                  } else if (sType === 'stall_fleuriste') {
+                    soundManager.playMarketStallCrash('flowers');
+                    Haptic.impactMedium();
+                    this.particles.spawnFlowerBurst(propPos);
+                    this.particles.spawnPropShatter(propPos, 'terracotta');
+                    if (!gameState.isRuinsMode) {
+                      gameState.score += 250;
+                      this.particles.spawnComicBurst(propPos, 250, gameState.combo);
+                      if (this.ui) this.ui.spawnFloatingCombatText('+250', 'FLEURS AU VENT ! 💐🌸', '#ff6b81', 52, 42);
+                    }
+                  }
+
+                  // Éjection dynamique réaliste du stand
+                  prop.position.y += 2.5;
+                  prop.rotation.x = Math.PI * 0.88;
+                  prop.rotation.z = (prop.position.x > 0 ? 1 : -1) * 1.35;
+                  setTimeout(() => { prop.visible = false; }, 550);
+
+                } else {
+                  this.engine.triggerCameraShake(0.52);
+                  soundManager.playPropSmash();
+                  Haptic.impactLight();
+
+                  this.particles.spawnPropShatter(propPos, prop.userData.type || 'lamp');
+
+                  // Animation physique d'éjection et fracas de l'objet
+                  prop.position.y += 2.2;
+                  prop.rotation.x = Math.PI * 0.85;
+                  prop.rotation.z = (prop.position.x > 0 ? 1 : -1) * 1.2;
+                  setTimeout(() => { prop.visible = false; }, 550);
+
+                  if (!gameState.isRuinsMode) {
+                    if (prop.userData.type === 'lamp') {
+                      gameState.score += 180;
+                      this.particles.spawnComicBurst(propPos, 180, gameState.combo);
+                      if (this.ui) this.ui.spawnFloatingCombatText('+180', 'LAMPADAIRE BROYÉ !', '#fffa65', 50, 40);
+                    } else if (prop.userData.type === 'tree') {
+                      gameState.score += 200;
+                      this.particles.spawnComicBurst(propPos, 200, gameState.combo);
+                      if (this.ui) this.ui.spawnFloatingCombatText('+200', 'ARBRE DÉRACINÉ !', '#2ed573', 50, 40);
+                    } else if (prop.userData.type === 'terrace') {
+                      gameState.score += 300;
+                      this.particles.spawnComicBurst(propPos, 300, gameState.combo);
+                      if (this.ui) this.ui.spawnFloatingCombatText('+300', 'TERRASSE PULVÉRISÉE !', '#ff9f43', 50, 40);
+                    }
+                  }
                 }
               }
             });
