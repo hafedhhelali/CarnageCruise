@@ -634,29 +634,42 @@ export class SoundManager {
     if (this.trySample('crash')) return;
 
     const now = this.ctx.currentTime;
+    const dest = this.getMasterOutput();
 
-    // 1. Coup de basse sourd / punch de choc
+    // 1. Coup de sub-bass profond et percutant (impact physique dans les basses fréquences)
+    const subOsc = this.ctx.createOscillator();
+    const subGain = this.ctx.createGain();
+    subOsc.type = 'sine';
+    subOsc.frequency.setValueAtTime(160, now);
+    subOsc.frequency.exponentialRampToValueAtTime(26, now + 0.45);
+    subGain.gain.setValueAtTime(0.85, now);
+    subGain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+    subOsc.connect(subGain);
+    subGain.connect(dest);
+    subOsc.onended = () => this.cleanupNodes(subOsc, subGain);
+    subOsc.start(now);
+    subOsc.stop(now + 0.45);
+
+    // 2. Punch d'écrasement mécanique (dent de scie agressive)
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
     osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(140, now);
-    osc.frequency.exponentialRampToValueAtTime(30, now + 0.4);
-
-    gain.gain.setValueAtTime(0.45, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
-
+    osc.frequency.setValueAtTime(180, now);
+    osc.frequency.exponentialRampToValueAtTime(32, now + 0.38);
+    gain.gain.setValueAtTime(0.65, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
     osc.connect(gain);
-    gain.connect(this.ctx.destination);
+    gain.connect(dest);
     osc.onended = () => this.cleanupNodes(osc, gain);
     osc.start(now);
-    osc.stop(now + 0.4);
+    osc.stop(now + 0.38);
 
-    // 2. Bruit blanc métallique / bris de verre cartoon
-    const bufferSize = Math.floor(this.ctx.sampleRate * 0.35);
+    // 3. Bris de carrosserie et bruit blanc métallique cartoon
+    const bufferSize = Math.floor(this.ctx.sampleRate * 0.38);
     const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
     const data = buffer.getChannelData(0);
     for (let i = 0; i < bufferSize; i++) {
-      data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (this.ctx.sampleRate * 0.08));
+      data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (this.ctx.sampleRate * 0.09));
     }
 
     const noise = this.ctx.createBufferSource();
@@ -664,16 +677,16 @@ export class SoundManager {
 
     const noiseFilter = this.ctx.createBiquadFilter();
     noiseFilter.type = 'bandpass';
-    noiseFilter.frequency.setValueAtTime(2200, now);
-    noiseFilter.Q.setValueAtTime(3.0, now);
+    noiseFilter.frequency.setValueAtTime(2400, now);
+    noiseFilter.Q.setValueAtTime(2.8, now);
 
     const noiseGain = this.ctx.createGain();
-    noiseGain.gain.setValueAtTime(0.35, now);
-    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+    noiseGain.gain.setValueAtTime(0.55, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
 
     noise.connect(noiseFilter);
     noiseFilter.connect(noiseGain);
-    noiseGain.connect(this.ctx.destination);
+    noiseGain.connect(dest);
 
     noise.onended = () => this.cleanupNodes(noise, noiseFilter, noiseGain);
     noise.start(now);
@@ -1027,43 +1040,58 @@ export class SoundManager {
     if (this.trySample('explosion')) return;
 
     const now = this.ctx.currentTime;
+    const dest = this.getMasterOutput();
+
+    // 1. Déflagration sub-bass tellurique
+    const subBoom = this.ctx.createOscillator();
+    const subBoomGain = this.ctx.createGain();
+    subBoom.type = 'sine';
+    subBoom.frequency.setValueAtTime(95, now);
+    subBoom.frequency.exponentialRampToValueAtTime(20, now + 0.65);
+    subBoomGain.gain.setValueAtTime(0.95, now);
+    subBoomGain.gain.exponentialRampToValueAtTime(0.001, now + 0.65);
+    subBoom.connect(subBoomGain);
+    subBoomGain.connect(dest);
+    subBoom.onended = () => this.cleanupNodes(subBoom, subBoomGain);
+    subBoom.start(now);
+    subBoom.stop(now + 0.65);
+
+    // 2. Onde d'impact agressive (rugissement de souffle)
     const boomOsc = this.ctx.createOscillator();
     const boomGain = this.ctx.createGain();
     boomOsc.type = 'sawtooth';
-    boomOsc.frequency.setValueAtTime(110, now);
-    boomOsc.frequency.exponentialRampToValueAtTime(18, now + 0.55);
-
-    boomGain.gain.setValueAtTime(0.85, now);
-    boomGain.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
-
+    boomOsc.frequency.setValueAtTime(130, now);
+    boomOsc.frequency.exponentialRampToValueAtTime(22, now + 0.58);
+    boomGain.gain.setValueAtTime(0.9, now);
+    boomGain.gain.exponentialRampToValueAtTime(0.001, now + 0.58);
     boomOsc.connect(boomGain);
-    boomGain.connect(this.ctx.destination);
+    boomGain.connect(dest);
     boomOsc.onended = () => this.cleanupNodes(boomOsc, boomGain);
     boomOsc.start(now);
-    boomOsc.stop(now + 0.55);
+    boomOsc.stop(now + 0.58);
 
-    // Bruit blanc d'impact explosif
-    const noise = this.ctx.createBufferSource();
-    const bufSize = Math.floor(this.ctx.sampleRate * 0.4);
+    // 3. Souffle d'air et bruit blanc thermique
+    const bufSize = Math.floor(this.ctx.sampleRate * 0.5);
     const buf = this.ctx.createBuffer(1, bufSize, this.ctx.sampleRate);
     const data = buf.getChannelData(0);
     for (let i = 0; i < bufSize; i++) {
-      data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (this.ctx.sampleRate * 0.1));
+      data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (this.ctx.sampleRate * 0.12));
     }
+    const noise = this.ctx.createBufferSource();
     noise.buffer = buf;
 
     const filter = this.ctx.createBiquadFilter();
     filter.type = 'lowpass';
-    filter.frequency.setValueAtTime(2400, now);
-    filter.frequency.exponentialRampToValueAtTime(120, now + 0.4);
+    filter.frequency.setValueAtTime(2800, now);
+    filter.frequency.exponentialRampToValueAtTime(110, now + 0.48);
 
     const noiseGain = this.ctx.createGain();
-    noiseGain.gain.setValueAtTime(0.9, now);
-    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+    noiseGain.gain.setValueAtTime(0.95, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.48);
 
     noise.connect(filter);
     filter.connect(noiseGain);
-    noiseGain.connect(this.ctx.destination);
+    noiseGain.connect(dest);
     noise.start(now);
     noise.onended = () => this.cleanupNodes(noise, filter, noiseGain);
   }
@@ -1856,47 +1884,58 @@ export class SoundManager {
     // 1. Oscillateur Mid (Caractère mécanique et rugissement des cylindres)
     this.engineOsc = this.ctx.createOscillator();
     this.engineOsc.type = 'sawtooth';
-    this.engineOsc.frequency.setValueAtTime(48, now);
+    this.engineOsc.frequency.setValueAtTime(55, now);
 
     // 2. Oscillateur Sub-bass (Corps et puissance des pistons dans le bas du spectre)
     this.engineSubOsc = this.ctx.createOscillator();
     this.engineSubOsc.type = 'sine';
-    this.engineSubOsc.frequency.setValueAtTime(32, now);
+    this.engineSubOsc.frequency.setValueAtTime(36, now);
+
+    // 3. Oscillateur High (Sifflement mécanique turbo et harmoniques aiguës de vitesse)
+    this.engineHighOsc = this.ctx.createOscillator();
+    this.engineHighOsc.type = 'triangle';
+    this.engineHighOsc.frequency.setValueAtTime(180, now);
 
     this.engineFilter = this.ctx.createBiquadFilter();
     this.engineFilter.type = 'lowpass';
-    this.engineFilter.frequency.setValueAtTime(160, now);
-    this.engineFilter.Q.value = 2.4;
+    this.engineFilter.frequency.setValueAtTime(260, now);
+    this.engineFilter.Q.value = 3.2;
 
     this.engineGain = this.ctx.createGain();
-    this.engineGain.gain.setValueAtTime(0.045, now);
+    this.engineGain.gain.setValueAtTime(0.12, now);
 
     this.engineOsc.connect(this.engineFilter);
     this.engineSubOsc.connect(this.engineFilter);
+    this.engineHighOsc.connect(this.engineFilter);
     this.engineFilter.connect(this.engineGain);
     this.engineGain.connect(dest);
 
     this.engineOsc.start(now);
     this.engineSubOsc.start(now);
+    this.engineHighOsc.start(now);
   }
 
   updateEngine(speedRatio) {
     if (!this.engineOsc || !this.ctx || this.isDestroyed) return;
     const now = this.ctx.currentTime;
-    const clampedRatio = Math.max(0, Math.min(1.8, speedRatio));
+    const clampedRatio = Math.max(0, Math.min(2.0, speedRatio));
 
     // Ramping de fréquence dynamique selon l'accélération
-    const targetMidFreq = 48 + clampedRatio * 68;
-    const targetSubFreq = 30 + clampedRatio * 42;
-    this.engineOsc.frequency.setTargetAtTime(targetMidFreq, now, 0.06);
+    const targetMidFreq = 55 + clampedRatio * 95;
+    const targetSubFreq = 36 + clampedRatio * 52;
+    const targetHighFreq = 180 + clampedRatio * 440;
+    this.engineOsc.frequency.setTargetAtTime(targetMidFreq, now, 0.05);
     if (this.engineSubOsc) {
-      this.engineSubOsc.frequency.setTargetAtTime(targetSubFreq, now, 0.06);
+      this.engineSubOsc.frequency.setTargetAtTime(targetSubFreq, now, 0.05);
+    }
+    if (this.engineHighOsc) {
+      this.engineHighOsc.frequency.setTargetAtTime(targetHighFreq, now, 0.05);
     }
 
     if (this.engineFilter) {
-      // Ouverture du filtre à haut régime pour révéler les harmoniques métalliques
-      const filterCutoff = 160 + clampedRatio * 240;
-      this.engineFilter.frequency.setTargetAtTime(filterCutoff, now, 0.06);
+      // Ouverture dynamique du filtre à haut régime pour révéler la rage du moteur
+      const filterCutoff = 260 + clampedRatio * 550;
+      this.engineFilter.frequency.setTargetAtTime(filterCutoff, now, 0.05);
     }
   }
 
@@ -1909,16 +1948,25 @@ export class SoundManager {
     if (this.engineOsc) {
       try {
         this.engineOsc.stop();
+        this.engineOsc.disconnect();
       } catch (e) {}
+      this.engineOsc = null;
     }
     if (this.engineSubOsc) {
       try {
         this.engineSubOsc.stop();
+        this.engineSubOsc.disconnect();
       } catch (e) {}
+      this.engineSubOsc = null;
     }
-    this.cleanupNodes(this.engineOsc, this.engineSubOsc, this.engineFilter, this.engineGain);
-    this.engineOsc = null;
-    this.engineSubOsc = null;
+    if (this.engineHighOsc) {
+      try {
+        this.engineHighOsc.stop();
+        this.engineHighOsc.disconnect();
+      } catch (e) {}
+      this.engineHighOsc = null;
+    }
+    this.cleanupNodes(this.engineOsc, this.engineSubOsc, this.engineHighOsc, this.engineFilter, this.engineGain);
     this.engineGain = null;
     this.engineFilter = null;
   }

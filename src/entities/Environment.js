@@ -1400,11 +1400,12 @@ export class Environment {
 
       // LAISSER UN CARREFOUR TOTALEMENT OUVERT POUR CHAQUE INTERSECTION
       // Intersections régulières à Z = 95 + k * 160 (95, 255, 415, 575, ...)
-      const worldZ = chunk.position.z + currentZ + bWidth / 2;
-      const relInter = ((worldZ - 95) % 160 + 160) % 160;
-      if (relInter < 14 || relInter > 146) {
-        // En plein couloir transversal : ne PAS poser de mur pour laisser circuler les voitures de traverse !
-        currentZ += bWidth;
+      const bMinZ = chunk.position.z + currentZ;
+      const bMaxZ = bMinZ + bWidth;
+      const nearestInterZ = Math.round((bMinZ - 95) / 160) * 160 + 95;
+      if (bMaxZ >= nearestInterZ - 17 && bMinZ <= nearestInterZ + 17) {
+        // En plein couloir transversal : sauter totalement l'intersection pour laisser circuler le trafic transversal sans heurter de mur !
+        currentZ = (nearestInterZ + 17.5) - chunk.position.z;
         continue;
       }
 
@@ -1476,6 +1477,16 @@ export class Environment {
 
     while (currentZ < this.chunkLength / 2) {
       const bWidth = 7.0 + Math.random() * 5.0;
+
+      // Dégagement net des carrefours
+      const bMinZ = chunk.position.z + currentZ;
+      const bMaxZ = bMinZ + bWidth;
+      const nearestInterZ = Math.round((bMinZ - 95) / 160) * 160 + 95;
+      if (bMaxZ >= nearestInterZ - 17 && bMinZ <= nearestInterZ + 17) {
+        currentZ = (nearestInterZ + 17.5) - chunk.position.z;
+        continue;
+      }
+
       const bHeight = 3.5 + Math.random() * 8.5; // Bâtiments effondrés de hauteur inégale
       const bDepth = 9.5;
 
@@ -1670,6 +1681,34 @@ export class Environment {
       const bulb = new THREE.Mesh(this.sharedGeos.lampBulb, glowMat);
       bulb.position.set(-side * 0.4, 4.0, 0);
       lamp.add(bulb);
+
+      // Cône lumineux volumétrique descendant (Éclairage nocturne arcade chaleureux)
+      if (!this.sharedGeos.lampLightCone) {
+        this.sharedGeos.lampLightCone = new THREE.ConeGeometry(1.4, 3.8, 8, 1, true);
+        this.sharedMats.lampLightCone = new THREE.MeshBasicMaterial({
+          color: 0xfffa65,
+          transparent: true,
+          opacity: 0.08,
+          depthWrite: false,
+          side: THREE.DoubleSide
+        });
+        this.sharedGeos.lampGroundPool = new THREE.CircleGeometry(1.6, 10);
+        this.sharedMats.lampGroundPool = new THREE.MeshBasicMaterial({
+          color: 0xfff275,
+          transparent: true,
+          opacity: 0.14,
+          depthWrite: false
+        });
+      }
+      const lightCone = new THREE.Mesh(this.sharedGeos.lampLightCone, this.sharedMats.lampLightCone);
+      lightCone.position.set(-side * 0.4, 2.0, 0);
+      lamp.add(lightCone);
+
+      const groundPool = new THREE.Mesh(this.sharedGeos.lampGroundPool, this.sharedMats.lampGroundPool);
+      groundPool.rotation.x = -Math.PI / 2;
+      groundPool.position.set(-side * 0.4, 0.03, 0);
+      lamp.add(groundPool);
+
       chunk.add(lamp);
       chunk.userData.props.push(lamp);
 

@@ -1561,11 +1561,11 @@ export class UIManager {
     soundManager.playSupersonicJet();
 
     const initialDestruction = storage.getCityDestruction(city.id) || 0;
-    let strikeDamage = 35;
-    if (weaponType === 'NUKE') strikeDamage = 40;
-    else if (weaponType === 'CARPET') strikeDamage = 30;
-    else if (weaponType === 'ORBITAL') strikeDamage = 45;
-    else if (weaponType === 'BIO') strikeDamage = 25;
+    let strikeDamage = 22;
+    if (weaponType === 'NUKE') strikeDamage = 24;
+    else if (weaponType === 'CARPET') strikeDamage = 20;
+    else if (weaponType === 'ORBITAL') strikeDamage = 28;
+    else if (weaponType === 'BIO') strikeDamage = 16;
 
     const targetDestruction = Math.min(100, initialDestruction + strikeDamage);
     const totalPop = city.population || city.exterminationTarget || 500000;

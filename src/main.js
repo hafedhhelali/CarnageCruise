@@ -868,6 +868,53 @@ class GameApp {
           (z) => this.environment.getRoadAngle(z),
           (streetName) => {
             if (this.ui) this.ui.showTrafficLightWarning(streetName);
+          },
+          (crossingCar) => {
+            if (isFlyingCraft) return;
+            const isSuper = this.bike.isInvulnerable() || gameState.isNitroActive || this.bike.currentBikeId === 'tank' || this.bike.currentBikeId === 'rouleau';
+            if (isSuper) {
+              // T-BONE CARAMBOLAGE ROYAL ! La voiture transversale est pulvérisée et voltige dans les airs
+              crossingCar.isWrecked = true;
+              crossingCar.vy = 12.0 + Math.random() * 5.0;
+              crossingCar.vx = (crossingCar.velX || 20) * 0.4 + (Math.random() - 0.5) * 12.0;
+              crossingCar.rotX = 6.0;
+              crossingCar.rotY = 8.0;
+              this.engine.triggerCameraShake(0.85);
+              soundManager.playCrash();
+              soundManager.playExplosion();
+              this.particles.spawnCrashBurst(crossingCar.mesh.position);
+              gameState.score += 1500;
+              gameState.recordKill(1500, 'CARAMBOLAGE T-BONE', 'car');
+              this.particles.spawnComicBurst(crossingCar.mesh.position, 1500, gameState.combo);
+              if (this.ui) this.ui.spawnFloatingCombatText('+1500', 'T-BONE CARAMBOLAGE ! 💥', '#ff9f43', 50, 42);
+              Haptic.impactHeavy();
+            } else {
+              // Accident transversal violent au carrefour !
+              const crashed = this.bike.triggerCrash();
+              if (crashed) {
+                this.engine.triggerCameraShake(0.9);
+                soundManager.playCrash();
+                soundManager.playPenaltyBuzzer();
+                this.particles.spawnCrashBurst(this.bike.mesh.position);
+                gameState.applyVehicleCrashPenalty(350);
+                if (this.ui) {
+                  this.ui.triggerCrashPenaltyUI(350);
+                  this.ui.spawnFloatingCombatText('-350', 'T-BONE ACCIDENT ! 🚨', '#eb4d4b', 50, 36);
+                }
+                Haptic.impactHeavy();
+              }
+            }
+          },
+          (crossingCar) => {
+            if (isFlyingCraft) return;
+            // Frôlage transversal audacieux (Near-Miss)
+            gameState.score += 500;
+            soundManager.playSpeedBumpBoingFwump(1.4);
+            if (this.particles.spawnSparks) {
+              this.particles.spawnSparks(new THREE.Vector3(this.bike.mesh.position.x, 0.4, this.bike.z), 12, 0x00cec9);
+            }
+            if (this.ui) this.ui.spawnFloatingCombatText('+500', 'FRÔLAGE EXTRÊME ! 🔥', '#00cec9', 50, 38);
+            Haptic.impactLight();
           }
         );
 
@@ -918,7 +965,7 @@ class GameApp {
       }
 
       // 10. Particules, étoiles et lignes de vitesse
-      this.particles.update(delta, this.bike.z, currentSpeed);
+      this.particles.update(delta, this.bike.z, currentSpeed, this.bike.mesh.position.x, gameState.isNitroActive);
 
       // 10b. Pigeons parisiens vivants : Picorent et s'envolent au passage de la moto
       if (!isFlyingCraft) {

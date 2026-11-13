@@ -94,14 +94,14 @@ export class Engine {
       this.scene.environment = null;
     }
 
-    // Caméra
+    // Caméra perspective grand angle arcade
     this.camera = new THREE.PerspectiveCamera(
-      60,
+      70,
       window.innerWidth / window.innerHeight,
       0.1,
-      500
+      600
     );
-    this.baseFov = 60;
+    this.baseFov = 70;
 
     // Pool de PointLights dynamiques pour flashs d'armes et d'explosions (Zéro lag mobile)
     this.dynamicLights = [];
@@ -164,9 +164,9 @@ export class Engine {
       this.postProcessing = null;
     }
 
-    // Propriétés de caméra dynamique
-    this.cameraTarget = new THREE.Vector3(0, 1.2, 0);
-    this.cameraOffset = new THREE.Vector3(0, 3.2, -6.2); // Position arcade derrière la moto
+    // Propriétés de caméra dynamique (Zoom-out panoramique arcade)
+    this.cameraTarget = new THREE.Vector3(0, 1.4, 0);
+    this.cameraOffset = new THREE.Vector3(0, 4.6, -9.2); // Position arcade surélevée et reculée pour vue grandiose
     this.shakeIntensity = 0;
     this.shakeDecay = 6.0;
 
@@ -341,17 +341,21 @@ export class Engine {
     this.camera.position.y += (targetCamY - this.camera.position.y) * Math.min(1.0, delta * 8.0);
     this.camera.position.z += (targetCamZ - this.camera.position.z) * Math.min(1.0, delta * 15.0);
 
-    // LookAt centré précisément sur le couloir du joueur pour cadrage optimal
+    // LookAt centré précisément sur le couloir du joueur avec visibilité lointaine anticipée
     const lookTargetX = bikePosition.x;
-    const lookTargetY = bikePosition.y + 1.2;
-    const lookTargetZ = bikePosition.z + 10.0;
+    const lookTargetY = bikePosition.y + 1.5;
+    const lookTargetZ = bikePosition.z + 16.0;
     this.camera.lookAt(lookTargetX, lookTargetY, lookTargetZ);
 
     // Élargissement du champ de vision (FOV) selon la vitesse pour booster les sensations
-    const speedBonusFov = (bikeSpeed / 30.0) * 12.0;
+    const speedBonusFov = (bikeSpeed / 30.0) * 14.0;
     const targetFov = this.baseFov + speedBonusFov;
-    this.camera.fov += (targetFov - this.camera.fov) * delta * 4.0;
+    this.camera.fov += (targetFov - this.camera.fov) * delta * 5.0;
     this.camera.updateProjectionMatrix();
+
+    // Roulis dynamique de caméra dans les virages
+    const targetRoll = -Math.max(-0.05, Math.min(0.05, (this.camera.position.x - bikePosition.x) * 0.025));
+    this.camera.rotation.z += (targetRoll - this.camera.rotation.z) * delta * 6.0;
   }
 
   updateCameraCinematic(delta, bikePosition) {

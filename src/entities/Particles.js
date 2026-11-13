@@ -86,17 +86,25 @@ export class ParticleSystem {
   }
 
   initSpeedLines() {
-    for (let i = 0; i < 20; i++) {
-      const mesh = new THREE.Mesh(this.sharedGeos.speedCylinder, this.sharedMats.speedLine);
+    this.speedLineMats = {
+      white: new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.55 }),
+      nitro: new THREE.MeshBasicMaterial({ color: 0x00f2fe, transparent: true, opacity: 0.85 }),
+      amber: new THREE.MeshBasicMaterial({ color: 0xffa502, transparent: true, opacity: 0.75 })
+    };
+
+    // 45 Lignes de vitesse aérodynamiques profilées
+    for (let i = 0; i < 45; i++) {
+      const mesh = new THREE.Mesh(this.sharedGeos.speedCylinder, this.speedLineMats.white);
       mesh.rotation.x = Math.PI / 2;
       mesh.visible = false;
       this.scene.add(mesh);
       this.speedLines.push({
         mesh,
-        offsetX: (Math.random() - 0.5) * 6.5,
-        offsetY: 0.4 + Math.random() * 2.8,
-        offsetZ: Math.random() * 32.0,
-        speed: 45 + Math.random() * 25
+        relAngle: Math.random() * Math.PI * 2,
+        radius: 2.2 + Math.random() * 4.8,
+        offsetY: 1.0 + Math.random() * 4.2,
+        offsetZ: Math.random() * 36.0,
+        speed: 55 + Math.random() * 35
       });
     }
   }
@@ -659,7 +667,7 @@ export class ParticleSystem {
     }
   }
 
-  update(delta, playerZ, speed) {
+  update(delta, playerZ, speed, bikeX = 0, isNitro = false) {
     // 1. Mettre à jour la fumée, étincelles et confettis
     for (let i = this.particles.length - 1; i >= 0; i--) {
       const p = this.particles[i];
@@ -843,8 +851,12 @@ export class ParticleSystem {
       }
     }
 
-    // 10. Lignes de vitesse dynamiques
-    const showSpeedLines = speed > 22;
+    // 10. Lignes de vitesse dynamiques grand angle & boost Nitro
+    const showSpeedLines = speed > 13.5 || isNitro;
+    const currentMat = isNitro ? (this.speedLineMats ? this.speedLineMats.nitro : this.sharedMats.speedLine)
+      : (speed > 24 ? (this.speedLineMats ? this.speedLineMats.amber : this.sharedMats.speedLine)
+      : (this.speedLineMats ? this.speedLineMats.white : this.sharedMats.speedLine));
+
     this.speedLines.forEach(sl => {
       if (!showSpeedLines) {
         sl.mesh.visible = false;
@@ -852,16 +864,27 @@ export class ParticleSystem {
       }
 
       sl.mesh.visible = true;
-      sl.offsetZ -= sl.speed * delta;
-
-      if (sl.offsetZ < -5) {
-        sl.offsetZ = 25 + Math.random() * 15;
-        sl.offsetX = (Math.random() - 0.5) * 6.5;
-        sl.offsetY = 0.4 + Math.random() * 2.2;
+      if (currentMat && sl.mesh.material !== currentMat) {
+        sl.mesh.material = currentMat;
       }
 
+      // Élongation dynamique selon la vitesse pure
+      const stretchZ = Math.min(2.8, 1.0 + (speed / 18.0) * (isNitro ? 1.6 : 1.0));
+      sl.mesh.scale.set(1.0, stretchZ, 1.0);
+
+      const effectiveSpeed = (sl.speed + speed * 1.8) * (isNitro ? 1.45 : 1.0);
+      sl.offsetZ -= effectiveSpeed * delta;
+
+      if (sl.offsetZ < -8) {
+        sl.offsetZ = 24 + Math.random() * 18;
+        sl.relAngle = Math.random() * Math.PI * 2;
+        sl.radius = 2.4 + Math.random() * 5.2;
+        sl.offsetY = 1.0 + Math.random() * 4.4;
+      }
+
+      const worldX = bikeX + Math.cos(sl.relAngle) * sl.radius;
       sl.mesh.position.set(
-        sl.offsetX,
+        worldX,
         sl.offsetY,
         playerZ + sl.offsetZ
       );

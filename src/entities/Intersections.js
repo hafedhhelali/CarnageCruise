@@ -419,7 +419,7 @@ export class IntersectionManager {
 
     carGroup.userData.wheels = wheels;
 
-    // 4. Optiques avant LED et bande de feux arrière
+    // 4. Optiques avant LED et bande de feux arrière avec faisceaux volumétriques
     const headMat = new THREE.MeshBasicMaterial({ color: 0xfffa65 });
     const tailMat = new THREE.MeshBasicMaterial({ color: 0xff1744 });
 
@@ -429,6 +429,23 @@ export class IntersectionManager {
     const lightR = new THREE.Mesh(lightGeo, headMat);
     lightR.position.set(chassisL / 2 + 0.02, chassisY + 0.12, -chassisW * 0.32);
     carGroup.add(lightL, lightR);
+
+    // Faisceaux volumétriques de phares (Headlight Beams projetés vers l'avant)
+    const beamGeo = new THREE.ConeGeometry(0.65, 8.5, 8, 1, true);
+    const beamMat = new THREE.MeshBasicMaterial({
+      color: 0xfff9c4,
+      transparent: true,
+      opacity: 0.18,
+      depthWrite: false,
+      side: THREE.DoubleSide
+    });
+    const beamL = new THREE.Mesh(beamGeo, beamMat);
+    beamL.rotation.z = -Math.PI / 2;
+    beamL.position.set(chassisL / 2 + 4.25, chassisY + 0.1, chassisW * 0.32);
+    const beamR = new THREE.Mesh(beamGeo, beamMat);
+    beamR.rotation.z = -Math.PI / 2;
+    beamR.position.set(chassisL / 2 + 4.25, chassisY + 0.1, -chassisW * 0.32);
+    carGroup.add(beamL, beamR);
 
     // Barre LED rouge continue à l'arrière
     const lightbar = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.12, chassisW * 0.85), tailMat);
@@ -461,8 +478,8 @@ export class IntersectionManager {
     nodeGroup.position.set(curveX, 0, zPos);
     nodeGroup.rotation.y = curveAngle;
 
-    // 1. Chaussée transversale large (Avenue croisée 52m de long x 16m de large)
-    const crossRoadGeo = new THREE.PlaneGeometry(54, 16);
+    // 1. Chaussée transversale large (Avenue perpendiculaire prolongée 96m x 18m)
+    const crossRoadGeo = new THREE.PlaneGeometry(96, 18);
     const crossRoadMat = new THREE.MeshToonMaterial({ color: 0x222a35 });
     const crossRoad = new THREE.Mesh(crossRoadGeo, crossRoadMat);
     crossRoad.rotation.x = -Math.PI / 2;
@@ -472,13 +489,73 @@ export class IntersectionManager {
 
     // Ligne centrale discontinue jaune/blanche sur l'avenue transversale
     const crossCenterLineMat = new THREE.MeshBasicMaterial({ color: 0xf1c40f, transparent: true, opacity: 0.85 });
-    for (let cX = -24; cX <= 24; cX += 4.5) {
+    for (let cX = -44; cX <= 44; cX += 4.5) {
       if (Math.abs(cX) < 6.0) continue; // Laisser le centre du carrefour ouvert
       const dash = new THREE.Mesh(new THREE.PlaneGeometry(2.5, 0.3), crossCenterLineMat);
       dash.rotation.x = -Math.PI / 2;
       dash.position.set(cX, 0.025, 0);
       nodeGroup.add(dash);
     }
+
+    // 1b. Immeubles et façades haussmanniennes longeant l'avenue perpendiculaire
+    // Les voitures traversent entre de vrais immeubles au lieu de surgir du vide !
+    const crossBldgColors = [0xdfd5c6, 0xeee3d3, 0xd4c5b3, 0xc8b8a6, 0xede4d3];
+    const roofMat = new THREE.MeshToonMaterial({ color: 0x2f3542 });
+    const shopColors = [0x800020, 0x1e372f, 0x0c2461, 0xb33939];
+    const shopWindowMat = new THREE.MeshBasicMaterial({ color: 0xffe6a2, transparent: true, opacity: 0.85 });
+    const crossSidewalkMat = new THREE.MeshToonMaterial({ color: 0x95a5a6 });
+    const crossCurbMat = new THREE.MeshToonMaterial({ color: 0xdcdde1 });
+
+    [-1, 1].forEach(zSide => {
+      const bldgZ = zSide * 15.5;
+      const walkZ = zSide * 10.0;
+      const curbZ = zSide * 8.6;
+
+      // Trottoirs continus de l'avenue transversale
+      [-29.5, 29.5].forEach(walkX => {
+        const walkMesh = new THREE.Mesh(new THREE.BoxGeometry(30, 0.32, 2.8), crossSidewalkMat);
+        walkMesh.position.set(walkX, 0.16, walkZ);
+        nodeGroup.add(walkMesh);
+
+        const curbMesh = new THREE.Mesh(new THREE.BoxGeometry(30, 0.36, 0.3), crossCurbMat);
+        curbMesh.position.set(walkX, 0.18, curbZ);
+        nodeGroup.add(curbMesh);
+      });
+
+      // Alignement de 6 immeubles haussmanniens de chaque côté
+      [-39, -30, -21, 21, 30, 39].forEach((bX, idx) => {
+        const bHeight = 11.0 + ((idx * 3 + Math.abs(bX)) % 6);
+        const bMat = new THREE.MeshToonMaterial({ color: crossBldgColors[(idx + Math.abs(bX)) % crossBldgColors.length] });
+        const bldg = new THREE.Mesh(new THREE.BoxGeometry(8.4, bHeight, 8.5), bMat);
+        bldg.position.set(bX, bHeight / 2, bldgZ);
+        nodeGroup.add(bldg);
+
+        // Toit mansardé en zinc
+        const roof = new THREE.Mesh(new THREE.BoxGeometry(8.3, 2.6, 8.4), roofMat);
+        roof.position.set(bX, bHeight + 1.3, bldgZ);
+        nodeGroup.add(roof);
+
+        // Auvent de boutique rez-de-chaussée
+        const awningMat = new THREE.MeshToonMaterial({ color: shopColors[(idx + 2) % shopColors.length] });
+        const awning = new THREE.Mesh(new THREE.BoxGeometry(7.2, 0.4, 1.4), awningMat);
+        awning.rotation.x = zSide > 0 ? -0.25 : 0.25;
+        awning.position.set(bX, 2.6, bldgZ - (zSide * 4.4));
+        nodeGroup.add(awning);
+
+        // Vitrine chaleureuse de commerce
+        const shopWin = new THREE.Mesh(new THREE.PlaneGeometry(6.6, 2.0), shopWindowMat);
+        shopWin.rotation.y = zSide > 0 ? Math.PI : 0;
+        shopWin.position.set(bX, 1.2, bldgZ - (zSide * 4.26));
+        nodeGroup.add(shopWin);
+      });
+
+      // Candélabres sur l'avenue perpendiculaire
+      [-35, -23, 23, 35].forEach(lampX => {
+        const cLamp = this.createStreetLampMesh();
+        cLamp.position.set(lampX, 0.32, walkZ);
+        nodeGroup.add(cLamp);
+      });
+    });
 
     // 2. 4 Trottoirs d'angles arrondis réalistes en granit gris clair avec chanfrein
     const sidewalkMat = new THREE.MeshToonMaterial({ color: 0x95a5a6 });
@@ -624,7 +701,7 @@ export class IntersectionManager {
     }
   }
 
-  update(delta, playerZ, bikeX, bikeSpeed, onRedLightViolation, onStopAtRedLightBonus, roadCurveFunc = null, roadAngleFunc = null, onApproachingRedLight = null) {
+  update(delta, playerZ, bikeX, bikeSpeed, onRedLightViolation, onStopAtRedLightBonus, roadCurveFunc = null, roadAngleFunc = null, onApproachingRedLight = null, onCrossingCarCollision = null, onCrossingNearMiss = null) {
     // Génération continue des carrefours réalistes
     if (this.nextSpawnZ < playerZ + 260) {
       this.spawnIntersection(this.nextSpawnZ, roadCurveFunc, roadAngleFunc);
@@ -715,10 +792,27 @@ export class IntersectionManager {
       }
     });
 
-    // 4. Déplacement fluide des véhicules transversaux (ambiance urbaine sans accident)
+    // 4. Déplacement, voltige physique et collisions des véhicules transversaux
     for (let i = this.crossingCars.length - 1; i >= 0; i--) {
       const car = this.crossingCars[i];
       if (!car.active) continue;
+
+      if (car.isWrecked) {
+        // Physique de voltige / projection spectaculaire en cas de carambolage T-Bone
+        car.mesh.position.y += car.vy * delta;
+        car.mesh.position.x += (car.vx || 0) * delta;
+        car.vy -= 26 * delta; // Gravité
+        car.mesh.rotation.x += (car.rotX || 5) * delta;
+        car.mesh.rotation.y += (car.rotY || 7) * delta;
+        car.mesh.rotation.z += (car.rotZ || 4) * delta;
+        car.wreckTimer = (car.wreckTimer || 0) + delta;
+
+        if (car.mesh.position.y < -3 || car.wreckTimer > 2.2) {
+          this.container.remove(car.mesh);
+          this.crossingCars.splice(i, 1);
+        }
+        continue;
+      }
 
       car.mesh.position.x += car.velX * delta;
 
@@ -729,8 +823,25 @@ export class IntersectionManager {
         });
       }
 
+      // Détection d'interaction avec le joueur (Carambolage T-Bone ou Frôlage)
+      const carWorldX = car.mesh.position.x;
+      const dx = Math.abs(bikeX - carWorldX);
+      const dz = Math.abs(playerZ - car.z);
+
+      if (dx < 2.5 && dz < 2.2 && !car.collisionHandled) {
+        car.collisionHandled = true;
+        if (onCrossingCarCollision) {
+          onCrossingCarCollision(car);
+        }
+      } else if (dx < 4.4 && dz < 3.2 && !car.nearMissAwarded && !car.collisionHandled) {
+        car.nearMissAwarded = true;
+        if (onCrossingNearMiss) {
+          onCrossingNearMiss(car);
+        }
+      }
+
       // Supprimer quand la voiture sort du champ
-      if (Math.abs(car.mesh.position.x) > 42) {
+      if (Math.abs(car.mesh.position.x) > 48) {
         this.container.remove(car.mesh);
         this.crossingCars.splice(i, 1);
       }
