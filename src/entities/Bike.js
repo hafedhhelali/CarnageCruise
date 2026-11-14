@@ -2429,7 +2429,7 @@ export class Bike {
         const whipCycle = Math.sin(this.bouncePhase * 1.8);
         this.riderWhip.rotation.x = -Math.PI / 4 + whipCycle * 0.45;
         this.riderWhip.rotation.z = Math.PI / 5 + Math.cos(this.bouncePhase * 1.8) * 0.2;
-        if (whipCycle > 0.94 && (!this.lastWhipSnap || Date.now() - this.lastWhipSnap > 1400)) {
+        if (whipCycle > 0.94 && gameState && gameState.currentMode === 'PLAYING' && speed > 0.5 && (!this.lastWhipSnap || Date.now() - this.lastWhipSnap > 1400)) {
           this.lastWhipSnap = Date.now();
           soundManager.playWhipCrack();
         }
@@ -2513,18 +2513,28 @@ export class Bike {
     }
 
     // --- GESTION VISUELLE DYNAMIQUE DU NITRO & DU HALO UNDERGLOW FUTURISTE ---
+    const isOrganicEntity = ['run_ak47', 'run_chainsaw', 'cheval'].includes(this.currentBikeId);
     if (gameState && gameState.isNitroActive) {
-      this.nitroFlames.visible = true;
-      const jitterZ = 1.0 + Math.random() * 0.45;
-      const jitterX = 1.0 + Math.random() * 0.25;
-      this.flameL.scale.set(jitterX, jitterX, jitterZ);
-      this.flameR.scale.set(jitterX, jitterX, jitterZ);
-      if (this.nitroFlameMat) {
-        this.nitroFlameMat.opacity = 0.75 + Math.random() * 0.25;
-      }
-      if (this.underglowMat) {
-        this.underglowMat.color.setHex(0x00f2fe);
-        this.underglowMat.opacity = 0.42 + Math.sin(this.bouncePhase * 6.0) * 0.08;
+      if (isOrganicEntity) {
+        // Homme et cheval sous boisson énergétique : aucune flamme de réacteur
+        this.nitroFlames.visible = false;
+        if (this.underglowMat) {
+          this.underglowMat.color.setHex(0x2ed573);
+          this.underglowMat.opacity = 0.28 + Math.sin(this.bouncePhase * 6.0) * 0.06;
+        }
+      } else {
+        this.nitroFlames.visible = true;
+        const jitterZ = 1.0 + Math.random() * 0.45;
+        const jitterX = 1.0 + Math.random() * 0.25;
+        this.flameL.scale.set(jitterX, jitterX, jitterZ);
+        this.flameR.scale.set(jitterX, jitterX, jitterZ);
+        if (this.nitroFlameMat) {
+          this.nitroFlameMat.opacity = 0.75 + Math.random() * 0.25;
+        }
+        if (this.underglowMat) {
+          this.underglowMat.color.setHex(0x00f2fe);
+          this.underglowMat.opacity = 0.42 + Math.sin(this.bouncePhase * 6.0) * 0.08;
+        }
       }
     } else {
       this.nitroFlames.visible = false;
@@ -2650,6 +2660,7 @@ export class Bike {
   }
 
   triggerAttack() {
+    if (gameState && gameState.currentMode !== 'PLAYING') return null;
     if (this.currentBikeId === 'cheval') {
       this.isAttacking = true;
       this.attackTimer = 0.38;

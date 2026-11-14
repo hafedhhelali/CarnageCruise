@@ -70,28 +70,11 @@ export class SoundManager {
       this.musicBus.gain.setValueAtTime(1.0, this.ctx.currentTime);
 
       // Delay feedback (r�verb simple et l�g�re)
-      this.musicDelay = this.ctx.createDelay(1.0);
-      this.musicDelay.delayTime.setValueAtTime(0.28, this.ctx.currentTime);
-
-      this.musicFeedback = this.ctx.createGain();
-      this.musicFeedback.gain.setValueAtTime(0.35, this.ctx.currentTime);
-
-      this.musicWetGain = this.ctx.createGain();
-      this.musicWetGain.gain.setValueAtTime(0.25, this.ctx.currentTime);
-
+      // Routage direct sans écho/delay sur le bus musical
       this.musicDryGain = this.ctx.createGain();
-      this.musicDryGain.gain.setValueAtTime(0.85, this.ctx.currentTime);
-
-      // Routage : musicBus -> dry -> masterCompressor
-      //           musicBus -> delay -> feedback -> delay (boucle) -> wet -> masterCompressor
+      this.musicDryGain.gain.setValueAtTime(1.0, this.ctx.currentTime);
       this.musicBus.connect(this.musicDryGain);
       this.musicDryGain.connect(this.masterCompressor);
-
-      this.musicBus.connect(this.musicDelay);
-      this.musicDelay.connect(this.musicFeedback);
-      this.musicFeedback.connect(this.musicDelay);
-      this.musicDelay.connect(this.musicWetGain);
-      this.musicWetGain.connect(this.masterCompressor);
     }
   }
 
@@ -1952,7 +1935,7 @@ export class SoundManager {
 
   // --- MOTEUR AUDIO PROCÉDURAL MULTI-CORPS & SONS DE PILOTAGE EXPERTS ---
   startEngine() {
-    if (this.engineOsc || !this.ctx || this.isMutedSfx || this.isDestroyed) return;
+    if (this.engineOsc || !this.ctx || this.isMutedSfx || this.isDestroyed || this.isGameplayPaused) return;
     this.resumeContext();
 
     const dest = this.getMasterOutput();
@@ -1993,7 +1976,7 @@ export class SoundManager {
   }
 
   updateEngine(speedRatio) {
-    if (!this.engineOsc || !this.ctx || this.isDestroyed) return;
+    if (!this.engineOsc || !this.ctx || this.isDestroyed || this.isGameplayPaused) return;
     const now = this.ctx.currentTime;
     const clampedRatio = Math.max(0, Math.min(2.0, speedRatio));
 
@@ -2050,6 +2033,7 @@ export class SoundManager {
 
   // Coupe net et définitivement tous les sons de gameplay (moteur, musique de course, boucles)
   stopAllGameplaySounds() {
+    this.isGameplayPaused = false;
     this.stopEngine();
     this.stopMusic();
     if (this.musicTimer) {
@@ -2058,6 +2042,21 @@ export class SoundManager {
     }
     this.musicPlaying = false;
     this.currentTrack = null;
+  }
+
+  pauseGameplayAudio() {
+    this.isGameplayPaused = true;
+    this.wasMusicPlayingBeforePause = this.musicPlaying;
+    this.wasTrackBeforePause = this.currentTrack;
+    this.stopEngine();
+    this.stopMusic();
+  }
+
+  resumeGameplayAudio() {
+    this.isGameplayPaused = false;
+    if (this.wasMusicPlayingBeforePause && !this.isMutedMusic) {
+      this.startMusic(this.wasTrackBeforePause || 'RACE');
+    }
   }
 
   // Crépitement / Retour de flamme d'échappement (Pop & Crackle) à la décélération

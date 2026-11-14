@@ -99,6 +99,15 @@ assert(mainContent.includes('if (gameState.isBraking) {') && bikeContent.include
 assert(uiContent.includes('FREIN') && uiContent.includes('ARRÊT') && uiContent.includes('BOISSON ÉNERGÉTIQUE') && uiContent.includes('mode-engin') && uiContent.includes('mode-homme'), 'HUD Tactique : Boutons différenciés Engin (FREIN/NITRO) vs Homme (ARRÊT/BOISSON ÉNERGÉTIQUE)');
 assert(uiContent.includes('spawnBuildingDebris') && uiContent.includes('bridgeCars'), 'Destruction Ville : Animation cinématique skyline 3D avec effondrement physique des immeubles');
 
+// 10. Tests v0.9.54-beta : Cohérence homme/cheval, pause audio, suppression écho, vitesses logiques
+const soundContent = fs.readFileSync(path.join(rootDir, 'src', 'audio', 'SoundManager.js'), 'utf8');
+assert(mainContent.includes("isFootOnly && (propType === 'tree' || propType === 'lamp')"), 'Physique : Homme seul à pied ne renverse pas les arbres ni les poteaux');
+assert(mainContent.includes('if (!isNonMotorized) {') && mainContent.includes('spawnExhaustSmoke'), 'Particules : Aucune fumée d\'échappement ou de dérapage pour homme à pied et cheval');
+assert(bikeContent.includes('isOrganicEntity') && bikeContent.includes('this.nitroFlames.visible = false'), 'Visuel : Homme et cheval ne dégagent aucune flamme sous boisson énergétique');
+assert(soundContent.includes('pauseGameplayAudio()') && soundContent.includes('resumeGameplayAudio()') && mainContent.includes('soundManager.pauseGameplayAudio()'), 'Audio Pause : La pause coupe immédiatement moteur, course et musique');
+assert(!soundContent.includes('this.musicDelay'), 'Audio Qualité : Effet d\'écho gênant (musicDelay) supprimé du mixage musical');
+assert(gameStateContent.includes('maxSpeed: 6.7') && uiContent.includes('Math.round(bike.maxSpeed * 3.6)'), 'Équilibrage : Vitesses et paramètres des 14 engins/coureurs recalibrés logiquement (~24 km/h à pied)');
+
 console.log(`\n📊 RÉSULTAT DU CONTRÔLE QUALITÉ : ${passedTests}/${totalTests} tests réussis.`);
 if (passedTests === totalTests) {
   console.log('✨ Architecture certifiée propre, modulaire et conforme SOLID.');

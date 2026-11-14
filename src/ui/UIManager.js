@@ -2754,7 +2754,7 @@ export class UIManager {
         <div class="stat-item">
           <div style="display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 800;">
             <span class="stat-name">VITESSE</span>
-            <span style="color: #fffa65;">${bike.maxSpeed} km/h</span>
+            <span style="color: #fffa65;">${Math.round(bike.maxSpeed * 3.6)} km/h</span>
           </div>
           <div class="stat-gauge-bar">
             <div class="stat-gauge-fill" style="width: ${(bike.speedRating / 5) * 100}%;"></div>
@@ -3730,7 +3730,7 @@ ${gameState.isRuinsMode ? `
 
     if (speedVal) speedVal.textContent = data.speed;
     if (speedGauge) {
-      const pct = Math.min(100, Math.floor((data.speed / 160) * 100));
+      const pct = Math.min(100, Math.floor((data.speed / 220) * 100));
       speedGauge.style.width = `${pct}%`;
     }
     if (progressFill) {

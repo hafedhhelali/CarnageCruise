@@ -276,13 +276,17 @@ class GameApp {
         this.isPointerDown = false;
         this.steerInput = 0;
         gameState.setBraking(false);
-        soundManager.stopEngine();
+        soundManager.pauseGameplayAudio();
       } else if (action === 'RESUME') {
         gameState.currentMode = 'PLAYING';
         if (gameState.selectedBike) {
           gameState.targetSpeed = gameState.isRuinsMode ? 7.0 : gameState.selectedBike.maxSpeed;
         }
-        soundManager.startEngine();
+        soundManager.resumeGameplayAudio();
+        const isNonMotorized = gameState.selectedBike && ['run_ak47', 'run_chainsaw', 'cheval'].includes(gameState.selectedBike.id);
+        if (!isNonMotorized) {
+          soundManager.startEngine();
+        }
       } else if (action === 'CHANGE_BIKE_IN_GAME') {
         const bikeObj = payload;
         const bikeId = (bikeObj && bikeObj.id) ? bikeObj.id : (typeof bikeObj === 'string' ? bikeObj : storage.getEquippedBike());
@@ -302,6 +306,12 @@ class GameApp {
           this.bike.isCrashed = false;
           this.bike.mesh.position.x = prevWorldX;
           this.bike.mesh.position.z = prevZ;
+          const isNonMotorized = ['run_ak47', 'run_chainsaw', 'cheval'].includes(bikeId);
+          if (isNonMotorized) {
+            soundManager.stopEngine();
+          } else if (gameState.currentMode === 'PLAYING') {
+            soundManager.startEngine();
+          }
         }
       } else if (action === 'PREVIEW_BIKE' || action === 'BIKE_EQUIPPED') {
         const bikeId = (payload && payload.id) ? payload.id : payload;
@@ -653,8 +663,11 @@ class GameApp {
       }
 
       // 5. Son moteur réactif (ronronnement ralenti à l'arrêt, accélération dynamique)
+      const isNonMotorized = ['run_ak47', 'run_chainsaw', 'cheval'].includes(this.bike.currentBikeId);
       if (!this.hasCrossedFinish) {
-        soundManager.updateEngine(currentSpeed / 20.0);
+        if (gameState.currentMode === 'PLAYING' && !isNonMotorized) {
+          soundManager.updateEngine(currentSpeed / 20.0);
+        }
 
         // Modulation d'intensité dynamique de la musique sadique (CALM, TENSION, COMBO)
         if (gameState.isNitroActive || gameState.combo >= 3 || currentSpeed > 24) {
@@ -666,12 +679,14 @@ class GameApp {
         }
       }
 
-      // 6. Fumée d'échappement et fumée de dérapage au freinage
-      if (currentSpeed > 1.0) {
-        this.particles.spawnExhaustSmoke(this.bike.getExhaustPosition(), currentSpeed / 20.0);
-      }
-      if (gameState.isBraking && currentSpeed > 3.5) {
-        this.particles.spawnSkidSmoke(this.bike.mesh.position);
+      // 6. Fumée d'échappement et fumée de dérapage au freinage (uniquement engins motorisés)
+      if (!isNonMotorized) {
+        if (currentSpeed > 1.0) {
+          this.particles.spawnExhaustSmoke(this.bike.getExhaustPosition(), currentSpeed / 20.0);
+        }
+        if (gameState.isBraking && currentSpeed > 3.5) {
+          this.particles.spawnSkidSmoke(this.bike.mesh.position);
+        }
       }
 
       // 7. Génération et recyclage du monde 3D
@@ -821,6 +836,7 @@ class GameApp {
       }
 
       // 8d. Collisions avec le mobilier urbain et stands de rue (Poteaux, Arbres, Primeurs, Bouquinistes, Chariots) sur trottoir
+      const isFootOnly = ['run_ak47', 'run_chainsaw'].includes(this.bike.currentBikeId);
       if (!isFlyingCraft && this.environment.chunks) {
         this.environment.chunks.forEach(chunk => {
           if (chunk.userData && chunk.userData.props) {
@@ -836,6 +852,24 @@ class GameApp {
               const hitRadiusX = isStall ? 1.6 : 1.35;
 
               if (dZ < hitRadiusZ && dX < hitRadiusX) {
+                const propType = prop.userData.type || 'lamp';
+                // Un homme seul à pied ne peut pas déraciner un arbre ou abattre un poteau
+                if (isFootOnly && (propType === 'tree' || propType === 'lamp')) {
+                  const nowMs = performance.now();
+                  if (!prop.userData.lastBounceAt || nowMs - prop.userData.lastBounceAt > 450) {
+                    prop.userData.lastBounceAt = nowMs;
+                    const pushDir = (this.bike.mesh.position.x >= worldX) ? 1 : -1;
+                    this.bike.x += pushDir * 1.4;
+                    gameState.speed *= 0.35;
+                    this.engine.triggerCameraShake(0.28);
+                    Haptic.impactMedium();
+                    if (this.ui) {
+                      this.ui.spawnFloatingCombatText('', '💥 OBSTACLE SOLIDE !', '#ffa502', 50, 38);
+                    }
+                  }
+                  return;
+                }
+
                 prop.userData.isHit = true;
                 dailyMissions.onPropSmash();
 
@@ -1119,7 +1153,9 @@ class GameApp {
       this.bike.mesh.position.z = this.bike.z;
       this.bike.mesh.rotation.y = roadAngle;
 
-      soundManager.updateEngine(0.08); // Ralenti moteur doux à l'arrêt
+      if (!['run_ak47', 'run_chainsaw', 'cheval'].includes(this.bike.currentBikeId)) {
+        soundManager.updateEngine(0.08); // Ralenti moteur doux à l'arrêt
+      }
       this.environment.update(this.bike.z, delta);
       this.particles.update(delta, this.bike.z, 0);
       this.engine.updateCameraGameplay(delta, this.bike.mesh.position, 0);
