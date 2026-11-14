@@ -614,11 +614,12 @@ export class Traffic {
         // Suivre la trajectoire de la route en restant dans sa voie (+2.2m ou -2.2m)
         const curveX = roadCurveFunc ? roadCurveFunc(v.position.z) : 0;
         const targetX = curveX + v.userData.lane;
-        v.position.x += (targetX - v.position.x) * delta * 5.0;
+        v.position.x = targetX;
 
-        // Orientation naturelle avec la courbure
+        // Orientation naturelle exactement sur la tangente de la courbure
         const aheadX = roadCurveFunc ? roadCurveFunc(v.position.z + 3.0) : 0;
-        v.rotation.y = (aheadX - curveX) * 0.32;
+        const targetRotY = Math.atan2(aheadX - curveX, 3.0);
+        v.rotation.y += (targetRotY - v.rotation.y) * Math.min(1.0, delta * 12.0);
 
         // Détection de collision physique avec le bolide du joueur
         const dZ = Math.abs(v.position.z - playerZ);
@@ -645,7 +646,9 @@ export class Traffic {
       const amb = this.ambulance;
       amb.position.z += amb.userData.speed * delta;
       const curveX = roadCurveFunc ? roadCurveFunc(amb.position.z) : 0;
-      amb.position.x += (curveX + amb.userData.lane - amb.position.x) * delta * 5.0;
+      const aheadX = roadCurveFunc ? roadCurveFunc(amb.position.z + 3.0) : 0;
+      amb.position.x = curveX + amb.userData.lane;
+      amb.rotation.y = Math.atan2(aheadX - curveX, 3.0);
 
       // Clignotement alternatif des gyrophares bleu et rouge
       amb.userData.strobeTimer = (amb.userData.strobeTimer || 0) + delta;

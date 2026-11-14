@@ -328,8 +328,8 @@ export class Engine {
     const dampY = 1.0 - Math.exp(-9.5 * delta);
     const dampZ = 1.0 - Math.exp(-18.0 * delta);
 
-    // Placement caméra dans l'axe tangentiel du virage derrière le véhicule
-    const targetCamX = bikePosition.x - Math.sin(roadAngle) * 1.45;
+    // Placement caméra parfaitement centré dans l'axe du véhicule
+    const targetCamX = bikePosition.x - Math.sin(roadAngle * 0.28) * 1.85;
     const targetCamY = bikePosition.y + this.cameraOffset.y;
     const targetCamZ = bikePosition.z + this.cameraOffset.z;
 
@@ -348,10 +348,10 @@ export class Engine {
       this.shakeIntensity = 0;
     }
 
-    // LookAt lissé avec anticipation de la courbe routière à 18m devant le pilote
+    // LookAt lissé dans l'axe naturel du bolide (zéro rotation parasite en crabe)
     const lookAheadZ = 16.5 + Math.min(4.5, (bikeSpeed / 28.0) * 3.5);
     const lookTargetX = lookAheadRoadX !== null
-      ? (bikePosition.x * 0.55 + lookAheadRoadX * 0.45)
+      ? (bikePosition.x * 0.78 + lookAheadRoadX * 0.22)
       : bikePosition.x * 0.96;
     const lookTargetY = bikePosition.y + 1.25;
     const lookTargetZ = bikePosition.z + lookAheadZ;

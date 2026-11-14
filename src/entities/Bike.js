@@ -2262,7 +2262,7 @@ export class Bike {
     return true;
   }
 
-  update(delta, steerInput, speed) {
+  update(delta, steerInput, speed, roadAngle = 0) {
     // Gestion de l'invulnérabilité clignotante après relèvement
     if (this.invulnerableTimer > 0) {
       this.invulnerableTimer -= delta;
@@ -2337,7 +2337,8 @@ export class Bike {
     }
     this.wasOnSidewalk = onSidewalk;
 
-    this.targetLean = this.smoothedSteer * 0.35;
+    const curveBank = (speed > 2.0) ? (-roadAngle * 0.32) : 0;
+    this.targetLean = this.smoothedSteer * 0.35 + curveBank;
     this.currentLean += (this.targetLean - this.currentLean) * Math.min(1.0, delta * 8.2);
 
     // Positionnement et rotation du bolide

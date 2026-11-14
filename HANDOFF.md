@@ -8,7 +8,7 @@ Ce document fournit l'ensemble des informations de conception, d'architecture lo
 ## 1. VISION DU PROJET & SPÉCIFICATIONS
 
 - **Genre** : Jeu de course d'arcade urbain / Runner 3D burlesque
-- **Version actuelle** : **0.9.50-beta** (Build / versionCode 60 - Canal 0.x.x BETA)
+- **Version actuelle** : **0.9.51-beta** (Build / versionCode 61 - Canal 0.x.x BETA)
 - **Signature & Clé** : Keystore permanent dédié `android/app/CarnageCruise.keystore` (validité 10 000 jours, EOMedia Paris)
 - **Plateforme cible** : Android (Smartphones & Tablettes) + WebGL Mobile/Desktop
 - **Direction artistique** : Cartoon 3D éclatant, physique burlesque (slapstick), animations hilarantes et dynamiques, identité française affirmée.
@@ -422,5 +422,27 @@ Ce document fournit l'ensemble des informations de conception, d'architecture lo
 - **Distance de Course Étendue** : portée de `1400m` à `2400m` (`1800m` en mission cataclysme).
 - **Multiplicateur de Combo Progressif** : `1 + (combo - 1) * 0.25` (plafonné à `×3.25` en combo ×10 au lieu de `×10`), évitant l'explosion instantanée du score.
 - **Équilibrage des Armes Explosives & Cibles** : réduction des points bruts d'obus/missiles/plasma (`380..420` sur véhicule, `220` sur piéton AoE), suppression du double comptage sur les carambolages et rehaussement des `targetScore` de toutes les villes (`×2.15`), demandant ~45 à 65 secondes d'action soutenue pour atteindre les 100%.
+
+---
+
+## 14. CORRECTIFS DE PILOTAGE EN COURBE, PASSAGES PIÉTONS, BANDES ROUTIÈRES & SÉLECTEUR D'ENGIN EN PAUSE (v0.9.51-beta / Build 61)
+
+### A. Pilotage Naturel dans les Virages & Suppression des Panneaux de Virage (`src/entities/Environment.js`, `src/entities/Bike.js`, `src/main.js`, `src/core/Engine.js`, `src/entities/Traffic.js`)
+- **Courbes Progressifs Fluides (`getRoadCenterX`)** : remplacement de la triple ondulation haute fréquence par une courbe cosinusoïdale purement progressive `ramp * ((Math.cos(u) - 1.0) * 4.5)` calée sur les carrefours (`Z = 95 + k*160`), éliminant les changements d'inflexion brusques en milieu de bloc.
+- **Suppression de la Rotation en Crabe** : suppression du déport centrifuge contradictoire qui poussait le véhicule dans le sens opposé à l'orientation de son nez, lissage de `rotation.y` sur `this.bike.smoothedSteer`, inclinaison naturelle dans le virage (`curveBank = -roadAngle * 0.32`) et alignement caméra cohérent.
+- **Suppression des Indications de Virage** : retrait complet des panneaux chevrons de signalisation de virage (`isCurveChevron`) sur les trottoirs.
+
+### B. Traversée des Piétons Strictement sur les Passages Cloutés (`src/entities/Characters.js`)
+- **Ancrage Exclusif aux Passages Zébrés des Carrefours** : les piétons traversants (`isCrossing = true`) sont désormais positionnés uniquement sur les passages cloutés des carrefours (`nearestInterZ ± 8.0m`, avec `nearestInterZ = 95 + k*160`) au lieu de l'ancien modulo `60m`.
+- **Maintien Strict des Piétons de Trottoir** : mémorisation de `char.sidewalkSide` et verrouillage sur la largeur du trottoir (`curveX + side * 5.2`), empêchant tout piéton de trottoir de traverser la chaussée dans les courbes ou lors d'une fuite.
+
+### C. Visibilité Permanente des Bandes Blanches Centrales (`src/entities/Environment.js`)
+- **Correction du Frustum Culling & de l'Enfouissement** : séparation du flag `isCenterStripe: true` (pour ne jamais abaisser les bandes sous le sol comme les trottoirs), désactivation du `frustumCulled` (`frustumCulled = false`) et recalcul automatique de `mesh.geometry.computeBoundingSphere()` après déformation des rubans, garantissant que les traits de route restent visibles en permanence quand on avance (et ne disparaissent qu'en mode Ruines après une explosion).
+
+### D. Libellé Explicite « Bombe Nucléaire » & Changement d'Engin en Course (`src/ui/UIManager.js` & `src/ui/style.css`)
+- **Remplacement de l'acronyme « ADM »** : remplacé partout par **« BOMBE NUCLÉAIRE »** / **« ☢️ NUCLÉAIRE »** pour une compréhension immédiate.
+- **Ergonomie de la Barre Supérieure HUD** : refonte de `.hud-top-bar` avec pilule de score nette à gauche, carte d'objectif lisible sans troncature au centre, et nouveau bouton combiné **« ⏸ PAUSE / ENGIN »** affichant l'icône du véhicule actif à droite.
+- **Sélecteur d'Engin en Direct dans le Menu Pause (`showPauseModal`)** : grille interactive de tous les engins débloqués permettant de changer d'engin instantanément en pleine course (`CHANGE_BIKE_IN_GAME`) avec mise à jour immédiate du modèle 3D et des commandes d'arme du HUD, plus accès direct au Garage complet.
+
 
 

@@ -272,22 +272,17 @@ export class Environment {
     this.createFinishArch(this.finishDistance);
   }
 
-  // Calcul mathématique de la courbure de la rue selon Z (grands virages en S et chicanes synchronisés avec les carrefours)
+  // Calcul mathématique de la courbure de la rue selon Z (grands virages progressifs synchronisés avec les carrefours)
   getRoadCenterX(z) {
     // Villes à route droite explicite : pas de virages
     if (this.cityTheme && this.cityTheme.roadStraight) return 0;
-    // Transition progressive sur les 35 premiers mètres au départ pour un lancement fluide
-    const ramp = Math.min(1.0, Math.max(0.0, (z - 10) / 35.0));
+    // Transition progressive sur les 40 premiers mètres au départ pour un lancement fluide
+    const ramp = Math.min(1.0, Math.max(0.0, (z - 15.0) / 40.0));
     // Phase calée sur l'espacement des carrefours (Z = 95 + k*160) :
-    // À chaque carrefour, u = k*PI donc sin(u) = 0 et la tangente dX/dZ = 0 (carrefour parfaitement droit et d'équerre),
-    // tandis qu'entre deux carrefours la chaussée décrit de grands virages en S et chicanes (+/- 13.5m) !
+    // À chaque carrefour, u = k*PI donc la dérivée d(cos(u))/dz = -sin(u) = 0 (carrefour parfaitement droit et d'équerre),
+    // et entre deux carrefours la route décrit une seule courbe ample, fluide et naturelle sans oscillation parasite !
     const u = (Math.PI * (z - 95.0)) / 160.0;
-    const s = Math.sin(u);
-    return ramp * (
-      (Math.cos(u) - 1.0) * 6.5 +
-      Math.sin(u * 2.0) * s * 3.8 +
-      s * s * Math.sin(z * 0.009) * 5.2
-    );
+    return ramp * ((Math.cos(u) - 1.0) * 4.5);
   }
 
   getRoadAngle(z) {
@@ -1291,10 +1286,12 @@ export class Environment {
     roadGeo.userData = { basePos: Float32Array.from(roadGeo.attributes.position.array), isRoad: true };
     const road = new THREE.Mesh(roadGeo, roadMat);
     road.receiveShadow = true;
+    road.frustumCulled = false;
     chunk.add(road);
     chunk.userData.ribbons.push(road);
 
-    // Bandes blanches centrales subdivisées en rubans (déformées point par point avec la chaussée : 100% parallèles aux trottoirs dans tous les virages !)
+    // Bandes blanches centrales subdivisées en rubans (déformées point par point avec la chaussée :
+    // 100% parallèles aux trottoirs et visibles en permanence sauf après explosion en mode Ruines !)
     if (!this.isRuinsMode) {
       const stripeTemplate = new THREE.PlaneGeometry(0.18, 3.4, 1, 8);
       stripeTemplate.rotateX(-Math.PI / 2);
@@ -1302,9 +1299,10 @@ export class Environment {
       for (let i = 0; i < numStripes; i++) {
         const localZ = -this.chunkLength / 2 + i * 7 + 3.5;
         const sGeo = stripeTemplate.clone();
-        sGeo.translate(0, 0.016, localZ);
-        sGeo.userData = { basePos: Float32Array.from(sGeo.attributes.position.array), isSidewalkOrCurb: true };
+        sGeo.translate(0, 0.018, localZ);
+        sGeo.userData = { basePos: Float32Array.from(sGeo.attributes.position.array), isCenterStripe: true };
         const stripe = new THREE.Mesh(sGeo, stripeMat);
+        stripe.frustumCulled = false;
         chunk.add(stripe);
         chunk.userData.ribbons.push(stripe);
       }
@@ -1317,6 +1315,7 @@ export class Environment {
       geo.userData = { basePos: Float32Array.from(geo.attributes.position.array), isSidewalkOrCurb: true };
       const mesh = new THREE.Mesh(geo, yPos < 0.14 ? sidewalkMat : curbMat);
       mesh.receiveShadow = true;
+      mesh.frustumCulled = false;
       chunk.add(mesh);
       chunk.userData.ribbons.push(mesh);
     };
@@ -1384,10 +1383,12 @@ export class Environment {
           pos.setXYZ(i, bx + roadX, finalY, bz);
         }
         pos.needsUpdate = true;
+        mesh.frustumCulled = false;
+        mesh.geometry.computeBoundingSphere();
       });
     }
 
-    // 2. Alignement dynamique des immeubles, monuments, arbres, réverbères, panneaux chevrons et bandes
+    // 2. Alignement dynamique des immeubles, monuments, arbres, réverbères et stands
     chunk.children.forEach(child => {
       if (!child.userData || child.userData.localZ === undefined) return;
       const worldZ = zPos + child.userData.localZ;
@@ -1408,20 +1409,6 @@ export class Environment {
         const clearance = child.userData.interClearance || 12.5;
         const inIntersection = (nearestInterZ >= 80 && Math.abs(worldZ - nearestInterZ) <= clearance);
         child.visible = !inIntersection;
-      }
-
-      // Mise à jour dynamique des panneaux chevrons de virage (visibles uniquement dans les courbes marquées)
-      if (child.userData.isCurveChevron) {
-        const curv = this.getRoadCurvature(worldZ);
-        const side = child.userData.side;
-        // Placé à l'extérieur du virage : si la route tourne à droite (curv > 0), extérieur à gauche (side = -1)
-        const isOutsideBend = (curv > 0.0011 && side === -1) || (curv < -0.0011 && side === 1);
-        const nearestInterZ = Math.round((worldZ - 95) / 160) * 160 + 95;
-        const nearInter = (nearestInterZ >= 80 && Math.abs(worldZ - nearestInterZ) <= 15.0);
-        child.visible = isOutsideBend && !nearInter;
-        if (child.visible && child.userData.signBoard && this.sharedMats) {
-          child.userData.signBoard.material = curv > 0 ? this.sharedMats.chevronMatR : this.sharedMats.chevronMatL;
-        }
       }
     });
   }
@@ -2300,33 +2287,7 @@ export class Environment {
       }
     });
 
-    // 4. Panneaux lumineux de signalisation de virage (Chevrons <<< / >>>) sur l'extérieur des courbes
-    [-18, 12].forEach(cz => {
-      [-1, 1].forEach(side => {
-        const chevGroup = new THREE.Group();
-        const chevX = side * 4.42;
-        chevGroup.position.set(chevX, 0, cz);
-        const post = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.055, 1.85, 6), lampMat);
-        post.position.y = 0.92;
-        const board = new THREE.Mesh(
-          new THREE.BoxGeometry(1.05, 0.52, 0.06),
-          this.sharedMats?.chevronMatR || lampMat
-        );
-        board.position.set(0, 1.75, 0);
-        chevGroup.add(post, board);
-        chevGroup.userData = {
-          baseX: chevX,
-          localZ: cz,
-          baseRotY: side * -0.18,
-          isCurveChevron: true,
-          side,
-          signBoard: board
-        };
-        chunk.add(chevGroup);
-      });
-    });
-
-    // 5. Stand de rue authentique et pittoresque (primeurs, bouquinistes, marchand ambulant, fleuriste)
+    // 4. Stand de rue authentique et pittoresque (primeurs, bouquinistes, marchand ambulant, fleuriste)
     const stallTypes = ['stall_primeur', 'stall_bouquiniste', 'stall_streetfood', 'stall_fleuriste'];
     const chunkHash = Math.abs(Math.round(chunk.position.z / 60));
     const stallType = stallTypes[chunkHash % stallTypes.length];

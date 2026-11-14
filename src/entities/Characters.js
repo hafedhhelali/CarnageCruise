@@ -747,17 +747,25 @@ export class CharacterSystem {
         char.isOnSidewalk = !isCrosser;
 
         if (isCrosser) {
-          // Piéton traversant sur un passage piéton
-          // Arrondi vers le passage piéton le plus proche
-          const crosswalkZ = Math.round(newZ / 60) * 60;
+          // Piéton traversant EXCLUSIVEMENT sur les passages piétons zébrés des carrefours (Z = 95 + k*160 ± 8.0m)
+          let nearestInterZ = Math.max(95, Math.round((newZ - 95) / 160) * 160 + 95);
+          if (nearestInterZ - 8.0 < playerZ + 28) {
+            nearestInterZ += 160;
+          }
+          const crosswalkSideOffset = (idx % 2 === 0) ? -8.0 : 8.0;
+          const crosswalkZ = nearestInterZ + crosswalkSideOffset;
+          const crossCurveX = roadCurveFunc ? roadCurveFunc(crosswalkZ) : 0;
           const startSide = Math.random() > 0.5 ? 1 : -1;
+          const startProgress = (Math.random() - 0.5) * 6.5; // Répartis sur la largeur du passage clouté
           char.crossDirection = -startSide;
-          char.group.position.set(curveX + startSide * 5.2, 0.02, crosswalkZ);
+          char.crosswalkZ = crosswalkZ;
+          char.group.position.set(crossCurveX + startProgress, 0.02, crosswalkZ);
           char.group.rotation.set(0, char.crossDirection > 0 ? Math.PI / 2 : -Math.PI / 2, 0);
         } else {
-          // Piéton marchant le long du trottoir (gauche ou droite)
+          // Piéton marchant strictement le long du trottoir (gauche ou droite, jamais sur la chaussée)
           const side = (idx % 2 === 0 ? 1 : -1);
-          const sidewalkOffset = side * (4.8 + Math.random() * 1.6);
+          const sidewalkOffset = side * (4.85 + Math.random() * 1.45);
+          char.sidewalkSide = side;
           char.walkDirection = Math.random() > 0.5 ? 1 : -1;
           char.group.position.set(curveX + sidewalkOffset, 0.25, newZ);
           char.group.rotation.set(0, char.walkDirection > 0 ? 0 : Math.PI, 0);
@@ -877,14 +885,26 @@ export class CharacterSystem {
         if (shouldFlee) {
           char.isFleeing = true;
           char.fleeTimer += delta;
+          const fleeCurveX = roadCurveFunc ? roadCurveFunc(char.group.position.z) : 0;
 
-          if (char.fleeDirectionX === 0) {
+          if (char.isOnSidewalk) {
+            // Un piéton sur le trottoir fuit TOUJOURS vers l'extérieur du trottoir, jamais vers le milieu de la route !
+            char.fleeDirectionX = char.sidewalkSide || (char.group.position.x >= fleeCurveX ? 1 : -1);
+          } else if (char.fleeDirectionX === 0) {
             char.fleeDirectionX = char.group.position.x >= bikeX ? 1 : -1;
           }
 
           // Sprint rapide vers le bord
           const sprintSpeed = char.typeDef.speed * 2.4;
           char.group.position.x += char.fleeDirectionX * sprintSpeed * delta;
+          if (char.isOnSidewalk) {
+            const side = char.sidewalkSide || 1;
+            const relX = (char.group.position.x - fleeCurveX) * side;
+            const clampedRelX = Math.max(4.75, Math.min(6.75, relX));
+            char.group.position.x = fleeCurveX + side * clampedRelX;
+          } else if (char.crosswalkZ !== undefined) {
+            char.group.position.z = char.crosswalkZ;
+          }
 
           // Orientation vers la fuite
           char.group.rotation.y = char.fleeDirectionX > 0 ? Math.PI / 2 : -Math.PI / 2;
@@ -907,7 +927,7 @@ export class CharacterSystem {
           char.legL.rotation.x = legAngle;
           char.legR.rotation.x = -legAngle;
 
-          if (Math.abs(char.group.position.x) > 4.8) {
+          if (Math.abs(char.group.position.x - fleeCurveX) > 4.8) {
             char.armL.rotation.x = 0;
             char.armR.rotation.x = 0;
             if (char.mouth) char.mouth.scale.set(1.1, 0.6, 0.5);
@@ -956,25 +976,28 @@ export class CharacterSystem {
           }
 
           if (char.isCrossing) {
-            // Traverse la chaussée sur le passage piéton : TOUJOURS aligné dans le sens de la marche !
+            // Traverse la chaussée EXCLUSIVEMENT sur le passage piéton du carrefour : TOUJOURS aligné dans le sens de la marche !
+            if (char.crosswalkZ !== undefined) {
+              char.group.position.z = char.crosswalkZ;
+            }
             char.group.position.x += char.crossDirection * char.typeDef.speed * delta * 1.1;
             char.group.position.y = 0.02;
             const curveX = roadCurveFunc ? roadCurveFunc(char.group.position.z) : 0;
-            // Quand il atteint l'autre trottoir, demi-tour
-            if (Math.abs(char.group.position.x - curveX) > 5.5) {
+            // Quand il atteint l'autre trottoir, demi-tour sur le passage piéton
+            if (Math.abs(char.group.position.x - curveX) > 5.3) {
               char.crossDirection *= -1;
+              char.group.position.x = curveX + Math.sign(char.group.position.x - curveX) * 5.3;
             }
             // Strictement orienté dans la direction du pas (+X = PI/2, -X = -PI/2) : ZÉRO marche arrière
             char.group.rotation.y = char.crossDirection > 0 ? Math.PI / 2 : -Math.PI / 2;
           } else {
-            // Marche le long du trottoir à altitude 0.25m
+            // Marche strictement le long de son trottoir à altitude 0.25m (ne traverse jamais la route)
             char.group.position.z += char.walkDirection * char.typeDef.speed * delta * 0.85;
             char.group.position.y = 0.25;
             const curveX = roadCurveFunc ? roadCurveFunc(char.group.position.z) : 0;
-            // Garder le piéton sur son trottoir (gauche ou droite)
-            const side = char.group.position.x > curveX ? 1 : -1;
-            const targetX = curveX + side * 5.2;
-            char.group.position.x += (targetX - char.group.position.x) * delta * 2.0;
+            const side = char.sidewalkSide || (char.group.position.x >= curveX ? 1 : -1);
+            char.sidewalkSide = side;
+            char.group.position.x = curveX + side * 5.2;
             // Strictement orienté dans le sens de marche le long du trottoir (+Z = 0, -Z = PI)
             char.group.rotation.y = char.walkDirection > 0 ? 0 : Math.PI;
           }

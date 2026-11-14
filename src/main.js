@@ -273,6 +273,22 @@ class GameApp {
       } else if (action === 'RESUME') {
         gameState.currentMode = 'PLAYING';
         soundManager.startEngine();
+      } else if (action === 'CHANGE_BIKE_IN_GAME') {
+        const bikeObj = payload;
+        const bikeId = (bikeObj && bikeObj.id) ? bikeObj.id : (typeof bikeObj === 'string' ? bikeObj : storage.getEquippedBike());
+        if (bikeId) {
+          storage.equipBike(bikeId);
+          gameState.selectBike(bikeId);
+          const prevX = this.bike.x;
+          const prevZ = this.bike.z;
+          const prevWorldX = this.bike.mesh.position.x;
+          this.bike.buildCurrentBike(bikeId);
+          this.bike.buildRider();
+          this.bike.x = prevX;
+          this.bike.z = prevZ;
+          this.bike.mesh.position.x = prevWorldX;
+          this.bike.mesh.position.z = prevZ;
+        }
       } else if (action === 'PREVIEW_BIKE' || action === 'BIKE_EQUIPPED') {
         const bikeId = (payload && payload.id) ? payload.id : payload;
         this.bike.buildCurrentBike(bikeId);
@@ -555,22 +571,15 @@ class GameApp {
       // 2. Déplacement de la moto vers l'avant selon la vitesse réelle
       this.bike.z += currentSpeed * delta;
 
-      // 3. Suivi de la courbure de la route (virages gauche/droite réalistes et déport centrifuge)
+      // 3. Suivi fluide de la courbure de la route (zéro dérapage en crabe ni rotation brusque)
       const roadCenterX = this.environment.getRoadCenterX(this.bike.z);
       const roadAngle = this.environment.getRoadAngle(this.bike.z);
-      const roadCurvature = this.environment.getRoadCurvature ? this.environment.getRoadCurvature(this.bike.z) : 0;
 
-      // Force centrifuge réaliste dans les virages : pousse progressivement vers l'extérieur de la courbe
-      if (!isFlyingCraft && currentSpeed > 2.5 && !this.bike.isCrashed) {
-        const centrifugalDrift = -roadCurvature * currentSpeed * delta * 14.5;
-        this.bike.x = THREE.MathUtils.clamp(this.bike.x + centrifugalDrift, -5.85, 5.85);
-      }
-
-      // 4. Physique de direction, suspension et inclinaison
-      this.bike.update(delta, currentSteer, currentSpeed);
+      // 4. Physique de direction, suspension et inclinaison naturelle
+      this.bike.update(delta, currentSteer, currentSpeed, roadAngle);
       this.bike.mesh.position.x = roadCenterX + this.bike.x;
       this.bike.mesh.position.z = this.bike.z;
-      this.bike.mesh.rotation.y = roadAngle - currentSteer * 0.14;
+      this.bike.mesh.rotation.y = roadAngle * 0.28 - (this.bike.smoothedSteer || 0) * 0.18;
 
       // 4b. EFFETS DE SURFACE : montée de trottoir & frôlement des façades
       // Montée sur le trottoir (|x| > 4.25m) : gerbe d'étincelles de bordure,

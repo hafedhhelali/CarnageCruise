@@ -1011,11 +1011,11 @@ export class UIManager {
               <span class="btn-enter-hero-desc">OBJECTIF : ${city.targetScore.toLocaleString('fr-FR')} PTS</span>
             </div>
           </button>
-          <button id="btn-wmd-city" class="btn-arcade btn-wmd-dock" title="Exterminer avec une Arme de Destruction Massive">
+          <button id="btn-wmd-city" class="btn-arcade btn-wmd-dock" title="Lancer une Bombe Nucléaire ou Frappe Stratégique">
             <span class="wmd-dock-icon">☢️</span>
             <div class="wmd-dock-texts">
-              <span class="wmd-dock-title">FRAPPE ADM</span>
-              <span class="wmd-dock-sub">${cityDestruction > 0 ? `${cityDestruction}% DÉTRUITE` : 'TACTIQUE'}</span>
+              <span class="wmd-dock-title">BOMBE NUCLÉAIRE</span>
+              <span class="wmd-dock-sub">${cityDestruction > 0 ? `${cityDestruction}% DÉTRUITE` : 'FRAPPE MASSIVE'}</span>
             </div>
           </button>
         ` : `
@@ -3012,6 +3012,7 @@ export class UIManager {
     hud.className = 'screen-hud';
 
     const equippedBikeId = storage.getEquippedBike() || gameState.selectedBike?.id || 'tank';
+    const equippedBikeObj = BIKES.find(b => b.id === equippedBikeId) || BIKES[0];
     const isFootOrHorse = (equippedBikeId === 'cheval' || equippedBikeId === 'run_ak47' || equippedBikeId === 'run_chainsaw');
     const boostIcon = isFootOrHorse ? '🥫' : '⚡';
     const boostLabel = isFootOrHorse ? 'ENERGY' : 'NITRO';
@@ -3052,6 +3053,46 @@ export class UIManager {
       actionLabel = 'MISSILE';
       actionTitle = 'Tirer une salve de missiles plasma / frappe aérienne !';
       isWeapon = true;
+    } else if (equippedBikeId === 'rad_rover') {
+      actionIcon = '⚡';
+      actionLabel = 'PLASMA';
+      actionTitle = 'Décharge Plasma EMP !';
+      isWeapon = true;
+    } else if (equippedBikeId === 'hovercraft') {
+      actionIcon = '🌊';
+      actionLabel = 'TORPILLE';
+      actionTitle = 'Lancer une torpille vortex !';
+      isWeapon = true;
+    } else if (equippedBikeId === 'snowmobile') {
+      actionIcon = '❄️';
+      actionLabel = 'CRYO';
+      actionTitle = 'Tirer un missile cryogénique !';
+      isWeapon = true;
+    } else if (equippedBikeId === 'dragster') {
+      actionIcon = '🔥';
+      actionLabel = 'FLAMMES';
+      actionTitle = 'Lance-flammes thermique !';
+      isWeapon = true;
+    } else if (equippedBikeId === 'decapotable') {
+      actionIcon = '💥';
+      actionLabel = 'CALIBRE 12';
+      actionTitle = 'Tir de chevrotine !';
+      isWeapon = true;
+    } else if (equippedBikeId === 'chopper') {
+      actionIcon = '⛓️';
+      actionLabel = 'CHAÎNE';
+      actionTitle = 'Fouetter à la chaîne lourde !';
+      isWeapon = true;
+    } else if (equippedBikeId === 'scooter') {
+      actionIcon = '🔫';
+      actionLabel = 'RAFALE';
+      actionTitle = 'Rafale Uzi !';
+      isWeapon = true;
+    } else if (equippedBikeId === 'rouleau') {
+      actionIcon = '🚜';
+      actionLabel = 'ONDE CHOC';
+      actionTitle = 'Onde de choc 50 Tonnes !';
+      isWeapon = true;
     }
 
     hud.innerHTML = `
@@ -3068,7 +3109,7 @@ export class UIManager {
             <span>🗺️ QUITTER</span>
           </button>
         ` : `
-          <!-- Badge Score Lumineux Arcade -->
+          <!-- Badge Score Lumineux Arcade (Ergonomie Haut Gauche) -->
           <div class="score-box-arcade">
             <div class="score-badge-header">
               <span class="score-badge-icon">⚡</span>
@@ -3081,26 +3122,30 @@ export class UIManager {
             </div>
           </div>
 
-          <!-- Carte d'Objectif et de Progression Compacte (Épurée & Aérée) -->
+          <!-- Carte d'Objectif et de Progression (Ergonomie Haut Centre, textes clairs et lisibles) -->
           <div class="progress-objective-compact" id="hud-objective-card">
             <div class="objective-header-row">
               <span class="city-target-title" id="hud-city-name">${gameState.selectedCity.isNuclearMission ? '☢️ ' + gameState.selectedCity.name.toUpperCase() : (gameState.selectedCity.emblem || '📍') + ' ' + gameState.selectedCity.name.toUpperCase()}</span>
-              <span class="objective-target-pts" id="hud-target-pts">🎯 ${gameState.selectedCity.targetScore.toLocaleString('fr-FR')} PTS</span>
+              <span class="objective-target-pts" id="hud-target-pts">🎯 ${gameState.selectedCity.targetScore.toLocaleString('fr-FR')}</span>
             </div>
             <div class="progress-bar-bg">
               <div class="progress-bar-fill" id="hud-progress-fill"></div>
-              <span class="progress-pct-text" id="hud-progress-pct">0%</span>
+              <span class="progress-pct-text" id="hud-progress-pct">OBJECTIF 0%</span>
             </div>
           </div>
 
           <!-- Bouton Rapide Retour Carte dès 100% atteint -->
           <button id="btn-hud-return-map-100" class="hud-btn-return-map-100" title="Objectif 100% accompli ! Retourner à la carte">
-            <span>🗺️ RETOUR CARTE</span>
+            <span>🗺️ CARTE</span>
           </button>
 
-          <!-- Bouton Pause Chrome -->
-          <button class="btn-icon-pause" id="btn-hud-pause" title="Mettre en pause">
-            ⏸️
+          <!-- Bouton Pause & Changement d'Engin Ergonomique (Haut Droite) -->
+          <button class="btn-icon-pause btn-pause-vehicle-pill" id="btn-hud-pause" title="Pause & Changer d'engin en course">
+            <span class="pause-veh-emoji">${equippedBikeObj.icon}</span>
+            <div class="pause-veh-texts">
+              <span class="pause-veh-main">⏸ PAUSE</span>
+              <span class="pause-veh-sub">ENGIN</span>
+            </div>
           </button>
         `}
       </div>
@@ -3448,7 +3493,7 @@ ${gameState.isRuinsMode ? `
             </button>
             ${!isExterminated ? `
               <button id="btn-assault-wmd" class="btn-arcade btn-danger-wmd">
-                <span>💀 ADM</span>
+                <span>☢️ NUCLÉAIRE</span>
               </button>
             ` : ''}
           </div>
@@ -4337,7 +4382,7 @@ ${gameState.isRuinsMode ? `
           </button>
           ${!isAlreadyExterminated ? `
             <button id="btn-results-wmd-exterminate" class="btn-arcade" style="flex: 1.2; padding: 10px; font-size: 0.82rem; background: rgba(235, 77, 75, 0.25); border: 1.5px solid #ff7675; color: #ff7675;">
-              <span>💀 ADM</span>
+              <span>☢️ NUCLÉAIRE</span>
             </button>
           ` : ''}
         </div>
@@ -4434,22 +4479,49 @@ ${gameState.isRuinsMode ? `
     }
   }
 
-  // --- 8. MODALE DE PAUSE ---
+  // --- 8. MODALE DE PAUSE & CHANGEMENT D'ENGIN EN DIRECT ---
   showPauseModal() {
     const overlay = document.createElement('div');
-    overlay.className = 'modal-overlay';
+    overlay.className = 'modal-overlay interactive';
     this.activeModals.push(overlay);
 
+    const equippedBikeId = storage.getEquippedBike() || gameState.selectedBike?.id || 'tank';
+    const unlockedBikes = BIKES.filter(b => storage.isBikeUnlocked(b.id));
+
+    const bikeGridHtml = unlockedBikes.map(b => {
+      const isEquipped = b.id === equippedBikeId;
+      return `
+        <button type="button" class="pause-bike-item ${isEquipped ? 'equipped' : ''}" data-bike-id="${b.id}" title="Déployer ${b.name}">
+          <span class="pause-bike-icon">${b.icon}</span>
+          <span class="pause-bike-name">${b.name}</span>
+          ${isEquipped ? '<span class="pause-bike-active-dot">ACTIF</span>' : ''}
+        </button>
+      `;
+    }).join('');
+
     overlay.innerHTML = `
-      <div class="modal-card">
-        <h2 class="modal-title">PAUSE</h2>
+      <div class="modal-card pause-modal-enhanced">
+        <h2 class="modal-title">⏸ PAUSE & ENGIN</h2>
+
+        <div class="pause-vehicle-switcher">
+          <div class="pause-switcher-header">
+            <span>⚡ CHANGER D'ENGIN EN COURSE</span>
+            <span class="pause-switcher-sub">Déploiement immédiat</span>
+          </div>
+          <div class="pause-bike-grid">
+            ${bikeGridHtml}
+          </div>
+        </div>
 
         <div class="modal-actions">
           <button id="btn-pause-resume" class="btn-arcade">
-            ▶️ REPRENDRE
+            ▶️ REPRENDRE LA COURSE
+          </button>
+          <button id="btn-pause-garage" class="btn-arcade btn-secondary">
+            🪖 GARAGE & ARSENAL COMPLET
           </button>
           <button id="btn-pause-restart" class="btn-arcade btn-accent">
-            🔄 RECOMMENCER
+            🔄 RECOMMENCER L'ÉTAPE
           </button>
           <button id="btn-pause-map" class="btn-arcade btn-ghost">
             🛰️ RETOUR SATELLITE À LA CARTE
@@ -4458,11 +4530,44 @@ ${gameState.isRuinsMode ? `
       </div>
     `;
 
+    // Changement d'engin instantané en pleine course
+    overlay.querySelectorAll('.pause-bike-item').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const bikeId = btn.getAttribute('data-bike-id');
+        const bikeObj = BIKES.find(b => b.id === bikeId);
+        if (!bikeObj) return;
+        soundManager.playClick('hero');
+        storage.equipBike(bikeObj.id);
+        gameState.selectBike(bikeObj.id);
+        if (this.onAction) {
+          this.onAction('CHANGE_BIKE_IN_GAME', bikeObj);
+        }
+        overlay.remove();
+        this.activeModals = this.activeModals.filter(m => m !== overlay);
+        // Rafraîchir le HUD pour mettre à jour le bouton d'arme / nitro et l'icône de l'engin
+        this.root.innerHTML = '';
+        this.renderHUDScreen();
+        if (this.onAction) {
+          this.onAction('RESUME');
+        }
+        this.showToastUnlock({ name: `${bikeObj.icon} ${bikeObj.name.toUpperCase()} DÉPLOYÉ !` });
+      });
+    });
+
     overlay.querySelector('#btn-pause-resume').addEventListener('click', () => {
       soundManager.playClick();
       overlay.remove();
       this.activeModals = this.activeModals.filter(m => m !== overlay);
       if (this.onAction) this.onAction('RESUME');
+    });
+
+    overlay.querySelector('#btn-pause-garage').addEventListener('click', () => {
+      soundManager.playClick('garage');
+      overlay.remove();
+      this.activeModals = this.activeModals.filter(m => m !== overlay);
+      this.previousScreen = 'MAP';
+      this.setScreen('GARAGE');
     });
 
     overlay.querySelector('#btn-pause-restart').addEventListener('click', () => {
