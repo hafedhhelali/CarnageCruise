@@ -5,7 +5,7 @@
  * et correction de la navigation du Garage.
  */
 
-import { gameState, CITIES, BIKES } from '../core/GameState.js';
+import { gameState, CITIES, BIKES, getCityBiomeInfo, getCityRegion } from '../core/GameState.js';
 import { storage } from '../core/Storage.js';
 import { dailyMissions, loginStreak } from '../core/DailyMissions.js';
 import { soundManager } from '../audio/SoundManager.js';
@@ -91,8 +91,12 @@ export class UIManager {
     // Si une modale est ouverte : la fermer en priorité
     if (this.activeModals.length > 0) {
       const topModal = this.activeModals.pop();
+      const wasPauseModal = topModal && topModal.dataset && topModal.dataset.isPauseModal === 'true';
       if (topModal && topModal.parentNode) {
         topModal.remove();
+      }
+      if (wasPauseModal && this.onAction) {
+        this.onAction('RESUME');
       }
       return;
     }
@@ -119,7 +123,8 @@ export class UIManager {
         this.setScreen('MAP');
         return;
       }
-      // En jeu : afficher le menu de pause
+      // En jeu : mettre en pause et afficher le menu de pause
+      if (this.onAction) this.onAction('PAUSE');
       this.showPauseModal();
       return;
     }
@@ -362,7 +367,7 @@ export class UIManager {
     const currentBike = BIKES.find(b => b.id === currentBikeId) || BIKES[0];
 
     mapScreen.innerHTML = `
-      <!-- EN-TÊTE ÉPURÉ : NAVIGATION, ÉTOILES & MONNAIE (SANS DOUBLON VÉHICULE NI PROFIL) -->
+      <!-- EN-TÊTE ÉPURÉ : NAVIGATION, ÉTOILES, MONNAIE & FILTRE PAR RÉGION -->
       <div class="map-header-redesign">
         <div class="map-top-bar">
           <button id="btn-map-back" class="map-top-btn" title="Retour Accueil">
@@ -371,7 +376,7 @@ export class UIManager {
           </button>
 
           <div class="stars-pill" title="Étoiles de Campagne">
-            <span>🗺️ CARTE • ★ ${totalStars}</span>
+            <span>🗺️ ${CITIES.length} ÉTAPES • ★ ${totalStars}</span>
           </div>
 
           <!-- Pilule de monnaie simple -->
@@ -379,9 +384,17 @@ export class UIManager {
             <span>🪙 ${coins}</span>
           </div>
         </div>
+
+        <!-- BARRE D'ONGLETS RÉGIONAUX UI/UX (EUROPE, AFRIQUE DU NORD, PROCHE-ORIENT) -->
+        <div class="map-region-filter-bar" id="map-region-tabs">
+          <button class="region-tab-pill active" data-region="ALL">🌍 TOUT (${CITIES.length})</button>
+          <button class="region-tab-pill" data-region="EUROPE">🇪🇺 EUROPE</button>
+          <button class="region-tab-pill" data-region="AFRIQUE DU NORD">🏜️ AFRIQUE DU NORD</button>
+          <button class="region-tab-pill" data-region="PROCHE-ORIENT">🕌 PROCHE-ORIENT</button>
+        </div>
       </div>
 
-      <!-- CARTE D'EUROPE ET BASSIN MÉDITERRANÉEN HAUTE-FIDÉLITÉ AVEC ZOOM INTERACTIF -->
+      <!-- CARTE D'EUROPE, AFRIQUE DU NORD & PROCHE-ORIENT HAUTE-FIDÉLITÉ AVEC ZOOM INTERACTIF -->
       <div class="europe-map-scroll-viewport" id="europe-viewport">
         <!-- CONTRÔLES DE ZOOM COMPACTS EN PILULE DOCKÉE EN HAUT À DROITE (ZÉRO CONFLIT ERGONOMIQUE) -->
         <div class="map-zoom-controls-pill">
@@ -402,13 +415,25 @@ export class UIManager {
                 <stop offset="100%" stop-color="#0a1d17" />
               </linearGradient>
 
-              <!-- Dégradé des pays frontaliers -->
+              <!-- Dégradé des pays européens -->
               <linearGradient id="neighborCountryGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stop-color="#182330" />
                 <stop offset="100%" stop-color="#0e1722" />
               </linearGradient>
 
-              <!-- Dégradé des océans et mers européennes -->
+              <!-- Dégradé Afrique du Nord (Ocre Saharien & Atlas) -->
+              <linearGradient id="maghrebGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#2e2318" />
+                <stop offset="100%" stop-color="#1c140d" />
+              </linearGradient>
+
+              <!-- Dégradé Proche-Orient (Ambre du Levant & Mésopotamie) -->
+              <linearGradient id="levantGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#2d1b24" />
+                <stop offset="100%" stop-color="#1a1016" />
+              </linearGradient>
+
+              <!-- Dégradé des océans et mers -->
               <radialGradient id="oceanShading" cx="50%" cy="50%" r="75%">
                 <stop offset="0%" stop-color="#0e2439" />
                 <stop offset="55%" stop-color="#091827" />
@@ -421,28 +446,30 @@ export class UIManager {
               </filter>
             </defs>
 
-            <!-- Fond Océanique / Mers Européennes & Méditerranée -->
+            <!-- Fond Océanique / Mers Européennes, Méditerranée & Mer Rouge -->
             <rect width="100%" height="100%" fill="url(#oceanShading)" />
 
-            <!-- ================= GÉOGRAPHIE RÉALISTE DE TOUTE L'EUROPE & BASSIN MÉDITERRANÉEN (50 PAYS SIG 50M) ================= -->
+            <!-- ================= GÉOGRAPHIE RÉALISTE EUROPE, AFRIQUE DU NORD & PROCHE-ORIENT ================= -->
             ${Object.entries(REAL_COUNTRY_PATHS).map(([code, country]) => {
               const isFrance = code === 'FRA';
-              const isMaghreb = (code === 'MAR' || code === 'DZA' || code === 'TUN' || code === 'LBY' || code === 'EGY');
-              const strokeColor = isFrance ? '#00cec9' : (isMaghreb ? '#e67e22' : '#2ed573');
-              const strokeW = isFrance ? '2.4' : '1.1';
+              const isMaghreb = ['MAR', 'DZA', 'TUN', 'LBY', 'EGY'].includes(code);
+              const isMiddleEast = ['TUR', 'CYP', 'SYR', 'LBN', 'ISR', 'JOR', 'IRQ', 'SAU'].includes(code);
+              const strokeColor = isFrance ? '#00cec9' : (isMaghreb ? '#f59e0b' : (isMiddleEast ? '#fb7185' : '#2ed573'));
+              const fillGrad = isFrance ? 'url(#franceLuxury)' : (isMaghreb ? 'url(#maghrebGrad)' : (isMiddleEast ? 'url(#levantGrad)' : 'url(#neighborCountryGrad)'));
+              const strokeW = isFrance ? '2.4' : (isMaghreb || isMiddleEast ? '1.35' : '1.1');
               return `
                 <path class="country-${code.toLowerCase()} ${isFrance ? 'france-mainland' : 'neighbor-country'}"
                       d="${country.d}"
-                      fill="${isFrance ? 'url(#franceLuxury)' : 'url(#neighborCountryGrad)'}"
+                      fill="${fillGrad}"
                       stroke="${strokeColor}"
                       stroke-width="${strokeW}"
-                      opacity="${isFrance ? '1.0' : '0.88'}"
+                      opacity="${isFrance ? '1.0' : '0.92'}"
                       filter="url(#coastalGlow)" />
               `;
             }).join('')}
 
-            <!-- Noms Géographiques Clés -->
-            <text x="360" y="860" fill="#00cec9" font-size="16" font-weight="900" letter-spacing="4" opacity="0.45">MER MÉDITERRANÉE</text>
+            <!-- Noms Géographiques Clés (Europe, Afrique du Nord & Proche-Orient) -->
+            <text x="530" y="872" fill="#00cec9" font-size="15" font-weight="900" letter-spacing="4" opacity="0.5">MER MÉDITERRANÉE</text>
             <text x="750" y="320" fill="#00cec9" font-size="14" font-weight="900" letter-spacing="3" opacity="0.4">MER BALTIQUE</text>
             <text x="940" y="680" fill="#00cec9" font-size="14" font-weight="900" letter-spacing="3" opacity="0.4">MER NOIRE</text>
             <text x="490" y="625" fill="#00cec9" font-size="18" font-weight="900" letter-spacing="3" opacity="0.65">FRANCE 🇫🇷</text>
@@ -450,8 +477,18 @@ export class UIManager {
             <text x="660" y="770" fill="#74b9ff" font-size="14" font-weight="900" letter-spacing="2" opacity="0.6">ITALIE 🇮🇹</text>
             <text x="590" y="520" fill="#74b9ff" font-size="14" font-weight="900" letter-spacing="2" opacity="0.6">ALLEMAGNE 🇩🇪</text>
             <text x="430" y="470" fill="#74b9ff" font-size="13" font-weight="900" letter-spacing="1.5" opacity="0.6">ROYAUME-UNI 🇬🇧</text>
-            <text x="500" y="910" fill="#2ed573" font-size="15" font-weight="900" letter-spacing="2" opacity="0.6">ALGÉRIE 🇩🇿</text>
-            <text x="630" y="910" fill="#ff4757" font-size="14" font-weight="900" letter-spacing="2" opacity="0.6">TUNISIE 🇹🇳</text>
+            <!-- Afrique du Nord -->
+            <text x="275" y="1015" fill="#fbbf24" font-size="15" font-weight="900" letter-spacing="2" opacity="0.72">MAROC 🇲🇦</text>
+            <text x="475" y="995" fill="#fbbf24" font-size="16" font-weight="900" letter-spacing="2.5" opacity="0.72">ALGÉRIE 🇩🇿</text>
+            <text x="615" y="950" fill="#fbbf24" font-size="13" font-weight="900" letter-spacing="1.5" opacity="0.7">TUNISIE 🇹🇳</text>
+            <text x="745" y="1055" fill="#fbbf24" font-size="15" font-weight="900" letter-spacing="2.5" opacity="0.7">LIBYE 🇱🇾</text>
+            <text x="955" y="1075" fill="#fbbf24" font-size="16" font-weight="900" letter-spacing="2.5" opacity="0.75">ÉGYPTE 🇪🇬</text>
+            <!-- Proche-Orient -->
+            <text x="965" y="838" fill="#fb7185" font-size="16" font-weight="900" letter-spacing="2.5" opacity="0.75">TURQUIE 🇹🇷</text>
+            <text x="1115" y="948" fill="#fb7185" font-size="13" font-weight="900" letter-spacing="1.5" opacity="0.75">SYRIE 🇸🇾</text>
+            <text x="1032" y="974" fill="#fb7185" font-size="12" font-weight="900" letter-spacing="1.2" opacity="0.75">LIBAN 🇱🇧</text>
+            <text x="1102" y="1036" fill="#fb7185" font-size="13" font-weight="900" letter-spacing="1.5" opacity="0.75">JORDANIE 🇯🇴</text>
+            <text x="1162" y="985" fill="#fb7185" font-size="13" font-weight="900" letter-spacing="1.5" opacity="0.72">IRAK 🇮🇶</text>
           </svg>
 
           <!-- Avion Voyageur Animé se déplaçant d'une ville à une autre (✈️) -->
@@ -460,16 +497,17 @@ export class UIManager {
             <div class="plane-traveler-trail">💨</div>
           </div>
 
-          <!-- Pins interactifs des 20 villes d'Europe et Méditerranée avec médaillons 3D et drapeaux -->
-          <!-- Pins interactifs des villes d'Europe et Méditerranée -->
+          <!-- Pins interactifs des villes d'Europe, Afrique du Nord et Proche-Orient -->
           ${CITIES.map((city, idx) => {
             const unlocked = storage.isCityUnlocked(city.id);
             const isExterminated = storage.isCityExterminated(city.id);
             const isSelected = this.selectedMapCity.id === city.id;
+            const cityRegion = getCityRegion(city);
 
             return `
               <div class="city-pin ${unlocked ? 'unlocked' : 'locked'} ${isSelected ? 'selected' : ''} ${isExterminated ? 'exterminated-pin' : ''}"
                    data-city-id="${city.id}"
+                   data-region="${cityRegion}"
                    style="left: ${city.mapCoords.x}%; top: ${city.mapCoords.y}%;">
                 <div class="city-pulse-ring"></div>
                 <div class="city-pin-dot">
@@ -881,6 +919,53 @@ export class UIManager {
       });
     });
 
+    // Filtres rapides par Région (Europe, Afrique du Nord, Proche-Orient)
+    const regionTabs = mapScreen.querySelectorAll('.region-tab-pill');
+    regionTabs.forEach(tab => {
+      tab.addEventListener('click', (e) => {
+        e.stopPropagation();
+        soundManager.playClick();
+        Haptic.tap();
+
+        const targetRegion = tab.getAttribute('data-region') || 'ALL';
+        regionTabs.forEach(t => t.classList.toggle('active', t === tab));
+
+        // Mettre en valeur les pins de la région sélectionnée
+        pins.forEach(pin => {
+          const pinRegion = pin.getAttribute('data-region');
+          const matches = (targetRegion === 'ALL' || pinRegion === targetRegion);
+          pin.classList.toggle('region-dimmed', !matches);
+        });
+
+        // Sélectionner et centrer sur une ville représentative de la région
+        if (targetRegion === 'AFRIQUE DU NORD') {
+          this.mapZoom = 1.15;
+          const currentReg = getCityRegion(this.selectedMapCity);
+          const focusCity = currentReg === 'AFRIQUE DU NORD'
+            ? this.selectedMapCity
+            : (CITIES.find(c => c.id === 'alger') || CITIES.find(c => getCityRegion(c) === 'AFRIQUE DU NORD'));
+          if (focusCity) updateSelection(focusCity.id);
+        } else if (targetRegion === 'PROCHE-ORIENT') {
+          this.mapZoom = 1.45;
+          const currentReg = getCityRegion(this.selectedMapCity);
+          const focusCity = currentReg === 'PROCHE-ORIENT'
+            ? this.selectedMapCity
+            : (CITIES.find(c => c.id === 'beyrouth') || CITIES.find(c => getCityRegion(c) === 'PROCHE-ORIENT'));
+          if (focusCity) updateSelection(focusCity.id);
+        } else if (targetRegion === 'EUROPE') {
+          this.mapZoom = 0.95;
+          const currentReg = getCityRegion(this.selectedMapCity);
+          const focusCity = currentReg === 'EUROPE'
+            ? this.selectedMapCity
+            : (CITIES.find(c => c.id === 'paris') || CITIES[0]);
+          if (focusCity) updateSelection(focusCity.id);
+        } else {
+          this.mapZoom = 0.72;
+          centerOnCity(this.selectedMapCity, true);
+        }
+      });
+    });
+
     mapScreen.querySelector('#btn-map-back').addEventListener('click', () => {
       soundManager.playClick();
       this.setScreen('SPLASH');
@@ -934,6 +1019,8 @@ export class UIManager {
     const cityDestruction = storage.getCityDestruction(city.id);
     const cityData = storage.getCityData(city.id);
     const starsHtml = isExterminated ? '★★★' : ('★'.repeat(cityData.stars) + '☆'.repeat(3 - cityData.stars));
+    const biomeInfo = getCityBiomeInfo(city);
+    const cityRegion = getCityRegion(city);
 
     detailCard.innerHTML = `
       <!-- 1. BARRE DE NAVIGATION PRÉCISE : CHEVRONS ERGONOMIQUES 44x44 & TITRE PLEINE LARGEUR (ZÉRO TEXTE COUPÉ) -->
@@ -943,15 +1030,19 @@ export class UIManager {
         </button>
         <div class="city-nav-info">
           <div class="city-nav-top-meta">
-            <span class="city-nav-step-badge">ÉTAPE ${stageIndex} / ${CITIES.length}</span>
+            <span class="city-nav-step-badge">ÉTAPE ${stageIndex}/${CITIES.length} • ${cityRegion}</span>
+            <span class="city-biome-pill" style="--biome-color: ${biomeInfo.badgeColor}; --biome-bg: ${biomeInfo.bgTint};">
+              ${biomeInfo.icon} ${biomeInfo.label.toUpperCase()}
+            </span>
             <span class="city-status-pill ${isExterminated ? 'status-ext' : (cityDestruction > 0 ? 'status-ext' : (unlocked ? 'status-unl' : 'status-loc'))}">
-              ${isExterminated ? '☠️ CONDAMNÉE' : (cityDestruction > 0 ? `💥 DÉTRUITE ${cityDestruction}%` : (unlocked ? '⚡ LIBRE' : '🔒 VERR.'))}
+              ${isExterminated ? '☠️ CONDAMNÉE' : (cityDestruction > 0 ? `💥 ${cityDestruction}%` : (unlocked ? '⚡ LIBRE' : '🔒 VERR.'))}
             </span>
           </div>
           <div class="city-nav-title-row">
             <span class="city-nav-flag">${city.countryFlag || '🌍'}</span>
-            <span class="city-nav-title" title="${city.name}">${city.name.toUpperCase()}</span>
+            <span class="city-nav-title" title="${city.name} (${city.country})">${city.name.toUpperCase()}</span>
           </div>
+          <div class="city-nav-scenery-sub">${city.typeTag || city.monument || city.subtitle || ''}</div>
         </div>
         <button id="btn-card-next-city" class="btn-nav-arrow" title="Étape suivante (${nextCity.name})" aria-label="Suivante">
           <span>▶</span>
@@ -3134,19 +3225,24 @@ export class UIManager {
             </div>
           </div>
 
-          <!-- Bouton Rapide Retour Carte dès 100% atteint -->
-          <button id="btn-hud-return-map-100" class="hud-btn-return-map-100" title="Objectif 100% accompli ! Retourner à la carte">
-            <span>🗺️ CARTE</span>
-          </button>
+          <!-- Dock de Contrôle Supérieur Droit (Retour Carte 100%, Sélecteur d'Engin & Pause Vectorielle) -->
+          <div class="hud-top-right-dock">
+            <button id="btn-hud-return-map-100" class="hud-btn-return-map-100" title="Objectif 100% accompli ! Retourner à la carte">
+              <span>🗺️ CARTE</span>
+            </button>
 
-          <!-- Bouton Pause & Changement d'Engin Ergonomique (Haut Droite) -->
-          <button class="btn-icon-pause btn-pause-vehicle-pill" id="btn-hud-pause" title="Pause & Changer d'engin en course">
-            <span class="pause-veh-emoji">${equippedBikeObj.icon}</span>
-            <div class="pause-veh-texts">
-              <span class="pause-veh-main">⏸ PAUSE</span>
-              <span class="pause-veh-sub">ENGIN</span>
-            </div>
-          </button>
+            <button type="button" class="btn-hud-bike-switch" id="btn-hud-bike-switch" title="Changer d'engin en course">
+              <span class="hud-bike-switch-icon" id="hud-current-bike-icon">${equippedBikeObj.icon}</span>
+              <span class="hud-bike-switch-badge" aria-hidden="true">↻</span>
+            </button>
+
+            <button type="button" class="btn-icon-pause" id="btn-hud-pause" title="Mettre en pause" aria-label="Pause">
+              <svg class="pause-svg-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+                <rect x="5.5" y="4.5" width="4.5" height="15" rx="2.2" fill="currentColor" />
+                <rect x="14" y="4.5" width="4.5" height="15" rx="2.2" fill="currentColor" />
+              </svg>
+            </button>
+          </div>
         `}
       </div>
 
@@ -3300,11 +3396,27 @@ ${gameState.isRuinsMode ? `
       });
     }
 
-    hud.querySelector('#btn-hud-pause').addEventListener('click', () => {
+    const openPauseMenu = (e) => {
+      if (e) {
+        if (e.type === 'touchstart') e.preventDefault();
+        e.stopPropagation();
+      }
       soundManager.playClick();
       if (this.onAction) this.onAction('PAUSE');
       this.showPauseModal();
-    });
+    };
+
+    const pauseBtn = hud.querySelector('#btn-hud-pause');
+    if (pauseBtn) {
+      pauseBtn.addEventListener('touchstart', openPauseMenu, { passive: false });
+      pauseBtn.addEventListener('click', openPauseMenu);
+    }
+
+    const bikeSwitchBtn = hud.querySelector('#btn-hud-bike-switch');
+    if (bikeSwitchBtn) {
+      bikeSwitchBtn.addEventListener('touchstart', openPauseMenu, { passive: false });
+      bikeSwitchBtn.addEventListener('click', openPauseMenu);
+    }
 
     const hornAttackBtn = hud.querySelector('#btn-hud-horn');
     if (hornAttackBtn) {
@@ -3342,6 +3454,7 @@ ${gameState.isRuinsMode ? `
 
     // 3 -> 2
     setTimeout(() => {
+      if (!overlay.parentNode || gameState.currentMode === 'PAUSED') return;
       const display = overlay.querySelector('#countdown-display');
       const sub = overlay.querySelector('#countdown-sub');
       if (display) {
@@ -3354,6 +3467,7 @@ ${gameState.isRuinsMode ? `
 
     // 2 -> 1
     setTimeout(() => {
+      if (!overlay.parentNode || gameState.currentMode === 'PAUSED') return;
       const display = overlay.querySelector('#countdown-display');
       const sub = overlay.querySelector('#countdown-sub');
       if (display) {
@@ -3366,6 +3480,7 @@ ${gameState.isRuinsMode ? `
 
     // 1 -> GO !
     setTimeout(() => {
+      if (!overlay.parentNode || gameState.currentMode === 'PAUSED') return;
       const display = overlay.querySelector('#countdown-display');
       const sub = overlay.querySelector('#countdown-sub');
       if (display) {
@@ -4481,12 +4596,36 @@ ${gameState.isRuinsMode ? `
 
   // --- 8. MODALE DE PAUSE & CHANGEMENT D'ENGIN EN DIRECT ---
   showPauseModal() {
+    // Éviter d'empiler plusieurs modales de pause
+    const existingPause = this.root.querySelector('.pause-modal-overlay');
+    if (existingPause) return;
+
+    // Supprimer tout compte à rebours résiduel pour éviter un conflit d'état
+    const existingCountdown = this.root.querySelector('.hud-countdown-overlay');
+    if (existingCountdown) existingCountdown.remove();
+
+    if (this.onAction) {
+      this.onAction('PAUSE');
+    }
+
     const overlay = document.createElement('div');
-    overlay.className = 'modal-overlay interactive';
+    overlay.className = 'modal-overlay pause-modal-overlay interactive';
+    overlay.dataset.isPauseModal = 'true';
     this.activeModals.push(overlay);
 
-    const equippedBikeId = storage.getEquippedBike() || gameState.selectedBike?.id || 'tank';
-    const unlockedBikes = BIKES.filter(b => storage.isBikeUnlocked(b.id));
+    const equippedBikeId = (storage && typeof storage.getEquippedBike === 'function' ? storage.getEquippedBike() : null)
+      || gameState.selectedBike?.id
+      || 'tank';
+
+    let unlockedBikes = BIKES;
+    try {
+      if (storage && typeof storage.isBikeUnlocked === 'function') {
+        const filtered = BIKES.filter(b => storage.isBikeUnlocked(b.id));
+        if (filtered.length > 0) unlockedBikes = filtered;
+      }
+    } catch (err) {
+      unlockedBikes = BIKES;
+    }
 
     const bikeGridHtml = unlockedBikes.map(b => {
       const isEquipped = b.id === equippedBikeId;
@@ -4501,7 +4640,16 @@ ${gameState.isRuinsMode ? `
 
     overlay.innerHTML = `
       <div class="modal-card pause-modal-enhanced">
-        <h2 class="modal-title">⏸ PAUSE & ENGIN</h2>
+        <div class="pause-modal-header">
+          <div class="pause-modal-title-badge">
+            <svg class="pause-modal-svg" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+              <rect x="5.5" y="4.5" width="4.5" height="15" rx="2.2" fill="currentColor" />
+              <rect x="14" y="4.5" width="4.5" height="15" rx="2.2" fill="currentColor" />
+            </svg>
+            <h2 class="modal-title" style="margin: 0;">PAUSE TACTIQUE</h2>
+          </div>
+          <button type="button" id="btn-pause-close-x" class="pause-modal-close-x" title="Reprendre la course" aria-label="Reprendre">✕</button>
+        </div>
 
         <div class="pause-vehicle-switcher">
           <div class="pause-switcher-header">
@@ -4514,21 +4662,44 @@ ${gameState.isRuinsMode ? `
         </div>
 
         <div class="modal-actions">
-          <button id="btn-pause-resume" class="btn-arcade">
+          <button type="button" id="btn-pause-resume" class="btn-arcade">
             ▶️ REPRENDRE LA COURSE
           </button>
-          <button id="btn-pause-garage" class="btn-arcade btn-secondary">
+          <button type="button" id="btn-pause-garage" class="btn-arcade btn-secondary">
             🪖 GARAGE & ARSENAL COMPLET
           </button>
-          <button id="btn-pause-restart" class="btn-arcade btn-accent">
+          <button type="button" id="btn-pause-restart" class="btn-arcade btn-accent">
             🔄 RECOMMENCER L'ÉTAPE
           </button>
-          <button id="btn-pause-map" class="btn-arcade btn-ghost">
+          <button type="button" id="btn-pause-map" class="btn-arcade btn-ghost">
             🛰️ RETOUR SATELLITE À LA CARTE
           </button>
         </div>
       </div>
     `;
+
+    const closeAndResume = () => {
+      overlay.remove();
+      this.activeModals = this.activeModals.filter(m => m !== overlay);
+      if (this.onAction) this.onAction('RESUME');
+    };
+
+    // Clic sur l'arrière-plan sombre ou sur la croix pour reprendre immédiatement
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) {
+        soundManager.playClick();
+        closeAndResume();
+      }
+    });
+
+    const closeXBtn = overlay.querySelector('#btn-pause-close-x');
+    if (closeXBtn) {
+      closeXBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        soundManager.playClick();
+        closeAndResume();
+      });
+    }
 
     // Changement d'engin instantané en pleine course
     overlay.querySelectorAll('.pause-bike-item').forEach(btn => {
@@ -4545,9 +4716,15 @@ ${gameState.isRuinsMode ? `
         }
         overlay.remove();
         this.activeModals = this.activeModals.filter(m => m !== overlay);
-        // Rafraîchir le HUD pour mettre à jour le bouton d'arme / nitro et l'icône de l'engin
+        // Rafraîchir le HUD pour mettre à jour le bouton d'arme / nitro et l'icône de l'engin sans relancer le compte à rebours
+        gameState.currentMode = 'PLAYING';
         this.root.innerHTML = '';
         this.renderHUDScreen();
+        this.updateHUDScore({
+          score: gameState.score,
+          combo: gameState.combo,
+          comboTitle: 'COMBO'
+        });
         if (this.onAction) {
           this.onAction('RESUME');
         }
@@ -4555,14 +4732,14 @@ ${gameState.isRuinsMode ? `
       });
     });
 
-    overlay.querySelector('#btn-pause-resume').addEventListener('click', () => {
+    overlay.querySelector('#btn-pause-resume').addEventListener('click', (e) => {
+      e.stopPropagation();
       soundManager.playClick();
-      overlay.remove();
-      this.activeModals = this.activeModals.filter(m => m !== overlay);
-      if (this.onAction) this.onAction('RESUME');
+      closeAndResume();
     });
 
-    overlay.querySelector('#btn-pause-garage').addEventListener('click', () => {
+    overlay.querySelector('#btn-pause-garage').addEventListener('click', (e) => {
+      e.stopPropagation();
       soundManager.playClick('garage');
       overlay.remove();
       this.activeModals = this.activeModals.filter(m => m !== overlay);
@@ -4570,14 +4747,16 @@ ${gameState.isRuinsMode ? `
       this.setScreen('GARAGE');
     });
 
-    overlay.querySelector('#btn-pause-restart').addEventListener('click', () => {
+    overlay.querySelector('#btn-pause-restart').addEventListener('click', (e) => {
+      e.stopPropagation();
       soundManager.playClick();
       overlay.remove();
       this.activeModals = this.activeModals.filter(m => m !== overlay);
       if (this.onAction) this.onAction('START_RUN', gameState.selectedCity);
     });
 
-    overlay.querySelector('#btn-pause-map').addEventListener('click', () => {
+    overlay.querySelector('#btn-pause-map').addEventListener('click', (e) => {
+      e.stopPropagation();
       soundManager.playClick();
       overlay.remove();
       this.activeModals = this.activeModals.filter(m => m !== overlay);
@@ -4589,8 +4768,8 @@ ${gameState.isRuinsMode ? `
     const pauseCard = overlay.querySelector('.modal-card');
     if (pauseCard) {
       gsap.fromTo(pauseCard,
-        { scale: 0.8, opacity: 0, y: 30 },
-        { scale: 1.0, opacity: 1, y: 0, duration: 0.35, ease: "back.out(1.8)" }
+        { scale: 0.88, opacity: 0, y: 20 },
+        { scale: 1.0, opacity: 1, y: 0, duration: 0.28, ease: "back.out(1.6)" }
       );
     }
   }

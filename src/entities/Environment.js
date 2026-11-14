@@ -6,6 +6,7 @@
 
 import * as THREE from 'three';
 import { textureFactory } from '../gfx/TextureFactory.js';
+import { getCityBiomeInfo } from '../core/GameState.js';
 
 export class Environment {
   constructor(scene) {
@@ -220,13 +221,34 @@ export class Environment {
       flowerYellow: new THREE.MeshToonMaterial({ color: 0xfffa65, gradientMap: textureFactory.getToonGradientMap() }),
       flowerPurple: new THREE.MeshToonMaterial({ color: 0xa55eea, gradientMap: textureFactory.getToonGradientMap() }),
       bookCovers: new THREE.MeshToonMaterial({ color: 0x2c3e50, gradientMap: textureFactory.getToonGradientMap() }),
-      chalkboard: new THREE.MeshStandardMaterial({ color: 0x222f3e, roughness: 0.9 })
+      chalkboard: new THREE.MeshStandardMaterial({ color: 0x222f3e, roughness: 0.9 }),
+      // Matériaux des 7 Biomes (Parcs, Corniches, Plages, Déserts, Steppes, Falaises, Canyons)
+      seaWater: new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.18, metalness: 0.35 }),
+      lagoonWater: new THREE.MeshStandardMaterial({ color: 0x06b6d4, roughness: 0.15, metalness: 0.3 }),
+      seaFoam: new THREE.MeshBasicMaterial({ color: 0xe0f2fe, transparent: true, opacity: 0.85 }),
+      beachSand: new THREE.MeshStandardMaterial({ color: 0xfde68a, roughness: 0.92 }),
+      desertSand: new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.9 }),
+      desertDuneLight: new THREE.MeshStandardMaterial({ color: 0xfbbf24, roughness: 0.88 }),
+      desertRock: new THREE.MeshStandardMaterial({ color: 0xb45309, roughness: 0.92 }),
+      steppeGrass: new THREE.MeshStandardMaterial({ color: 0xa3a847, roughness: 0.92 }),
+      steppeScrub: new THREE.MeshToonMaterial({ color: 0x657732, gradientMap: textureFactory.getToonGradientMap() }),
+      steppeRock: new THREE.MeshStandardMaterial({ color: 0xc2b280, roughness: 0.9 }),
+      cliffRock: new THREE.MeshStandardMaterial({ color: 0x78716c, roughness: 0.92 }),
+      cliffStrata: new THREE.MeshStandardMaterial({ color: 0xa8a29e, roughness: 0.88 }),
+      canyonRed: new THREE.MeshStandardMaterial({ color: 0xc2410c, roughness: 0.9 }),
+      canyonRose: new THREE.MeshStandardMaterial({ color: 0xe11d48, roughness: 0.88 }),
+      canyonCarved: new THREE.MeshStandardMaterial({ color: 0xfb7185, roughness: 0.82 }),
+      tentFabric: new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.85 }),
+      parasolCyan: new THREE.MeshToonMaterial({ color: 0x00d2d3, gradientMap: textureFactory.getToonGradientMap() }),
+      parasolCoral: new THREE.MeshToonMaterial({ color: 0xff6b6b, gradientMap: textureFactory.getToonGradientMap() }),
+      goldDome: new THREE.MeshStandardMaterial({ color: 0xfbbf24, roughness: 0.22, metalness: 0.85 })
     };
   }
 
   setCity(cityDef, finishDistance = null, isRuins = false) {
     this.isRuinsMode = !!isRuins || !!cityDef.isRuinsMode;
     this.cityTheme = cityDef;
+    this.currentBiome = getCityBiomeInfo(cityDef).id;
     this.disasterType = cityDef.disasterType || (cityDef.isNuclearMission ? 'NUCLEAR' : (cityDef.isDamMission ? 'DAM' : (cityDef.isMountainMission ? 'MOUNTAIN' : 'STREET')));
     this.isCataclysmMission = this.disasterType !== 'STREET';
     this.isNuclearMission = this.disasterType === 'NUCLEAR' || !!cityDef.isNuclearMission;
@@ -1160,6 +1182,110 @@ export class Environment {
 
       lmGroup.add(annabaGroup);
 
+    } else if (cityId === 'le_caire' || cityId === 'ghardaia' || cityId === 'tripoli') {
+      // GRANDES PYRAMIDES DE GIZEH & SPHINX DORÉ
+      const pyramidMat = new THREE.MeshToonMaterial({ color: 0xf59e0b });
+      const goldCapMat = new THREE.MeshStandardMaterial({ color: 0xfbbf24, metalness: 0.85, roughness: 0.2 });
+      const gizaGroup = new THREE.Group();
+      gizaGroup.position.set(18, 0, 240);
+
+      const kheops = new THREE.Mesh(new THREE.ConeGeometry(48, 68, 4), pyramidMat);
+      kheops.position.set(-22, 34, 0);
+      kheops.rotation.y = Math.PI / 4;
+      const pyramidion = new THREE.Mesh(new THREE.ConeGeometry(10, 14, 4), goldCapMat);
+      pyramidion.position.set(-22, 62, 0);
+      pyramidion.rotation.y = Math.PI / 4;
+
+      const khephren = new THREE.Mesh(new THREE.ConeGeometry(38, 54, 4), pyramidMat);
+      khephren.position.set(34, 27, 18);
+      khephren.rotation.y = Math.PI / 4;
+
+      gizaGroup.add(kheops, pyramidion, khephren);
+      lmGroup.add(gizaGroup);
+
+    } else if (cityId === 'petra') {
+      // LE KHAZNEH DE PÉTRA TAILLÉ DANS LA FALAISE DE GRÈS ROSE
+      const roseMat = new THREE.MeshToonMaterial({ color: 0xe11d48 });
+      const carvedMat = new THREE.MeshToonMaterial({ color: 0xfb7185 });
+      const petraGroup = new THREE.Group();
+      petraGroup.position.set(0, 0, 235);
+
+      const cliffBg = new THREE.Mesh(new THREE.BoxGeometry(110, 82, 26), roseMat);
+      cliffBg.position.set(0, 41, 10);
+      const pediment = new THREE.Mesh(new THREE.ConeGeometry(26, 12, 3), carvedMat);
+      pediment.position.set(0, 38, -4);
+      const tholos = new THREE.Mesh(new THREE.CylinderGeometry(8, 8, 18, 12), carvedMat);
+      tholos.position.set(0, 52, -4);
+      const urn = new THREE.Mesh(new THREE.SphereGeometry(4.5, 10, 10), new THREE.MeshBasicMaterial({ color: 0xfbbf24 }));
+      urn.position.set(0, 65, -4);
+      petraGroup.add(cliffBg, pediment, tholos, urn);
+      [-18, -10, -4, 4, 10, 18].forEach(cx => {
+        const col = new THREE.Mesh(new THREE.CylinderGeometry(1.6, 1.8, 28, 10), carvedMat);
+        col.position.set(cx, 16, -4);
+        petraGroup.add(col);
+      });
+      lmGroup.add(petraGroup);
+
+    } else if (cityId === 'jerusalem' || cityId === 'damas' || cityId === 'bagdad') {
+      // DÔME DU ROCHER DORÉ / GRANDE COUPOLE ORIENTALE
+      const wallMat = new THREE.MeshToonMaterial({ color: 0xfef3c7 });
+      const domeColor = cityId === 'bagdad' ? 0x06b6d4 : (cityId === 'damas' ? 0x10b981 : 0xfbbf24);
+      const domeMat = new THREE.MeshStandardMaterial({ color: domeColor, metalness: 0.75, roughness: 0.2 });
+      const shrineGroup = new THREE.Group();
+      shrineGroup.position.set(22, 0, 235);
+
+      const octagon = new THREE.Mesh(new THREE.CylinderGeometry(32, 34, 22, 8), wallMat);
+      octagon.position.y = 11;
+      const drum = new THREE.Mesh(new THREE.CylinderGeometry(18, 18, 12, 16), new THREE.MeshToonMaterial({ color: 0x0284c7 }));
+      drum.position.y = 26;
+      const dome = new THREE.Mesh(new THREE.SphereGeometry(19, 20, 16), domeMat);
+      dome.position.y = 34;
+      const crescent = new THREE.Mesh(new THREE.TorusGeometry(3.2, 0.6, 8, 16), domeMat);
+      crescent.position.y = 56;
+      shrineGroup.add(octagon, drum, dome, crescent);
+      lmGroup.add(shrineGroup);
+
+    } else if (cityId === 'marrakech' || cityId === 'casablanca' || cityId === 'alexandrie') {
+      // GRAND MINARET DE LA KOUTOUBIA / HASSAN II / PHARE D'ALEXANDRIE
+      const towerColor = cityId === 'marrakech' ? 0xd97742 : 0xfef3c7;
+      const towerMat = new THREE.MeshToonMaterial({ color: towerColor });
+      const tealMat = new THREE.MeshToonMaterial({ color: 0x10b981 });
+      const lanternGold = new THREE.MeshBasicMaterial({ color: 0xfbbf24 });
+      const minGroup = new THREE.Group();
+      minGroup.position.set(26, 0, 235);
+
+      const baseTower = new THREE.Mesh(new THREE.BoxGeometry(20, 64, 20), towerMat);
+      baseTower.position.y = 32;
+      const band = new THREE.Mesh(new THREE.BoxGeometry(21, 5, 21), tealMat);
+      band.position.y = 58;
+      const lantern = new THREE.Mesh(new THREE.BoxGeometry(10, 16, 10), towerMat);
+      lantern.position.y = 72;
+      const domeTop = new THREE.Mesh(new THREE.SphereGeometry(6.5, 12, 12), lanternGold);
+      domeTop.position.y = 82;
+      minGroup.add(baseTower, band, lantern, domeTop);
+      lmGroup.add(minGroup);
+
+    } else if (cityId === 'beyrouth' || cityId === 'antalya' || cityId === 'tanger' || cityId === 'oran') {
+      // ROCHER AUX PIGEONS DE RAOUCHÉ & FALAISE MARITIME
+      const rockMat = new THREE.MeshToonMaterial({ color: 0xd6c7b2 });
+      const seaMat = new THREE.MeshBasicMaterial({ color: 0x0284c7 });
+      const raoucheGroup = new THREE.Group();
+      raoucheGroup.position.set(28, 0, 235);
+
+      const sea = new THREE.Mesh(new THREE.PlaneGeometry(340, 200), seaMat);
+      sea.rotation.x = -Math.PI / 2;
+      sea.position.y = 0.1;
+      const pillarL = new THREE.Mesh(new THREE.BoxGeometry(18, 52, 18), rockMat);
+      pillarL.position.set(-14, 26, 0);
+      const pillarR = new THREE.Mesh(new THREE.BoxGeometry(18, 52, 18), rockMat);
+      pillarR.position.set(14, 26, 0);
+      const archTop = new THREE.Mesh(new THREE.BoxGeometry(48, 16, 20), rockMat);
+      archTop.position.set(0, 48, 0);
+      const sentinelRock = new THREE.Mesh(new THREE.ConeGeometry(14, 44, 7), rockMat);
+      sentinelRock.position.set(38, 22, 10);
+      raoucheGroup.add(sea, pillarL, pillarR, archTop, sentinelRock);
+      lmGroup.add(raoucheGroup);
+
     } else {
       // MONUMENT D'ÉLÉGANCE CLASSIQUE / BEFFROI
       const classicMat = new THREE.MeshToonMaterial({ color: 0xdcdde1 });
@@ -1490,16 +1616,74 @@ export class Environment {
       const bDepth = 10.0;
       const centerZ = currentZ + bWidth / 2;
 
-      // Diversité architecturale & urbaine : Squares publics verdoyants & Esplanades avec statues commémoratives
-      const parcelRand = ((parcelIndex * 17) % 100) / 100;
-      if (!this.isCataclysmMission && parcelRand < 0.14 && bWidth >= 8.5) {
-        this.createUrbanSquare(chunk, side, xBase, currentZ, bWidth, bDepth);
-        currentZ += bWidth;
-        continue;
-      } else if (!this.isCataclysmMission && parcelRand >= 0.14 && parcelRand < 0.24 && bWidth >= 8.5) {
-        this.createUrbanMonument(chunk, side, xBase, currentZ, bWidth, bDepth);
-        currentZ += bWidth;
-        continue;
+      // Diversité architecturale & paysagère : Parcs, Corniches, Plages, Déserts, Steppes, Falaises, Canyons & Monuments
+      const parcelRand = ((parcelIndex * 23 + chunkIdx * 13) % 100) / 100;
+      const biome = this.currentBiome || 'park';
+
+      if (!this.isCataclysmMission && bWidth >= 8.2) {
+        if (biome === 'canyon' && parcelRand < 0.78) {
+          this.createCanyonZone(chunk, side, xBase, currentZ, bWidth, bDepth, parcelIndex);
+          currentZ += bWidth;
+          continue;
+        }
+        if (biome === 'desert' && parcelRand < 0.74) {
+          this.createDesertZone(chunk, side, xBase, currentZ, bWidth, bDepth, parcelIndex);
+          currentZ += bWidth;
+          continue;
+        }
+        if (biome === 'beach' && parcelRand < 0.72) {
+          if (side > 0 || parcelRand < 0.45) {
+            this.createBeachZone(chunk, side, xBase, currentZ, bWidth, bDepth, parcelIndex);
+          } else {
+            this.createParkZone(chunk, side, xBase, currentZ, bWidth, bDepth, parcelIndex);
+          }
+          currentZ += bWidth;
+          continue;
+        }
+        if (biome === 'corniche' && parcelRand < 0.72) {
+          if (side > 0) {
+            this.createCornicheZone(chunk, side, xBase, currentZ, bWidth, bDepth, parcelIndex);
+          } else if (parcelRand < 0.36) {
+            this.createCliffsZone(chunk, side, xBase, currentZ, bWidth, bDepth, parcelIndex);
+          } else {
+            this.createParkZone(chunk, side, xBase, currentZ, bWidth, bDepth, parcelIndex);
+          }
+          currentZ += bWidth;
+          continue;
+        }
+        if (biome === 'steppe' && parcelRand < 0.72) {
+          this.createSteppeZone(chunk, side, xBase, currentZ, bWidth, bDepth, parcelIndex);
+          currentZ += bWidth;
+          continue;
+        }
+        if (biome === 'cliffs' && parcelRand < 0.70) {
+          if (side < 0 || parcelRand < 0.45) {
+            this.createCliffsZone(chunk, side, xBase, currentZ, bWidth, bDepth, parcelIndex);
+          } else {
+            this.createCornicheZone(chunk, side, xBase, currentZ, bWidth, bDepth, parcelIndex);
+          }
+          currentZ += bWidth;
+          continue;
+        }
+
+        // Alternance paysagère riche pour les villes de type 'park' / métropoles classiques
+        if (parcelRand < 0.22) {
+          this.createParkZone(chunk, side, xBase, currentZ, bWidth, bDepth, parcelIndex);
+          currentZ += bWidth;
+          continue;
+        } else if (parcelRand >= 0.22 && parcelRand < 0.32) {
+          this.createUrbanSquare(chunk, side, xBase, currentZ, bWidth, bDepth);
+          currentZ += bWidth;
+          continue;
+        } else if (parcelRand >= 0.32 && parcelRand < 0.40) {
+          this.createUrbanMonument(chunk, side, xBase, currentZ, bWidth, bDepth);
+          currentZ += bWidth;
+          continue;
+        } else if (parcelRand >= 0.40 && parcelRand < 0.48 && side > 0) {
+          this.createCornicheZone(chunk, side, xBase, currentZ, bWidth, bDepth, parcelIndex);
+          currentZ += bWidth;
+          continue;
+        }
       }
 
       // Pivot placé directement sur l'alignement de la façade (bord extérieur du trottoir)
@@ -1731,6 +1915,438 @@ export class Environment {
     monGroup.add(statueGroup);
 
     chunk.add(monGroup);
+  }
+
+  // --- 1. GRAND PARC VERDOYANT, BOSQUETS & BASSINS (park) ---
+  createParkZone(chunk, side, xBase, currentZ, bWidth, bDepth = 10.0, parcelIndex = 0) {
+    const parkGroup = new THREE.Group();
+    const centerZ = currentZ + bWidth / 2;
+    const centerX = xBase + side * (bDepth / 2);
+    parkGroup.position.set(centerX, 0, centerZ);
+    parkGroup.userData = {
+      baseX: centerX,
+      localZ: centerZ,
+      baseRotY: 0,
+      hideAtIntersection: true,
+      interClearance: 10.8 + bWidth * 0.5
+    };
+
+    const lawnMat = this.sharedMats?.lawn || new THREE.MeshStandardMaterial({ color: 0x27ae60, roughness: 0.85 });
+    const foliage1 = this.sharedMats?.foliage1 || lawnMat;
+    const foliage2 = this.sharedMats?.foliage2 || lawnMat;
+    const woodMat = this.sharedMats?.wood || new THREE.MeshStandardMaterial({ color: 0x5d4037 });
+    const stoneMat = this.sharedMats?.granite || new THREE.MeshStandardMaterial({ color: 0x95a5a6 });
+    const waterMat = this.sharedMats?.fountainWater || new THREE.MeshStandardMaterial({ color: 0x0984e3 });
+    const flowerMat = (parcelIndex % 2 === 0) ? (this.sharedMats?.flower1 || lawnMat) : (this.sharedMats?.flower2 || lawnMat);
+
+    // Pelouse vallonnée
+    const lawn = new THREE.Mesh(new THREE.BoxGeometry(bDepth + 3.0, 0.28, bWidth), lawnMat);
+    lawn.position.set(side * 1.2, 0.14, 0);
+    parkGroup.add(lawn);
+
+    // Allée sablée & Muret bas en pierre de taille côté trottoir
+    const curbWall = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.55, bWidth * 0.82), stoneMat);
+    curbWall.position.set(-side * (bDepth / 2 - 0.2), 0.32, 0);
+    parkGroup.add(curbWall);
+
+    // Bosquet d'arbres majestueux & Cyprès
+    [-bWidth * 0.28, 0, bWidth * 0.28].forEach((tz, i) => {
+      const treeX = (i % 2 === 0 ? 0.6 : 2.6) * side;
+      const trunk = new THREE.Mesh(this.sharedGeos.treeTrunk, woodMat);
+      trunk.position.set(treeX, 1.2, tz);
+      const crown = new THREE.Mesh(this.sharedGeos.treeFoliage, i % 2 === 0 ? foliage1 : foliage2);
+      crown.scale.set(1.25, 1.35, 1.25);
+      crown.position.set(treeX, 3.2, tz);
+      parkGroup.add(trunk, crown);
+    });
+
+    // Bassin miroir ou parterre floral
+    if (parcelIndex % 2 === 0) {
+      const poolRim = new THREE.Mesh(new THREE.CylinderGeometry(1.9, 2.0, 0.38, 14), stoneMat);
+      poolRim.position.set(-side * 1.0, 0.3, 0);
+      const poolWater = new THREE.Mesh(new THREE.CylinderGeometry(1.65, 1.65, 0.1, 14), waterMat);
+      poolWater.position.set(-side * 1.0, 0.46, 0);
+      parkGroup.add(poolRim, poolWater);
+    } else {
+      const flowerBed = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.25, bWidth * 0.55), flowerMat);
+      flowerBed.position.set(-side * 1.2, 0.28, 0);
+      parkGroup.add(flowerBed);
+    }
+
+    chunk.add(parkGroup);
+  }
+
+  // --- 2. CORNICHE MARITIME, BALUSTRADE DE PIERRE & MER SCINTILLANTE (corniche) ---
+  createCornicheZone(chunk, side, xBase, currentZ, bWidth, bDepth = 10.0, parcelIndex = 0) {
+    const cornicheGroup = new THREE.Group();
+    const centerZ = currentZ + bWidth / 2;
+    const centerX = xBase + side * (bDepth / 2);
+    cornicheGroup.position.set(centerX, 0, centerZ);
+    cornicheGroup.userData = {
+      baseX: centerX,
+      localZ: centerZ,
+      baseRotY: 0,
+      hideAtIntersection: true,
+      interClearance: 10.8 + bWidth * 0.5
+    };
+
+    const marbleMat = this.sharedMats?.marble || new THREE.MeshStandardMaterial({ color: 0xf5f6fa });
+    const seaMat = this.sharedMats?.seaWater || new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.2 });
+    const foamMat = this.sharedMats?.seaFoam || new THREE.MeshBasicMaterial({ color: 0xe0f2fe });
+    const cliffMat = this.sharedMats?.cliffRock || new THREE.MeshStandardMaterial({ color: 0x78716c });
+    const woodMat = this.sharedMats?.wood || new THREE.MeshStandardMaterial({ color: 0x5d4037 });
+    const foliageMat = this.sharedMats?.foliage1 || new THREE.MeshStandardMaterial({ color: 0x27ae60 });
+
+    // 1. Balustrade blanche de corniche en bordure de trottoir
+    const edgeX = -side * (bDepth / 2 - 0.22);
+    const railTop = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.18, bWidth), marbleMat);
+    railTop.position.set(edgeX, 0.92, 0);
+    const railBase = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.25, bWidth), marbleMat);
+    railBase.position.set(edgeX, 0.15, 0);
+    cornicheGroup.add(railTop, railBase);
+
+    for (let z = -bWidth * 0.42; z <= bWidth * 0.42; z += 1.4) {
+      const baluster = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.12, 0.65, 8), marbleMat);
+      baluster.position.set(edgeX, 0.55, z);
+      cornicheGroup.add(baluster);
+    }
+
+    // 2. Enrochement côtier & Vaste étendue de mer Méditerranée / Atlantique en contrebas
+    const seaPlane = new THREE.Mesh(new THREE.BoxGeometry(bDepth + 14.0, 0.3, bWidth + 0.4), seaMat);
+    seaPlane.position.set(side * 6.5, -1.35, 0);
+    const foamLine = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.08, bWidth), foamMat);
+    foamLine.position.set(-side * (bDepth / 2 - 1.4), -1.15, 0);
+    const seaWall = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.8, bWidth), cliffMat);
+    seaWall.position.set(-side * (bDepth / 2 - 0.5), -0.45, 0);
+    cornicheGroup.add(seaPlane, foamLine, seaWall);
+
+    // 3. Rochers marins émergés ou voilier au large
+    if (parcelIndex % 2 === 0) {
+      const seaRock = new THREE.Mesh(new THREE.DodecahedronGeometry(1.8, 0), cliffMat);
+      seaRock.scale.set(1.3, 0.9, 1.2);
+      seaRock.position.set(side * 4.2, -0.6, 0);
+      cornicheGroup.add(seaRock);
+    } else {
+      // Palmier de promenade penché vers la mer
+      const pTrunk = new THREE.Mesh(this.sharedGeos.palmTrunk, woodMat);
+      pTrunk.position.set(edgeX + side * 0.6, 2.0, 0);
+      cornicheGroup.add(pTrunk);
+      for (let f = 0; f < 5; f++) {
+        const frond = new THREE.Mesh(this.sharedGeos.palmLeaf, foliageMat);
+        const ang = (f * Math.PI * 2) / 5;
+        frond.position.set(edgeX + side * 0.6 + Math.sin(ang) * 0.8, 3.85, Math.cos(ang) * 0.8);
+        frond.rotation.y = ang;
+        frond.rotation.x = 0.35;
+        cornicheGroup.add(frond);
+      }
+    }
+
+    chunk.add(cornicheGroup);
+  }
+
+  // --- 3. PLAGE DORÉE, LAGUNE TURQUOISE, PARASOLS & PALMIERS (beach) ---
+  createBeachZone(chunk, side, xBase, currentZ, bWidth, bDepth = 10.0, parcelIndex = 0) {
+    const beachGroup = new THREE.Group();
+    const centerZ = currentZ + bWidth / 2;
+    const centerX = xBase + side * (bDepth / 2);
+    beachGroup.position.set(centerX, 0, centerZ);
+    beachGroup.userData = {
+      baseX: centerX,
+      localZ: centerZ,
+      baseRotY: 0,
+      hideAtIntersection: true,
+      interClearance: 10.8 + bWidth * 0.5
+    };
+
+    const sandMat = this.sharedMats?.beachSand || new THREE.MeshStandardMaterial({ color: 0xfde68a });
+    const lagoonMat = this.sharedMats?.lagoonWater || new THREE.MeshStandardMaterial({ color: 0x06b6d4 });
+    const foamMat = this.sharedMats?.seaFoam || new THREE.MeshBasicMaterial({ color: 0xe0f2fe });
+    const woodMat = this.sharedMats?.wood || new THREE.MeshStandardMaterial({ color: 0x5d4037 });
+    const foliageMat = this.sharedMats?.foliage1 || new THREE.MeshStandardMaterial({ color: 0x27ae60 });
+    const pCyan = this.sharedMats?.parasolCyan || new THREE.MeshBasicMaterial({ color: 0x00d2d3 });
+    const pCoral = this.sharedMats?.parasolCoral || new THREE.MeshBasicMaterial({ color: 0xff6b6b });
+    const marbleMat = this.sharedMats?.marble || new THREE.MeshStandardMaterial({ color: 0xffffff });
+
+    // 1. Plage de sable fin doré et lagune turquoise
+    const sandSlope = new THREE.Mesh(new THREE.BoxGeometry(bDepth * 0.72, 0.26, bWidth), sandMat);
+    sandSlope.position.set(-side * 1.4, 0.08, 0);
+    const lagoon = new THREE.Mesh(new THREE.BoxGeometry(bDepth + 8.0, 0.22, bWidth), lagoonMat);
+    lagoon.position.set(side * 6.2, -0.08, 0);
+    const surfFoam = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.06, bWidth), foamMat);
+    surfFoam.position.set(side * 2.1, 0.06, 0);
+    beachGroup.add(sandSlope, lagoon, surfFoam);
+
+    // 2. Parasols de plage colorés & Transats blancs
+    [-bWidth * 0.25, bWidth * 0.25].forEach((pz, idx) => {
+      const px = -side * 1.6;
+      const pole = new THREE.Mesh(this.sharedGeos.parasolPole, woodMat);
+      pole.position.set(px, 1.1, pz);
+      const canopy = new THREE.Mesh(this.sharedGeos.parasol, (parcelIndex + idx) % 2 === 0 ? pCyan : pCoral);
+      canopy.position.set(px, 2.05, pz);
+      const lounger = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.18, 0.75), marbleMat);
+      lounger.position.set(px + side * 0.4, 0.26, pz + 0.65);
+      beachGroup.add(pole, canopy, lounger);
+    });
+
+    // 3. Palmier cocotier de bord de plage
+    const palmX = -side * 3.4;
+    const pTrunk = new THREE.Mesh(this.sharedGeos.palmTrunk, woodMat);
+    pTrunk.position.set(palmX, 2.1, 0);
+    beachGroup.add(pTrunk);
+    for (let f = 0; f < 6; f++) {
+      const frond = new THREE.Mesh(this.sharedGeos.palmLeaf, foliageMat);
+      const ang = (f * Math.PI) / 3;
+      frond.position.set(palmX + Math.sin(ang) * 0.85, 3.95, Math.cos(ang) * 0.85);
+      frond.rotation.y = ang;
+      frond.rotation.x = 0.38;
+      beachGroup.add(frond);
+    }
+
+    chunk.add(beachGroup);
+  }
+
+  // --- 4. DÉSERT OCRE, DUNES DE SABLE, OASIS & COLONNES ANTIQUES (desert) ---
+  createDesertZone(chunk, side, xBase, currentZ, bWidth, bDepth = 10.0, parcelIndex = 0) {
+    const desertGroup = new THREE.Group();
+    const centerZ = currentZ + bWidth / 2;
+    const centerX = xBase + side * (bDepth / 2);
+    desertGroup.position.set(centerX, 0, centerZ);
+    desertGroup.userData = {
+      baseX: centerX,
+      localZ: centerZ,
+      baseRotY: 0,
+      hideAtIntersection: true,
+      interClearance: 10.8 + bWidth * 0.5
+    };
+
+    const sandMat = this.sharedMats?.desertSand || new THREE.MeshStandardMaterial({ color: 0xf59e0b });
+    const duneMat = this.sharedMats?.desertDuneLight || new THREE.MeshStandardMaterial({ color: 0xfbbf24 });
+    const rockMat = this.sharedMats?.desertRock || new THREE.MeshStandardMaterial({ color: 0xb45309 });
+    const woodMat = this.sharedMats?.wood || new THREE.MeshStandardMaterial({ color: 0x5d4037 });
+    const foliageMat = this.sharedMats?.foliage1 || new THREE.MeshStandardMaterial({ color: 0x27ae60 });
+    const waterMat = this.sharedMats?.lagoonWater || new THREE.MeshStandardMaterial({ color: 0x06b6d4 });
+    const tentMat = this.sharedMats?.tentFabric || new THREE.MeshStandardMaterial({ color: 0x78350f });
+
+    // 1. Sol désertique ocre & Grandes dunes sculptées
+    const desertFloor = new THREE.Mesh(new THREE.BoxGeometry(bDepth + 8.0, 0.3, bWidth), sandMat);
+    desertFloor.position.set(side * 3.5, 0.15, 0);
+    desertGroup.add(desertFloor);
+
+    const duneH = 4.2 + (parcelIndex % 3) * 1.8;
+    const dune = new THREE.Mesh(new THREE.ConeGeometry(4.8, duneH, 7), duneMat);
+    dune.scale.set(1.3, 1.0, 1.5);
+    dune.position.set(side * 2.8, duneH * 0.45, -bWidth * 0.15);
+    desertGroup.add(dune);
+
+    // 2. Variété : Oasis aux palmiers dattiers, Colonnes antiques/Obélisque ou Tente Bédouine
+    const variant = parcelIndex % 3;
+    if (variant === 0) {
+      // Oasis d'émeraude et palmiers dattiers
+      const oasisPool = new THREE.Mesh(new THREE.CylinderGeometry(2.1, 2.3, 0.18, 12), waterMat);
+      oasisPool.position.set(-side * 1.6, 0.28, bWidth * 0.15);
+      desertGroup.add(oasisPool);
+
+      [-bWidth * 0.22, bWidth * 0.25].forEach(pz => {
+        const px = -side * 2.2;
+        const pTrunk = new THREE.Mesh(this.sharedGeos.palmTrunk, woodMat);
+        pTrunk.position.set(px, 2.1, pz);
+        desertGroup.add(pTrunk);
+        for (let f = 0; f < 6; f++) {
+          const frond = new THREE.Mesh(this.sharedGeos.palmLeaf, foliageMat);
+          const ang = (f * Math.PI) / 3;
+          frond.position.set(px + Math.sin(ang) * 0.85, 3.95, pz + Math.cos(ang) * 0.85);
+          frond.rotation.y = ang;
+          frond.rotation.x = 0.38;
+          desertGroup.add(frond);
+        }
+      });
+    } else if (variant === 1) {
+      // Obélisque pharaonique / Colonnes de Palmyre dans le sable
+      const obelisk = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.85, 9.5, 4), rockMat);
+      obelisk.position.set(-side * 1.8, 4.75, 0);
+      const pyramidMini = new THREE.Mesh(new THREE.ConeGeometry(3.4, 5.2, 4), duneMat);
+      pyramidMini.position.set(side * 1.5, 2.6, bWidth * 0.22);
+      pyramidMini.rotation.y = Math.PI / 4;
+      desertGroup.add(obelisk, pyramidMini);
+    } else {
+      // Campement berbère / bédouin & Rocher mesa
+      const tent = new THREE.Mesh(new THREE.ConeGeometry(2.4, 2.2, 6), tentMat);
+      tent.scale.set(1.2, 1.0, 1.5);
+      tent.position.set(-side * 1.6, 1.2, 0);
+      const mesa = new THREE.Mesh(new THREE.CylinderGeometry(2.2, 3.0, 5.5, 7), rockMat);
+      mesa.position.set(side * 2.4, 2.75, bWidth * 0.24);
+      desertGroup.add(tent, mesa);
+    }
+
+    chunk.add(desertGroup);
+  }
+
+  // --- 5. STEPPE SAUVAGE, HAUTS PLATEAUX & CHEMINÉES DE FÉES (steppe) ---
+  createSteppeZone(chunk, side, xBase, currentZ, bWidth, bDepth = 10.0, parcelIndex = 0) {
+    const steppeGroup = new THREE.Group();
+    const centerZ = currentZ + bWidth / 2;
+    const centerX = xBase + side * (bDepth / 2);
+    steppeGroup.position.set(centerX, 0, centerZ);
+    steppeGroup.userData = {
+      baseX: centerX,
+      localZ: centerZ,
+      baseRotY: 0,
+      hideAtIntersection: true,
+      interClearance: 10.8 + bWidth * 0.5
+    };
+
+    const grassMat = this.sharedMats?.steppeGrass || new THREE.MeshStandardMaterial({ color: 0xa3a847 });
+    const scrubMat = this.sharedMats?.steppeScrub || new THREE.MeshStandardMaterial({ color: 0x657732 });
+    const rockMat = this.sharedMats?.steppeRock || new THREE.MeshStandardMaterial({ color: 0xc2b280 });
+    const darkRockMat = this.sharedMats?.desertRock || new THREE.MeshStandardMaterial({ color: 0x92400e });
+    const marbleMat = this.sharedMats?.marble || new THREE.MeshStandardMaterial({ color: 0xf5f6fa });
+
+    // 1. Plaine herbeuse ocre-vert des hauts plateaux
+    const plain = new THREE.Mesh(new THREE.BoxGeometry(bDepth + 8.0, 0.3, bWidth), grassMat);
+    plain.position.set(side * 3.5, 0.15, 0);
+    steppeGroup.add(plain);
+
+    // 2. Arbustes sauvages de la steppe
+    [-bWidth * 0.3, 0, bWidth * 0.3].forEach((sz, idx) => {
+      const bush = new THREE.Mesh(this.sharedGeos.treeFoliage, scrubMat);
+      bush.scale.set(0.75, 0.55, 0.75);
+      bush.position.set((idx % 2 === 0 ? -1.8 : 0.8) * side, 0.65, sz);
+      steppeGroup.add(bush);
+    });
+
+    // 3. Cheminées de fées (style Cappadoce) / Pitons rocheux et Yourte nomade
+    const spireH = 8.5 + (parcelIndex % 3) * 3.2;
+    const spireShaft = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 2.3, spireH, 8), rockMat);
+    spireShaft.position.set(side * 1.8, spireH / 2, -bWidth * 0.18);
+    const spireCap = new THREE.Mesh(new THREE.ConeGeometry(1.65, 2.4, 8), darkRockMat);
+    spireCap.position.set(side * 1.8, spireH + 0.9, -bWidth * 0.18);
+    steppeGroup.add(spireShaft, spireCap);
+
+    if (parcelIndex % 2 === 0) {
+      // Yourte traditionnelle des steppes
+      const yurtWall = new THREE.Mesh(new THREE.CylinderGeometry(2.0, 2.0, 1.4, 12), marbleMat);
+      yurtWall.position.set(-side * 1.4, 0.9, bWidth * 0.2);
+      const yurtRoof = new THREE.Mesh(new THREE.ConeGeometry(2.15, 1.1, 12), darkRockMat);
+      yurtRoof.position.set(-side * 1.4, 2.15, bWidth * 0.2);
+      steppeGroup.add(yurtWall, yurtRoof);
+    } else {
+      // Second piton rocheux
+      const rock2 = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 1.8, 6.5, 7), rockMat);
+      rock2.position.set(-side * 1.2, 3.25, bWidth * 0.22);
+      steppeGroup.add(rock2);
+    }
+
+    chunk.add(steppeGroup);
+  }
+
+  // --- 6. FALAISES ESCARPÉES & PAROIS ROCHEUSES (cliffs) ---
+  createCliffsZone(chunk, side, xBase, currentZ, bWidth, bDepth = 10.0, parcelIndex = 0) {
+    const cliffGroup = new THREE.Group();
+    const centerZ = currentZ + bWidth / 2;
+    const centerX = xBase + side * (bDepth / 2);
+    cliffGroup.position.set(centerX, 0, centerZ);
+    cliffGroup.userData = {
+      baseX: centerX,
+      localZ: centerZ,
+      baseRotY: 0,
+      hideAtIntersection: true,
+      interClearance: 10.8 + bWidth * 0.5
+    };
+
+    const rockMat = this.sharedMats?.cliffRock || new THREE.MeshStandardMaterial({ color: 0x78716c });
+    const strataMat = this.sharedMats?.cliffStrata || new THREE.MeshStandardMaterial({ color: 0xa8a29e });
+    const foliageMat = this.sharedMats?.foliage2 || new THREE.MeshStandardMaterial({ color: 0x1e8449 });
+    const woodMat = this.sharedMats?.wood || new THREE.MeshStandardMaterial({ color: 0x5d4037 });
+
+    const cliffH = 17.0 + (parcelIndex % 4) * 3.2;
+
+    // 1. Paroi de falaise principale stratifiée
+    const mainWall = new THREE.Mesh(new THREE.BoxGeometry(bDepth * 0.88, cliffH, bWidth * 0.98), rockMat);
+    mainWall.position.set(side * 0.6, cliffH / 2, 0);
+    cliffGroup.add(mainWall);
+
+    // 2. Corniches et strates rocheuses en relief côté route
+    [4.5, 9.8, 14.5].forEach((ly, idx) => {
+      if (ly < cliffH - 1.5) {
+        const ledge = new THREE.Mesh(
+          new THREE.BoxGeometry(1.8 + (idx % 2) * 0.7, 2.2, bWidth * (0.85 - idx * 0.12)),
+          idx % 2 === 0 ? strataMat : rockMat
+        );
+        ledge.position.set(-side * (bDepth * 0.38), ly, (idx - 1) * 0.8);
+        cliffGroup.add(ledge);
+      }
+    });
+
+    // 3. Pin maritime / Cèdre suspendu au sommet de l'escarpement
+    const treeX = -side * 1.8;
+    const trunk = new THREE.Mesh(this.sharedGeos.treeTrunk, woodMat);
+    trunk.position.set(treeX, cliffH + 0.8, 0);
+    const canopy = new THREE.Mesh(this.sharedGeos.treeFoliage, foliageMat);
+    canopy.scale.set(1.4, 0.95, 1.4);
+    canopy.position.set(treeX, cliffH + 2.1, 0);
+    cliffGroup.add(trunk, canopy);
+
+    chunk.add(cliffGroup);
+  }
+
+  // --- 7. CANYON ROUGE DE GRÈS ROSE & FAÇADES RUPESTRES STYLE PÉTRA (canyon) ---
+  createCanyonZone(chunk, side, xBase, currentZ, bWidth, bDepth = 10.0, parcelIndex = 0) {
+    const canyonGroup = new THREE.Group();
+    const centerZ = currentZ + bWidth / 2;
+    const centerX = xBase + side * (bDepth / 2);
+    canyonGroup.position.set(centerX, 0, centerZ);
+    canyonGroup.userData = {
+      baseX: centerX,
+      localZ: centerZ,
+      baseRotY: 0,
+      hideAtIntersection: true,
+      interClearance: 10.8 + bWidth * 0.5
+    };
+
+    const redMat = this.sharedMats?.canyonRed || new THREE.MeshStandardMaterial({ color: 0xc2410c });
+    const roseMat = this.sharedMats?.canyonRose || new THREE.MeshStandardMaterial({ color: 0xe11d48 });
+    const carvedMat = this.sharedMats?.canyonCarved || new THREE.MeshStandardMaterial({ color: 0xfb7185 });
+    const goldMat = this.sharedMats?.goldDome || new THREE.MeshStandardMaterial({ color: 0xfbbf24 });
+
+    const wallH = 20.0 + (parcelIndex % 3) * 3.8;
+
+    // 1. Muraille vertigineuse du canyon de grès rouge/rose
+    const gorgeWall = new THREE.Mesh(
+      new THREE.BoxGeometry(bDepth, wallH, bWidth * 0.98),
+      parcelIndex % 2 === 0 ? redMat : roseMat
+    );
+    gorgeWall.position.set(side * 0.4, wallH / 2, 0);
+    canyonGroup.add(gorgeWall);
+
+    // Strates horizontales de grès
+    [5.5, 11.5, 16.5].forEach((sy, idx) => {
+      if (sy < wallH - 1.5) {
+        const band = new THREE.Mesh(
+          new THREE.BoxGeometry(1.5, 1.6, bWidth * 0.92),
+          idx % 2 === 0 ? roseMat : redMat
+        );
+        band.position.set(-side * (bDepth * 0.42), sy, 0);
+        canyonGroup.add(band);
+      }
+    });
+
+    // 2. Façade nabatéenne / Temple rupestre sculpté dans la paroi face à la route
+    if (parcelIndex % 2 === 0) {
+      const faceX = -side * (bDepth * 0.48);
+      [-bWidth * 0.22, bWidth * 0.22].forEach(cz => {
+        const col = new THREE.Mesh(this.sharedGeos.romanColumn, carvedMat);
+        col.scale.set(1.2, 1.5, 1.2);
+        col.position.set(faceX, 3.2, cz);
+        canyonGroup.add(col);
+      });
+      const pediment = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.4, bWidth * 0.62), carvedMat);
+      pediment.position.set(faceX, 6.8, 0);
+      const urn = new THREE.Mesh(new THREE.SphereGeometry(0.55, 8, 8), goldMat);
+      urn.position.set(faceX, 8.1, 0);
+      canyonGroup.add(pediment, urn);
+    }
+
+    chunk.add(canyonGroup);
   }
 
   populateRuinsBuildings(chunk, side) {

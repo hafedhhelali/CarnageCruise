@@ -68,8 +68,26 @@ const interContent = fs.readFileSync(path.join(rootDir, 'src', 'entities', 'Inte
 const texContent = fs.readFileSync(path.join(rootDir, 'src', 'gfx', 'TextureFactory.js'), 'utf8');
 assert(envContent.includes('alignChunkToCurve') && envContent.includes('getRoadCurvature'), 'Rubans routiers courbés subdivisés et calcul de courbure actifs');
 assert(interContent.includes('getIntersectionBoxTexture') && interContent.includes('getStreetPlateTexture'), 'Carrefours 3D architecturaux avec Box-Junction et plaques de rue HD');
-assert(texContent.includes('getCurveChevronTexture') && texContent.includes('styleVariant'), '4 styles de façades architecturales et panneaux chevrons de virage actifs');
+assert(texContent.includes('styleVariant'), '4 styles de façades architecturales actifs');
 assert(gameStateContent.includes('comboMultiplier = 1 + (this.combo - 1) * 0.25'), 'Progression vers l\'objectif 100% recalibrée et progressive');
+
+// 7. Tests de non-régression stricts sur les bugs corrigés précédemment
+const engineContent = fs.readFileSync(path.join(rootDir, 'src', 'core', 'Engine.js'), 'utf8');
+const storageContent = fs.readFileSync(path.join(rootDir, 'src', 'core', 'Storage.js'), 'utf8');
+const uiContent = fs.readFileSync(path.join(rootDir, 'src', 'ui', 'UIManager.js'), 'utf8');
+const charsContent = fs.readFileSync(path.join(rootDir, 'src', 'entities', 'Characters.js'), 'utf8');
+
+assert(!engineContent.includes('this.camera.rotation.z ='), 'Non-régression : Aucun écrasement de camera.rotation.z après lookAt() (pas de caméra inversée)');
+assert(envContent.includes('mesh.frustumCulled = false;') && envContent.includes('mesh.geometry.computeBoundingSphere();'), 'Non-régression : Bandes centrales de la route jamais éliminées par le frustum culling');
+assert(!envContent.includes('isCurveChevron: true'), 'Non-régression : Aucune indication/panneau chevron de virage parasite');
+assert(charsContent.includes('sidewalkSide') && charsContent.includes('nearestInterZ'), 'Non-régression : Piétons strictement sur les passages piétons ou trottoirs');
+assert(storageContent.includes('isBikeUnlocked(bikeId)'), 'Non-régression : storage.isBikeUnlocked(bikeId) présent (modale Pause 100% fluide sans blocage)');
+assert(uiContent.includes('hud-top-right-dock') && uiContent.includes('BOMBE NUCLÉAIRE'), 'Non-régression : Zone Pause/HUD ergonomique avec icône SVG et libellé BOMBE NUCLÉAIRE');
+
+// 8. Tests d'expansion Proche-Orient & Afrique du Nord + 7 Biomes 3D
+assert(gameStateContent.includes("id: 'marrakech'") && gameStateContent.includes("id: 'constantine'") && gameStateContent.includes("id: 'petra'") && gameStateContent.includes("id: 'beyrouth'") && gameStateContent.includes("id: 'jerusalem'") && gameStateContent.includes("id: 'bagdad'"), 'Expansion Carte : Villes d\'Afrique du Nord et du Proche-Orient présentes');
+assert(envContent.includes('createParkZone') && envContent.includes('createCornicheZone') && envContent.includes('createBeachZone') && envContent.includes('createDesertZone') && envContent.includes('createSteppeZone') && envContent.includes('createCliffsZone') && envContent.includes('createCanyonZone'), 'Diversification 3D : 7 générateurs de biomes (Parcs, Corniches, Plages, Déserts, Steppes, Falaises, Canyons) actifs');
+assert(uiContent.includes('map-region-filter-bar') && uiContent.includes('city-biome-pill'), 'Design UI/UX : Filtres par région (Europe / Afrique du Nord / Proche-Orient) et badges de biome actifs');
 
 console.log(`\n📊 RÉSULTAT DU CONTRÔLE QUALITÉ : ${passedTests}/${totalTests} tests réussis.`);
 if (passedTests === totalTests) {

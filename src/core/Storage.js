@@ -263,6 +263,12 @@ export class Storage {
     }
   }
 
+  isBikeUnlocked(bikeId) {
+    if (!bikeId) return false;
+    return (Array.isArray(this.data?.unlockedBikes) && this.data.unlockedBikes.includes(bikeId)) ||
+           DEFAULT_SAVE.unlockedBikes.includes(bikeId);
+  }
+
   unlockBike(bikeId, cost) {
     if (!this.data.unlockedBikes.includes(bikeId)) {
       if (this.data.coins >= cost) {

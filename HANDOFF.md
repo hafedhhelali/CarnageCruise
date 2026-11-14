@@ -8,7 +8,7 @@ Ce document fournit l'ensemble des informations de conception, d'architecture lo
 ## 1. VISION DU PROJET & SPÉCIFICATIONS
 
 - **Genre** : Jeu de course d'arcade urbain / Runner 3D burlesque
-- **Version actuelle** : **0.9.51-beta** (Build / versionCode 61 - Canal 0.x.x BETA)
+- **Version actuelle** : **0.9.52-beta** (Build / versionCode 62 - Canal 0.x.x BETA)
 - **Signature & Clé** : Keystore permanent dédié `android/app/CarnageCruise.keystore` (validité 10 000 jours, EOMedia Paris)
 - **Plateforme cible** : Android (Smartphones & Tablettes) + WebGL Mobile/Desktop
 - **Direction artistique** : Cartoon 3D éclatant, physique burlesque (slapstick), animations hilarantes et dynamiques, identité française affirmée.
@@ -443,6 +443,38 @@ Ce document fournit l'ensemble des informations de conception, d'architecture lo
 - **Remplacement de l'acronyme « ADM »** : remplacé partout par **« BOMBE NUCLÉAIRE »** / **« ☢️ NUCLÉAIRE »** pour une compréhension immédiate.
 - **Ergonomie de la Barre Supérieure HUD** : refonte de `.hud-top-bar` avec pilule de score nette à gauche, carte d'objectif lisible sans troncature au centre, et nouveau bouton combiné **« ⏸ PAUSE / ENGIN »** affichant l'icône du véhicule actif à droite.
 - **Sélecteur d'Engin en Direct dans le Menu Pause (`showPauseModal`)** : grille interactive de tous les engins débloqués permettant de changer d'engin instantanément en pleine course (`CHANGE_BIKE_IN_GAME`) avec mise à jour immédiate du modèle 3D et des commandes d'arme du HUD, plus accès direct au Garage complet.
+
+---
+
+## 15. EXPANSION AFRIQUE DU NORD & PROCHE-ORIENT, 7 BIOMES 3D DIVERSIFIÉS & REFONTE ZONE PAUSE / UI-UX (v0.9.52-beta / Build 62)
+
+### A. Correction Définitive du Blocage Pause & Refonte Design de la Zone Pause HUD (`src/core/Storage.js`, `src/main.js`, `src/ui/UIManager.js`, `src/ui/style.css`)
+- **Correction du Freeze à l'ouverture de Pause** : ajout de la méthode manquante `storage.isBikeUnlocked(bikeId)` dans `src/core/Storage.js` (qui levait une exception bloquante dans `showPauseModal()` après l'appel à `PAUSE`), sécurisation du bouton retour Android (`handleHardwareBack` déclenche bien `RESUME` à la fermeture de la modale Pause) et protection du compte à rebours `triggerCountdown` pendant la pause.
+- **Nouveau Dock Supérieur Droit `.hud-top-right-dock`** : séparation claire en deux boutons assortis de 46px de haut en verre dépoli sombre (`backdrop-filter: blur(12px)`) :
+  - **Pilule Engin Rapide (`#btn-hud-bike-switch`)** : affiche l'icône de l'engin actif + `↻`.
+  - **Bouton Pause Vectoriel (`#btn-hud-pause`)** : bouton carré arrondi 46×46px avec véritable icône SVG vectorielle `❚❚` (remplaçant l'emoji `⏸` disgracieux).
+
+### B. Expansion de la Carte : Afrique du Nord & Proche-Orient (`src/core/GameState.js`, `src/ui/EuropeMapData.js`, `src/ui/UIManager.js`)
+- **98 Étapes de Campagne** couvrant l'Europe, l'Afrique du Nord et le Proche-Orient :
+  - **Afrique du Nord** : Casablanca, Tanger (Cap Spartel), Marrakech (Koutoubia & Palmeraie), Oran (Santa Cruz & Corniche), Alger, Constantine (Gorges du Rhumel & Ponts Suspendus), Annaba, Ghardaïa (Sahara & Vallée du M'Zab), Tunis, Djerba (Lagunes Turquoise), Tripoli, Benghazi, Alexandrie (Phare Antique & Corniche), Le Caire (Pyramides de Gizeh), Charm el-Cheikh (Mer Rouge & Sinaï).
+  - **Proche-Orient** : Istanbul, Antalya (Falaises de Düden), Cappadoce (Steppe & Cheminées de Fées), Chypre / Limassol (Rocher d'Aphrodite), Beyrouth (Corniche de Raouché & Rocher aux Pigeons), Damas (Jardins de la Ghouta & Omeyyades), Palmyre (Désert & Grande Colonnade), Jérusalem (Dôme du Rocher & Collines de Judée), Amman (Citadelle & Steppe de Moab), Pétra / Wadi Rum (Canyon Rouge du Siq & Khazneh), Bagdad (Jardins du Tigre & Coupole Turquoise).
+- **Tracé Géographique Complet (`EuropeMapData.js`)** : ajout des polygones de l'Irak (`IRQ`) et du nord de l'Arabie (`SAU`) aux côtés du Maroc, de l'Algérie, de la Tunisie, de la Libye, de l'Égypte, de la Turquie, de Chypre, de la Syrie, du Liban, d'Israël et de la Jordanie, avec dégradés régionaux distincts et étiquettes géographiques dédiées.
+
+### C. Diversification Majeure des Paysages 3D : 7 Biomes Procéduraux (`src/entities/Environment.js`)
+- Implémentation de 7 générateurs de paysages 3D (`BIOME_CATALOG` & `Environment.js`) parfaitement alignés sur la courbure de la route (`alignChunkToCurve`) :
+  1. **`park` (`createParkZone`)** : grands parcs verdoyants, bosquets d'arbres, murets en pierre, bassins miroirs et massifs fleuris.
+  2. **`corniche` (`createCornicheZone`)** : balustrade côtière en marbre blanc surplombant les flots scintillants de la Méditerranée/Atlantique, écume de rivage, rochers marins et palmiers.
+  3. **`beach` (`createBeachZone`)** : plages de sable d'or, lagunes turquoise, parasols colorés, transats et cocotiers/palmiers.
+  4. **`desert` (`createDesertZone`)** : dunes de sable ocre sculptées, oasis aux palmiers dattiers, obélisques/pyramides antiques et tentes bédouines/berbères.
+  5. **`steppe` (`createSteppeZone`)** : plaines sauvages des hauts plateaux, buissons arides, cheminées de fées (Cappadoce) et yourtes nomades.
+  6. **`cliffs` (`createCliffsZone`)** : hautes falaises stratifiées de calcaire/granit surplombant la route avec corniches rocheuses et pins suspendus.
+  7. **`canyon` (`createCanyonZone`)** : vertigineuses parois de grès rouge/rose (style Siq de Pétra & Gorges du Rhumel) avec façades nabatéennes sculptées à même la roche.
+
+### D. Ergonomie UI/UX & Contrôle Architecture Clean (`src/ui/UIManager.js`, `src/ui/style.css`, `scripts/verify-architecture.js`)
+- **Barre de Filtres par Région (`.map-region-filter-bar`)** : onglets rapides `🌍 TOUT`, `🇪🇺 EUROPE`, `🏜️ AFRIQUE DU NORD`, `🕌 PROCHE-ORIENT` avec centrage/zoom automatique et mise en valeur des étapes de la région.
+- **Badges de Biome Colorés (`.city-biome-pill`)** : affichage clair du type de paysage (`🏞️ PARCS & JARDINS`, `🌊 CORNICHE & MER`, `🏖️ PLAGES & LAGUNES`, `🏜️ DÉSERT & OASIS`, `🌾 STEPPES & PLATEAUX`, `⛰️ FALAISES`, `🪨 CANYONS & GORGES`) et du sous-titre monumental sur la fiche de chaque ville.
+- **25/25 Tests d'Architecture & Non-Régression (`npm test`)** : vérification automatisée garantissant l'absence totale de régression sur tous les correctifs précédents (caméra, bandes blanches centrales, absence de panneaux chevrons, piétons sur passages cloutés, bouton pause).
+
 
 
 

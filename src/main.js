@@ -269,9 +269,15 @@ class GameApp {
         this.ui.setScreen('MAP');
       } else if (action === 'PAUSE') {
         gameState.currentMode = 'PAUSED';
+        this.isPointerDown = false;
+        this.steerInput = 0;
+        gameState.setBraking(false);
         soundManager.stopEngine();
       } else if (action === 'RESUME') {
         gameState.currentMode = 'PLAYING';
+        if (gameState.selectedBike) {
+          gameState.targetSpeed = gameState.isRuinsMode ? 7.0 : gameState.selectedBike.maxSpeed;
+        }
         soundManager.startEngine();
       } else if (action === 'CHANGE_BIKE_IN_GAME') {
         const bikeObj = payload;
@@ -279,6 +285,9 @@ class GameApp {
         if (bikeId) {
           storage.equipBike(bikeId);
           gameState.selectBike(bikeId);
+          if (gameState.selectedBike) {
+            gameState.targetSpeed = gameState.isRuinsMode ? 7.0 : gameState.selectedBike.maxSpeed;
+          }
           const prevX = this.bike.x;
           const prevZ = this.bike.z;
           const prevWorldX = this.bike.mesh.position.x;
@@ -286,6 +295,7 @@ class GameApp {
           this.bike.buildRider();
           this.bike.x = prevX;
           this.bike.z = prevZ;
+          this.bike.isCrashed = false;
           this.bike.mesh.position.x = prevWorldX;
           this.bike.mesh.position.z = prevZ;
         }
