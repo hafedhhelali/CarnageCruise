@@ -89,6 +89,16 @@ assert(gameStateContent.includes("id: 'marrakech'") && gameStateContent.includes
 assert(envContent.includes('createParkZone') && envContent.includes('createCornicheZone') && envContent.includes('createBeachZone') && envContent.includes('createDesertZone') && envContent.includes('createSteppeZone') && envContent.includes('createCliffsZone') && envContent.includes('createCanyonZone'), 'Diversification 3D : 7 générateurs de biomes (Parcs, Corniches, Plages, Déserts, Steppes, Falaises, Canyons) actifs');
 assert(uiContent.includes('map-region-filter-bar') && uiContent.includes('city-biome-pill'), 'Design UI/UX : Filtres par région (Europe / Afrique du Nord / Proche-Orient) et badges de biome actifs');
 
+// 9. Tests v0.9.53-beta : Lignes vitesse réduites, Frein=0 virage, HUD Engin/Homme, Carte sans doublon, Skyline 3D WMD
+const mainContent = fs.readFileSync(path.join(rootDir, 'src', 'main.js'), 'utf8');
+const bikeContent = fs.readFileSync(path.join(rootDir, 'src', 'entities', 'Bike.js'), 'utf8');
+const cityIds = [...cityMatch[1].matchAll(/id:\s*'([^']+)'/g)].map(m => m[1]);
+assert(cityIds.length === new Set(cityIds).size, `Carte : 100% des ${cityIds.length} IDs de villes sont uniques (aucun doublon)`);
+assert(particlesContent.includes('CylinderGeometry(0.006, 0.006, 1.8, 4)') && particlesContent.includes('for (let i = 0; i < 10; i++)'), 'Effet vitesse : Lignes blanches fortement réduites (10 lignes fines en périphérie)');
+assert(mainContent.includes('if (gameState.isBraking) {') && bikeContent.includes('if (gameState.isBraking) {'), 'Physique Frein : Direction gauche/droite verrouillée pendant le freinage');
+assert(uiContent.includes('FREIN') && uiContent.includes('ARRÊT') && uiContent.includes('BOISSON ÉNERGÉTIQUE') && uiContent.includes('mode-engin') && uiContent.includes('mode-homme'), 'HUD Tactique : Boutons différenciés Engin (FREIN/NITRO) vs Homme (ARRÊT/BOISSON ÉNERGÉTIQUE)');
+assert(uiContent.includes('spawnBuildingDebris') && uiContent.includes('bridgeCars'), 'Destruction Ville : Animation cinématique skyline 3D avec effondrement physique des immeubles');
+
 console.log(`\n📊 RÉSULTAT DU CONTRÔLE QUALITÉ : ${passedTests}/${totalTests} tests réussis.`);
 if (passedTests === totalTests) {
   console.log('✨ Architecture certifiée propre, modulaire et conforme SOLID.');

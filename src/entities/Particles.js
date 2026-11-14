@@ -35,7 +35,7 @@ export class ParticleSystem {
       ring: new THREE.RingGeometry(0.4, 0.6, 20),
       confetti: new THREE.PlaneGeometry(0.18, 0.28),
       splatCircle: new THREE.CircleGeometry(0.3, 8),
-      speedCylinder: new THREE.CylinderGeometry(0.018, 0.018, 6.5, 4),
+      speedCylinder: new THREE.CylinderGeometry(0.006, 0.006, 1.8, 4),
       // Accessoires réalistes de stands de rue & marchands ambulants
       fruitSphere: new THREE.SphereGeometry(0.15, 6, 6),
       bookBox: new THREE.BoxGeometry(0.24, 0.08, 0.32),
@@ -107,13 +107,13 @@ export class ParticleSystem {
 
   initSpeedLines() {
     this.speedLineMats = {
-      white: new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.55 }),
-      nitro: new THREE.MeshBasicMaterial({ color: 0x00f2fe, transparent: true, opacity: 0.85 }),
-      amber: new THREE.MeshBasicMaterial({ color: 0xffa502, transparent: true, opacity: 0.75 })
+      white: new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.12 }),
+      nitro: new THREE.MeshBasicMaterial({ color: 0x00f2fe, transparent: true, opacity: 0.30 }),
+      amber: new THREE.MeshBasicMaterial({ color: 0xffa502, transparent: true, opacity: 0.18 })
     };
 
-    // 45 Lignes de vitesse aérodynamiques profilées
-    for (let i = 0; i < 45; i++) {
+    // 10 Lignes de vitesse périphériques ultra-discrètes (effet réduit pour ne jamais gêner la visibilité)
+    for (let i = 0; i < 10; i++) {
       const mesh = new THREE.Mesh(this.sharedGeos.speedCylinder, this.speedLineMats.white);
       mesh.rotation.x = Math.PI / 2;
       mesh.visible = false;
@@ -121,8 +121,8 @@ export class ParticleSystem {
       this.speedLines.push({
         mesh,
         relAngle: Math.random() * Math.PI * 2,
-        radius: 2.2 + Math.random() * 4.8,
-        offsetY: 1.0 + Math.random() * 4.2,
+        radius: 6.2 + Math.random() * 4.0,
+        offsetY: 1.6 + Math.random() * 3.6,
         offsetZ: Math.random() * 36.0,
         speed: 55 + Math.random() * 35
       });
@@ -1143,14 +1143,14 @@ export class ParticleSystem {
       }
     }
 
-    // 10. Lignes de vitesse dynamiques grand angle & boost Nitro
-    const showSpeedLines = speed > 13.5 || isNitro;
+    // 10. Lignes de vitesse périphériques réduites & discrètes (uniquement très haute vitesse ou boost Nitro)
+    const showSpeedLines = speed > 26.0 || isNitro;
     const currentMat = isNitro ? (this.speedLineMats ? this.speedLineMats.nitro : this.sharedMats.speedLine)
-      : (speed > 24 ? (this.speedLineMats ? this.speedLineMats.amber : this.sharedMats.speedLine)
+      : (speed > 32 ? (this.speedLineMats ? this.speedLineMats.amber : this.sharedMats.speedLine)
       : (this.speedLineMats ? this.speedLineMats.white : this.sharedMats.speedLine));
 
-    this.speedLines.forEach(sl => {
-      if (!showSpeedLines) {
+    this.speedLines.forEach((sl, idx) => {
+      if (!showSpeedLines || (!isNitro && idx >= 4)) {
         sl.mesh.visible = false;
         return;
       }
@@ -1160,18 +1160,18 @@ export class ParticleSystem {
         sl.mesh.material = currentMat;
       }
 
-      // Élongation dynamique selon la vitesse pure
-      const stretchZ = Math.min(2.8, 1.0 + (speed / 18.0) * (isNitro ? 1.6 : 1.0));
+      // Élongation modérée et fine
+      const stretchZ = Math.min(1.4, 0.7 + (speed / 35.0) * (isNitro ? 1.1 : 0.7));
       sl.mesh.scale.set(1.0, stretchZ, 1.0);
 
-      const effectiveSpeed = (sl.speed + speed * 1.8) * (isNitro ? 1.45 : 1.0);
+      const effectiveSpeed = (sl.speed + speed * 1.5) * (isNitro ? 1.35 : 1.0);
       sl.offsetZ -= effectiveSpeed * delta;
 
       if (sl.offsetZ < -8) {
         sl.offsetZ = 24 + Math.random() * 18;
         sl.relAngle = Math.random() * Math.PI * 2;
-        sl.radius = 2.4 + Math.random() * 5.2;
-        sl.offsetY = 1.0 + Math.random() * 4.4;
+        sl.radius = 6.2 + Math.random() * 4.0;
+        sl.offsetY = 1.6 + Math.random() * 3.6;
       }
 
       const worldX = bikeX + Math.cos(sl.relAngle) * sl.radius;

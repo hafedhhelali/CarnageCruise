@@ -2321,13 +2321,21 @@ export class Bike {
     }
 
     // --- CONTRÔLE NORMAL DIRECTIONNEL PROGRESSIF & AMORTI VIF ---
-    this.smoothedSteer += (steerInput - this.smoothedSteer) * Math.min(1.0, delta * 9.6);
+    // Quand le joueur appuie sur le frein / arrêt (isBraking), verrouillage total gauche/droite
+    if (gameState.isBraking) {
+      steerInput = 0;
+      this.smoothedSteer = 0;
+    } else {
+      this.smoothedSteer += (steerInput - this.smoothedSteer) * Math.min(1.0, delta * 9.6);
+    }
 
     // Largeur étendue : Chaussée (-4.2 à +4.2) + Trottoirs (-6.0 à +6.0)
     // Permet de rouler confortablement sur le trottoir sans heurter les façades de bâtiments (8.5m)
     // Sensibilité latérale accrue (10.2 m/s max) pour un slalom réactif et esquives précises
     const MAX_WIDTH = 6.0;
-    this.x -= this.smoothedSteer * 10.2 * delta;
+    if (!gameState.isBraking) {
+      this.x -= this.smoothedSteer * 10.2 * delta;
+    }
     this.x = Math.max(-MAX_WIDTH, Math.min(MAX_WIDTH, this.x));
 
     // Détection de montée sur le trottoir (|x| > 4.25m)

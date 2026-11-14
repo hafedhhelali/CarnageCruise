@@ -146,6 +146,10 @@ class GameApp {
 
     window.addEventListener('pointermove', (e) => {
       if (!this.isPointerDown || gameState.currentMode !== 'PLAYING') return;
+      if (gameState.isBraking) {
+        this.steerInput = 0;
+        return;
+      }
 
       const deltaX = e.clientX - this.touchStartX;
       if (Math.abs(deltaX) < 3.5) {
@@ -564,10 +568,14 @@ class GameApp {
     const delta = Math.min(this.clock.getDelta(), 0.1); // Sécurité contre les sauts de frame
     TWEEN.update();
 
-    // Calcul du braquage final (tactile ou clavier)
+    // Calcul du braquage final (tactile ou clavier) — verrouillé à 0 pendant le freinage / arrêt
     let currentSteer = this.steerInput;
     if (this.keys.left) currentSteer = -1.0;
     else if (this.keys.right) currentSteer = 1.0;
+    if (gameState.isBraking) {
+      this.steerInput = 0;
+      currentSteer = 0;
+    }
 
     if (gameState.currentMode === 'PLAYING') {
       const isFlyingCraft = this.bike.currentBikeId === 'aero_jet' || this.bike.isFlyingEscape;

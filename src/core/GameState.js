@@ -206,7 +206,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 975000,
     exterminationTarget: 975000,
-    mapCoords: { x: 64.8, y: 25.8 }
+    mapCoords: { x: 65.1, y: 25.9 }
   },
   {
     id: 'copenhague',
@@ -606,7 +606,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 80000,
     exterminationTarget: 80000,
-    mapCoords: { x: 35.8, y: 53.2 }
+    mapCoords: { x: 36, y: 53.3 }
   },
   {
     id: 'saint_malo',
@@ -631,7 +631,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 47000,
     exterminationTarget: 47000,
-    mapCoords: { x: 35.3, y: 55.6 }
+    mapCoords: { x: 35.5, y: 55.8 }
   },
   {
     id: 'bordeaux',
@@ -706,7 +706,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 290000,
     exterminationTarget: 290000,
-    mapCoords: { x: 49.6, y: 55.8 }
+    mapCoords: { x: 49.5, y: 55.9 }
   },
   {
     id: 'geneve',
@@ -731,7 +731,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 200000,
     exterminationTarget: 200000,
-    mapCoords: { x: 47.3, y: 61.5 }
+    mapCoords: { x: 47.4, y: 61 }
   },
   {
     id: 'zurich',
@@ -856,7 +856,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 475000,
     exterminationTarget: 475000,
-    mapCoords: { x: 63.4, y: 56.9 }
+    mapCoords: { x: 63.5, y: 56.9 }
   },
   {
     id: 'budapest',
@@ -1156,7 +1156,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 15800000,
     exterminationTarget: 15800000,
-    mapCoords: { x: 80.9, y: 73.2 }
+    mapCoords: { x: 80.6, y: 73.1 }
   },
   {
     id: 'athenes',
@@ -1206,7 +1206,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 630000,
     exterminationTarget: 630000,
-    mapCoords: { x: 75.2, y: 85 }
+    mapCoords: { x: 75.4, y: 85.2 }
   },
   {
     id: 'nicosie',
@@ -1231,7 +1231,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 330000,
     exterminationTarget: 330000,
-    mapCoords: { x: 87.3, y: 85.3 }
+    mapCoords: { x: 87.2, y: 85.6 }
   },
   {
     id: 'venise',
@@ -1256,7 +1256,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 260000,
     exterminationTarget: 260000,
-    mapCoords: { x: 56.3, y: 63.3 }
+    mapCoords: { x: 56.2, y: 63.2 }
   },
   {
     id: 'milan',
@@ -1331,7 +1331,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 960000,
     exterminationTarget: 960000,
-    mapCoords: { x: 59.2, y: 73.6 }
+    mapCoords: { x: 59.2, y: 73.4 }
   },
   {
     id: 'nice',
@@ -1356,7 +1356,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 340000,
     exterminationTarget: 340000,
-    mapCoords: { x: 48.9, y: 67.3 }
+    mapCoords: { x: 48.8, y: 67.2 }
   },
   {
     id: 'marseille',
@@ -1381,7 +1381,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 870000,
     exterminationTarget: 870000,
-    mapCoords: { x: 46.1, y: 68.2 }
+    mapCoords: { x: 46.3, y: 68.2 }
   },
   {
     id: 'barcelone',
@@ -1406,7 +1406,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 1630000,
     exterminationTarget: 1630000,
-    mapCoords: { x: 41.4, y: 72.4 }
+    mapCoords: { x: 41.3, y: 72.4 }
   },
   {
     id: 'saragosse',
@@ -1506,7 +1506,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 545000,
     exterminationTarget: 545000,
-    mapCoords: { x: 24.8, y: 78.1 }
+    mapCoords: { x: 25, y: 78.2 }
   },
   {
     id: 'casablanca',
@@ -1533,7 +1533,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 3750000,
     exterminationTarget: 3750000,
-    mapCoords: { x: 27.1, y: 88.5 }
+    mapCoords: { x: 27.2, y: 88.5 }
   },
   {
     id: 'tanger',
@@ -1560,7 +1560,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 1120000,
     exterminationTarget: 1120000,
-    mapCoords: { x: 30.2, y: 84.0 }
+    mapCoords: { x: 29.7, y: 84.3 }
   },
   {
     id: 'marrakech',
@@ -1587,7 +1587,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 1050000,
     exterminationTarget: 1050000,
-    mapCoords: { x: 25.8, y: 93.4 }
+    mapCoords: { x: 26.5, y: 92.3 }
   },
   {
     id: 'oran',
@@ -1614,7 +1614,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 1560000,
     exterminationTarget: 1560000,
-    mapCoords: { x: 37.8, y: 84.0 }
+    mapCoords: { x: 37.4, y: 84.3 }
   },
   {
     id: 'alger',
@@ -1641,7 +1641,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 2980000,
     exterminationTarget: 2980000,
-    mapCoords: { x: 42.7, y: 82.2 }
+    mapCoords: { x: 42.8, y: 82.3 }
   },
   {
     id: 'constantine',
@@ -1668,7 +1668,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 940000,
     exterminationTarget: 940000,
-    mapCoords: { x: 47.9, y: 84.0 }
+    mapCoords: { x: 48, y: 82.9 }
   },
   {
     id: 'annaba',
@@ -1695,7 +1695,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 460000,
     exterminationTarget: 460000,
-    mapCoords: { x: 49.7, y: 81.9 }
+    mapCoords: { x: 49.6, y: 82 }
   },
   {
     id: 'ghardaia',
@@ -1722,7 +1722,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 360000,
     exterminationTarget: 360000,
-    mapCoords: { x: 44.5, y: 92.5 }
+    mapCoords: { x: 43.6, y: 90.6 }
   },
   {
     id: 'tunis',
@@ -1776,7 +1776,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 180000,
     exterminationTarget: 180000,
-    mapCoords: { x: 54.4, y: 87.2 }
+    mapCoords: { x: 54.4, y: 88.7 }
   },
   {
     id: 'tripoli',
@@ -1803,7 +1803,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 1150000,
     exterminationTarget: 1150000,
-    mapCoords: { x: 57.6, y: 89.8 }
+    mapCoords: { x: 57.7, y: 90 }
   },
   {
     id: 'benghazi',
@@ -1830,7 +1830,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 650000,
     exterminationTarget: 650000,
-    mapCoords: { x: 67.7, y: 91.3 }
+    mapCoords: { x: 67.9, y: 91.3 }
   },
   {
     id: 'alexandrie',
@@ -1857,7 +1857,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 5480000,
     exterminationTarget: 5480000,
-    mapCoords: { x: 81.8, y: 92.2 }
+    mapCoords: { x: 82.3, y: 93.2 }
   },
   {
     id: 'le_caire',
@@ -1911,7 +1911,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 150000,
     exterminationTarget: 150000,
-    mapCoords: { x: 88.0, y: 97.4 }
+    mapCoords: { x: 88.7, y: 98.2 }
   },
   {
     id: 'antalya',
@@ -1938,7 +1938,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 1340000,
     exterminationTarget: 1340000,
-    mapCoords: { x: 82.8, y: 82.2 }
+    mapCoords: { x: 83.3, y: 81.7 }
   },
   {
     id: 'cappadoce',
@@ -1965,10 +1965,10 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 310000,
     exterminationTarget: 310000,
-    mapCoords: { x: 87.6, y: 79.4 }
+    mapCoords: { x: 89.5, y: 78.3 }
   },
   {
-    id: 'nicosie',
+    id: 'limassol',
     name: 'Chypre (Limassol)',
     country: 'Chypre',
     countryFlag: '🇨🇾',
@@ -1992,7 +1992,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 420000,
     exterminationTarget: 420000,
-    mapCoords: { x: 86.7, y: 85.8 }
+    mapCoords: { x: 86.7, y: 86.3 }
   },
   {
     id: 'beyrouth',
@@ -2019,7 +2019,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 2420000,
     exterminationTarget: 2420000,
-    mapCoords: { x: 90.4, y: 87.8 }
+    mapCoords: { x: 90.7, y: 87.9 }
   },
   {
     id: 'damas',
@@ -2046,7 +2046,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 2580000,
     exterminationTarget: 2580000,
-    mapCoords: { x: 92.0, y: 89.2 }
+    mapCoords: { x: 91.6, y: 88.6 }
   },
   {
     id: 'palmyre',
@@ -2073,7 +2073,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 120000,
     exterminationTarget: 120000,
-    mapCoords: { x: 95.2, y: 86.6 }
+    mapCoords: { x: 94.5, y: 86.6 }
   },
   {
     id: 'jerusalem',
@@ -2100,7 +2100,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 980000,
     exterminationTarget: 980000,
-    mapCoords: { x: 89.6, y: 91.2 }
+    mapCoords: { x: 89.6, y: 92 }
   },
   {
     id: 'amman',
@@ -2127,7 +2127,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 4000000,
     exterminationTarget: 4000000,
-    mapCoords: { x: 91.5, y: 91.6 }
+    mapCoords: { x: 91.1, y: 91.7 }
   },
   {
     id: 'petra',
@@ -2154,7 +2154,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 250000,
     exterminationTarget: 250000,
-    mapCoords: { x: 90.8, y: 95.0 }
+    mapCoords: { x: 90.4, y: 94.7 }
   },
   {
     id: 'bagdad',
@@ -2181,7 +2181,7 @@ export const CITIES = [
     unlockedByDefault: false,
     population: 7650000,
     exterminationTarget: 7650000,
-    mapCoords: { x: 97.6, y: 90.8 }
+    mapCoords: { x: 98.5, y: 89 }
   }
 ];
 
@@ -2264,7 +2264,7 @@ export function getCityBiomeInfo(city) {
   if (['cappadoce', 'amman', 'madrid', 'saragosse', 'ankara', 'kiev', 'minsk', 'bucarest', 'sofia', 'belgrade'].includes(id) || text.includes('steppe') || text.includes('plateau')) {
     return BIOME_CATALOG.steppe;
   }
-  if (['djerba', 'charm_el_cheikh', 'nicosie', 'barcelone', 'valence', 'palma', 'ibiza', 'malaga', 'la_valette', 'heraklion', 'split', 'zadar', 'constanta', 'odessa', 'varna'].includes(id) || text.includes('plage') || text.includes('sable') || text.includes('lagune')) {
+  if (['djerba', 'charm_el_cheikh', 'nicosie', 'limassol', 'barcelone', 'valence', 'palma', 'ibiza', 'malaga', 'la_valette', 'heraklion', 'split', 'zadar', 'constanta', 'odessa', 'varna'].includes(id) || text.includes('plage') || text.includes('sable') || text.includes('lagune')) {
     return BIOME_CATALOG.beach;
   }
   if (['tanger', 'annaba', 'antalya', 'jerusalem', 'reykjavik', 'bergen', 'edimbourg', 'dublin', 'porto', 'dover', 'innsbruck', 'zurich', 'geneve', 'salzbourg', 'vaduz', 'andorre', 'saint_marin', 'tirana', 'skopje', 'sarajevo'].includes(id) || text.includes('falaise') || text.includes('alpes') || text.includes('montagne') || text.includes('fjord') || text.includes('rocher')) {

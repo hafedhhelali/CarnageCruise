@@ -51,7 +51,6 @@ export class WmdPixiRenderer {
       // 1. Conteneur principal avec filtres GPU
       this.filterContainer = new Container();
       this.colorFilter = new ColorMatrixFilter();
-      this.colorFilter.night(0.6, false); // Mode vision nocturne militaire initiale
       this.currentPhase = 'APPROACH';
       this.filterContainer.filters = [this.colorFilter];
 
@@ -81,22 +80,15 @@ export class WmdPixiRenderer {
     try {
       this.gridLayer.clear();
       const cx = w / 2;
-      const cy = h / 2;
+      const cy = h * 0.60;
 
-      // Anneau radar de ciblage militaire
-      this.gridLayer.circle(cx, cy, Math.min(w, h) * 0.44);
-      this.gridLayer.stroke({ color: 0x00cec9, width: 1.5, alpha: 0.35 });
-
-      this.gridLayer.circle(cx, cy, Math.min(w, h) * 0.22);
-      this.gridLayer.stroke({ color: 0x00cec9, width: 1.0, alpha: 0.25 });
-
-      // Réticule d'acquisition satellite KH-12
-      const len = 35;
+      // Viseur tactique discret sur l'horizon de la skyline
+      const len = 24;
       this.gridLayer.moveTo(cx - len, cy);
       this.gridLayer.lineTo(cx + len, cy);
       this.gridLayer.moveTo(cx, cy - len);
       this.gridLayer.lineTo(cx, cy + len);
-      this.gridLayer.stroke({ color: 0x00cec9, width: 1.2, alpha: 0.4 });
+      this.gridLayer.stroke({ color: 0x00cec9, width: 1.0, alpha: 0.25 });
     } catch (e) {
       // Ignorer silencieusement si contexte restreint
     }
@@ -107,17 +99,18 @@ export class WmdPixiRenderer {
 
     try {
       const cx = w / 2;
-      const cy = h / 2;
+      const cy = h * 0.60;
 
-      // 1. Mise à jour des filtres GPU lors des transitions de phase
+      // 1. Mise à jour des filtres GPU lors des transitions de phase (subtil pour préserver les couleurs de la skyline)
       if (this.colorFilter && this.currentPhase !== phase) {
         this.currentPhase = phase;
+        this.colorFilter.reset();
         if (phase === 'APPROACH' || phase === 'COUNTDOWN') {
-          this.colorFilter.night(0.6, false);
+          this.colorFilter.contrast(0.12, false);
         } else if (phase === 'DETONATION') {
-          this.colorFilter.predator(0.7, false);
+          this.colorFilter.saturate(0.35, false);
         } else if (phase === 'EXTERMINATED') {
-          this.colorFilter.blackAndWhite(false);
+          this.colorFilter.desaturate(false);
         }
       }
 

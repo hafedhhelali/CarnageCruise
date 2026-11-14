@@ -469,26 +469,28 @@ export class UIManager {
             }).join('')}
 
             <!-- Noms Géographiques Clés (Europe, Afrique du Nord & Proche-Orient) -->
-            <text x="530" y="872" fill="#00cec9" font-size="15" font-weight="900" letter-spacing="4" opacity="0.5">MER MÉDITERRANÉE</text>
-            <text x="750" y="320" fill="#00cec9" font-size="14" font-weight="900" letter-spacing="3" opacity="0.4">MER BALTIQUE</text>
-            <text x="940" y="680" fill="#00cec9" font-size="14" font-weight="900" letter-spacing="3" opacity="0.4">MER NOIRE</text>
-            <text x="490" y="625" fill="#00cec9" font-size="18" font-weight="900" letter-spacing="3" opacity="0.65">FRANCE 🇫🇷</text>
-            <text x="380" y="820" fill="#74b9ff" font-size="15" font-weight="900" letter-spacing="2" opacity="0.6">ESPAGNE 🇪🇸</text>
-            <text x="660" y="770" fill="#74b9ff" font-size="14" font-weight="900" letter-spacing="2" opacity="0.6">ITALIE 🇮🇹</text>
-            <text x="590" y="520" fill="#74b9ff" font-size="14" font-weight="900" letter-spacing="2" opacity="0.6">ALLEMAGNE 🇩🇪</text>
-            <text x="430" y="470" fill="#74b9ff" font-size="13" font-weight="900" letter-spacing="1.5" opacity="0.6">ROYAUME-UNI 🇬🇧</text>
-            <!-- Afrique du Nord -->
-            <text x="275" y="1015" fill="#fbbf24" font-size="15" font-weight="900" letter-spacing="2" opacity="0.72">MAROC 🇲🇦</text>
-            <text x="475" y="995" fill="#fbbf24" font-size="16" font-weight="900" letter-spacing="2.5" opacity="0.72">ALGÉRIE 🇩🇿</text>
-            <text x="615" y="950" fill="#fbbf24" font-size="13" font-weight="900" letter-spacing="1.5" opacity="0.7">TUNISIE 🇹🇳</text>
-            <text x="745" y="1055" fill="#fbbf24" font-size="15" font-weight="900" letter-spacing="2.5" opacity="0.7">LIBYE 🇱🇾</text>
-            <text x="955" y="1075" fill="#fbbf24" font-size="16" font-weight="900" letter-spacing="2.5" opacity="0.75">ÉGYPTE 🇪🇬</text>
-            <!-- Proche-Orient -->
-            <text x="965" y="838" fill="#fb7185" font-size="16" font-weight="900" letter-spacing="2.5" opacity="0.75">TURQUIE 🇹🇷</text>
-            <text x="1115" y="948" fill="#fb7185" font-size="13" font-weight="900" letter-spacing="1.5" opacity="0.75">SYRIE 🇸🇾</text>
-            <text x="1032" y="974" fill="#fb7185" font-size="12" font-weight="900" letter-spacing="1.2" opacity="0.75">LIBAN 🇱🇧</text>
-            <text x="1102" y="1036" fill="#fb7185" font-size="13" font-weight="900" letter-spacing="1.5" opacity="0.75">JORDANIE 🇯🇴</text>
-            <text x="1162" y="985" fill="#fb7185" font-size="13" font-weight="900" letter-spacing="1.5" opacity="0.72">IRAK 🇮🇶</text>
+            <g text-anchor="middle" style="paint-order: stroke; stroke: #040a12; stroke-width: 3.5px; stroke-linejoin: round;">
+              <text x="580" y="882" fill="#00cec9" font-size="14" font-weight="900" letter-spacing="4" opacity="0.55">MER MÉDITERRANÉE</text>
+              <text x="775" y="315" fill="#00cec9" font-size="13" font-weight="900" letter-spacing="3" opacity="0.45">MER BALTIQUE</text>
+              <text x="980" y="690" fill="#00cec9" font-size="13" font-weight="900" letter-spacing="3" opacity="0.45">MER NOIRE</text>
+              <text x="505" y="645" fill="#00cec9" font-size="17" font-weight="900" letter-spacing="2.5" opacity="0.72">FRANCE 🇫🇷</text>
+              <text x="395" y="835" fill="#74b9ff" font-size="14" font-weight="900" letter-spacing="2" opacity="0.65">ESPAGNE 🇪🇸</text>
+              <text x="678" y="768" fill="#74b9ff" font-size="13" font-weight="900" letter-spacing="2" opacity="0.65">ITALIE 🇮🇹</text>
+              <text x="635" y="520" fill="#74b9ff" font-size="13" font-weight="900" letter-spacing="2" opacity="0.65">ALLEMAGNE 🇩🇪</text>
+              <text x="415" y="458" fill="#74b9ff" font-size="12" font-weight="900" letter-spacing="1.2" opacity="0.65">ROYAUME-UNI 🇬🇧</text>
+              <!-- Afrique du Nord -->
+              <text x="305" y="1005" fill="#fbbf24" font-size="14" font-weight="900" letter-spacing="2" opacity="0.78">MAROC 🇲🇦</text>
+              <text x="495" y="988" fill="#fbbf24" font-size="15" font-weight="900" letter-spacing="2.5" opacity="0.78">ALGÉRIE 🇩🇿</text>
+              <text x="625" y="948" fill="#fbbf24" font-size="12" font-weight="900" letter-spacing="1.5" opacity="0.75">TUNISIE 🇹🇳</text>
+              <text x="765" y="1045" fill="#fbbf24" font-size="14" font-weight="900" letter-spacing="2.5" opacity="0.75">LIBYE 🇱🇾</text>
+              <text x="995" y="1065" fill="#fbbf24" font-size="15" font-weight="900" letter-spacing="2.5" opacity="0.8">ÉGYPTE 🇪🇬</text>
+              <!-- Proche-Orient -->
+              <text x="1035" y="848" fill="#fb7185" font-size="15" font-weight="900" letter-spacing="2.5" opacity="0.8">TURQUIE 🇹🇷</text>
+              <text x="1130" y="942" fill="#fb7185" font-size="12" font-weight="900" letter-spacing="1.5" opacity="0.78">SYRIE 🇸🇾</text>
+              <text x="1055" y="968" fill="#fb7185" font-size="11" font-weight="900" letter-spacing="1.2" opacity="0.78">LIBAN 🇱🇧</text>
+              <text x="1115" y="1028" fill="#fb7185" font-size="12" font-weight="900" letter-spacing="1.5" opacity="0.78">JORDANIE 🇯🇴</text>
+              <text x="1175" y="975" fill="#fb7185" font-size="12" font-weight="900" letter-spacing="1.5" opacity="0.75">IRAK 🇮🇶</text>
+            </g>
           </svg>
 
           <!-- Avion Voyageur Animé se déplaçant d'une ville à une autre (✈️) -->
@@ -1709,167 +1711,178 @@ export class UIManager {
       usePixi = ok;
     });
 
-    // 1. GÉNÉRATION DE LA TOPOGRAPHIE URBAINE SATELLITE
-    const riverPoints = [];
-    for (let py = 0; py <= h + 40; py += 30) {
-      const rx = (w * 0.32) + Math.sin(py * 0.007) * (w * 0.14) + Math.cos(py * 0.015) * 25;
-      riverPoints.push({ x: rx, y: py });
+    // 1. GÉNÉRATION DE LA SKYLINE 3D DE LA MÉTROPOLE (IMMEUBLES, FENÊTRES, PONT, REFLETS)
+    const horizonY = h * 0.62;
+    const waterY = h * 0.66;
+
+    // Étoiles nocturnes
+    const stars = [];
+    for (let s = 0; s < 75; s++) {
+      stars.push({
+        x: Math.random() * w,
+        y: Math.random() * (horizonY * 0.85),
+        r: 0.6 + Math.random() * 1.4,
+        twinkle: Math.random() * Math.PI * 2
+      });
     }
 
-    // 2. PRÉ-RENDU SUR CANVAS HORS-ÉCRAN (OFFSCREEN CANVAS OPTIMIZATION)
-    // Permet de dessiner l'ensemble du décor statique une seule fois (gain de ~5ms par frame)
-    const staticBgCanvas = document.createElement('canvas');
-    staticBgCanvas.width = canvas.width;
-    staticBgCanvas.height = canvas.height;
-    const bgCtx = staticBgCanvas.getContext('2d');
-    bgCtx.scale(dpr, dpr);
-
-    // Fond spatial profond
-    bgCtx.fillStyle = '#020611';
-    bgCtx.fillRect(0, 0, w, h);
-
-    // Fleuve métropolitain avec berges lumineuses
-    bgCtx.strokeStyle = '#081a33';
-    bgCtx.lineWidth = 38;
-    bgCtx.lineCap = 'round';
-    bgCtx.lineJoin = 'round';
-    bgCtx.beginPath();
-    riverPoints.forEach((pt, idx) => {
-      if (idx === 0) bgCtx.moveTo(pt.x, pt.y);
-      else bgCtx.lineTo(pt.x, pt.y);
-    });
-    bgCtx.stroke();
-
-    bgCtx.strokeStyle = 'rgba(0, 206, 201, 0.22)';
-    bgCtx.lineWidth = 2.5;
-    bgCtx.stroke();
-
-    // Grille de rues & boulevards urbains
-    bgCtx.strokeStyle = 'rgba(56, 189, 248, 0.12)';
-    bgCtx.lineWidth = 1.2;
-    const gridSize = 42;
-    for (let x = 0; x < w; x += gridSize) {
-      bgCtx.beginPath();
-      bgCtx.moveTo(x, 0);
-      bgCtx.lineTo(x, h);
-      bgCtx.stroke();
-    }
-    for (let y = 0; y < h; y += gridSize) {
-      bgCtx.beginPath();
-      bgCtx.moveTo(0, y);
-      bgCtx.lineTo(w, y);
-      bgCtx.stroke();
-    }
-
-    // Grands boulevards radiaux de la métropole
-    bgCtx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
-    bgCtx.lineWidth = 2.5;
-    for (let a = 0; a < Math.PI * 2; a += Math.PI / 4) {
-      bgCtx.beginPath();
-      bgCtx.moveTo(centerX, centerY);
-      bgCtx.lineTo(centerX + Math.cos(a) * Math.max(w, h), centerY + Math.sin(a) * Math.max(w, h));
-      bgCtx.stroke();
-    }
-
-    // Ponts reliant les deux rives
-    bgCtx.strokeStyle = '#f1c40f';
-    bgCtx.lineWidth = 4;
-    riverPoints.forEach((pt, idx) => {
-      if (idx % 4 === 0) {
-        bgCtx.beginPath();
-        bgCtx.moveTo(pt.x - 26, pt.y);
-        bgCtx.lineTo(pt.x + 26, pt.y);
-        bgCtx.stroke();
+    // Immeubles & Gratte-ciels multi-plans (arrière-plan + premier plan détaillé)
+    const buildings = [];
+    const buildLayer = (layerIdx, count, minH, maxH, minW, maxW, baseShade) => {
+      let curX = -15;
+      const step = (w + 30) / count;
+      for (let i = 0; i < count; i++) {
+        const bw = minW + Math.random() * (maxW - minW);
+        const bh = minH + Math.random() * (maxH - minH);
+        const bx = curX + (Math.random() - 0.5) * (step * 0.35);
+        curX += step;
+        const cols = Math.max(2, Math.floor(bw / 8));
+        const rows = Math.max(3, Math.floor(bh / 10));
+        const litWindows = [];
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            if (Math.random() < (layerIdx === 0 ? 0.35 : 0.62)) {
+              litWindows.push({
+                rx: 4 + c * ((bw - 8) / cols),
+                ry: 6 + r * ((bh - 10) / rows),
+                color: Math.random() < 0.72 ? '#ffd369' : '#74b9ff',
+                lit: true
+              });
+            }
+          }
+        }
+        buildings.push({
+          layer: layerIdx,
+          x: bx,
+          w: bw,
+          h: bh,
+          baseShade,
+          hasSpire: Math.random() < 0.32,
+          windows: litWindows,
+          damage: 0, // 0..1
+          collapseY: 0,
+          tilt: 0,
+          tiltDir: (bx + bw / 2 < centerX) ? -1 : 1,
+          hit: false,
+          fireSeeds: Array.from({ length: 3 }, () => ({
+            ox: Math.random() * bw,
+            phase: Math.random() * Math.PI * 2,
+            size: 8 + Math.random() * 12
+          }))
+        });
       }
+    };
+
+    buildLayer(0, 26, h * 0.10, h * 0.25, 22, 44, '#0c1524'); // Arrière-plan
+    buildLayer(1, 18, h * 0.14, h * 0.33, 28, 56, '#132033'); // Premier plan
+
+    // Tour / Monument central emblématique
+    buildings.push({
+      layer: 2,
+      x: centerX - 18,
+      w: 36,
+      h: h * 0.38,
+      baseShade: '#1b2b44',
+      hasSpire: true,
+      isMonument: true,
+      windows: Array.from({ length: 24 }, (_, k) => ({
+        rx: 6 + (k % 3) * 9,
+        ry: 14 + Math.floor(k / 3) * 14,
+        color: '#fffa65',
+        lit: true
+      })),
+      damage: 0,
+      collapseY: 0,
+      tilt: 0,
+      tiltDir: 1,
+      hit: false,
+      fireSeeds: [
+        { ox: 8, phase: 0.4, size: 16 },
+        { ox: 18, phase: 1.9, size: 20 },
+        { ox: 28, phase: 3.1, size: 15 }
+      ]
     });
 
-    // Cercles concentriques radar de télémétrie militaire
-    bgCtx.strokeStyle = 'rgba(0, 206, 201, 0.22)';
-    bgCtx.lineWidth = 1;
-    [50, 110, 180, 270, 380].forEach(r => {
-      bgCtx.beginPath();
-      bgCtx.arc(centerX, centerY, r, 0, Math.PI * 2);
-      bgCtx.stroke();
-    });
-
-    // 3. 550 POINTS THERMIQUES DE POPULATION
-    const thermalDots = [];
-    for (let i = 0; i < 550; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      const dist = Math.pow(Math.random(), 0.58) * (Math.min(w, h) * 0.48);
-      thermalDots.push({
-        x: centerX + Math.cos(angle) * dist,
-        y: centerY + Math.sin(angle) * dist,
-        baseColor: (Math.random() < 0.35) ? '#fffa65' : '#2ed573',
-        size: 1.4 + Math.random() * 1.8,
+    // Voitures lumineuses sur le pont au premier plan
+    const bridgeCars = [];
+    for (let v = 0; v < 22; v++) {
+      const dir = v % 2 === 0 ? 1 : -1;
+      bridgeCars.push({
+        x: Math.random() * w,
+        dir,
+        speed: (35 + Math.random() * 55) * dir,
+        color: dir > 0 ? '#fffa65' : '#ff4757',
         alive: true
       });
     }
 
-    // 4. VÉHICULES CIRCULANT SUR LA CARTE SATELLITE
-    const satVehicles = [];
-    for (let v = 0; v < 36; v++) {
-      const ang = Math.random() * Math.PI * 2;
-      const rad = 40 + Math.random() * (Math.min(w, h) * 0.42);
-      satVehicles.push({
-        angle: ang,
-        radius: rad,
-        speed: (0.16 + Math.random() * 0.28) * (Math.random() < 0.5 ? 1 : -1),
-        color: (Math.random() < 0.5) ? '#ffffff' : '#fffa65'
-      });
-    }
+    // Projecteurs de défense aérienne balayant le ciel
+    const searchlights = [
+      { x: w * 0.18, phase: 0.2 },
+      { x: w * 0.48, phase: 1.7 },
+      { x: w * 0.82, phase: 3.1 }
+    ];
 
-    // 5. PARTICULES ET IMPACTS
+    // 5. PARTICULES, DÉBRIS DE BÉTON ET BOULES DE FEU
     const particles = [];
-    const spawnParticle = (x, y, vx, vy, color, size, life, decay, type = 'spark') => {
-      particles.push({ x, y, vx, vy, color, size, life, maxLife: life, decay, type });
+    const spawnParticle = (x, y, vx, vy, color, size, life, decay, gravity = 0) => {
+      if (particles.length > 420) return;
+      particles.push({ x, y, vx, vy, color, size, life, maxLife: life, decay, gravity });
     };
 
-    // Pour Carpet Bombing : 32 impacts en cascade
+    const spawnBuildingDebris = (bx, by, bw, colorBase) => {
+      for (let d = 0; d < 14; d++) {
+        const px = bx + Math.random() * bw;
+        const py = by + Math.random() * 28;
+        const vx = (Math.random() - 0.5) * 7.5;
+        const vy = -2.5 - Math.random() * 7.0;
+        const col = d % 3 === 0 ? '#ff9f43' : (d % 3 === 1 ? '#ff4757' : colorBase);
+        spawnParticle(px, py, vx, vy, col, 2.5 + Math.random() * 4.5, 1.0 + Math.random() * 0.8, 0.016, 0.24);
+      }
+    };
+
+    // Pour Carpet Bombing : vague de bombes sur toute la largeur de la skyline
     const carpetStrikes = [];
     if (weaponType === 'CARPET') {
-      for (let s = 0; s < 32; s++) {
-        const ang = -0.32 + (Math.random() - 0.5) * 0.25;
-        const dist = -w * 0.52 + (s / 32) * (w * 1.04);
+      for (let s = 0; s < 22; s++) {
+        const sx = (w * 0.06) + (s / 21) * (w * 0.88) + (Math.random() - 0.5) * 18;
         carpetStrikes.push({
-          x: centerX + Math.cos(ang) * dist + (Math.random() - 0.5) * 55,
-          y: centerY + Math.sin(ang) * dist + (Math.random() - 0.5) * 45,
-          delay: 1.6 + (s * 0.09),
+          x: sx,
+          y: horizonY - Math.random() * 26,
+          delay: 1.65 + (s * 0.11),
           exploded: false,
           radius: 0
         });
       }
     }
 
-    // Pour Laser Orbital : arcs de foudre EMP
+    // Pour Laser Orbital : éclairs EMP le long de la skyline
     const empArcs = [];
     const createEmpArc = () => {
-      const pts = [{ x: centerX, y: centerY }];
+      const pts = [{ x: centerX, y: horizonY - 20 }];
       let curX = centerX;
-      let curY = centerY;
-      const angle = Math.random() * Math.PI * 2;
-      const length = 55 + Math.random() * (Math.min(w, h) * 0.48);
-      const steps = 8 + Math.floor(Math.random() * 6);
+      let curY = horizonY - 20;
+      const dirX = Math.random() < 0.5 ? -1 : 1;
+      const steps = 6 + Math.floor(Math.random() * 5);
       for (let step = 1; step <= steps; step++) {
-        const segLen = length / steps;
-        curX += Math.cos(angle) * segLen + (Math.random() - 0.5) * 32;
-        curY += Math.sin(angle) * segLen + (Math.random() - 0.5) * 32;
-        pts.push({ x: curX, y: curY });
+        curX += dirX * (25 + Math.random() * 45);
+        curY += (Math.random() - 0.55) * 38;
+        pts.push({ x: curX, y: Math.min(waterY, curY) });
       }
       return { pts, life: 1.0 };
     };
 
-    // Pour Aérosol Bio : nuages de gaz toxique bicolores
+    // Pour Aérosol Bio : nappes de gaz rampant dans les rues de la skyline
     const bioGasPuffs = [];
     if (weaponType === 'BIO') {
-      for (let g = 0; g < 44; g++) {
+      for (let g = 0; g < 36; g++) {
         bioGasPuffs.push({
-          x: centerX + (Math.random() - 0.5) * 55,
-          y: centerY + (Math.random() - 0.5) * 55,
-          vx: (Math.random() - 0.5) * 2.2,
-          vy: (Math.random() - 0.5) * 2.2,
-          radius: 18 + Math.random() * 26,
-          targetRadius: 60 + Math.random() * 105,
+          x: centerX + (Math.random() - 0.5) * (w * 0.8),
+          y: horizonY - 10 + (Math.random() - 0.5) * 70,
+          vx: (Math.random() - 0.5) * 1.4,
+          vy: (Math.random() - 0.6) * 0.6,
+          radius: 26 + Math.random() * 35,
+          targetRadius: 85 + Math.random() * 95,
           isViolet: (g % 2 === 0),
           opacity: 0
         });
@@ -1879,7 +1892,7 @@ export class UIManager {
     let startTime = performance.now();
     let simPhase = 'APPROACH';
     let shockwaveRadius = 0;
-    let shockwaveMaxRadius = Math.hypot(w, h) * 0.75;
+    let shockwaveMaxRadius = Math.hypot(w, h) * 0.85;
     let cameraShake = 0;
     let animFrameId = null;
 
@@ -1921,16 +1934,16 @@ export class UIManager {
         statusPhaseEl.textContent = `T-${remainingT}s : ACQUISITION`;
 
         if (weaponType === 'NUKE') {
-          impactBanner.textContent = `☢️ TRAJECTOIRE ICBM HYPERSONIQUE T-${remainingT}s`;
+          impactBanner.textContent = `☢️ OGIVE NUCLÉAIRE EN DESCENTE T-${remainingT}s`;
         } else if (weaponType === 'CARPET') {
-          impactBanner.textContent = `✈️ ESCADRILLE B-52 EN RASE-MOTTES T-${remainingT}s`;
+          impactBanner.textContent = `✈️ ESCADRILLE B-52 SUR LA SKYLINE T-${remainingT}s`;
         } else if (weaponType === 'ORBITAL') {
-          impactBanner.textContent = `🛰️ SYNCHRONISATION FAISCEAU IONIQUE T-${remainingT}s`;
+          impactBanner.textContent = `🛰️ VERROUILLAGE FAISCEAU ORBITAL T-${remainingT}s`;
         } else if (weaponType === 'BIO') {
-          impactBanner.textContent = `☣️ DISPERSION NEURO-TOXIQUE T-${remainingT}s`;
+          impactBanner.textContent = `☣️ LARGAGE AÉROSOL TOXIQUE T-${remainingT}s`;
         }
       }
-      // 2. PHASE DE DÉTONATION & IMPACT (1.8s - 5.0s)
+      // 2. PHASE DE DÉTONATION & IMPACT (1.8s - 4.6s)
       else if (elapsed >= 1.8 && !hasCompleted) {
         simPhase = 'DETONATION';
         if (!hasDetonated) {
@@ -1941,8 +1954,7 @@ export class UIManager {
           }
 
           Haptic.carnage();
-
-          cameraShake = (weaponType === 'NUKE' ? 26 : (weaponType === 'CARPET' ? 18 : (weaponType === 'ORBITAL' ? 20 : 12)));
+          cameraShake = (weaponType === 'NUKE' ? 28 : (weaponType === 'CARPET' ? 18 : (weaponType === 'ORBITAL' ? 22 : 10)));
 
           if (weaponType === 'NUKE') {
             soundManager.playNuclearAlarm();
@@ -1960,18 +1972,27 @@ export class UIManager {
             setTimeout(() => soundManager.playExplosion(), 300);
           }
 
-          // Particules explosives initiales à haute énergie
-          for (let p = 0; p < 180; p++) {
-            const ang = Math.random() * Math.PI * 2;
-            const spd = 2.0 + Math.random() * 11.0;
-            spawnParticle(centerX, centerY, Math.cos(ang) * spd, Math.sin(ang) * spd, (p % 2 === 0 ? weaponColor : '#fffa65'), 2 + Math.random() * 5, 1.0 + Math.random() * 1.0, 0.018);
+          // Gerbe initiale de débris et d'étincelles depuis le centre-ville
+          for (let p = 0; p < 140; p++) {
+            const ang = -Math.PI * Math.random();
+            const spd = 3.0 + Math.random() * 12.0;
+            spawnParticle(
+              centerX + (Math.random() - 0.5) * 40,
+              horizonY - 10,
+              Math.cos(ang) * spd,
+              Math.sin(ang) * spd - 2.0,
+              (p % 2 === 0 ? weaponColor : '#fffa65'),
+              2.5 + Math.random() * 4.5,
+              1.1 + Math.random() * 0.9,
+              0.015,
+              0.18
+            );
           }
         }
 
         const detTime = elapsed - 1.8;
         const detDuration = 2.8;
         const detProgress = Math.min(1.0, detTime / detDuration);
-
         shockwaveRadius = detProgress * shockwaveMaxRadius;
 
         const currentDetPct = Math.round(initialDestruction + (targetDestruction - initialDestruction) * detProgress);
@@ -1986,18 +2007,18 @@ export class UIManager {
 
         if (detProgress >= 0.15 && !loggedMilestones.has('m1')) {
           loggedMilestones.add('m1');
-          addSectorLog('[T+0.5s] 💥 Blast supersonique : Centre-ville & avenues pulvérisés');
+          addSectorLog('[T+0.5s] 💥 Onde de choc : Façades & gratte-ciels éventrés');
         }
         if (detProgress >= 0.40 && !loggedMilestones.has('m2')) {
           loggedMilestones.add('m2');
-          addSectorLog('[T+1.2s] 🔥 Tempête de feu 8 000°C : Usines & résidences désintégrées');
+          addSectorLog('[T+1.2s] 🔥 Tempête thermique : Effondrement du centre-ville');
         }
         if (detProgress >= 0.70 && !loggedMilestones.has('m3')) {
           loggedMilestones.add('m3');
-          addSectorLog('[T+1.9s] ⚡ Flash EMP : Effondrement du réseau et communications');
+          addSectorLog('[T+1.9s] ⚡ Blackout total : Ponts et réseaux pulvérisés');
         }
 
-        impactBanner.textContent = (targetDestruction >= 100) ? `💥 ANÉANTISSEMENT DÉFINITIF EN COURS...` : `💥 FRAPPE TACTIQUE EN COURS...`;
+        impactBanner.textContent = (targetDestruction >= 100) ? `💥 ANÉANTISSEMENT DE ${city.name.toUpperCase()}...` : `💥 FRAPPE SUR ${city.name.toUpperCase()}...`;
         statusPhaseEl.textContent = `EXTINCTION : ${currentDetPct}%`;
 
         if (cameraShake > 0) cameraShake *= 0.93;
@@ -2015,13 +2036,13 @@ export class UIManager {
 
           if (targetDestruction >= 100) {
             statusPhaseEl.textContent = `☠️ VILLE EXTERMINÉE`;
-            impactBanner.textContent = `☠️ CITÉ ENTIÈRE PULVÉRISÉE & SCELLÉE (100%) !`;
+            impactBanner.textContent = `☠️ ${city.name.toUpperCase()} EN RUINES ET SCELLÉE (100%) !`;
             impactBanner.style.borderColor = '#ff4757';
             impactBanner.style.color = '#ff7675';
 
             if (!loggedMilestones.has('m4')) {
               loggedMilestones.add('m4');
-              addSectorLog('[T+2.8s] ☠️ BIOMASSE LOCALE : 0 SIGNAUX VITAUX (EXTINCTION TOTALE)');
+              addSectorLog('[T+2.8s] ☠️ SKYLINE RASÉE • 0 SIGNAUX VITAUX');
             }
 
             soundManager.playEvilLaugh();
@@ -2035,7 +2056,7 @@ export class UIManager {
             }
           } else {
             statusPhaseEl.textContent = `💥 FRAPPE RÉUSSIE (${targetDestruction}%)`;
-            impactBanner.textContent = `💥 IMPACT CONFIRMÉ : CITÉ DÉTRUITE À ${targetDestruction}% !`;
+            impactBanner.textContent = `💥 IMPACT CONFIRMÉ : ${city.name.toUpperCase()} DÉTRUITE À ${targetDestruction}% !`;
             impactBanner.style.borderColor = '#ff9f43';
             impactBanner.style.color = '#fffa65';
 
@@ -2056,612 +2077,421 @@ export class UIManager {
         }
       }
 
-      // --- RENDU CANVAS 2D TACTIQUE HAUTE DÉFINITION PLEIN ÉCRAN (60 FPS) ---
+      // --- RENDU CINÉMATIQUE 3D SKYLINE (60 FPS) ---
       ctx.save();
       ctx.scale(dpr, dpr);
 
-      // Secousse caméra (Screen Shake)
       if (cameraShake > 0.4) {
-        const shakeX = (Math.random() - 0.5) * cameraShake;
-        const shakeY = (Math.random() - 0.5) * cameraShake;
-        ctx.translate(shakeX, shakeY);
+        ctx.translate((Math.random() - 0.5) * cameraShake, (Math.random() - 0.5) * cameraShake);
       }
 
-      // 1. DESSIN INSTANTANÉ DU FOND SATELLITE PRÉ-CALCULÉ (BLIT 0.1ms)
-      ctx.drawImage(staticBgCanvas, 0, 0, w, h);
-
-      // Calcul de la progression globale (0.0 -> 1.0)
       let currentProgress = 0;
-      if (elapsed < 1.8) {
-        currentProgress = Math.min(1.0, elapsed / 1.8);
-      } else if (hasCompleted) {
-        currentProgress = 1.0;
+      if (elapsed < 1.8) currentProgress = Math.min(1.0, elapsed / 1.8);
+      else if (hasCompleted) currentProgress = 1.0;
+      else currentProgress = Math.min(1.0, (elapsed - 1.8) / 2.8);
+
+      // 1. CIEL DYNAMIQUE (Nuit étoilée -> Embrasement apocalypse -> Cendres rouges)
+      const skyGrad = ctx.createLinearGradient(0, 0, 0, horizonY);
+      if (simPhase === 'APPROACH') {
+        skyGrad.addColorStop(0, '#04091a');
+        skyGrad.addColorStop(0.55, '#0c1e3e');
+        skyGrad.addColorStop(1, '#1e3557');
       } else {
-        currentProgress = Math.min(1.0, (elapsed - 1.8) / 2.8);
+        const burn = simPhase === 'EXTERMINATED' ? 0.65 : Math.min(1, currentProgress * 1.4);
+        if (weaponType === 'ORBITAL') {
+          skyGrad.addColorStop(0, '#030c1a');
+          skyGrad.addColorStop(0.6, '#083358');
+          skyGrad.addColorStop(1, '#00a8cc');
+        } else if (weaponType === 'BIO') {
+          skyGrad.addColorStop(0, '#091412');
+          skyGrad.addColorStop(0.6, '#133329');
+          skyGrad.addColorStop(1, '#2ed573');
+        } else {
+          skyGrad.addColorStop(0, '#120709');
+          skyGrad.addColorStop(0.5, `rgba(${Math.round(45 + 140 * burn)}, ${Math.round(18 + 38 * burn)}, 16, 1)`);
+          skyGrad.addColorStop(1, `rgba(${Math.round(110 + 135 * burn)}, ${Math.round(40 + 70 * burn)}, 18, 1)`);
+        }
+      }
+      ctx.fillStyle = skyGrad;
+      ctx.fillRect(0, 0, w, horizonY + 20);
+
+      // Étoiles avant détonation
+      if (simPhase === 'APPROACH') {
+        ctx.fillStyle = '#ffffff';
+        stars.forEach(st => {
+          const tw = 0.35 + 0.55 * Math.abs(Math.sin(elapsed * 2.5 + st.twinkle));
+          ctx.globalAlpha = tw;
+          ctx.beginPath();
+          ctx.arc(st.x, st.y, st.r, 0, Math.PI * 2);
+          ctx.fill();
+        });
+        ctx.globalAlpha = 1;
+
+        // Projecteurs de défense aérienne
+        searchlights.forEach(sl => {
+          const ang = -Math.PI / 2 + Math.sin(elapsed * 1.6 + sl.phase) * 0.48;
+          const beamLen = horizonY * 0.9;
+          const beamGrad = ctx.createLinearGradient(sl.x, horizonY, sl.x + Math.cos(ang) * beamLen, horizonY + Math.sin(ang) * beamLen);
+          beamGrad.addColorStop(0, 'rgba(116, 185, 255, 0.25)');
+          beamGrad.addColorStop(1, 'rgba(116, 185, 255, 0)');
+          ctx.fillStyle = beamGrad;
+          ctx.beginPath();
+          ctx.moveTo(sl.x - 4, horizonY);
+          ctx.lineTo(sl.x + 4, horizonY);
+          ctx.lineTo(sl.x + Math.cos(ang) * beamLen + 38, horizonY + Math.sin(ang) * beamLen);
+          ctx.lineTo(sl.x + Math.cos(ang) * beamLen - 38, horizonY + Math.sin(ang) * beamLen);
+          ctx.closePath();
+          ctx.fill();
+        });
       }
 
-      // Rendu PixiJS v8 Accéléré GPU (si disponible)
+      // 2. MISE À JOUR & DESSIN DE LA SKYLINE (EFFONDREMENT PHYSIQUE DES IMMEUBLES)
+      buildings.forEach(b => {
+        const bxCenter = b.x + b.w / 2;
+        if (simPhase === 'DETONATION' || simPhase === 'EXTERMINATED' || simPhase === 'DAMAGED') {
+          let isImpacted = false;
+          if (weaponType === 'CARPET') {
+            for (const s of carpetStrikes) {
+              if (s.exploded && Math.abs(bxCenter - s.x) < 62) {
+                isImpacted = true;
+                break;
+              }
+            }
+          } else {
+            const distFromCenter = Math.abs(bxCenter - centerX);
+            isImpacted = distFromCenter <= shockwaveRadius * 0.92;
+          }
+
+          if (isImpacted) {
+            if (!b.hit) {
+              b.hit = true;
+              spawnBuildingDebris(b.x, horizonY - b.h * 0.65, b.w, b.baseShade);
+              b.windows.forEach(win => {
+                if (Math.random() < 0.78) win.lit = false;
+              });
+            }
+            const maxDmg = b.layer === 0 ? 0.55 : (weaponType === 'BIO' ? 0.25 : 0.72);
+            b.damage = Math.min(maxDmg, b.damage + 0.018);
+            if (weaponType !== 'BIO') {
+              b.collapseY = b.h * b.damage * 0.78;
+              b.tilt = b.tiltDir * b.damage * (b.isMonument ? 0.14 : 0.11);
+            }
+          }
+        }
+
+        ctx.save();
+        const baseY = horizonY + (b.layer === 0 ? 0 : 6);
+        ctx.translate(bxCenter, baseY);
+        ctx.rotate(b.tilt);
+
+        const visibleH = Math.max(12, b.h - b.collapseY);
+        // Corps du bâtiment
+        ctx.fillStyle = b.hit && weaponType !== 'BIO' ? '#171316' : b.baseShade;
+        ctx.fillRect(-b.w / 2, -visibleH, b.w, visibleH);
+
+        // Arête éclairée par l'explosion
+        ctx.fillStyle = b.hit ? 'rgba(255, 118, 117, 0.35)' : 'rgba(116, 185, 255, 0.16)';
+        ctx.fillRect(b.tiltDir > 0 ? -b.w / 2 : b.w / 2 - 2.5, -visibleH, 2.5, visibleH);
+
+        // Antenne / flèche
+        if (b.hasSpire && b.damage < 0.35) {
+          ctx.strokeStyle = b.isMonument ? '#ffd369' : '#636e72';
+          ctx.lineWidth = b.isMonument ? 3 : 1.6;
+          ctx.beginPath();
+          ctx.moveTo(0, -visibleH);
+          ctx.lineTo(0, -visibleH - (b.isMonument ? 28 : 16));
+          ctx.stroke();
+          if (Math.floor(elapsed * 4) % 2 === 0) {
+            ctx.fillStyle = '#ff3838';
+            ctx.beginPath();
+            ctx.arc(0, -visibleH - (b.isMonument ? 28 : 16), 2.2, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        // Fenêtres illuminées
+        b.windows.forEach(win => {
+          if (!win.lit || win.ry > visibleH - 6) return;
+          ctx.fillStyle = win.color;
+          ctx.fillRect(-b.w / 2 + win.rx, -visibleH + win.ry, 3.2, 4.5);
+        });
+
+        // Foyers d'incendie sur les bâtiments touchés
+        if (b.hit && weaponType !== 'BIO') {
+          b.fireSeeds.forEach(fs => {
+            const flicker = 0.75 + 0.35 * Math.sin(elapsed * 16 + fs.phase);
+            const fx = -b.w / 2 + fs.ox;
+            const fy = -visibleH + 4;
+            const fGrad = ctx.createRadialGradient(fx, fy, 0, fx, fy, fs.size * flicker);
+            fGrad.addColorStop(0, 'rgba(255, 250, 101, 0.92)');
+            fGrad.addColorStop(0.45, 'rgba(255, 110, 48, 0.78)');
+            fGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = fGrad;
+            ctx.beginPath();
+            ctx.arc(fx, fy, fs.size * flicker, 0, Math.PI * 2);
+            ctx.fill();
+          });
+        }
+        ctx.restore();
+      });
+
+      // 3. EAU / BAIE AU PREMIER PLAN + REFLETS DE LA VILLE ET DES FLAMMES
+      const waterGrad = ctx.createLinearGradient(0, horizonY, 0, h);
+      waterGrad.addColorStop(0, simPhase === 'APPROACH' ? '#071426' : '#1b0d10');
+      waterGrad.addColorStop(1, '#030710');
+      ctx.fillStyle = waterGrad;
+      ctx.fillRect(0, horizonY, w, h - horizonY);
+
+      // Lignes de reflets scintillants sur l'eau
+      for (let r = 0; r < 18; r++) {
+        const ry = horizonY + 8 + r * ((h - horizonY) / 20);
+        const rw = 40 + Math.sin(elapsed * 4 + r) * 35 + (simPhase !== 'APPROACH' ? 80 : 0);
+        ctx.fillStyle = simPhase === 'APPROACH'
+          ? 'rgba(116, 185, 255, 0.10)'
+          : (weaponType === 'ORBITAL' ? 'rgba(0, 206, 201, 0.16)' : (weaponType === 'BIO' ? 'rgba(46, 213, 115, 0.15)' : 'rgba(255, 118, 64, 0.18)'));
+        ctx.fillRect(centerX - rw * (1 + r * 0.08) + Math.sin(elapsed * 2 + r) * 14, ry, rw * (2 + r * 0.15), 2);
+      }
+
+      // Pont routier traversant le premier plan + trafic automobile
+      const bridgeY = horizonY + 14;
+      ctx.fillStyle = '#0f1722';
+      ctx.fillRect(0, bridgeY, w, 9);
+      ctx.strokeStyle = 'rgba(255, 211, 105, 0.45)';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(0, bridgeY);
+      ctx.lineTo(w, bridgeY);
+      ctx.stroke();
+
+      bridgeCars.forEach(car => {
+        if (simPhase === 'APPROACH') {
+          car.x += car.speed * (1 / 60);
+          if (car.x > w + 10) car.x = -10;
+          if (car.x < -10) car.x = w + 10;
+        } else if (Math.abs(car.x - centerX) < shockwaveRadius) {
+          car.alive = false;
+        }
+        if (car.alive) {
+          ctx.fillStyle = car.color;
+          ctx.fillRect(car.x - 2, bridgeY + 3, 4, 2.2);
+        }
+      });
+
+      // Rendu PixiJS v8 Accéléré GPU (halos additifs)
       if (usePixi) {
         try {
           pixiRenderer.renderFrame(simPhase, weaponType, currentProgress, shockwaveRadius, w, h);
         } catch (pixiErr) {
-          // Fallback silencieux vers le rendu 2D haute définition
+          // Fallback silencieux vers le rendu 2D
         }
       }
-
-      // 2. Balayage radar tournant
-      const sweepAngle = elapsed * 1.8;
-      ctx.strokeStyle = 'rgba(0, 206, 201, 0.45)';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(centerX, centerY);
-      ctx.lineTo(centerX + Math.cos(sweepAngle) * 380, centerY + Math.sin(sweepAngle) * 380);
-      ctx.stroke();
-
-      // 3. Circulation automobile sur la carte
-      satVehicles.forEach(v => {
-        v.angle += v.speed * (1 / 60);
-        const vx = centerX + Math.cos(v.angle) * v.radius;
-        const vy = centerY + Math.sin(v.angle) * v.radius;
-        ctx.fillStyle = v.color;
-        ctx.beginPath();
-        ctx.arc(vx, vy, 1.8, 0, Math.PI * 2);
-        ctx.fill();
-      });
-
-      // 4. BATCHING DES POINTS THERMIQUES (2 Draw Calls au lieu de 550 pour 60 FPS)
-      ctx.fillStyle = '#2ed573';
-      ctx.beginPath();
-      for (let i = 0; i < thermalDots.length; i++) {
-        const p = thermalDots[i];
-        if (!p.alive || p.baseColor !== '#2ed573') continue;
-        const dFromCenter = Math.hypot(p.x - centerX, p.y - centerY);
-        if (simPhase === 'DETONATION' || simPhase === 'EXTERMINATED') {
-          let shouldVaporize = (dFromCenter <= shockwaveRadius);
-          if (weaponType === 'CARPET') {
-            for (let strike of carpetStrikes) {
-              if (strike.exploded && Math.hypot(p.x - strike.x, p.y - strike.y) < strike.radius) {
-                shouldVaporize = true;
-                break;
-              }
-            }
-          }
-          if (shouldVaporize) {
-            p.alive = false;
-            if (Math.random() < 0.25) {
-              spawnParticle(p.x, p.y, (Math.random() - 0.5) * 2.5, (Math.random() - 0.5) * 2.5, weaponColor, 1.8, 0.6, 0.03);
-            }
-            continue;
-          }
-        }
-        ctx.rect(p.x - 1, p.y - 1, p.size, p.size);
-      }
-      ctx.fill();
-
-      ctx.fillStyle = '#fffa65';
-      ctx.beginPath();
-      for (let i = 0; i < thermalDots.length; i++) {
-        const p = thermalDots[i];
-        if (!p.alive || p.baseColor !== '#fffa65') continue;
-        const dFromCenter = Math.hypot(p.x - centerX, p.y - centerY);
-        if (simPhase === 'DETONATION' || simPhase === 'EXTERMINATED') {
-          let shouldVaporize = (dFromCenter <= shockwaveRadius);
-          if (weaponType === 'CARPET') {
-            for (let strike of carpetStrikes) {
-              if (strike.exploded && Math.hypot(p.x - strike.x, p.y - strike.y) < strike.radius) {
-                shouldVaporize = true;
-                break;
-              }
-            }
-          }
-          if (shouldVaporize) {
-            p.alive = false;
-            continue;
-          }
-        }
-        ctx.rect(p.x - 1, p.y - 1, p.size, p.size);
-      }
-      ctx.fill();
 
       // =========================================================================
-      // RENDU SPÉCIFIQUE PAR ARME : 4 ANIMATIONS MAJEURES AAA
+      // 4. ANIMATIONS SPÉCIFIQUES DES 4 ARMES SUR LA SKYLINE
       // =========================================================================
 
-      // --- 1. NUKE : FORMATION B-2 SPIRIT STEALTH BOMBER + 2 ESCORTES F-22 + LARGAGE MISSILE CROISIÈRE ---
+      // --- A. NUKE : B-2 + OGIVE PLONGEANTE -> CHAMPIGNON ATOMIQUE 3D SUR LA SKYLINE ---
       if (weaponType === 'NUKE') {
         if (simPhase === 'APPROACH') {
           const t = Math.min(1.0, elapsed / 1.8);
-          const flightAng = Math.atan2(h * 0.38, w + 360);
-          const startX = -160;
-          const startY = h * 0.22;
-          const curFlightX = startX + (w + 360) * t;
-          const curFlightY = startY + (h * 0.38) * t;
+          const warheadX = w * 0.15 + (centerX - w * 0.15) * Math.pow(t, 1.35);
+          const warheadY = -20 + (horizonY + 20) * Math.pow(t, 1.35);
 
-          // Helper de dessin d'un chasseur furtif d'escorte (F-22 Raptor)
-          const drawFighter = (fx, fy) => {
-            ctx.save();
-            ctx.translate(fx, fy);
-            ctx.rotate(flightAng + Math.PI / 2);
-
-            // Ombre au sol
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.42)';
-            ctx.beginPath();
-            ctx.moveTo(0 + 20, -20 + 26);
-            ctx.lineTo(-14 + 20, 14 + 26);
-            ctx.lineTo(-6 + 20, 16 + 26);
-            ctx.lineTo(0 + 20, 12 + 26);
-            ctx.lineTo(6 + 20, 16 + 26);
-            ctx.lineTo(14 + 20, 14 + 26);
-            ctx.closePath();
-            ctx.fill();
-
-            // Silhouette furtive F-22 Raptor
-            ctx.fillStyle = '#2d3436';
-            ctx.beginPath();
-            ctx.moveTo(0, -20);
-            ctx.lineTo(-14, 14);
-            ctx.lineTo(-6, 16);
-            ctx.lineTo(0, 12);
-            ctx.lineTo(6, 16);
-            ctx.lineTo(14, 14);
-            ctx.closePath();
-            ctx.fill();
-
-            // Verrière cockpit bleu métallisé
-            ctx.fillStyle = '#74b9ff';
-            ctx.beginPath();
-            ctx.ellipse(0, -7, 2.5, 5, 0, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Flammes de post-combustion jumelées
-            ctx.fillStyle = (Math.random() < 0.5 ? '#fffa65' : '#ff7675');
-            ctx.beginPath();
-            ctx.arc(-3.5, 16, 2, 0, Math.PI * 2);
-            ctx.arc(3.5, 16, 2, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Traînées de condensation supersoniques
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.55)';
-            ctx.lineWidth = 1.4;
-            [-3.5, 3.5].forEach(ex => {
-              ctx.beginPath();
-              ctx.moveTo(ex, 16);
-              ctx.lineTo(ex, 90);
-              ctx.stroke();
-            });
-
-            ctx.restore();
-          };
-
-          // Dessiner les 2 chasseurs d'escorte (gauche et droite)
-          const escortDistX = Math.cos(flightAng + Math.PI / 2) * 58;
-          const escortDistY = Math.sin(flightAng + Math.PI / 2) * 58;
-          const lagX = -Math.cos(flightAng) * 45;
-          const lagY = -Math.sin(flightAng) * 45;
-          drawFighter(curFlightX + escortDistX + lagX, curFlightY + escortDistY + lagY);
-          drawFighter(curFlightX - escortDistX + lagX, curFlightY - escortDistY + lagY);
-
-          // Dessiner le B-2 Spirit Stealth Bomber au centre
-          ctx.save();
-          ctx.translate(curFlightX, curFlightY);
-          ctx.rotate(flightAng + Math.PI / 2);
-
-          // Ombre projetée sur le terrain
-          ctx.fillStyle = 'rgba(0, 0, 0, 0.48)';
+          // Traînée incandescente de rentrée atmosphérique
+          const trailGrad = ctx.createLinearGradient(w * 0.15, -20, warheadX, warheadY);
+          trailGrad.addColorStop(0, 'rgba(255, 71, 87, 0)');
+          trailGrad.addColorStop(0.7, 'rgba(255, 159, 67, 0.85)');
+          trailGrad.addColorStop(1, '#ffffff');
+          ctx.strokeStyle = trailGrad;
+          ctx.lineWidth = 5;
           ctx.beginPath();
-          ctx.moveTo(0 + 26, -34 + 32);
-          ctx.lineTo(-62 + 26, 12 + 32);
-          ctx.lineTo(-42 + 26, 16 + 32);
-          ctx.lineTo(-24 + 26, 8 + 32);
-          ctx.lineTo(0 + 26, 18 + 32);
-          ctx.lineTo(24 + 26, 8 + 32);
-          ctx.lineTo(42 + 26, 16 + 32);
-          ctx.lineTo(62 + 26, 12 + 32);
-          ctx.closePath();
-          ctx.fill();
-
-          // Cellule furtive B-2 Spirit (Ailes volantes composites anthracite)
-          ctx.fillStyle = '#1c1f24';
-          ctx.beginPath();
-          ctx.moveTo(0, -34);
-          ctx.lineTo(-62, 12);
-          ctx.lineTo(-42, 16);
-          ctx.lineTo(-24, 8);
-          ctx.lineTo(0, 18);
-          ctx.lineTo(24, 8);
-          ctx.lineTo(42, 16);
-          ctx.lineTo(62, 12);
-          ctx.closePath();
-          ctx.fill();
-
-          // Lignes de structure radar-absorbante
-          ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
-          ctx.lineWidth = 1.2;
-          ctx.beginPath();
-          ctx.moveTo(0, -34);
-          ctx.lineTo(0, 18);
-          ctx.moveTo(-62, 12);
-          ctx.lineTo(0, -34);
-          ctx.lineTo(62, 12);
+          ctx.moveTo(w * 0.15, -20);
+          ctx.lineTo(warheadX, warheadY);
           ctx.stroke();
 
-          // Verrière de pilotage furtive
-          ctx.fillStyle = 'rgba(116, 185, 255, 0.85)';
+          ctx.fillStyle = '#ffffff';
           ctx.beginPath();
-          ctx.ellipse(0, -18, 4, 8, 0, 0, Math.PI * 2);
+          ctx.arc(warheadX, warheadY, 5, 0, Math.PI * 2);
           ctx.fill();
 
-          // Échappements et traînées de condensation
-          ctx.strokeStyle = 'rgba(255, 255, 255, 0.65)';
-          ctx.lineWidth = 2.2;
-          [-14, 14].forEach(eng => {
-            ctx.beginPath();
-            ctx.moveTo(eng, 10);
-            ctx.lineTo(eng, 130);
-            ctx.stroke();
-          });
-
-          // Feux clignotants d'extrémité d'ailes
-          ctx.fillStyle = (Math.floor(elapsed * 8) % 2 === 0) ? '#ff4757' : '#2ed573';
-          ctx.beginPath();
-          ctx.arc(-60, 12, 2.5, 0, Math.PI * 2);
-          ctx.arc(60, 12, 2.5, 0, Math.PI * 2);
-          ctx.fill();
-
-          // Soute ventrale d'armement ouverte à t >= 0.45
-          if (t >= 0.45) {
-            ctx.fillStyle = '#0a0c10';
-            ctx.fillRect(-6, -6, 12, 16);
-            ctx.strokeStyle = '#ff3838';
-            ctx.lineWidth = 1.5;
-            ctx.strokeRect(-6, -6, 12, 16);
-          }
-
-          ctx.restore();
-
-          // ARME LÂCHÉE : Missile de croisière nucléaire plongeant vers le centre
-          if (t >= 0.45) {
-            const dropT = (t - 0.45) / 0.55;
-            const dropOriginX = startX + (w + 360) * 0.45;
-            const dropOriginY = startY + (h * 0.38) * 0.45;
-
-            const missileX = dropOriginX + (centerX - dropOriginX) * Math.pow(dropT, 1.4);
-            const missileY = dropOriginY + (centerY - dropOriginY) * Math.pow(dropT, 1.4);
-
-            const boosterGrad = ctx.createLinearGradient(dropOriginX, dropOriginY, missileX, missileY);
-            boosterGrad.addColorStop(0, 'rgba(255, 71, 87, 0.15)');
-            boosterGrad.addColorStop(0.65, 'rgba(255, 159, 67, 0.85)');
-            boosterGrad.addColorStop(1, '#ffffff');
-
-            ctx.strokeStyle = boosterGrad;
-            ctx.lineWidth = 4.5;
-            ctx.beginPath();
-            ctx.moveTo(dropOriginX, dropOriginY);
-            ctx.lineTo(missileX, missileY);
-            ctx.stroke();
-
-            ctx.save();
-            ctx.translate(missileX, missileY);
-            const missileAngle = Math.atan2(centerY - dropOriginY, centerX - dropOriginX);
-            ctx.rotate(missileAngle);
-
-            ctx.fillStyle = '#ffffff';
-            ctx.beginPath();
-            ctx.roundRect(-10, -2.5, 20, 5, 2);
-            ctx.fill();
-
-            ctx.fillStyle = '#ff3838';
-            ctx.beginPath();
-            ctx.arc(10, 0, 2.5, -Math.PI / 2, Math.PI / 2);
-            ctx.fill();
-
-            ctx.fillStyle = '#fffa65';
-            ctx.beginPath();
-            ctx.moveTo(-10, -2);
-            ctx.lineTo(-17 + (Math.random() - 0.5) * 4, 0);
-            ctx.lineTo(-10, 2);
-            ctx.fill();
-
-            ctx.restore();
-          }
-
-          // Réticule d'acquisition satellite KH-12 tournant au centre-ville
-          const rot = elapsed * 3.5;
+          // Réticule de visée sur le centre-ville
           ctx.strokeStyle = '#ff3838';
-          ctx.lineWidth = 2.5;
+          ctx.lineWidth = 2;
           ctx.beginPath();
-          ctx.arc(centerX, centerY, 46, rot, rot + Math.PI * 1.4);
+          ctx.arc(centerX, horizonY - 12, 34 - t * 14, 0, Math.PI * 2);
           ctx.stroke();
+        } else {
+          // Onde de choc ovale en perspective sur la ville
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+          ctx.lineWidth = 5;
           ctx.beginPath();
-          ctx.arc(centerX, centerY, 62, -rot, -rot + Math.PI);
+          ctx.ellipse(centerX, horizonY, shockwaveRadius, shockwaveRadius * 0.42, 0, 0, Math.PI * 2);
           ctx.stroke();
+
+          // Champignon atomique imposant montant dans le ciel
+          const stemH = Math.min(h * 0.48, 80 + currentProgress * h * 0.42);
+          const capY = horizonY - stemH;
+          const capR = Math.min(w * 0.34, 48 + currentProgress * 125);
+
+          // Base de feu au sol
+          const baseFire = ctx.createRadialGradient(centerX, horizonY, 0, centerX, horizonY, capR * 0.9);
+          baseFire.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
+          baseFire.addColorStop(0.35, 'rgba(255, 159, 67, 0.9)');
+          baseFire.addColorStop(0.75, 'rgba(235, 77, 75, 0.6)');
+          baseFire.addColorStop(1, 'rgba(0, 0, 0, 0)');
+          ctx.fillStyle = baseFire;
           ctx.beginPath();
-          ctx.moveTo(centerX - 15, centerY);
-          ctx.lineTo(centerX + 15, centerY);
-          ctx.moveTo(centerX, centerY - 15);
-          ctx.lineTo(centerX, centerY + 15);
-          ctx.stroke();
-        } else if (simPhase === 'DETONATION' || simPhase === 'EXTERMINATED') {
-          // Double onde de choc supersonique
-          ctx.strokeStyle = '#ffffff';
+          ctx.ellipse(centerX, horizonY, capR * 0.9, capR * 0.35, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Tige du champignon
+          const stemW = capR * 0.28;
+          const colGrad = ctx.createLinearGradient(centerX - stemW, horizonY, centerX + stemW, horizonY);
+          colGrad.addColorStop(0, 'rgba(35, 35, 40, 0.88)');
+          colGrad.addColorStop(0.5, 'rgba(255, 165, 60, 0.95)');
+          colGrad.addColorStop(1, 'rgba(35, 35, 40, 0.88)');
+          ctx.fillStyle = colGrad;
+          ctx.fillRect(centerX - stemW, capY, stemW * 2, stemH);
+
+          // Anneau de condensation blanc autour de la tige
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.55)';
           ctx.lineWidth = 6;
           ctx.beginPath();
-          ctx.arc(centerX, centerY, shockwaveRadius, 0, Math.PI * 2);
+          ctx.ellipse(centerX, capY + stemH * 0.42, capR * 0.52, 12, 0, 0, Math.PI * 2);
           ctx.stroke();
 
-          ctx.strokeStyle = '#ff4757';
-          ctx.lineWidth = 3;
-          ctx.beginPath();
-          ctx.arc(centerX, centerY, Math.max(0, shockwaveRadius - 18), 0, Math.PI * 2);
-          ctx.stroke();
-
-          // Cratère de Trinitite vitrifiée craquelée au sol
-          const trinititeR = Math.min(180, shockwaveRadius * 0.42);
-          const trinititeGrad = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, trinititeR);
-          trinititeGrad.addColorStop(0, 'rgba(46, 213, 115, 0.85)');
-          trinititeGrad.addColorStop(0.55, 'rgba(16, 172, 132, 0.7)');
-          trinititeGrad.addColorStop(1, 'rgba(5, 24, 18, 0)');
-          ctx.fillStyle = trinititeGrad;
-          ctx.beginPath();
-          ctx.arc(centerX, centerY, trinititeR, 0, Math.PI * 2);
-          ctx.fill();
-
-          // Halo thermique incandescent
-          const blastR = Math.min(shockwaveRadius, Math.max(w, h));
-          const nukeGrad = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, blastR);
-          nukeGrad.addColorStop(0, 'rgba(255, 255, 255, 0.98)');
-          nukeGrad.addColorStop(0.2, 'rgba(255, 250, 101, 0.92)');
-          nukeGrad.addColorStop(0.48, 'rgba(235, 77, 75, 0.75)');
-          nukeGrad.addColorStop(0.8, 'rgba(183, 21, 64, 0.4)');
-          nukeGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-          ctx.fillStyle = nukeGrad;
-          ctx.beginPath();
-          ctx.arc(centerX, centerY, blastR, 0, Math.PI * 2);
-          ctx.fill();
-
-          // Champignon atomique volumétrique à 5 lobes denses
-          const capY = centerY - shockwaveRadius * 0.38;
-          const capR = shockwaveRadius * 0.52;
-
-          // Chapeau central
-          const capGrad = ctx.createRadialGradient(centerX, capY, 0, centerX, capY, capR);
-          capGrad.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
-          capGrad.addColorStop(0.35, 'rgba(255, 159, 67, 0.88)');
-          capGrad.addColorStop(0.7, 'rgba(45, 52, 54, 0.9)');
-          capGrad.addColorStop(1, 'rgba(0,0,0,0)');
-          ctx.fillStyle = capGrad;
-          ctx.beginPath();
-          ctx.arc(centerX, capY, capR, 0, Math.PI * 2);
-          ctx.fill();
-
-          // Lobes latéraux de fumée turbulente
-          [-capR * 0.55, -capR * 0.28, 0, capR * 0.28, capR * 0.55].forEach(lx => {
-            const lobeGrad = ctx.createRadialGradient(centerX + lx, capY + 10, 0, centerX + lx, capY + 10, capR * 0.6);
-            lobeGrad.addColorStop(0, 'rgba(235, 77, 75, 0.85)');
-            lobeGrad.addColorStop(0.6, 'rgba(45, 52, 54, 0.85)');
-            lobeGrad.addColorStop(1, 'rgba(0,0,0,0)');
-            ctx.fillStyle = lobeGrad;
+          // Chapeau volumétrique multicouche
+          [-0.48, 0.48, -0.22, 0.22, 0].forEach((off, idx) => {
+            const lx = centerX + off * capR;
+            const ly = capY + Math.abs(off) * 18;
+            const lr = idx === 4 ? capR * 0.72 : capR * 0.52;
+            const lGrad = ctx.createRadialGradient(lx, ly - lr * 0.2, 0, lx, ly, lr);
+            lGrad.addColorStop(0, 'rgba(255, 250, 140, 0.95)');
+            lGrad.addColorStop(0.38, 'rgba(255, 110, 48, 0.9)');
+            lGrad.addColorStop(0.75, 'rgba(42, 42, 48, 0.92)');
+            lGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = lGrad;
             ctx.beginPath();
-            ctx.arc(centerX + lx, capY + 10, capR * 0.6, 0, Math.PI * 2);
+            ctx.ellipse(lx, ly, lr, lr * 0.65, 0, 0, Math.PI * 2);
             ctx.fill();
           });
 
-          // Éclairs de foudre volcanique intérieurs au cœur du champignon
-          if (Math.random() < 0.45) {
+          // Éclairs volcaniques dans le nuage
+          if (Math.random() < 0.4) {
             ctx.strokeStyle = '#dff9fb';
-            ctx.lineWidth = 2.5;
+            ctx.lineWidth = 2;
             ctx.beginPath();
-            let lx = centerX + (Math.random() - 0.5) * capR * 0.6;
-            let ly = capY - capR * 0.2;
+            let lx = centerX + (Math.random() - 0.5) * capR;
+            let ly = capY;
             ctx.moveTo(lx, ly);
-            for (let seg = 0; seg < 5; seg++) {
-              lx += (Math.random() - 0.5) * 28;
+            for (let seg = 0; seg < 4; seg++) {
+              lx += (Math.random() - 0.5) * 26;
               ly += 14 + Math.random() * 12;
               ctx.lineTo(lx, ly);
             }
             ctx.stroke();
           }
-
-          // Colonne / pied de feu et fumée montant dans le ciel
-          const colGrad = ctx.createLinearGradient(centerX - capR * 0.28, centerY, centerX + capR * 0.28, centerY);
-          colGrad.addColorStop(0, 'rgba(45, 52, 54, 0.85)');
-          colGrad.addColorStop(0.5, 'rgba(255, 250, 101, 0.95)');
-          colGrad.addColorStop(1, 'rgba(45, 52, 54, 0.85)');
-          ctx.fillStyle = colGrad;
-          ctx.fillRect(centerX - capR * 0.22, capY, capR * 0.44, centerY - capY);
         }
       }
 
-      // --- 2. CARPET : FORMATION B-52 (8 TRAÎNÉES) + 32 EXPLOSIONS EN STACCATO ---
+      // --- B. CARPET : ESCADRILLE B-52 + PLUIE DE BOMBES + MUR DE FEU SUR LA SKYLINE ---
       else if (weaponType === 'CARPET') {
         if (simPhase === 'APPROACH') {
           const t = elapsed / 1.8;
-          const fleetX = -120 + (w + 240) * t;
-          const fleetY = 60 + t * 45;
-
-          [-42, 0, 42].forEach((offsetY, idx) => {
-            const bx = fleetX - idx * 38;
-            const by = fleetY + offsetY;
-
-            // Ombre projetée au sol à -25px
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+          const fleetX = -90 + (w + 180) * t;
+          const fleetY = horizonY * 0.28;
+          [-34, 0, 34].forEach((oy, idx) => {
+            const bx = fleetX - idx * 36;
+            const by = fleetY + oy;
+            ctx.fillStyle = '#0f172a';
             ctx.beginPath();
-            ctx.moveTo(bx + 24, by + 25);
-            ctx.lineTo(bx - 20, by + 3);
-            ctx.lineTo(bx - 12, by + 19);
-            ctx.lineTo(bx - 30, by + 25);
-            ctx.lineTo(bx - 12, by + 31);
-            ctx.lineTo(bx - 20, by + 47);
+            ctx.moveTo(bx + 24, by);
+            ctx.lineTo(bx - 18, by - 14);
+            ctx.lineTo(bx - 28, by);
+            ctx.lineTo(bx - 18, by + 14);
             ctx.closePath();
             ctx.fill();
-
-            // Silhouette réaliste de bombardier lourd B-52
-            ctx.fillStyle = '#1e272e';
+            ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+            ctx.lineWidth = 1.5;
             ctx.beginPath();
-            ctx.moveTo(bx + 26, by);
-            ctx.lineTo(bx - 20, by - 24);
-            ctx.lineTo(bx - 12, by - 6);
-            ctx.lineTo(bx - 32, by);
-            ctx.lineTo(bx - 12, by + 6);
-            ctx.lineTo(bx - 20, by + 24);
-            ctx.closePath();
-            ctx.fill();
-
-            // 8 TRAÎNÉES DE CONDENSATION DES RÉACTEURS (4 nacelles doubles B-52)
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.65)';
-            ctx.lineWidth = 1.8;
-            [-16, -11, -6, -2, 2, 6, 11, 16].forEach(engY => {
-              ctx.beginPath();
-              ctx.moveTo(bx - 16, by + engY);
-              ctx.lineTo(bx - 130, by + engY);
-              ctx.stroke();
-            });
-
-            // Feux de navigation clignotants
-            ctx.fillStyle = (Math.floor(elapsed * 7) % 2 === 0) ? '#ff4757' : '#2ed573';
-            ctx.beginPath();
-            ctx.arc(bx - 18, by - 22, 2.5, 0, Math.PI * 2);
-            ctx.arc(bx - 18, by + 22, 2.5, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.moveTo(bx - 16, by - 6); ctx.lineTo(bx - 110, by - 6);
+            ctx.moveTo(bx - 16, by + 6); ctx.lineTo(bx - 110, by + 6);
+            ctx.stroke();
           });
-        } else if (simPhase === 'DETONATION' || simPhase === 'EXTERMINATED') {
+        } else {
           carpetStrikes.forEach(strike => {
             if (elapsed >= strike.delay) {
               if (!strike.exploded) {
                 strike.exploded = true;
-                cameraShake = Math.max(cameraShake, 11);
+                cameraShake = Math.max(cameraShake, 12);
                 soundManager.playExplosion();
-                for (let p = 0; p < 24; p++) {
-                  const ang = Math.random() * Math.PI * 2;
-                  const spd = 0.8 + Math.random() * 5.5;
-                  spawnParticle(strike.x, strike.y, Math.cos(ang) * spd, Math.sin(ang) * spd, '#ff9f43', 2.5, 0.7, 0.025);
+                for (let p = 0; p < 18; p++) {
+                  const ang = -Math.PI * Math.random();
+                  const spd = 1.5 + Math.random() * 6.5;
+                  spawnParticle(strike.x, strike.y, Math.cos(ang) * spd, Math.sin(ang) * spd, p % 2 === 0 ? '#ff9f43' : '#fffa65', 3, 0.8, 0.024, 0.16);
                 }
               }
-
-              strike.radius = Math.min(80, strike.radius + 2.4);
+              strike.radius = Math.min(72, strike.radius + 3.2);
               const expGrad = ctx.createRadialGradient(strike.x, strike.y, 0, strike.x, strike.y, strike.radius);
-              expGrad.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
-              expGrad.addColorStop(0.3, 'rgba(255, 159, 67, 0.85)');
+              expGrad.addColorStop(0, 'rgba(255, 255, 255, 0.96)');
+              expGrad.addColorStop(0.32, 'rgba(255, 159, 67, 0.88)');
               expGrad.addColorStop(0.7, 'rgba(235, 77, 75, 0.55)');
-              expGrad.addColorStop(1, 'rgba(0,0,0,0)');
+              expGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
               ctx.fillStyle = expGrad;
               ctx.beginPath();
               ctx.arc(strike.x, strike.y, strike.radius, 0, Math.PI * 2);
-              ctx.fill();
-
-              // Cratère noir persistant
-              ctx.fillStyle = 'rgba(16, 20, 26, 0.65)';
-              ctx.beginPath();
-              ctx.arc(strike.x, strike.y, strike.radius * 0.45, 0, Math.PI * 2);
               ctx.fill();
             }
           });
         }
       }
 
-      // --- 3. ORBITAL : SURVOL HYPERSONIQUE MACH 6 AURORA + FAISCEAU IONIQUE PULSAR ---
+      // --- C. ORBITAL : RAYON IONIQUE GIGANTESQUE DEPUIS L'ESPACE ---
       else if (weaponType === 'ORBITAL') {
         if (simPhase === 'APPROACH') {
           const t = Math.min(1.0, elapsed / 1.8);
-          // Vol hypersonique traversant le ciel
-          const craftX = -100 + (w + 220) * Math.pow(t, 1.15);
-          const craftY = h * 0.22 + t * 45;
-
-          // Cône d'onde de choc plasma hypersonique Mach 6
-          const plasmaGrad = ctx.createRadialGradient(craftX + 24, craftY, 0, craftX, craftY, 75);
-          plasmaGrad.addColorStop(0, 'rgba(0, 206, 201, 0.95)');
-          plasmaGrad.addColorStop(0.4, 'rgba(9, 132, 227, 0.35)');
-          plasmaGrad.addColorStop(1, 'rgba(0, 206, 201, 0)');
-          ctx.fillStyle = plasmaGrad;
+          ctx.strokeStyle = `rgba(0, 206, 201, ${0.4 + 0.5 * t})`;
+          ctx.lineWidth = 2;
+          ctx.setLineDash([8, 6]);
           ctx.beginPath();
-          ctx.arc(craftX + 15, craftY, 75, 0, Math.PI * 2);
-          ctx.fill();
-
-          // Cellule furtive pointue d'avion spatial Aurora / Darkstar
-          ctx.fillStyle = '#0f172a';
-          ctx.beginPath();
-          ctx.moveTo(craftX + 36, craftY);
-          ctx.lineTo(craftX - 28, craftY - 18);
-          ctx.lineTo(craftX - 16, craftY);
-          ctx.lineTo(craftX - 28, craftY + 18);
-          ctx.closePath();
-          ctx.fill();
-
-          // Ligne centrale lumineuse
-          ctx.strokeStyle = '#00cec9';
-          ctx.lineWidth = 1.6;
-          ctx.beginPath();
-          ctx.moveTo(craftX + 36, craftY);
-          ctx.lineTo(craftX - 16, craftY);
-          ctx.stroke();
-
-          // Faisceau de visée laser satellite KH-12 verrouillant le centre-ville
-          ctx.strokeStyle = 'rgba(0, 206, 201, 0.75)';
-          ctx.lineWidth = 1.8;
-          ctx.setLineDash([6, 4]);
-          ctx.beginPath();
-          ctx.moveTo(craftX, craftY);
-          ctx.lineTo(centerX, centerY);
+          ctx.moveTo(centerX, 0);
+          ctx.lineTo(centerX, horizonY);
           ctx.stroke();
           ctx.setLineDash([]);
 
-          // Réticule cybernétique hexagonal
           ctx.strokeStyle = '#00cec9';
           ctx.lineWidth = 2.5;
-          ctx.strokeRect(centerX - 46, centerY - 46, 92, 92);
           ctx.beginPath();
-          ctx.arc(centerX, centerY, 28 + Math.sin(elapsed * 12) * 8, 0, Math.PI * 2);
+          ctx.ellipse(centerX, horizonY, 55 - t * 30, 20 - t * 10, 0, 0, Math.PI * 2);
           ctx.stroke();
-        } else if (simPhase === 'DETONATION' || simPhase === 'EXTERMINATED') {
-          // Colonne de rayon laser ionique géant (65px)
-          const beamWidth = Math.max(18, 65 * (1.0 - Math.min(1.0, (elapsed - 1.8) / 2.6)));
+        } else {
+          const beamWidth = Math.max(20, 72 * (1.0 - Math.min(0.75, (elapsed - 1.8) / 3.0)));
           const beamGrad = ctx.createLinearGradient(centerX - beamWidth, 0, centerX + beamWidth, 0);
-          beamGrad.addColorStop(0, 'rgba(9, 132, 227, 0.1)');
-          beamGrad.addColorStop(0.28, 'rgba(0, 206, 201, 0.95)');
+          beamGrad.addColorStop(0, 'rgba(9, 132, 227, 0)');
+          beamGrad.addColorStop(0.25, 'rgba(0, 206, 201, 0.92)');
           beamGrad.addColorStop(0.5, '#ffffff');
-          beamGrad.addColorStop(0.72, 'rgba(0, 206, 201, 0.95)');
-          beamGrad.addColorStop(1, 'rgba(9, 132, 227, 0.1)');
+          beamGrad.addColorStop(0.75, 'rgba(0, 206, 201, 0.92)');
+          beamGrad.addColorStop(1, 'rgba(9, 132, 227, 0)');
           ctx.fillStyle = beamGrad;
-          ctx.fillRect(centerX - beamWidth, 0, beamWidth * 2, h);
+          ctx.fillRect(centerX - beamWidth, 0, beamWidth * 2, horizonY + 12);
 
-          // Anneaux d'ondes de choc EMP bleus
-          if (shockwaveRadius > 1) {
-            ctx.strokeStyle = '#00cec9';
-            ctx.lineWidth = 5;
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, shockwaveRadius, 0, Math.PI * 2);
-            ctx.stroke();
-          }
+          // Cratère de plasma au point d'impact
+          const pGrad = ctx.createRadialGradient(centerX, horizonY, 0, centerX, horizonY, 120);
+          pGrad.addColorStop(0, '#ffffff');
+          pGrad.addColorStop(0.4, 'rgba(0, 206, 201, 0.85)');
+          pGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+          ctx.fillStyle = pGrad;
+          ctx.beginPath();
+          ctx.ellipse(centerX, horizonY, 130, 42, 0, 0, Math.PI * 2);
+          ctx.fill();
 
-          // Cratère de plasma bleu persistant
-          const plasmaR = Math.min(160, shockwaveRadius * 0.38);
-          if (plasmaR > 2) {
-            const plasmaGrad = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, plasmaR);
-            plasmaGrad.addColorStop(0, '#ffffff');
-            plasmaGrad.addColorStop(0.4, '#00cec9');
-            plasmaGrad.addColorStop(0.8, '#0984e3');
-            plasmaGrad.addColorStop(1, 'rgba(0,0,0,0)');
-            ctx.fillStyle = plasmaGrad;
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, plasmaR, 0, Math.PI * 2);
-            ctx.fill();
-          }
-
-          // Éclairs électriques EMP branchés ramifiant le long des boulevards
-          if (Math.random() < 0.4 && empArcs.length < 12) empArcs.push(createEmpArc());
+          if (Math.random() < 0.45 && empArcs.length < 10) empArcs.push(createEmpArc());
           for (let a = empArcs.length - 1; a >= 0; a--) {
             const arc = empArcs[a];
-            if (!arc || !arc.pts || arc.pts.length < 2) {
-              empArcs.splice(a, 1);
-              continue;
-            }
             arc.life -= 0.07;
-            if (arc.life <= 0) {
-              empArcs.splice(a, 1);
-              continue;
-            }
-            ctx.strokeStyle = `rgba(129, 236, 236, ${Math.max(0, arc.life)})`;
-            ctx.lineWidth = 2.5;
+            if (arc.life <= 0) { empArcs.splice(a, 1); continue; }
+            ctx.strokeStyle = `rgba(129, 236, 236, ${arc.life})`;
+            ctx.lineWidth = 2.4;
             ctx.beginPath();
             ctx.moveTo(arc.pts[0].x, arc.pts[0].y);
             for (let i = 1; i < arc.pts.length; i++) ctx.lineTo(arc.pts[i].x, arc.pts[i].y);
@@ -2670,131 +2500,64 @@ export class UIManager {
         }
       }
 
-      // --- 4. BIO : ÉPANDEUR FURTIF MILITAIRE + NAPPES VOLUMÉTRIQUES BICOLORES ---
+      // --- D. BIO : ÉPANDAGE + NUAGE NEURO-TOXIQUE ENGOUFFRANT LA SKYLINE ---
       else if (weaponType === 'BIO') {
         if (simPhase === 'APPROACH') {
           const t = Math.min(1.0, elapsed / 1.8);
-          const planeX = -120 + (w + 240) * t;
-          const planeY = h * 0.32 + Math.sin(t * Math.PI) * 18;
-
-          // Silhouette d'avion lourd militaire d'épandage
-          ctx.fillStyle = '#1e272e';
+          const planeX = -90 + (w + 180) * t;
+          const planeY = horizonY * 0.34;
+          ctx.fillStyle = '#0f172a';
           ctx.beginPath();
-          ctx.moveTo(planeX + 30, planeY);
-          ctx.lineTo(planeX - 24, planeY - 26);
-          ctx.lineTo(planeX - 14, planeY);
-          ctx.lineTo(planeX - 24, planeY + 26);
+          ctx.moveTo(planeX + 26, planeY);
+          ctx.lineTo(planeX - 20, planeY - 16);
+          ctx.lineTo(planeX - 12, planeY);
+          ctx.lineTo(planeX - 20, planeY + 16);
           ctx.closePath();
           ctx.fill();
-
-          // Verrière cockpit vert toxique
-          ctx.fillStyle = '#2ed573';
-          ctx.beginPath();
-          ctx.ellipse(planeX + 10, planeY, 3, 5, Math.PI / 2, 0, Math.PI * 2);
-          ctx.fill();
-
-          // Épandage d'aérosol toxique bicolore dense derrière les ailes
-          [-20, 20].forEach(sprayY => {
-            const sprayGrad = ctx.createLinearGradient(planeX - 20, planeY + sprayY, planeX - 180, planeY + sprayY);
-            sprayGrad.addColorStop(0, 'rgba(46, 213, 115, 0.85)');
-            sprayGrad.addColorStop(0.6, 'rgba(108, 92, 231, 0.55)');
-            sprayGrad.addColorStop(1, 'rgba(46, 213, 115, 0)');
-            ctx.fillStyle = sprayGrad;
-            ctx.beginPath();
-            ctx.moveTo(planeX - 20, planeY + sprayY);
-            ctx.lineTo(planeX - 180, planeY + sprayY - 14);
-            ctx.lineTo(planeX - 180, planeY + sprayY + 14);
-            ctx.closePath();
-            ctx.fill();
-          });
-
-          // Parachutes de conteneurs chimiques neuro-toxiques
-          if (t >= 0.40) {
-            const dropPositions = [
-              [centerX, centerY - 65],
-              [centerX + 65, centerY],
-              [centerX, centerY + 65],
-              [centerX - 65, centerY]
-            ];
-            const dropT = (t - 0.40) / 0.60;
-            dropPositions.forEach(dp => {
-              const curY = -30 + (dp[1] - (-30)) * dropT;
-              ctx.fillStyle = '#2ed573';
-              ctx.beginPath();
-              ctx.arc(dp[0], curY, 6, 0, Math.PI * 2);
-              ctx.fill();
-
-              ctx.strokeStyle = '#a4b0be';
-              ctx.lineWidth = 1.5;
-              ctx.beginPath();
-              ctx.arc(dp[0], curY - 10, 10, Math.PI, 0);
-              ctx.stroke();
-            });
-          }
-        } else if (simPhase === 'DETONATION' || simPhase === 'EXTERMINATED') {
+          const sprayGrad = ctx.createLinearGradient(planeX - 16, planeY, planeX - 160, planeY);
+          sprayGrad.addColorStop(0, 'rgba(46, 213, 115, 0.85)');
+          sprayGrad.addColorStop(1, 'rgba(46, 213, 115, 0)');
+          ctx.fillStyle = sprayGrad;
+          ctx.fillRect(planeX - 160, planeY - 12, 144, 24);
+        } else {
           bioGasPuffs.forEach(puff => {
             puff.x += puff.vx;
             puff.y += puff.vy;
-            puff.radius = Math.min(puff.targetRadius, puff.radius + 0.85);
-            puff.opacity = Math.min(0.72, puff.opacity + 0.025);
-
+            puff.radius = Math.min(puff.targetRadius, puff.radius + 1.1);
+            puff.opacity = Math.min(0.68, puff.opacity + 0.025);
             const gasGrad = ctx.createRadialGradient(puff.x, puff.y, 0, puff.x, puff.y, puff.radius);
             if (puff.isViolet) {
               gasGrad.addColorStop(0, `rgba(108, 92, 231, ${puff.opacity})`);
-              gasGrad.addColorStop(0.5, `rgba(136, 84, 208, ${puff.opacity * 0.75})`);
-              gasGrad.addColorStop(0.85, `rgba(74, 52, 172, ${puff.opacity * 0.45})`);
+              gasGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
             } else {
               gasGrad.addColorStop(0, `rgba(46, 213, 115, ${puff.opacity})`);
-              gasGrad.addColorStop(0.5, `rgba(0, 184, 148, ${puff.opacity * 0.75})`);
-              gasGrad.addColorStop(0.85, `rgba(16, 172, 132, ${puff.opacity * 0.45})`);
+              gasGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
             }
-            gasGrad.addColorStop(1, 'rgba(0,0,0,0)');
-
             ctx.fillStyle = gasGrad;
             ctx.beginPath();
             ctx.arc(puff.x, puff.y, puff.radius, 0, Math.PI * 2);
             ctx.fill();
           });
-
-          // Symbole Biohazard pulsant au centre
-          const bioScale = 1.0 + Math.sin(elapsed * 9) * 0.18;
-          ctx.font = `${Math.round(46 * bioScale)}px sans-serif`;
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText('☣️', centerX, centerY);
         }
       }
 
-      // Rendu des particules volantes
+      // 5. PARTICULES, DÉBRIS DE BÉTON & ÉTINCELLES AVEC GRAVITÉ
       for (let i = particles.length - 1; i >= 0; i--) {
         const bp = particles[i];
         bp.x += bp.vx;
         bp.y += bp.vy;
+        bp.vy += (bp.gravity || 0);
         bp.life -= bp.decay;
-
         if (bp.life <= 0) {
           particles.splice(i, 1);
           continue;
         }
-
-        const alpha = bp.life / bp.maxLife;
+        const alpha = Math.max(0, Math.min(1, bp.life / bp.maxLife));
         ctx.fillStyle = bp.color;
-        ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
-        ctx.beginPath();
-        ctx.arc(bp.x, bp.y, bp.size * alpha, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.globalAlpha = alpha;
+        ctx.fillRect(bp.x - bp.size / 2, bp.y - bp.size / 2, bp.size, bp.size);
       }
       ctx.globalAlpha = 1.0;
-
-      // Monument central ou crâne d'extermination
-      ctx.font = '32px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      if (simPhase === 'EXTERMINATED' || (simPhase === 'DETONATION' && shockwaveRadius > 50)) {
-        ctx.fillText('☠️', centerX, centerY);
-      } else {
-        ctx.fillText(city.countryFlag || '🏛️', centerX, centerY);
-      }
 
       ctx.restore();
       } catch (frameErr) {
@@ -3105,9 +2868,12 @@ export class UIManager {
     const equippedBikeId = storage.getEquippedBike() || gameState.selectedBike?.id || 'tank';
     const equippedBikeObj = BIKES.find(b => b.id === equippedBikeId) || BIKES[0];
     const isFootOrHorse = (equippedBikeId === 'cheval' || equippedBikeId === 'run_ak47' || equippedBikeId === 'run_chainsaw');
-    const boostIcon = isFootOrHorse ? '🥫' : '⚡';
-    const boostLabel = isFootOrHorse ? 'ENERGY' : 'NITRO';
-    const boostTitle = isFootOrHorse ? 'Boire une Energy Drink pour sprinter à pleine vitesse !' : 'Activer le Nitro Boost 5s (Touche Espace / Shift)';
+    const brakeIcon = isFootOrHorse ? '✋' : '🛑';
+    const brakeLabel = isFootOrHorse ? 'ARRÊT' : 'FREIN';
+    const brakeTitle = isFootOrHorse ? 'Maintenir pour vous arrêter immédiatement (direction verrouillée)' : 'Maintenir la pédale de frein pour freiner (direction verrouillée)';
+    const boostIcon = isFootOrHorse ? '🥤' : '🔥';
+    const boostLabel = isFootOrHorse ? 'BOISSON ÉNERGÉTIQUE' : 'NITRO';
+    const boostTitle = isFootOrHorse ? 'Boire une Boisson Énergétique pour sprinter à pleine vitesse !' : 'Activer le Nitro Boost 5s (Touche Espace / Shift)';
 
     let actionIcon = '📢';
     let actionLabel = 'KLAXON';
@@ -3247,11 +3013,11 @@ export class UIManager {
       </div>
 
       <div class="hud-bottom-controls">
-        <!-- Pédale de Frein ergonomique à gauche (pouce gauche) -->
-        <button class="btn-pedal-brake" id="btn-hud-brake" title="Maintenir la pédale pour freiner / stopper">
+        <!-- Pédale de Frein (Engin) / Bouton d'Arrêt (Homme) ergonomique à gauche (pouce gauche) -->
+        <button class="btn-pedal-brake ${isFootOrHorse ? 'mode-homme' : 'mode-engin'}" id="btn-hud-brake" title="${brakeTitle}">
           <div class="pedal-grip-ridges"></div>
-          <span class="pedal-icon">🛑</span>
-          <span class="pedal-label">FREIN</span>
+          <span class="pedal-icon" id="hud-brake-icon">${brakeIcon}</span>
+          <span class="pedal-label" id="hud-brake-label">${brakeLabel}</span>
         </button>
 
         <!-- Compteur de vitesse moderne centré & Carnage Pop exterminée -->
@@ -3280,7 +3046,7 @@ ${gameState.isRuinsMode ? `
             <span style="font-size: 0.68rem; font-weight: 950; letter-spacing: 0.5px;">QUITTER</span>
           </button>
 ` : `          <div class="hud-nitro-group">
-            <button class="btn-nitro-pedal ${isFootOrHorse ? 'btn-energy-drink' : ''} ${isFootOrHorse && gameState.energyDrinkCans > 0 ? 'ready' : ''}" id="btn-hud-nitro" title="${boostTitle}">
+            <button class="btn-nitro-pedal ${isFootOrHorse ? 'btn-energy-drink mode-homme' : 'mode-engin'} ${isFootOrHorse && gameState.energyDrinkCans > 0 ? 'ready' : ''}" id="btn-hud-nitro" title="${boostTitle}">
               <div class="nitro-fill-track">
                 <div class="nitro-fill-bar ${isFootOrHorse ? 'energy-fill-bar' : ''}" id="hud-nitro-fill" style="width: ${isFootOrHorse ? (gameState.energyDrinkCans > 0 ? '100%' : '0%') : '0%'};"></div>
               </div>
@@ -3315,13 +3081,15 @@ ${gameState.isRuinsMode ? `
       }, 3500);
     }
 
-    // Gestion du bouton de frein
+    // Gestion du bouton de frein / arrêt (verrouille la direction gauche/droite)
     const brakeBtn = hud.querySelector('#btn-hud-brake');
-    const startBraking = () => {
+    const startBraking = (e) => {
+      if (e) e.stopPropagation();
       gameState.setBraking(true);
       brakeBtn.classList.add('active');
     };
-    const stopBraking = () => {
+    const stopBraking = (e) => {
+      if (e) e.stopPropagation();
       gameState.setBraking(false);
       brakeBtn.classList.remove('active');
     };
@@ -4057,7 +3825,10 @@ ${gameState.isRuinsMode ? `
     if (quotaVal && data.killQuota !== undefined) {
       quotaVal.textContent = data.killQuota;
     }
-    // Mise à jour de la jauge et du bouton Nitro / Energy Drink 5 secondes
+    // Mise à jour de la jauge et des boutons Frein/Arrêt & Nitro/Boisson Énergétique
+    const brakeBtn = this.root.querySelector('#btn-hud-brake');
+    const brakeLabel = this.root.querySelector('#hud-brake-label');
+    const brakeIcon = this.root.querySelector('#hud-brake-icon');
     const nitroFill = this.root.querySelector('#hud-nitro-fill');
     const nitroSub = this.root.querySelector('#hud-nitro-sub');
     const nitroBtn = this.root.querySelector('#btn-hud-nitro');
@@ -4066,11 +3837,27 @@ ${gameState.isRuinsMode ? `
 
     const equippedBikeId = storage.getEquippedBike() || gameState.selectedBike?.id || 'tank';
     const isFootOrHorse = (equippedBikeId === 'cheval' || equippedBikeId === 'run_ak47' || equippedBikeId === 'run_chainsaw');
-    const defaultLabel = isFootOrHorse ? 'ENERGY' : 'NITRO';
-    const readyLabel = isFootOrHorse ? 'ENERGY !' : 'NITRO (5s)';
+    const defaultLabel = isFootOrHorse ? 'BOISSON ÉNERGÉTIQUE' : 'NITRO';
+    const readyLabel = isFootOrHorse ? 'BOISSON ÉNERGÉTIQUE' : 'NITRO';
 
+    if (brakeBtn) {
+      brakeBtn.classList.toggle('mode-homme', isFootOrHorse);
+      brakeBtn.classList.toggle('mode-engin', !isFootOrHorse);
+    }
+    if (brakeIcon) {
+      brakeIcon.textContent = isFootOrHorse ? '✋' : '🛑';
+    }
+    if (brakeLabel) {
+      brakeLabel.textContent = isFootOrHorse ? 'ARRÊT' : 'FREIN';
+    }
+
+    if (nitroBtn) {
+      nitroBtn.classList.toggle('btn-energy-drink', isFootOrHorse);
+      nitroBtn.classList.toggle('mode-homme', isFootOrHorse);
+      nitroBtn.classList.toggle('mode-engin', !isFootOrHorse);
+    }
     if (nitroIcon) {
-      nitroIcon.textContent = isFootOrHorse ? '🥫' : '⚡';
+      nitroIcon.textContent = isFootOrHorse ? '🥤' : '🔥';
     }
 
     if (isFootOrHorse) {
@@ -4080,20 +3867,20 @@ ${gameState.isRuinsMode ? `
           nitroBtn.classList.add('active');
           nitroBtn.classList.remove('ready');
         }
-        if (nitroSub) nitroSub.textContent = `${data.nitroTimer.toFixed(1)}s`;
-        if (nitroLabel) nitroLabel.textContent = 'BOOST 🥫 !';
+        if (nitroSub) nitroSub.textContent = `BOOST ${data.nitroTimer.toFixed(1)}s`;
+        if (nitroLabel) nitroLabel.textContent = 'BOISSON ÉNERGÉTIQUE';
         if (nitroFill) nitroFill.style.width = `${Math.round((data.nitroTimer / 5.0) * 100)}%`;
       } else {
         if (nitroBtn) nitroBtn.classList.remove('active');
         if (cans > 0) {
           if (nitroBtn) nitroBtn.classList.add('ready');
           if (nitroSub) nitroSub.textContent = `${cans} DISPO`;
-          if (nitroLabel) nitroLabel.textContent = 'ENERGY 🥫';
+          if (nitroLabel) nitroLabel.textContent = 'BOISSON ÉNERGÉTIQUE';
           if (nitroFill) nitroFill.style.width = '100%';
         } else {
           if (nitroBtn) nitroBtn.classList.remove('ready');
           if (nitroSub) nitroSub.textContent = '0 (ÉPUISÉ)';
-          if (nitroLabel) nitroLabel.textContent = 'ENERGY';
+          if (nitroLabel) nitroLabel.textContent = 'BOISSON ÉNERGÉTIQUE';
           if (nitroFill) nitroFill.style.width = '0%';
         }
       }
@@ -4104,8 +3891,8 @@ ${gameState.isRuinsMode ? `
           nitroBtn.classList.add('active');
           nitroBtn.classList.remove('ready');
         }
-        if (nitroSub) nitroSub.textContent = `${data.nitroTimer.toFixed(1)}s`;
-        if (nitroLabel) nitroLabel.textContent = 'BOOST !';
+        if (nitroSub) nitroSub.textContent = `BOOST ${data.nitroTimer.toFixed(1)}s`;
+        if (nitroLabel) nitroLabel.textContent = 'NITRO';
       } else {
         if (nitroBtn) nitroBtn.classList.remove('active');
         if (data.nitroGauge >= 100) {
