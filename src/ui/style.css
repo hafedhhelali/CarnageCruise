@@ -5337,21 +5337,26 @@ html, body {
 
 .city-main-actions-dock {
   display: flex;
+  flex-direction: column;
   align-items: stretch;
   gap: 8px;
   width: 100%;
+  box-sizing: border-box;
 }
 
 .btn-wmd-dock {
+  width: 100%;
+  box-sizing: border-box;
   background: linear-gradient(135deg, #eb4d4b, #b71540);
   border: 2px solid #fffa65;
   color: #ffffff;
   border-radius: 16px;
-  padding: 6px 14px;
+  padding: 10px 14px;
   cursor: pointer;
   flex-shrink: 0;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   box-shadow: 0 0 16px rgba(235, 77, 75, 0.65), inset 0 0 8px rgba(255, 250, 101, 0.25);
   transition: transform 0.12s, box-shadow 0.15s;

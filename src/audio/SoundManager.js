@@ -2308,6 +2308,7 @@ export class SoundManager {
   }
 
   pauseGameplayAudio() {
+    if (this.isGameplayPaused) return;
     this.isGameplayPaused = true;
     this.wasEnginePlaying = !!this.engineOsc;
     this.wasMusicPlayingBeforePause = this.musicPlaying;
@@ -2318,6 +2319,7 @@ export class SoundManager {
 
   resumeGameplayAudio() {
     this.isGameplayPaused = false;
+    this.resumeContext();
     if (this.wasMusicPlayingBeforePause && !this.isMutedMusic) {
       this.startMusic(this.wasTrackBeforePause || 'SADISTIC_CARNAGE');
     }

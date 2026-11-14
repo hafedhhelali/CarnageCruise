@@ -3093,17 +3093,20 @@ ${gameState.isRuinsMode ? '' : `          <div class="hud-nitro-group">
     brakeBtn.addEventListener('pointerleave', stopBraking);
     brakeBtn.addEventListener('pointercancel', stopBraking);
 
-    // Gestion du bouton Nitro / Energy Drink 5 secondes
+    // Gestion du bouton Nitro / Energy Drink 5 secondes (click intentionnel uniquement pour éviter les déclenchements accidentels au glissement)
     const nitroBtn = hud.querySelector('#btn-hud-nitro');
     if (nitroBtn) {
       const handleNitro = (e) => {
-        if (e && e.type === 'touchstart') e.preventDefault();
+        if (e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+        if (gameState.currentMode !== 'PLAYING') return;
         const ok = gameState.activateNitro();
         if (ok) {
           if (this.onAction) this.onAction('NITRO');
         }
       };
-      nitroBtn.addEventListener('touchstart', handleNitro, { passive: false });
       nitroBtn.addEventListener('click', handleNitro);
     }
 
@@ -3157,6 +3160,7 @@ ${gameState.isRuinsMode ? '' : `          <div class="hud-nitro-group">
         if (e.type === 'touchstart') e.preventDefault();
         e.stopPropagation();
       }
+      if (gameState.currentMode === 'PAUSED') return;
       soundManager.playClick();
       if (this.onAction) this.onAction('PAUSE');
       this.showPauseModal();
