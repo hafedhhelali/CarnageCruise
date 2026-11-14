@@ -218,7 +218,7 @@ export class IntersectionManager {
     gantry.add(lampRed, lampOrange, lampGreen);
 
     // Visières pare-soleil incurvées
-    const visorMat = new THREE.MeshToonMaterial({ color: 0x111111 });
+    const visorMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.75, metalness: 0.05 });
     [4.75, 4.3, 3.85].forEach(y => {
       const visor = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.14, 8, 1, true, 0, Math.PI), visorMat);
       visor.rotation.x = Math.PI / 2;
@@ -241,7 +241,7 @@ export class IntersectionManager {
   // --- CRÉATION DE BARRIÈRE PIÉTONNE PARISIENNE TYPE CROIX DE SAINT-ANDRÉ ---
   createSaintAndreBarrierMesh() {
     const bGroup = new THREE.Group();
-    const barMat = new THREE.MeshToonMaterial({ color: 0x1e372f }); // Vert impérial parisien
+    const barMat = new THREE.MeshStandardMaterial({ color: 0x1e372f, roughness: 0.45, metalness: 0.65 }); // Vert impérial parisien (fonte peinte)
 
     // Deux poteaux verticaux
     const p1 = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.1, 8), barMat);
@@ -275,7 +275,7 @@ export class IntersectionManager {
   // --- CRÉATION DE CANDÉLABRE URBAIN RÉALISTE ANCRÉ AU SOL ---
   createStreetLampMesh() {
     const lampGroup = new THREE.Group();
-    const ironMat = new THREE.MeshToonMaterial({ color: 0x242a30 });
+    const ironMat = new THREE.MeshStandardMaterial({ color: 0x242a30, roughness: 0.45, metalness: 0.65 });
     const glowMat = new THREE.MeshBasicMaterial({ color: 0xfff1d0 });
 
     // Socle ancré dans le trottoir

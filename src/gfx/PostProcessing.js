@@ -16,7 +16,9 @@ export class PostProcessingManager {
     this.scene = scene;
     this.camera = camera;
     this.enabled = true;
-    this.baseStrength = 0.28; // Force de bloom au repos (calibrée visuellement avec l'utilisateur)
+    const isMobile = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+    this.isMobile = isMobile;
+    this.baseStrength = isMobile ? 0.22 : 0.26; // Force de bloom calibrée PBR/HDR (mobile vs desktop)
 
     try {
       this.initComposer();
@@ -37,7 +39,7 @@ export class PostProcessingManager {
     try {
       renderTarget = new THREE.WebGLRenderTarget(width, height, {
         type: THREE.HalfFloatType,
-        samples: 4,
+        samples: this.isMobile ? 2 : 4,
         colorSpace: THREE.LinearSRGBColorSpace
       });
     } catch (err) {
@@ -58,9 +60,9 @@ export class PostProcessingManager {
     const bloomResolution = new THREE.Vector2(width / 2, height / 2); // 1/2 résolution pour perf mobile maximale
     this.bloomPass = new UnrealBloomPass(
       bloomResolution,
-      this.baseStrength, // force subtile et élégante
-      0.16,              // rayon resserré : halo précis, pas de voile généralisé
-      1.25               // seuil : seuls les émissifs HDR (> 1.25) luisent — le ciel et les nuages restent nets
+      this.baseStrength, // 0.22 mobile / 0.26 desktop
+      0.2,               // rayon resserré : halo précis, pas de voile généralisé
+      1.2                // seuil : seuls les émissifs HDR (> 1.2) luisent — le ciel et les nuages restent nets
     );
     this.composer.addPass(this.bloomPass);
 

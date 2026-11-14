@@ -46,6 +46,12 @@ export class Bike {
     this.jumpVelocity = 0;
     this.pitchAngle = 0;
 
+    // Suspension ressort-amortisseur 2nd ordre (trottoirs, réceptions, freinage/accélération)
+    this.suspOffset = 0;
+    this.suspVel = 0;
+    this.prevSpeed = 0;
+    this.defaultArmRRot = new THREE.Euler();
+
     // État de crash et relèvement comique
     this.isCrashed = false;
     this.crashTimer = 0;
@@ -139,29 +145,53 @@ export class Bike {
     this.mesh.add(this.axeSlashTrail);
 
     this.buildCurrentBike();
-    this.buildRider();
+  }
+
+  disposeGroupChildren(group) {
+    while (group.children.length > 0) {
+      const obj = group.children[0];
+      group.remove(obj);
+      obj.traverse(child => {
+        if (child.geometry) child.geometry.dispose();
+        if (child.material) {
+          if (Array.isArray(child.material)) {
+            child.material.forEach(m => m && m.dispose());
+          } else {
+            child.material.dispose();
+          }
+        }
+      });
+    }
   }
 
   buildCurrentBike(previewBikeId = null) {
-    // Nettoyer l'ancien modèle
-    while (this.bikeModelGroup.children.length > 0) {
-      const obj = this.bikeModelGroup.children[0];
-      this.bikeModelGroup.remove(obj);
-    }
+    // Nettoyer l'ancien modèle et libérer géométries/matériaux
+    this.disposeGroupChildren(this.bikeModelGroup);
     this.wheels = [];
     this.frontFork = null;
     this.horseGroup = null;
+    this.horseHead = null;
+    this.horseLegFL = null;
+    this.horseLegFR = null;
+    this.horseLegBL = null;
+    this.horseLegBR = null;
+    this.horseTail = null;
     this.frontRoller = null;
     this.carSteeringWheel = null;
+    this.tankWheels = [];
+    this.tankTurret = null;
+    this.tankBarrel = null;
 
     const bikeId = previewBikeId || gameState.selectedBike?.id || storage.getEquippedBike() || 'tank';
     this.currentBikeId = bikeId;
     const bodyColorHex = storage.getBikeColor(bikeId);
-    const bodyMaterial = new THREE.MeshStandardMaterial({
+    const bodyMaterial = new THREE.MeshPhysicalMaterial({
       color: bodyColorHex,
-      roughness: 0.18,
-      metalness: 0.82,
-      envMapIntensity: 1.4 // Peinture métallisée qui épouse l'environnement IBL
+      roughness: 0.25,
+      metalness: 0.72,
+      clearcoat: 1.0,
+      clearcoatRoughness: 0.06,
+      envMapIntensity: 1.25
     });
 
     const chromeMaterial = new THREE.MeshStandardMaterial({
@@ -186,7 +216,7 @@ export class Bike {
     const lampMaterial = new THREE.MeshStandardMaterial({
       color: 0xfff9c4,
       emissive: 0xfffa65,
-      emissiveIntensity: 0.85,
+      emissiveIntensity: 1.8,
       roughness: 0.1
     });
 
@@ -228,6 +258,7 @@ export class Bike {
 
   createWheel(radius, width, rubberMat, chromeMat) {
     const wheelGroup = new THREE.Group();
+    wheelGroup.userData.radius = radius;
 
     // 1. Pneu sculpté avec profil arrondi et flanc épais
     const tireGeo = new THREE.CylinderGeometry(radius, radius, width, 24);
@@ -269,7 +300,7 @@ export class Bike {
     wheelGroup.add(disc);
 
     // Étrier de frein rouge Brembo haute performance
-    const caliperMat = new THREE.MeshToonMaterial({ color: 0xe74c3c });
+    const caliperMat = new THREE.MeshStandardMaterial({ color: 0xe74c3c, roughness: 0.35, metalness: 0.3 });
     const caliper = new THREE.Mesh(new THREE.BoxGeometry(width * 0.38, radius * 0.26, radius * 0.2), caliperMat);
     caliper.position.set(width * 0.32, radius * 0.35, 0);
     wheelGroup.add(caliper);
@@ -812,7 +843,7 @@ export class Bike {
   buildRavageur(bodyMat, chromeMat, rubberMat, leatherMat, lampMat) {
     // 1. Roues à crampons tout-terrain géantes (Enduro / Rallye Raid)
     const steelMat = new THREE.MeshStandardMaterial({ color: 0x2d3436, metalness: 0.8, roughness: 0.3 });
-    const knobbyMat = new THREE.MeshLambertMaterial({ color: 0x111111 });
+    const knobbyMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.88, metalness: 0.05 });
 
     const rearWheel = this.createWheel(0.48, 0.26, knobbyMat, steelMat);
     rearWheel.position.set(0, 0.48, -0.78);
@@ -890,8 +921,8 @@ export class Bike {
 
     // Matériau de robe du cheval (auburn / alezan / bai ou couleur custom)
     const coatMat = bodyMat;
-    const darkHorseMat = new THREE.MeshToonMaterial({ color: 0x2d1810 }); // Crinière, queue et sabots
-    const hoofMat = new THREE.MeshToonMaterial({ color: 0x111111 });
+    const darkHorseMat = new THREE.MeshStandardMaterial({ color: 0x2d1810, roughness: 0.72, metalness: 0.02 }); // Crinière, queue et sabots
+    const hoofMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.55, metalness: 0.05 });
 
     // 1. Corps / Flanc du cheval (tonneau galbé)
     const bodyGeo = new THREE.CylinderGeometry(0.38, 0.44, 1.45, 12);
@@ -950,6 +981,7 @@ export class Bike {
     eyeR.position.set(0.14, 0.08, 0.06);
     headGroup.add(eyeL, eyeR);
 
+    this.horseHead = headGroup;
     this.horseGroup.add(headGroup);
 
     // 4. Queue fluide à l'arrière
@@ -1018,7 +1050,7 @@ export class Bike {
     this.frontRoller = drum;
 
     // Bras de fourche lourde du rouleau
-    const frameMat = new THREE.MeshToonMaterial({ color: 0x1e272e });
+    const frameMat = new THREE.MeshStandardMaterial({ color: 0x1e272e, roughness: 0.45, metalness: 0.65 });
     const armL = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.35, 1.4), frameMat);
     armL.position.set(-1.22, 0.68, 0.6);
     const armR = armL.clone();
@@ -1045,7 +1077,7 @@ export class Bike {
     rollerGroup.add(rearWheelL, rearWheelR);
 
     // 4. Cabine de conduite avec arceau de sécurité ROPS & toit
-    const pillarMat = new THREE.MeshToonMaterial({ color: 0x111111 });
+    const pillarMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.5, metalness: 0.5 });
     const p1 = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.2, 6), pillarMat);
     p1.position.set(-0.7, 1.7, -0.1);
     const p2 = p1.clone();
@@ -1120,7 +1152,14 @@ export class Bike {
     carGroup.add(hlL, hlR);
 
     // Pare-brise panoramique incliné
-    const glassMat = new THREE.MeshBasicMaterial({ color: 0x81ecec, transparent: true, opacity: 0.55 });
+    const glassMat = new THREE.MeshPhysicalMaterial({
+      color: 0x0b1622,
+      roughness: 0.08,
+      metalness: 0.15,
+      clearcoat: 1.0,
+      transparent: true,
+      opacity: 0.45
+    });
     const windshield = new THREE.Mesh(new THREE.BoxGeometry(1.35, 0.38, 0.04), glassMat);
     windshield.position.set(0, 0.95, 0.22);
     windshield.rotation.x = -0.38;
@@ -1745,26 +1784,35 @@ export class Bike {
   }
 
   buildRider() {
-    // Nettoyer
-    while (this.riderGroup.children.length > 0) {
-      this.riderGroup.remove(this.riderGroup.children[0]);
-    }
+    // Nettoyer et libérer géométries/matériaux + références obsolètes
+    this.disposeGroupChildren(this.riderGroup);
+    this.riderGroup.position.y = 0;
     this.runnerLegL = null;
     this.runnerLegR = null;
+    this.runnerKneeL = null;
+    this.runnerKneeR = null;
+    this.riderHead = null;
+    this.riderTorso = null;
+    this.riderArmL = null;
+    this.riderArmR = null;
+    this.scarfTail = null;
+    this.riderWhip = null;
+    this.riderAxe = null;
+    this.akMuzzleFlash = null;
 
     const isNuclear = gameState.selectedCity?.isNuclearMission || this.currentBikeId === 'aero_jet';
-    const hazmatYellowMat = new THREE.MeshToonMaterial({ color: 0xffe600, gradientMap: textureFactory.getToonGradientMap() });
+    const hazmatYellowMat = new THREE.MeshStandardMaterial({ color: 0xffe600, roughness: 0.42, metalness: 0.05 });
     const hazmatVisorMat = new THREE.MeshStandardMaterial({ color: 0x81ecec, transparent: true, opacity: 0.8, metalness: 0.9, roughness: 0.1 });
-    const hazmatBlackMat = new THREE.MeshLambertMaterial({ color: 0x111111 });
+    const hazmatBlackMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.7, metalness: 0.05 });
 
-    const skinMat = new THREE.MeshLambertMaterial({ color: 0xffccaa });
-    const jacketMat = isNuclear ? hazmatYellowMat : new THREE.MeshLambertMaterial({ color: 0x2c3e50 });
-    const pantsMat = isNuclear ? hazmatYellowMat : new THREE.MeshLambertMaterial({ color: 0x1a252f });
-    const shoesMat = isNuclear ? hazmatBlackMat : new THREE.MeshLambertMaterial({ color: 0x111111 });
-    const beretMat = new THREE.MeshLambertMaterial({ color: 0x9b111e }); // Rouge béret français
+    const skinMat = new THREE.MeshStandardMaterial({ color: 0xffccaa, roughness: 0.55, metalness: 0.02 });
+    const jacketMat = isNuclear ? hazmatYellowMat : new THREE.MeshStandardMaterial({ color: 0x2c3e50, roughness: 0.65, metalness: 0.05 });
+    const pantsMat = isNuclear ? hazmatYellowMat : new THREE.MeshStandardMaterial({ color: 0x1a252f, roughness: 0.72, metalness: 0.04 });
+    const shoesMat = isNuclear ? hazmatBlackMat : new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.6, metalness: 0.08 });
+    const beretMat = new THREE.MeshStandardMaterial({ color: 0x9b111e, roughness: 0.75, metalness: 0.02 }); // Rouge béret français
     const goldMat = new THREE.MeshStandardMaterial({ color: 0xffd700, metalness: 0.85, roughness: 0.2 });
     const steelMat = new THREE.MeshStandardMaterial({ color: 0xdcdde1, metalness: 0.85, roughness: 0.25 });
-    const woodMat = new THREE.MeshLambertMaterial({ color: 0x5a2d0c });
+    const woodMat = new THREE.MeshStandardMaterial({ color: 0x5a2d0c, roughness: 0.7, metalness: 0.02 });
 
     const isCar = this.currentBikeId === 'decapotable';
     const isTank = this.currentBikeId === 'tank';
@@ -1961,7 +2009,7 @@ export class Bike {
       whipGroup.rotation.z = Math.PI / 5;
 
       // Manche ergonomique en cuir noir tressé
-      const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.024, 0.032, 0.58, 8), new THREE.MeshToonMaterial({ color: 0x1a1a1a }));
+      const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.024, 0.032, 0.58, 8), new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.65, metalness: 0.1 }));
       whipGroup.add(handle);
 
       // Pommeau lourd sphérique en or (virole de contrepoids)
@@ -2125,7 +2173,7 @@ export class Bike {
       this.riderChainsaw = csGroup;
 
       // Bloc moteur orange de tronçonneuse
-      const orangeMat = new THREE.MeshToonMaterial({ color: 0xff6b01 });
+      const orangeMat = new THREE.MeshStandardMaterial({ color: 0xff6b01, roughness: 0.35, metalness: 0.15 });
       const motor = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.22, 0.35), orangeMat);
       csGroup.add(motor);
 
@@ -2161,31 +2209,45 @@ export class Bike {
 
     this.riderArmL = armL;
     this.riderArmR = armR;
+    this.defaultArmRRot = armR.rotation.clone();
 
     // --- JAMBES & CHAUSSURES DU PILOTE / COUREUR ---
     if (isRunner) {
-      // Pour les coureurs à pied : jambes articulées au bassin pour animation de sprint rapide
-      const legGeo = new THREE.BoxGeometry(0.12, 0.45, 0.14);
+      // Pour les coureurs à pied : jambes articulées hanche + genou pour animation de sprint réaliste
+      const thighGeo = new THREE.BoxGeometry(0.12, 0.24, 0.14);
+      const shinGeo = new THREE.BoxGeometry(0.11, 0.23, 0.13);
       const shoeGeo = new THREE.BoxGeometry(0.13, 0.11, 0.24);
 
       const createRunnerLeg = (x) => {
         const pivot = new THREE.Group();
         pivot.position.set(x, 0.75, 0);
 
-        const leg = new THREE.Mesh(legGeo, pantsMat);
-        leg.position.y = -0.22;
-        pivot.add(leg);
+        const thigh = new THREE.Mesh(thighGeo, pantsMat);
+        thigh.position.y = -0.11;
+        pivot.add(thigh);
+
+        const kneePivot = new THREE.Group();
+        kneePivot.position.y = -0.23;
+
+        const shin = new THREE.Mesh(shinGeo, pantsMat);
+        shin.position.y = -0.11;
+        kneePivot.add(shin);
 
         const shoe = new THREE.Mesh(shoeGeo, shoesMat);
-        shoe.position.set(0, -0.46, 0.05);
-        pivot.add(shoe);
+        shoe.position.set(0, -0.23, 0.05);
+        kneePivot.add(shoe);
 
+        pivot.add(kneePivot);
         this.riderGroup.add(pivot);
-        return pivot;
+        return { hip: pivot, knee: kneePivot };
       };
 
-      this.runnerLegL = createRunnerLeg(-0.16);
-      this.runnerLegR = createRunnerLeg(0.16);
+      const legL = createRunnerLeg(-0.16);
+      const legR = createRunnerLeg(0.16);
+      this.runnerLegL = legL.hip;
+      this.runnerLegR = legR.hip;
+      this.runnerKneeL = legL.knee;
+      this.runnerKneeR = legR.knee;
 
     } else if (isCar) {
       // Dans la décapotable : jambes allongées vers l'avant sous le tableau de bord
@@ -2280,15 +2342,15 @@ export class Bike {
 
       if (progress < 0.35) {
         // Phase 1 : Chute cartoon sur le flanc
-        this.mesh.rotation.z = THREE.MathUtils.lerp(this.mesh.rotation.z, 1.45, delta * 12);
-        this.mesh.position.y = THREE.MathUtils.lerp(this.mesh.position.y, 0.1, delta * 8);
+        this.mesh.rotation.z = THREE.MathUtils.lerp(this.mesh.rotation.z, 1.45, 1 - Math.exp(-12 * delta));
+        this.mesh.position.y = THREE.MathUtils.lerp(this.mesh.position.y, 0.1, 1 - Math.exp(-8 * delta));
         if (this.riderTorso) {
           this.riderTorso.rotation.x = -0.8;
           this.riderTorso.rotation.z = -0.6;
         }
       } else if (progress < 0.7) {
         // Phase 2 : Le pilote s'assied et secoue la tête comiquement ("étourdi")
-        this.mesh.rotation.z = THREE.MathUtils.lerp(this.mesh.rotation.z, 1.2, delta * 6);
+        this.mesh.rotation.z = THREE.MathUtils.lerp(this.mesh.rotation.z, 1.2, 1 - Math.exp(-6 * delta));
         if (this.riderHead) {
           this.riderHead.rotation.y = Math.sin(this.crashTimer * 20) * 0.7;
           this.riderHead.rotation.z = Math.cos(this.crashTimer * 15) * 0.3;
@@ -2299,14 +2361,14 @@ export class Bike {
       } else if (progress < 1.0) {
         // Phase 3 : Le pilote se redresse d'un bond élastique, moto redressée !
         const spring = Math.sin((progress - 0.7) / 0.3 * Math.PI);
-        this.mesh.rotation.z = THREE.MathUtils.lerp(this.mesh.rotation.z, 0, delta * 14);
-        this.mesh.position.y = THREE.MathUtils.lerp(this.mesh.position.y, spring * 0.4, delta * 10);
+        this.mesh.rotation.z = THREE.MathUtils.lerp(this.mesh.rotation.z, 0, 1 - Math.exp(-14 * delta));
+        this.mesh.position.y = THREE.MathUtils.lerp(this.mesh.position.y, spring * 0.4, 1 - Math.exp(-10 * delta));
         if (this.riderTorso) {
-          this.riderTorso.rotation.x = THREE.MathUtils.lerp(this.riderTorso.rotation.x, 0.25, delta * 12);
-          this.riderTorso.rotation.z = THREE.MathUtils.lerp(this.riderTorso.rotation.z, 0, delta * 12);
+          this.riderTorso.rotation.x = THREE.MathUtils.lerp(this.riderTorso.rotation.x, 0.25, 1 - Math.exp(-12 * delta));
+          this.riderTorso.rotation.z = THREE.MathUtils.lerp(this.riderTorso.rotation.z, 0, 1 - Math.exp(-12 * delta));
         }
         if (this.riderHead) {
-          this.riderHead.rotation.y = THREE.MathUtils.lerp(this.riderHead.rotation.y, 0, delta * 12);
+          this.riderHead.rotation.y = THREE.MathUtils.lerp(this.riderHead.rotation.y, 0, 1 - Math.exp(-12 * delta));
         }
       } else {
         // Relèvement terminé ! On repart
@@ -2338,45 +2400,61 @@ export class Bike {
     }
     this.x = Math.max(-MAX_WIDTH, Math.min(MAX_WIDTH, this.x));
 
-    // Détection de montée sur le trottoir (|x| > 4.25m)
+    // Détection de montée / descente du trottoir (|x| > 4.25m) -> impulsion suspension
     const onSidewalk = Math.abs(this.x) > 4.25;
     if (onSidewalk && !this.wasOnSidewalk) {
       soundManager.playCurbMount();
+      this.suspVel -= 1.8;
+    } else if (!onSidewalk && this.wasOnSidewalk) {
+      this.suspVel += 1.4;
     }
     this.wasOnSidewalk = onSidewalk;
 
     const curveBank = (speed > 2.0) ? (-roadAngle * 0.32) : 0;
     this.targetLean = this.smoothedSteer * 0.35 + curveBank;
-    this.currentLean += (this.targetLean - this.currentLean) * Math.min(1.0, delta * 8.2);
+    this.currentLean += (this.targetLean - this.currentLean) * (1 - Math.exp(-8.2 * delta));
 
     // Positionnement et rotation du bolide
     this.mesh.position.x = this.x;
     this.mesh.rotation.z = 0;
 
-    // Suspension / rebond + Dénivellation du trottoir (+0.25m) ou Vol basse altitude (4.2m)
+    // Suspension ressort-amortisseur 2nd ordre + dénivelé trottoir (+0.25m) / vol (4.2m)
     this.bouncePhase += delta * (speed * 0.8 + 2.0);
-    const suspensionBounce = Math.sin(this.bouncePhase) * 0.02;
+    const suspensionBounce = Math.sin(this.bouncePhase) * 0.015;
     const baseAltitude = this.isFlyingEscape ? 38.0 : (this.currentBikeId === 'aero_jet' ? (4.2 + Math.sin(this.bouncePhase * 0.45) * 0.25) : (onSidewalk ? 0.25 : 0.0));
+
+    // Plongée au freinage / cabrage à l'accélération
+    const accel = (speed - this.prevSpeed) / Math.max(delta, 0.001);
+    this.prevSpeed = speed;
+    const diveTarget = gameState.isBraking && speed > 1.0
+      ? 0.06
+      : THREE.MathUtils.clamp(-accel * 0.0035, -0.07, 0.08);
 
     // Mise à jour de la physique de saut (Gravité 18 m/s² et amorti de suspension)
     if (this.jumpAltitude > 0 || this.jumpVelocity > 0) {
       this.jumpVelocity -= 18.0 * delta;
       this.jumpAltitude = Math.max(0, this.jumpAltitude + this.jumpVelocity * delta);
       if (this.jumpVelocity < 0) {
-        this.pitchAngle = THREE.MathUtils.lerp(this.pitchAngle, 0.15, delta * 6.0); // nez plongeant à la retombée
+        this.pitchAngle = THREE.MathUtils.lerp(this.pitchAngle, 0.15, 1 - Math.exp(-6.0 * delta)); // nez plongeant à la retombée
       }
       if (this.jumpAltitude <= 0) {
         this.jumpAltitude = 0;
         this.jumpVelocity = 0;
         this.pitchAngle = 0;
+        this.suspVel -= 3.2;
         soundManager.playSuspensionThud();
       }
     } else {
-      this.pitchAngle = THREE.MathUtils.lerp(this.pitchAngle, 0, delta * 10.0);
+      this.pitchAngle = THREE.MathUtils.lerp(this.pitchAngle, diveTarget, 1 - Math.exp(-10.0 * delta));
     }
 
-    const targetY = baseAltitude + suspensionBounce + this.jumpAltitude;
-    this.mesh.position.y = THREE.MathUtils.lerp(this.mesh.position.y, targetY, delta * 12.0);
+    // Intégration ressort-amortisseur 2nd ordre
+    const suspAccel = -120.0 * this.suspOffset - 16.0 * this.suspVel;
+    this.suspVel += suspAccel * delta;
+    this.suspOffset = THREE.MathUtils.clamp(this.suspOffset + this.suspVel * delta, -0.18, 0.18);
+
+    const targetY = baseAltitude + suspensionBounce + this.jumpAltitude + this.suspOffset;
+    this.mesh.position.y = THREE.MathUtils.lerp(this.mesh.position.y, targetY, 1 - Math.exp(-12.0 * delta));
 
     // Inclinaison du châssis (atténuée pour la décapotable 4 roues)
     if (this.currentBikeId === 'decapotable') {
@@ -2408,21 +2486,25 @@ export class Bike {
       this.scarfTail.rotation.y = Math.cos(this.bouncePhase * 2.8) * 0.18;
     }
 
-    // Rotation des roues selon la vitesse
-    const wheelAngularSpeed = (speed / 0.35) * delta;
+    // Rotation des roues selon leur rayon réel et la vitesse
     this.wheels.forEach(w => {
-      w.rotation.x += wheelAngularSpeed;
+      const r = w.userData?.radius || 0.35;
+      w.rotation.x += (speed / r) * delta;
     });
 
-    // --- ANIMATION DE L'ÉTALON PUR-SANG & DU FOUET CINGLANT ---
+    // --- ANIMATION DE L'ÉTALON PUR-SANG (galop 4-temps réaliste) & DU FOUET CINGLANT ---
     if (this.currentBikeId === 'cheval') {
       const gallopCycle = this.bouncePhase * 3.2;
-      if (this.horseLegFL) this.horseLegFL.rotation.x = Math.sin(gallopCycle) * 0.55;
-      if (this.horseLegFR) this.horseLegFR.rotation.x = -Math.sin(gallopCycle) * 0.55;
-      if (this.horseLegBL) this.horseLegBL.rotation.x = -Math.sin(gallopCycle) * 0.5;
-      if (this.horseLegBR) this.horseLegBR.rotation.x = Math.sin(gallopCycle) * 0.5;
+      if (this.horseLegFL) this.horseLegFL.rotation.x = Math.sin(gallopCycle) * 0.62;
+      if (this.horseLegFR) this.horseLegFR.rotation.x = Math.sin(gallopCycle + 0.55) * 0.62;
+      if (this.horseLegBL) this.horseLegBL.rotation.x = Math.sin(gallopCycle + Math.PI) * 0.56;
+      if (this.horseLegBR) this.horseLegBR.rotation.x = Math.sin(gallopCycle + Math.PI + 0.55) * 0.56;
       if (this.horseTail) this.horseTail.rotation.z = Math.sin(gallopCycle * 0.6) * 0.35;
-      if (this.horseGroup) this.horseGroup.position.y = Math.abs(Math.sin(gallopCycle)) * 0.08;
+      if (this.horseHead) this.horseHead.rotation.x = Math.sin(gallopCycle + 0.4) * 0.14;
+      if (this.horseGroup) {
+        this.horseGroup.position.y = Math.abs(Math.sin(gallopCycle)) * 0.08;
+        this.horseGroup.rotation.x = Math.cos(gallopCycle) * 0.06;
+      }
 
       // Claquement périodique réaliste du FOUET avec son
       if (this.riderWhip) {
@@ -2439,9 +2521,21 @@ export class Bike {
     // --- ANIMATION DU SPRINTEUR À PIED (AK-47 / TRONÇONNEUSE) ---
     if (this.currentBikeId === 'run_ak47' || this.currentBikeId === 'run_chainsaw') {
       const runCycle = this.bouncePhase * 4.2;
-      if (this.runnerLegL) this.runnerLegL.rotation.x = Math.sin(runCycle) * 0.8;
-      if (this.runnerLegR) this.runnerLegR.rotation.x = -Math.sin(runCycle) * 0.8;
-      this.mesh.position.y = Math.abs(Math.sin(runCycle)) * 0.09;
+      const strideSin = Math.sin(runCycle);
+      if (this.runnerLegL) this.runnerLegL.rotation.x = strideSin * 0.85;
+      if (this.runnerLegR) this.runnerLegR.rotation.x = -strideSin * 0.85;
+      if (this.runnerKneeL) this.runnerKneeL.rotation.x = Math.max(0, -strideSin) * 0.95;
+      if (this.runnerKneeR) this.runnerKneeR.rotation.x = Math.max(0, strideSin) * 0.95;
+      if (this.riderTorso) {
+        this.riderTorso.rotation.x = 0.35 + Math.sin(runCycle * 2) * 0.05;
+      }
+      if (this.riderArmL && !this.isAttacking) {
+        this.riderArmL.rotation.x = Math.PI / 3.0 - strideSin * 0.45;
+      }
+      // Rebond de foulée sur riderGroup uniquement (préserve la hauteur trottoir/dos-d'âne de mesh.position.y)
+      this.riderGroup.position.y = Math.abs(strideSin) * 0.09;
+    } else if (this.riderGroup.position.y !== 0) {
+      this.riderGroup.position.y = 0;
     }
 
     // Animation du rouleau compresseur 50 Tonnes
@@ -2565,9 +2659,9 @@ export class Bike {
         this.isAttacking = false;
         if (this.akMuzzleFlash) this.akMuzzleFlash.material.opacity = 0;
         if (this.axeSlashTrail) this.axeSlashTrail.material.opacity = 0;
-        // Rétablir la posture normale des bras
-        if (this.riderArmR) {
-          this.riderArmR.rotation.set(0, 0, 0);
+        // Rétablir la posture par défaut du bras droit
+        if (this.riderArmR && this.defaultArmRRot) {
+          this.riderArmR.rotation.copy(this.defaultArmRRot);
         }
         if (this.riderTorso) {
           this.riderTorso.rotation.y = 0;

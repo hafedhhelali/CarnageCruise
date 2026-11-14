@@ -287,9 +287,9 @@ export class ParticleSystem {
       maxLife: 10.0
     });
 
-    // 2. Éclaboussures satellites autour de la flaque principale
+    // 2. Éclaboussures satellites autour de la flaque principale (matériau cloné pour un fade/dispose indépendant)
     for (let s = 0; s < 3; s++) {
-      const satSplat = new THREE.Mesh(this.sharedGeos.splatCircle, splatMat);
+      const satSplat = new THREE.Mesh(this.sharedGeos.splatCircle, splatMat.clone());
       satSplat.rotation.x = -Math.PI / 2;
       const offsetAng = Math.random() * Math.PI * 2;
       const offsetDist = 0.55 + Math.random() * 0.65;
@@ -304,7 +304,7 @@ export class ParticleSystem {
     }
   }
 
-  // Explosion 3D grandiose pour missiles et obus d'artillerie (Boule de feu, débris, ondes de choc et cratère au sol)
+  // Explosion 3D multi-étapes (flash HDR, ondes de choc, boule de feu en grappe, fumée montante, braises rebondissantes)
   spawnMissileExplosion(pos, radius = 7.0, themeColorHex = 0xff793f) {
     const explosionCenter = pos.clone();
     explosionCenter.y = Math.max(0.4, explosionCenter.y);
@@ -313,16 +313,28 @@ export class ParticleSystem {
     this.spawnShockwave(explosionCenter, themeColorHex);
     this.spawnShockwave(explosionCenter, 0xfffa65);
 
-    // 2. Boule de feu 3D volumétrique en expansion explosive rapide
+    // 2. Boule de feu volumétrique en grappe + flash cœur HDR
     const fireballGroup = new THREE.Group();
     fireballGroup.position.copy(explosionCenter);
 
-    const outerFire = new THREE.Mesh(this.sharedGeos.fireballSphere, this.sharedMats.fireballOrange.clone());
-    outerFire.scale.setScalar(0.5);
+    const outerMat = this.sharedMats.fireballOrange.clone();
+    const outerFire = new THREE.Mesh(this.sharedGeos.fireballSphere, outerMat);
+    outerFire.scale.setScalar(0.55);
     fireballGroup.add(outerFire);
 
-    const coreFire = new THREE.Mesh(this.sharedGeos.fireballSphere, this.sharedMats.fireballCore.clone());
-    coreFire.scale.setScalar(0.35);
+    // Lobes de feu périphériques pour un volume organique
+    for (let k = 0; k < 3; k++) {
+      const ang = (k / 3) * Math.PI * 2 + Math.random() * 0.6;
+      const lobe = new THREE.Mesh(this.sharedGeos.fireballSphere, outerMat);
+      lobe.position.set(Math.cos(ang) * 0.38, 0.12 + Math.random() * 0.25, Math.sin(ang) * 0.38);
+      lobe.scale.setScalar(0.36 + Math.random() * 0.16);
+      fireballGroup.add(lobe);
+    }
+
+    const coreMat = this.sharedMats.fireballCore.clone();
+    coreMat.color.setRGB(2.4, 2.0, 1.1);
+    const coreFire = new THREE.Mesh(this.sharedGeos.fireballSphere, coreMat);
+    coreFire.scale.setScalar(0.42);
     fireballGroup.add(coreFire);
 
     this.scene.add(fireballGroup);
@@ -332,8 +344,8 @@ export class ParticleSystem {
       core: coreFire,
       targetScale: Math.max(3.5, radius * 0.6),
       currentScale: 0.5,
-      life: 0.45,
-      maxLife: 0.45
+      life: 0.48,
+      maxLife: 0.48
     });
 
     // 3. Cratère et marque de brûlure au sol (Scorch Mark Decal)
@@ -348,7 +360,7 @@ export class ParticleSystem {
       maxLife: 12.0
     });
 
-    // 4. Débris et éclats de shrapnel incandescents projetés à haute vélocité
+    // 4. Braises incandescentes et éclats de shrapnel rebondissants
     const debrisCount = Math.min(36, Math.floor(18 + radius * 2));
     for (let i = 0; i < debrisCount; i++) {
       const isRed = (i % 2 === 0);
@@ -364,72 +376,111 @@ export class ParticleSystem {
         velZ: Math.sin(angle) * speed,
         rotVelX: Math.random() * 24 - 12,
         rotVelY: Math.random() * 24 - 12,
+        bounce: 0.38,
+        groundY: 0.08,
         life: 0.95,
         maxLife: 0.95
       });
     }
 
-    // 5. Volutes discrètes de fumée de détonation (allégées pour ne pas masquer l'écran)
-    const smokeCount = 3;
+    // 5. Volutes de fumée montantes (matériau cloné pour fondu d'opacité fluide)
+    const smokeCount = 4;
     for (let j = 0; j < smokeCount; j++) {
       const smoke = new THREE.Mesh(this.sharedGeos.smokeSphere, this.sharedMats.smokeDark.clone());
       smoke.position.set(
-        pos.x + (Math.random() - 0.5) * 1.2,
-        explosionCenter.y + Math.random() * 0.8,
-        pos.z + (Math.random() - 0.5) * 1.2
+        pos.x + (Math.random() - 0.5) * 1.4,
+        explosionCenter.y + 0.2 + Math.random() * 0.8,
+        pos.z + (Math.random() - 0.5) * 1.4
       );
-      smoke.scale.setScalar(0.7 + Math.random() * 0.5);
+      smoke.scale.setScalar(0.75 + Math.random() * 0.5);
       this.scene.add(smoke);
       this.smokePuffs.push({
         mesh: smoke,
-        velY: 1.8 + Math.random() * 1.5,
-        velX: (Math.random() - 0.5) * 1.0,
-        velZ: (Math.random() - 0.5) * 1.0,
-        growRate: 1.3,
-        life: 0.65,
-        maxLife: 0.65
+        velY: 2.2 + Math.random() * 1.6,
+        velX: (Math.random() - 0.5) * 1.2,
+        velZ: (Math.random() - 0.5) * 1.2,
+        growRate: 1.45,
+        life: 0.72,
+        maxLife: 0.72
       });
     }
   }
 
-  // Déflagration d'obus 120mm de char d'assaut (gerbe de feu et fumée noire)
-  // Édition allégée : 1 onde de choc, gerbe d'étincelles réduite — le coup reste
-  // percutant sans remplir la moitié de l'écran
+  // Déflagration d'obus 120mm de char d'assaut (multi-étapes compacte)
   spawnCannonBlast(pos) {
     this.spawnShockwave(pos, 0xff793f);
 
-    // Gerbe de flammes et étincelles incandescentes
-    for (let i = 0; i < 11; i++) {
-      const spark = new THREE.Mesh(this.sharedGeos.starCone, this.sharedMats.starOrange);
-      spark.position.copy(pos);
-      spark.position.y += 0.8;
+    // Boule de feu compacte + flash HDR
+    const blastCenter = pos.clone();
+    blastCenter.y += 0.75;
+    const fireballGroup = new THREE.Group();
+    fireballGroup.position.copy(blastCenter);
+
+    const outerMat = this.sharedMats.fireballOrange.clone();
+    const outerFire = new THREE.Mesh(this.sharedGeos.fireballSphere, outerMat);
+    outerFire.scale.setScalar(0.45);
+    fireballGroup.add(outerFire);
+
+    for (let k = 0; k < 2; k++) {
+      const lobe = new THREE.Mesh(this.sharedGeos.fireballSphere, outerMat);
+      lobe.position.set((k === 0 ? -0.25 : 0.25), 0.1, (Math.random() - 0.5) * 0.25);
+      lobe.scale.setScalar(0.32);
+      fireballGroup.add(lobe);
+    }
+
+    const coreMat = this.sharedMats.fireballCore.clone();
+    coreMat.color.setRGB(2.2, 1.85, 1.0);
+    const coreFire = new THREE.Mesh(this.sharedGeos.fireballSphere, coreMat);
+    coreFire.scale.setScalar(0.32);
+    fireballGroup.add(coreFire);
+
+    this.scene.add(fireballGroup);
+    this.fireballs.push({
+      group: fireballGroup,
+      outer: outerFire,
+      core: coreFire,
+      targetScale: 1.9,
+      currentScale: 0.4,
+      life: 0.34,
+      maxLife: 0.34
+    });
+
+    // Gerbe de braises et étincelles rebondissantes
+    for (let i = 0; i < 12; i++) {
+      const isGold = (i % 3 === 0);
+      const spark = new THREE.Mesh(this.sharedGeos.starCone, isGold ? this.sharedMats.starGold : this.sharedMats.starOrange);
+      spark.position.copy(blastCenter);
       const angle = Math.random() * Math.PI * 2;
       const speed = 4.5 + Math.random() * 9.0;
       this.scene.add(spark);
       this.debris.push({
         mesh: spark,
         velX: Math.cos(angle) * speed,
-        velY: 4.0 + Math.random() * 7.0,
+        velY: 3.5 + Math.random() * 7.0,
         velZ: Math.sin(angle) * speed,
         rotVelX: Math.random() * 20 - 10,
         rotVelY: Math.random() * 20 - 10,
+        bounce: 0.35,
+        groundY: 0.06,
         life: 0.85,
         maxLife: 0.85
       });
     }
 
-    // Volutes discrètes de fumée de départ (réduites pour ne pas obstruer la vue du joueur)
-    for (let j = 0; j < 2; j++) {
-      const smoke = new THREE.Mesh(this.sharedGeos.smokeSphere, this.sharedMats.smokeDark);
-      smoke.position.set(pos.x + (Math.random() - 0.5) * 0.4, pos.y + 0.3 + Math.random() * 0.4, pos.z + (Math.random() - 0.5) * 0.4);
-      smoke.scale.setScalar(0.35 + Math.random() * 0.25);
+    // Volutes de fumée montantes (matériau cloné)
+    for (let j = 0; j < 3; j++) {
+      const smoke = new THREE.Mesh(this.sharedGeos.smokeSphere, this.sharedMats.smokeDark.clone());
+      smoke.position.set(pos.x + (Math.random() - 0.5) * 0.5, pos.y + 0.4 + Math.random() * 0.4, pos.z + (Math.random() - 0.5) * 0.5);
+      smoke.scale.setScalar(0.38 + Math.random() * 0.25);
       this.scene.add(smoke);
       this.smokePuffs.push({
         mesh: smoke,
-        velY: 1.2 + Math.random() * 0.8,
-        growRate: 0.8,
-        life: 0.45,
-        maxLife: 0.45
+        velY: 1.6 + Math.random() * 1.0,
+        velX: (Math.random() - 0.5) * 0.6,
+        velZ: (Math.random() - 0.5) * 0.6,
+        growRate: 0.95,
+        life: 0.55,
+        maxLife: 0.55
       });
     }
   }
@@ -478,7 +529,7 @@ export class ParticleSystem {
 
     // Poussière d'impact
     for (let j = 0; j < 3; j++) {
-      const smoke = new THREE.Mesh(this.sharedGeos.smokeSphere, this.sharedMats.skidSmoke);
+      const smoke = new THREE.Mesh(this.sharedGeos.smokeSphere, this.sharedMats.skidSmoke.clone());
       smoke.position.set(pos.x + (Math.random() - 0.5) * 0.8, pos.y + 0.3, pos.z + (Math.random() - 0.5) * 0.8);
       smoke.scale.setScalar(0.4 + Math.random() * 0.35);
       this.scene.add(smoke);
@@ -553,7 +604,7 @@ export class ParticleSystem {
 
     // Brume fruitée
     for (let j = 0; j < 4; j++) {
-      const smoke = new THREE.Mesh(this.sharedGeos.smokeSphere, this.sharedMats.smoke);
+      const smoke = new THREE.Mesh(this.sharedGeos.smokeSphere, this.sharedMats.smoke.clone());
       smoke.position.set(pos.x + (Math.random() - 0.5) * 1.0, pos.y + 0.5, pos.z + (Math.random() - 0.5) * 1.0);
       smoke.scale.setScalar(0.45 + Math.random() * 0.4);
       this.scene.add(smoke);
@@ -724,7 +775,7 @@ export class ParticleSystem {
     }
 
     for (let p = 0; p < 5; p++) {
-      const smoke = new THREE.Mesh(this.sharedGeos.smokeSphere, this.sharedMats.smoke);
+      const smoke = new THREE.Mesh(this.sharedGeos.smokeSphere, this.sharedMats.smoke.clone());
       smoke.position.set(pos.x + (Math.random() - 0.5) * 1.2, pos.y + 0.6, pos.z + (Math.random() - 0.5) * 1.2);
       smoke.scale.setScalar(0.5 + Math.random() * 0.4);
       this.scene.add(smoke);
@@ -766,7 +817,7 @@ export class ParticleSystem {
 
     // Champignon atomique montant dans le ciel
     for (let j = 0; j < 16; j++) {
-      const smoke = new THREE.Mesh(this.sharedGeos.smokeSphere, this.sharedMats.smokeDark);
+      const smoke = new THREE.Mesh(this.sharedGeos.smokeSphere, this.sharedMats.smokeDark.clone());
       smoke.position.set(pos.x + (Math.random() - 0.5) * 4.0, pos.y + 1.0 + Math.random() * 3.0, pos.z + (Math.random() - 0.5) * 4.0);
       smoke.scale.setScalar(2.4 + Math.random() * 2.8);
       this.scene.add(smoke);
@@ -808,7 +859,7 @@ export class ParticleSystem {
 
     // Vapeur d'eau et embruns
     for (let j = 0; j < 14; j++) {
-      const spray = new THREE.Mesh(this.sharedGeos.smokeSphere, this.sharedMats.skidSmoke);
+      const spray = new THREE.Mesh(this.sharedGeos.smokeSphere, this.sharedMats.skidSmoke.clone());
       spray.position.set(pos.x + (Math.random() - 0.5) * 6.0, pos.y + 1.0 + Math.random() * 2.0, pos.z + (Math.random() - 0.5) * 6.0);
       spray.scale.setScalar(2.0 + Math.random() * 2.5);
       this.scene.add(spray);
@@ -850,7 +901,7 @@ export class ParticleSystem {
 
     // Nuage géant d'avalanche de poussière
     for (let j = 0; j < 16; j++) {
-      const dust = new THREE.Mesh(this.sharedGeos.smokeSphere, this.sharedMats.smoke);
+      const dust = new THREE.Mesh(this.sharedGeos.smokeSphere, this.sharedMats.smoke.clone());
       dust.position.set(pos.x + (Math.random() - 0.5) * 6.0, pos.y + 2.0 + Math.random() * 4.0, pos.z + (Math.random() - 0.5) * 6.0);
       dust.scale.setScalar(2.5 + Math.random() * 3.0);
       this.scene.add(dust);
@@ -1021,18 +1072,23 @@ export class ParticleSystem {
     }
 
     // 4. Mettre à jour les taches de sang au sol
+    const sharedMatSet = new Set(Object.values(this.sharedMats));
     for (let s = this.bloodSplats.length - 1; s >= 0; s--) {
       const splat = this.bloodSplats[s];
       splat.life -= delta;
 
       if (splat.life <= 0) {
         this.scene.remove(splat.mesh);
-        splat.mesh.material.dispose();
+        if (splat.mesh.material && !sharedMatSet.has(splat.mesh.material)) {
+          splat.mesh.material.dispose();
+        }
         this.bloodSplats.splice(s, 1);
         continue;
       }
 
-      splat.mesh.material.opacity = Math.min(0.85, (splat.life / splat.maxLife) * 0.85);
+      if (splat.mesh.material && !sharedMatSet.has(splat.mesh.material)) {
+        splat.mesh.material.opacity = Math.min(0.85, (splat.life / splat.maxLife) * 0.85);
+      }
     }
 
     // 5. Mettre à jour les étoiles cartoon
@@ -1088,7 +1144,6 @@ export class ParticleSystem {
     }
 
     // 7. Mettre à jour les volutes de fumée noire (sans disposer les matériaux partagés !)
-    const sharedMatSet = new Set(Object.values(this.sharedMats));
     for (let p = this.smokePuffs.length - 1; p >= 0; p--) {
       const smk = this.smokePuffs[p];
       smk.life -= delta;
@@ -1125,7 +1180,7 @@ export class ParticleSystem {
       fb.currentScale += (fb.targetScale - fb.currentScale) * Math.min(1.0, delta * 18.0);
       fb.group.scale.setScalar(fb.currentScale);
       if (fb.outer?.material) fb.outer.material.opacity = (1 - prog) * 0.92;
-      if (fb.core?.material) fb.core.material.opacity = (1 - prog) * 0.98;
+      if (fb.core?.material) fb.core.material.opacity = Math.max(0, 1 - prog * 1.45) * 0.98;
     }
 
     // 9. Mettre à jour les marques de brûlure / cratères au sol

@@ -50,6 +50,26 @@ class TextureFactoryService {
     return texture;
   }
 
+  // Utilitaire de mise en cache pour cartes PBR (bumpMap, roughnessMap) en espace linéaire
+  getOrCreateDataMap(key, generatorFn, anisotropy = 4) {
+    if (this.cache.has(key)) {
+      return this.cache.get(key);
+    }
+    const canvas = document.createElement('canvas');
+    generatorFn(canvas);
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.NoColorSpace;
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    texture.generateMipmaps = true;
+    texture.minFilter = THREE.LinearMipmapLinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+    texture.anisotropy = anisotropy;
+
+    this.cache.set(key, texture);
+    return texture;
+  }
+
   // 1. Asphalte urbain Next-Gen haute définition : grain bitumineux profond, traces de roulement,
   // caniveaux en granit biseautés, lignes de rive blanches et plots rétro-réfléchissants LED
   getRoadTexture() {
@@ -870,6 +890,220 @@ class TextureFactoryService {
         ctx.arc(128, 180, 24, 0.2, Math.PI - 0.2);
         ctx.stroke();
       }
+    });
+  }
+
+  // 8. Cartes PBR Procédurales (Bump & Roughness) basse VRAM pour mobile (256x256 / 256x512)
+  getRoadBumpMap() {
+    return this.getOrCreateDataMap('road_bump_v1', (canvas) => {
+      canvas.width = 256;
+      canvas.height = 512;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#808080';
+      ctx.fillRect(0, 0, 256, 512);
+
+      const imgData = ctx.getImageData(0, 0, 256, 512);
+      const data = imgData.data;
+      for (let i = 0; i < data.length; i += 4) {
+        const v = Math.max(0, Math.min(255, 128 + (Math.random() - 0.5) * 52));
+        data[i] = data[i + 1] = data[i + 2] = v;
+      }
+      ctx.putImageData(imgData, 0, 0);
+
+      // Joints de dalles de caniveau
+      ctx.fillStyle = '#383838';
+      ctx.fillRect(11, 0, 2, 512);
+      ctx.fillRect(243, 0, 2, 512);
+      for (let y = 0; y < 512; y += 24) {
+        ctx.fillRect(0, y, 12, 2);
+        ctx.fillRect(244, y, 12, 2);
+      }
+    });
+  }
+
+  getRoadRoughnessMap() {
+    return this.getOrCreateDataMap('road_roughness_v1', (canvas) => {
+      canvas.width = 256;
+      canvas.height = 512;
+      const ctx = canvas.getContext('2d');
+
+      // Accotements et granulats rugueux (~0.92 => 235)
+      ctx.fillStyle = 'rgb(235, 235, 235)';
+      ctx.fillRect(0, 0, 256, 512);
+
+      // Bandes de roulement lissées par les pneus (~0.52 => 133)
+      const drawLaneWear = (x0, x1) => {
+        const grad = ctx.createLinearGradient(x0, 0, x1, 0);
+        grad.addColorStop(0, 'rgba(235, 235, 235, 0)');
+        grad.addColorStop(0.28, 'rgba(133, 133, 133, 1)');
+        grad.addColorStop(0.5, 'rgba(180, 180, 180, 0.75)');
+        grad.addColorStop(0.72, 'rgba(133, 133, 133, 1)');
+        grad.addColorStop(1, 'rgba(235, 235, 235, 0)');
+        ctx.fillStyle = grad;
+        ctx.fillRect(x0, 0, x1 - x0, 512);
+      };
+      drawLaneWear(30, 110);
+      drawLaneWear(146, 226);
+
+      // Micro-variation minérale
+      const imgData = ctx.getImageData(0, 0, 256, 512);
+      const data = imgData.data;
+      for (let i = 0; i < data.length; i += 4) {
+        const v = Math.max(90, Math.min(250, data[i] + (Math.random() - 0.5) * 18));
+        data[i] = data[i + 1] = data[i + 2] = v;
+      }
+      ctx.putImageData(imgData, 0, 0);
+    });
+  }
+
+  getSidewalkBumpMap() {
+    return this.getOrCreateDataMap('sidewalk_bump_v1', (canvas) => {
+      canvas.width = 256;
+      canvas.height = 256;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#303030';
+      ctx.fillRect(0, 0, 256, 256);
+
+      const rows = 16;
+      const cols = 16;
+      const pW = 256 / cols;
+      const pH = 256 / rows;
+      for (let r = 0; r < rows; r++) {
+        const offset = (r % 2) * (pW / 2);
+        for (let c = -1; c < cols + 1; c++) {
+          const x = c * pW + offset;
+          const y = r * pH;
+          const h = 185 + Math.floor((Math.random() - 0.5) * 34);
+          ctx.fillStyle = `rgb(${h},${h},${h})`;
+          ctx.fillRect(x + 1, y + 1, pW - 2, pH - 2);
+        }
+      }
+    });
+  }
+
+  getSidewalkRoughnessMap() {
+    return this.getOrCreateDataMap('sidewalk_roughness_v1', (canvas) => {
+      canvas.width = 256;
+      canvas.height = 256;
+      const ctx = canvas.getContext('2d');
+      // Joints de mortier très rugueux (~0.95 => 242)
+      ctx.fillStyle = 'rgb(242, 242, 242)';
+      ctx.fillRect(0, 0, 256, 256);
+
+      const rows = 16;
+      const cols = 16;
+      const pW = 256 / cols;
+      const pH = 256 / rows;
+      for (let r = 0; r < rows; r++) {
+        const offset = (r % 2) * (pW / 2);
+        for (let c = -1; c < cols + 1; c++) {
+          const x = c * pW + offset;
+          const y = r * pH;
+          const rough = 175 + Math.floor((Math.random() - 0.5) * 24); // ~0.68..0.73
+          ctx.fillStyle = `rgb(${rough},${rough},${rough})`;
+          ctx.fillRect(x + 1, y + 1, pW - 2, pH - 2);
+        }
+      }
+    });
+  }
+
+  getFacadeBumpMap(styleVariant = 0) {
+    const v = styleVariant % 4;
+    return this.getOrCreateDataMap(`facade_bump_v1_${v}`, (canvas) => {
+      canvas.width = 256;
+      canvas.height = 512;
+      const ctx = canvas.getContext('2d');
+
+      if (v === 1) {
+        // Mur-rideau vitré en retrait, piliers et bandeaux en relief
+        ctx.fillStyle = '#555555';
+        ctx.fillRect(0, 0, 256, 512);
+        ctx.fillStyle = '#dcdcdc';
+        [0, 60, 122, 184, 242].forEach(px => ctx.fillRect(px, 0, 14, 440));
+        [26, 105, 185, 265, 345, 422].forEach(py => ctx.fillRect(0, py, 256, 10));
+      } else {
+        // Maçonnerie en relief et baies vitrées en retrait
+        ctx.fillStyle = '#c8c8c8';
+        ctx.fillRect(0, 0, 256, 512);
+        ctx.fillStyle = '#b2b2b2';
+        for (let y = 0; y < 512; y += 16) {
+          ctx.fillRect(0, y, 256, 1);
+        }
+        const floors = [40, 120, 200, 280, 360];
+        const cols = [18, 76, 134, 192];
+        floors.forEach(fy => {
+          cols.forEach(wx => {
+            ctx.fillStyle = '#484848';
+            ctx.fillRect(wx, fy, 42, 56);
+            ctx.fillStyle = '#e8e8e8';
+            ctx.fillRect(wx - 2, fy + 56, 46, 4);
+          });
+        });
+      }
+    });
+  }
+
+  getFacadeRoughnessMap(styleVariant = 0) {
+    const v = styleVariant % 4;
+    return this.getOrCreateDataMap(`facade_roughness_v1_${v}`, (canvas) => {
+      canvas.width = 256;
+      canvas.height = 512;
+      const ctx = canvas.getContext('2d');
+
+      const glassVal = 'rgb(31, 31, 31)';     // ~0.12 vitrage lisse
+      const masonryVal = 'rgb(217, 217, 217)'; // ~0.85 pierre/maçonnerie
+
+      if (v === 1) {
+        ctx.fillStyle = glassVal;
+        ctx.fillRect(0, 0, 256, 512);
+        ctx.fillStyle = masonryVal;
+        [0, 60, 122, 184, 242].forEach(px => ctx.fillRect(px, 0, 14, 440));
+        [26, 105, 185, 265, 345, 422].forEach(py => ctx.fillRect(0, py, 256, 10));
+        ctx.fillRect(0, 440, 256, 72);
+      } else {
+        ctx.fillStyle = masonryVal;
+        ctx.fillRect(0, 0, 256, 512);
+        ctx.fillStyle = glassVal;
+        const floors = [40, 120, 200, 280, 360];
+        const cols = [18, 76, 134, 192];
+        floors.forEach(fy => {
+          cols.forEach(wx => {
+            ctx.fillRect(wx, fy, 42, 56);
+          });
+        });
+      }
+    });
+  }
+
+  getTerrainBumpMap(type = 'rock') {
+    const t = (type === 'sand' || type === 'snow') ? type : 'rock';
+    return this.getOrCreateDataMap(`terrain_bump_v1_${t}`, (canvas) => {
+      canvas.width = 256;
+      canvas.height = 256;
+      const ctx = canvas.getContext('2d');
+      const imgData = ctx.createImageData(256, 256);
+      const data = imgData.data;
+
+      for (let y = 0; y < 256; y++) {
+        for (let x = 0; x < 256; x++) {
+          const idx = (y * 256 + x) * 4;
+          let val = 128;
+          if (t === 'sand') {
+            const ripple = Math.sin(y * 0.22 + Math.sin(x * 0.08) * 2.2) * 34;
+            val = 128 + ripple + (Math.random() - 0.5) * 20;
+          } else if (t === 'snow') {
+            const drift = Math.sin(x * 0.07 + y * 0.05) * 22;
+            val = 128 + drift + (Math.random() - 0.5) * 24;
+          } else {
+            const strata = Math.sin(y * 0.14 + Math.cos(x * 0.11) * 1.8) * 30;
+            val = 128 + strata + (Math.random() - 0.5) * 58;
+          }
+          const c = Math.max(0, Math.min(255, val));
+          data[idx] = data[idx + 1] = data[idx + 2] = c;
+          data[idx + 3] = 255;
+        }
+      }
+      ctx.putImageData(imgData, 0, 0);
     });
   }
 

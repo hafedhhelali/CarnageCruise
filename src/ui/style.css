@@ -5,14 +5,27 @@
  */
 
 :root {
-  --primary: #ff2e63;
-  --primary-glow: rgba(255, 46, 99, 0.45);
-  --secondary: #00f2fe;
-  --accent: #ffd32a;
-  --gold: #ffd32a;
-  --dark-bg: rgba(9, 14, 26, 0.92);
-  --glass-bg: rgba(13, 21, 38, 0.84);
-  --border-light: rgba(0, 242, 254, 0.24);
+  /* Dark Carbon-Titanium Glassmorphism Tokens */
+  --carbon-950: #06080d;
+  --carbon-900: #0b101b;
+  --carbon-800: #131b2b;
+  --glass-carbon: rgba(11, 16, 27, 0.84);
+  --titanium-border: rgba(226, 232, 240, 0.18);
+  --accent-cyan: #22d3ee;
+  --accent-crimson: #f43f5e;
+  --accent-amber: #f59e0b;
+  --accent-emerald: #10b981;
+  --font-mono-hud: 'JetBrains Mono', 'SF Mono', 'Consolas', monospace;
+
+  /* Legacy aliases mapped to Carbon-Titanium palette */
+  --primary: var(--accent-crimson);
+  --primary-glow: rgba(244, 63, 94, 0.45);
+  --secondary: var(--accent-cyan);
+  --accent: var(--accent-amber);
+  --gold: #fbbf24;
+  --dark-bg: var(--carbon-900);
+  --glass-bg: var(--glass-carbon);
+  --border-light: var(--titanium-border);
   --text-main: #f8fafc;
   --text-muted: #94a3b8;
   --font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
@@ -107,13 +120,21 @@ html, body {
   pointer-events: auto !important;
   touch-action: manipulation;
   user-select: none;
+}
+
+.btn-ruins-exit-thumb::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
+  border: 2px solid rgba(244, 63, 94, 0.65);
+  pointer-events: none;
   animation: ruinsExitPulse 1.8s infinite ease-in-out;
 }
 
 @keyframes ruinsExitPulse {
-  0% { transform: scale(1); box-shadow: 0 6px 20px rgba(235, 77, 75, 0.7); }
-  50% { transform: scale(1.06); box-shadow: 0 10px 28px rgba(255, 118, 117, 0.95); }
-  100% { transform: scale(1); box-shadow: 0 6px 20px rgba(235, 77, 75, 0.7); }
+  0%, 100% { opacity: 0.45; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.06); }
 }
 
 /* --- BOUTONS NÉO-ARCADE FUTURISTES & CONFORTABLES (DESIGN CYBER-GLASS 3D) --- */
@@ -259,27 +280,30 @@ html, body {
   overflow-y: auto;
 }
 
-/* En-tête supérieur Splash */
+/* En-tête supérieur Splash : Pilules Titane Uniformes 36px */
 .splash-header-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
   width: 100%;
   max-width: 520px;
+  gap: 8px;
 }
 
 .splash-badge-version {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: rgba(0, 0, 0, 0.65);
-  backdrop-filter: blur(8px);
-  padding: 4px 10px;
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  height: 36px;
+  background: var(--glass-carbon);
+  backdrop-filter: blur(12px);
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid var(--titanium-border);
   font-size: 0.72rem;
   font-weight: 700;
-  color: #a4b0be;
+  color: #cbd5e1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
 .splash-header-right {
@@ -288,24 +312,40 @@ html, body {
   gap: 8px;
 }
 
+.splash-header-right .currency-pill,
 .stars-pill {
-  display: flex;
+  display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 4px;
-  background: linear-gradient(135deg, rgba(254, 211, 48, 0.25), rgba(255, 165, 2, 0.15));
-  border: 1.5px solid #fed330;
-  border-radius: 20px;
-  padding: 5px 10px;
-  font-size: 0.82rem;
+  height: 36px;
+  background: var(--glass-carbon);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--titanium-border);
+  border-radius: 999px;
+  padding: 0 12px;
+  font-size: 0.8rem;
   font-weight: 900;
-  color: #fed330;
-  box-shadow: 0 0 10px rgba(254, 211, 48, 0.3);
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.stars-pill {
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.35);
 }
 
 .btn-audio-quick {
-  width: 38px;
-  height: 38px;
-  font-size: 1.1rem;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  border-radius: 999px;
+  background: var(--glass-carbon);
+  border: 1px solid var(--titanium-border);
+  font-size: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  touch-action: manipulation;
 }
 
 .logo-container {
@@ -343,10 +383,10 @@ html, body {
   font-weight: 950;
   font-style: italic;
   text-transform: uppercase;
-  background: linear-gradient(180deg, #ffffff 0%, #ffd32a 55%, #f59e0b 100%);
+  background: linear-gradient(180deg, #ffffff 0%, #e2e8f0 42%, #94a3b8 64%, #22d3ee 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 4px 16px rgba(0, 242, 254, 0.35)) drop-shadow(0 6px 12px rgba(0, 0, 0, 0.85));
+  filter: drop-shadow(0 2px 10px rgba(34, 211, 238, 0.28)) drop-shadow(0 6px 14px rgba(0, 0, 0, 0.9));
   letter-spacing: 2.5px;
   text-align: center;
   line-height: 1.06;
@@ -354,40 +394,41 @@ html, body {
 }
 
 .game-subtitle {
-  font-size: clamp(0.74rem, 2.2vw, 1.02rem);
+  font-size: clamp(0.72rem, 2.2vw, 0.98rem);
   font-weight: 850;
   text-transform: uppercase;
-  color: #00f2fe;
-  background: rgba(9, 15, 28, 0.72);
-  border: 1px solid rgba(0, 242, 254, 0.38);
+  color: var(--accent-cyan);
+  background: var(--glass-carbon);
+  border: 1px solid var(--titanium-border);
   padding: 4px 14px;
   border-radius: 999px;
-  letter-spacing: 2.5px;
+  letter-spacing: 2.2px;
   margin-top: 6px;
-  box-shadow: 0 4px 14px rgba(0, 242, 254, 0.18);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
 }
 
-/* Carte de statut du Véhicule Équipé (Cyber-Glass Confortable) */
+/* Carte de statut du Véhicule Équipé (Fibre de Carbone & Titane) */
 .splash-vehicle-card {
   width: 100%;
   max-width: 420px;
-  background: linear-gradient(135deg, rgba(11, 19, 36, 0.86), rgba(17, 28, 52, 0.82));
+  background:
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.02) 0 2px, transparent 2px 6px),
+    linear-gradient(145deg, var(--carbon-800), var(--carbon-950));
   backdrop-filter: blur(16px);
-  border: 1.5px solid rgba(0, 242, 254, 0.42);
-  border-radius: 20px;
-  padding: 11px 16px;
+  border: 1px solid var(--titanium-border);
+  border-radius: 18px;
+  padding: 12px 16px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   gap: 4px;
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.16);
-  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.58), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  transition: transform 0.12s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.15s ease;
+  touch-action: manipulation;
 }
 
 .splash-vehicle-card:active {
   transform: scale(0.97);
-  border-color: #00f2fe;
-  box-shadow: 0 0 20px rgba(0, 242, 254, 0.4);
 }
 
 .vehicle-card-badge {
@@ -451,23 +492,42 @@ html, body {
   max-width: 440px;
 }
 
-/* Bouton Héros Principal de Lancement Futuriste */
-.hero-play-btn {
+/* Bouton Héros Principal de Lancement Chamfreiné 56px */
+.hero-play-btn,
+#btn-splash-play {
   width: 100%;
-  min-height: 58px;
+  min-height: 56px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 24px;
-  font-size: 1.2rem;
+  padding: 12px 24px;
+  font-size: 1.15rem;
   letter-spacing: 1.4px;
-  border-radius: 20px;
-  background: linear-gradient(135deg, #ff2e63 0%, #e11d48 50%, #ff6b81 100%);
-  border: 2px solid rgba(255, 211, 42, 0.78);
+  border-radius: 14px;
+  clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px);
+  background: linear-gradient(135deg, #f43f5e 0%, #e11d48 52%, #9f1239 100%);
+  border: 1.5px solid rgba(255, 255, 255, 0.45);
   box-shadow:
-    0 10px 28px rgba(255, 46, 99, 0.52),
-    0 0 22px rgba(0, 242, 254, 0.25),
-    inset 0 2px 3px rgba(255, 255, 255, 0.65);
+    0 10px 28px rgba(244, 63, 94, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  position: relative;
+  touch-action: manipulation;
+}
+
+#btn-splash-play::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: 0 0 24px rgba(244, 63, 94, 0.75);
+  opacity: 0.4;
+  pointer-events: none;
+  animation: splashPlayGlow 2.2s infinite ease-in-out;
+}
+
+@keyframes splashPlayGlow {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 0.9; }
 }
 
 .hero-play-icon {
@@ -493,15 +553,16 @@ html, body {
 }
 
 .btn-touch-target {
-  min-height: 50px;
+  min-height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   padding: 10px 12px;
-  font-size: 0.85rem;
+  font-size: 0.84rem;
   letter-spacing: 0.5px;
-  border-radius: 16px;
+  border-radius: 14px;
+  touch-action: manipulation;
 }
 
 .btn-nuclear-launch {
@@ -526,10 +587,11 @@ html, body {
 
 .btn-sm-utility {
   flex: 1;
-  min-height: 42px;
-  padding: 8px 10px;
+  min-height: 48px;
+  padding: 8px 12px;
   font-size: 0.82rem;
   border-radius: 14px;
+  touch-action: manipulation;
 }
 
 .splash-legal {
@@ -539,7 +601,7 @@ html, body {
   margin-top: 2px;
 }
 
-/* --- HUD DE GAMEPLAY & ENTÊTE SCORE / OBJECTIF OPTIMISÉ --- */
+/* --- HUD DE GAMEPLAY & ENTÊTE SCORE / OBJECTIF OPTIMISÉ (BARRE FINE 44px) --- */
 .screen-hud {
   position: absolute;
   top: 0;
@@ -549,7 +611,8 @@ html, body {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: calc(env(safe-area-inset-top, 32px) + 32px) 16px 16px;
+  padding: max(12px, env(safe-area-inset-top, 12px)) 14px max(12px, env(safe-area-inset-bottom, 12px));
+  pointer-events: none;
 }
 
 .hud-top-bar {
@@ -561,21 +624,21 @@ html, body {
   z-index: 20;
 }
 
-/* 1. BADGE SCORE LUMINEUX CYBER-ARCADE CONFORTABLE (HAUT GAUCHE) */
+/* 1. BADGE SCORE CARBONE-TITANE (HAUT GAUCHE) */
 .score-box-arcade {
   position: relative;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  height: 48px;
-  background: linear-gradient(145deg, rgba(10, 16, 30, 0.92), rgba(18, 27, 48, 0.92));
-  padding: 5px 12px;
-  border-radius: 14px;
-  border: 1.5px solid rgba(0, 242, 254, 0.48);
+  height: 44px;
+  background: var(--glass-carbon);
+  padding: 4px 11px;
+  border-radius: 12px;
+  border: 1px solid var(--titanium-border);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.52), inset 0 1px 0 rgba(255, 255, 255, 0.12);
-  min-width: 92px;
+  min-width: 88px;
   flex-shrink: 0;
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(12px);
 }
 
 .score-badge-header {
@@ -597,14 +660,16 @@ html, body {
 }
 
 .score-box-arcade .score-value {
-  font-size: 1.28rem;
+  font-family: var(--font-mono-hud);
+  font-variant-numeric: tabular-nums;
+  font-size: 1.18rem;
   font-weight: 950;
   color: #f8fafc;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.4px;
   line-height: 1.05;
-  text-shadow: 0 0 10px rgba(0, 242, 254, 0.42);
+  text-shadow: 0 0 10px rgba(34, 211, 238, 0.35);
   margin-top: 1px;
-  transition: transform 0.1s ease;
+  transition: transform 0.12s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.15s ease;
 }
 
 .combo-badge {
@@ -640,22 +705,22 @@ html, body {
   100% { transform: scale(1.15); }
 }
 
-/* 2. CARTE D'OBJECTIF ET DE PROGRESSION ERGONOMIQUE & LISIBLE (HAUT CENTRE) */
+/* 2. CARTE D'OBJECTIF ET DE PROGRESSION CARBONE-TITANE (HAUT CENTRE) */
 .progress-objective-card,
 .progress-objective-compact {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  height: 48px;
-  background: linear-gradient(145deg, rgba(10, 16, 30, 0.92), rgba(18, 27, 48, 0.92));
-  padding: 5px 11px;
-  border-radius: 14px;
-  border: 1.5px solid rgba(0, 206, 201, 0.45);
+  height: 44px;
+  background: var(--glass-carbon);
+  padding: 4px 10px;
+  border-radius: 12px;
+  border: 1px solid var(--titanium-border);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.52), inset 0 1px 0 rgba(255, 255, 255, 0.1);
   flex: 1;
   min-width: 0;
   max-width: 240px;
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(12px);
 }
 
 .objective-header-row {
@@ -678,9 +743,11 @@ html, body {
 }
 
 .objective-target-pts {
-  font-size: 0.68rem;
+  font-family: var(--font-mono-hud);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.66rem;
   font-weight: 900;
-  color: #00f2fe;
+  color: var(--accent-cyan);
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -750,15 +817,15 @@ html, body {
   display: flex;
   align-items: center;
   gap: 6px;
-  height: 48px;
-  background: linear-gradient(145deg, rgba(10, 16, 30, 0.92), rgba(18, 27, 48, 0.92));
-  padding: 4px;
-  border-radius: 14px;
-  border: 1.5px solid rgba(0, 242, 254, 0.45);
+  height: 44px;
+  background: var(--glass-carbon);
+  padding: 3px 4px;
+  border-radius: 12px;
+  border: 1px solid var(--titanium-border);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.52), inset 0 1px 0 rgba(255, 255, 255, 0.12);
   flex-shrink: 0;
   pointer-events: auto;
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(12px);
 }
 
 .btn-hud-bike-switch {
@@ -1040,24 +1107,28 @@ html, body {
 }
 
 /* Zone tactile et contrôles bas ergonomiques */
+/* ==========================================================================
+   TACTICAL BOTTOM COCKPIT — DARK CARBON-TITANIUM 3D PHYSICAL BEVELS
+   ========================================================================== */
 .hud-bottom-controls {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
   width: 100%;
-  padding: 0 12px 14px 12px;
+  padding: 0 12px max(12px, env(safe-area-inset-bottom, 12px)) 12px;
   box-sizing: border-box;
   pointer-events: none;
 }
 
-/* 1. PÉDALE DE FREIN ERGONOMIQUE (POUCE GAUCHE) */
+/* 1. PÉDALE DE FREIN / ARRÊT 3D BEVEL (POUCE GAUCHE) */
 .btn-pedal-brake {
-  width: 88px;
-  height: 68px;
+  width: 94px;
+  height: 72px;
   border-radius: 18px;
-  background: linear-gradient(145deg, #2c0b0e, #5c141a);
-  border: 2px solid #ff4d4f;
-  color: #fff;
+  background: linear-gradient(160deg, #991b1b 0%, #450a0a 60%, #1c0507 100%);
+  border: 1.5px solid rgba(244, 63, 94, 0.72);
+  border-bottom: 4px solid #4c0519;
+  color: #f8fafc;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1065,65 +1136,94 @@ html, body {
   gap: 2px;
   cursor: pointer;
   pointer-events: auto;
-  box-shadow: 0 6px 20px rgba(255, 77, 79, 0.45), inset 0 2px 4px rgba(255, 255, 255, 0.2);
-  transition: transform 0.08s ease, filter 0.08s ease;
+  touch-action: manipulation;
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.65),
+    0 0 16px rgba(244, 63, 94, 0.28),
+    inset 0 2px 1px rgba(255, 255, 255, 0.28),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.55);
+  transition: transform 0.12s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.15s ease;
   position: relative;
   overflow: hidden;
   user-select: none;
   -webkit-user-select: none;
 }
 
+.btn-pedal-brake.mode-engin {
+  background: linear-gradient(160deg, #be123c 0%, #7f1d1d 55%, #2a060d 100%);
+  border-color: rgba(251, 113, 133, 0.8);
+}
+
+.btn-pedal-brake.mode-homme {
+  background: linear-gradient(160deg, #d97706 0%, #92400e 58%, #451a03 100%);
+  border-color: rgba(251, 191, 36, 0.82);
+  border-bottom-color: #451a03;
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.65),
+    0 0 16px rgba(245, 158, 11, 0.3),
+    inset 0 2px 1px rgba(255, 255, 255, 0.32),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.5);
+}
+
+.btn-pedal-brake.mode-homme .pedal-label {
+  color: #fef3c7;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
+}
+
 .pedal-grip-ridges {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0;
   background: repeating-linear-gradient(
     0deg,
-    rgba(0, 0, 0, 0.35),
-    rgba(0, 0, 0, 0.35) 4px,
-    transparent 4px,
-    transparent 8px
+    rgba(0, 0, 0, 0.32),
+    rgba(0, 0, 0, 0.32) 3px,
+    transparent 3px,
+    transparent 7px
   );
   pointer-events: none;
-  opacity: 0.7;
+  opacity: 0.65;
 }
 
 .pedal-icon {
-  font-size: 1.35rem;
+  font-size: 1.32rem;
   z-index: 2;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.55));
 }
 
 .pedal-label {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 900;
-  letter-spacing: 1px;
-  color: #fff;
+  letter-spacing: 0.9px;
+  color: #f8fafc;
   z-index: 2;
-  text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
 }
 
-.btn-pedal-brake:active, .btn-pedal-brake.active {
-  transform: scale(0.92) translateY(3px);
-  background: linear-gradient(145deg, #e74c3c, #c0392b);
-  border-color: #ff7675;
-  box-shadow: 0 0 25px #ff4757, inset 0 3px 6px rgba(0,0,0,0.5);
+.btn-pedal-brake:active,
+.btn-pedal-brake.active {
+  transform: translateY(3px) scale(0.93);
+  border-color: #ffffff;
+  box-shadow: 0 0 26px rgba(244, 63, 94, 0.85), inset 0 3px 8px rgba(0, 0, 0, 0.7);
 }
 
-/* 2. COMPTEUR DE VITESSE CENTRÉ (DÉGAGÉ ET LISIBLE) */
+.btn-pedal-brake.mode-homme:active,
+.btn-pedal-brake.mode-homme.active {
+  box-shadow: 0 0 26px rgba(245, 158, 11, 0.85), inset 0 3px 8px rgba(0, 0, 0, 0.7);
+}
+
+/* 2. COMPTEUR DE VITESSE LOW-PROFILE CARBONE-TITANE */
 .speedometer-center {
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: rgba(15, 23, 42, 0.85);
-  padding: 8px 16px;
-  border-radius: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+  background: var(--glass-carbon);
+  padding: 6px 14px;
+  border-radius: 16px;
+  border: 1px solid var(--titanium-border);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(12px);
   pointer-events: none;
-  min-width: 105px;
+  min-width: 108px;
 }
 
 .speed-dial {
@@ -1133,118 +1233,150 @@ html, body {
 }
 
 .speed-value {
-  font-size: 2.1rem;
+  font-family: var(--font-mono-hud);
+  font-variant-numeric: tabular-nums;
+  font-size: 1.95rem;
   font-weight: 900;
-  color: #fffa65;
+  color: #f8fafc;
   line-height: 1;
-  text-shadow: 0 0 12px rgba(255, 250, 101, 0.4);
+  text-shadow: 0 0 12px rgba(34, 211, 238, 0.45);
 }
 
 .speed-unit {
-  font-size: 0.72rem;
+  font-family: var(--font-mono-hud);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.68rem;
   font-weight: 800;
-  color: #a4b0be;
+  color: var(--accent-cyan);
+  letter-spacing: 0.6px;
 }
 
 .speed-track-gauge {
   width: 100%;
-  height: 5px;
+  height: 4px;
   background: rgba(255, 255, 255, 0.12);
-  border-radius: 3px;
-  margin-top: 5px;
+  border-radius: 999px;
+  margin-top: 4px;
   overflow: hidden;
 }
 
 .speed-fill-gauge {
   height: 100%;
   width: 0%;
-  background: linear-gradient(90deg, #2ed573, #ffa502, #ff4757);
-  transition: width 0.15s ease-out;
-  border-radius: 3px;
+  background: linear-gradient(90deg, var(--accent-emerald), var(--accent-amber), var(--accent-crimson));
+  transition: width 0.12s ease-out;
+  border-radius: 999px;
 }
 
-/* 3. BOUTON KLAXON ERGONOMIQUE (POUCE DROIT) */
-.btn-horn-pedal {
+/* 3. DÉCLENCHEUR D'ARME / KLAXON MÉTALLIQUE CIRCULAIRE (#btn-hud-horn) */
+.btn-horn-pedal,
+#btn-hud-horn {
   width: 68px;
   height: 68px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #ffa502, #ff7f50);
-  border: 2px solid #ffbe76;
-  color: #fff;
+  background: radial-gradient(circle at 30% 25%, #475569 0%, #1e293b 52%, #0f172a 100%);
+  border: 2px solid rgba(226, 232, 240, 0.38);
+  color: #f8fafc;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 6px 20px rgba(255, 127, 80, 0.45);
+  box-shadow:
+    0 8px 22px rgba(0, 0, 0, 0.65),
+    inset 0 2px 2px rgba(255, 255, 255, 0.35),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.65);
   cursor: pointer;
   pointer-events: auto;
-  transition: transform 0.08s ease;
+  touch-action: manipulation;
+  position: relative;
+  transition: transform 0.12s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.15s ease;
   user-select: none;
   -webkit-user-select: none;
 }
 
 .horn-icon {
-  font-size: 1.4rem;
+  font-size: 1.35rem;
   line-height: 1;
 }
 
 .horn-label {
-  font-size: 0.62rem;
+  font-size: 0.6rem;
   font-weight: 900;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.6px;
   margin-top: 2px;
 }
 
-.btn-horn-pedal:active {
-  transform: scale(0.90);
-  filter: brightness(1.15);
-  box-shadow: 0 0 20px #ffa502;
+.btn-horn-pedal:active,
+#btn-hud-horn:active {
+  transform: scale(0.91);
+  box-shadow: 0 0 22px rgba(245, 158, 11, 0.75), inset 0 3px 8px rgba(0, 0, 0, 0.75);
 }
 
-/* BOUTON D'ATTAQUE VISCÉRAL (HACHE, FOUET, AK-47, TRONÇONNEUSE) */
 .btn-attack-pedal {
-  background: linear-gradient(135deg, #ff4757, #ff1744) !important;
-  border: 2px solid #ff6b81 !important;
-  box-shadow: 0 4px 18px rgba(255, 23, 68, 0.55), 0 0 12px rgba(255, 71, 87, 0.4) !important;
-  animation: attackPedalPulse 1.8s infinite ease-in-out !important;
+  background: radial-gradient(circle at 30% 25%, #f43f5e 0%, #be123c 55%, #4c0519 100%) !important;
+  border: 2px solid rgba(251, 113, 133, 0.85) !important;
+  box-shadow:
+    0 6px 22px rgba(244, 63, 94, 0.5),
+    inset 0 2px 2px rgba(255, 255, 255, 0.38),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.6) !important;
+}
+
+.btn-attack-pedal::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid rgba(244, 63, 94, 0.7);
+  pointer-events: none;
+  animation: attackPedalPulse 1.8s infinite ease-in-out;
 }
 
 @keyframes attackPedalPulse {
-  0%, 100% {
-    box-shadow: 0 4px 18px rgba(255, 23, 68, 0.55), 0 0 10px rgba(255, 71, 87, 0.3);
-  }
-  50% {
-    box-shadow: 0 6px 24px rgba(255, 23, 68, 0.85), 0 0 18px rgba(255, 107, 129, 0.7);
-    border-color: #ffd700 !important;
-  }
+  0%, 100% { opacity: 0.35; transform: scale(1); }
+  50% { opacity: 0.95; transform: scale(1.06); }
 }
 
 .btn-attack-pedal:active {
-  transform: scale(0.88) !important;
-  filter: brightness(1.3) !important;
-  box-shadow: 0 0 28px #ff4757 !important;
+  transform: scale(0.9) !important;
+  box-shadow: 0 0 28px rgba(244, 63, 94, 0.9) !important;
 }
 
-/* 4. BOUTON NITRO BOOST 5 SECONDES */
+/* 4. PÉDALE NITRO / BOISSON ÉNERGÉTIQUE 3D BEVEL */
 .btn-nitro-pedal {
-  width: 78px;
-  height: 68px;
+  width: 94px;
+  height: 72px;
   border-radius: 18px;
-  background: linear-gradient(145deg, #0f2027, #203a43, #2c5364);
-  border: 2px solid #00d2d3;
-  color: #fff;
+  background: linear-gradient(160deg, #0e7490 0%, #164e63 58%, #082f49 100%);
+  border: 1.5px solid rgba(34, 211, 238, 0.75);
+  border-bottom: 4px solid #083344;
+  color: #f8fafc;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 6px 20px rgba(0, 210, 211, 0.4);
+  padding: 4px 6px 8px;
+  box-sizing: border-box;
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.65),
+    0 0 18px rgba(34, 211, 238, 0.3),
+    inset 0 2px 1px rgba(255, 255, 255, 0.3),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.5);
   cursor: pointer;
   pointer-events: auto;
-  transition: all 0.12s ease;
+  touch-action: manipulation;
+  transition: transform 0.12s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.15s ease;
   position: relative;
   overflow: hidden;
   user-select: none;
   -webkit-user-select: none;
+}
+
+.btn-nitro-pedal.mode-engin .nitro-label {
+  font-size: 0.72rem;
+  font-weight: 950;
+  letter-spacing: 1px;
+  color: #ecfeff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
 }
 
 .nitro-fill-track {
@@ -1252,57 +1384,116 @@ html, body {
   bottom: 0;
   left: 0;
   width: 100%;
-  height: 6px;
-  background: rgba(0, 0, 0, 0.5);
+  height: 5px;
+  background: rgba(0, 0, 0, 0.55);
 }
 
 .nitro-fill-bar {
   height: 100%;
-  background: linear-gradient(90deg, #00d2d3, #54a0ff, #fff);
-  box-shadow: 0 0 8px #00d2d3;
+  background: linear-gradient(90deg, var(--accent-cyan), #38bdf8, #ffffff);
+  box-shadow: 0 0 8px var(--accent-cyan);
   transition: width 0.15s ease-out;
 }
 
 .nitro-icon {
   font-size: 1.25rem;
   line-height: 1;
-  filter: drop-shadow(0 0 6px #00d2d3);
+  filter: drop-shadow(0 0 6px rgba(34, 211, 238, 0.65));
 }
 
 .nitro-label {
-  font-size: 0.65rem;
+  font-size: 0.66rem;
   font-weight: 900;
   letter-spacing: 0.8px;
-  color: #fff;
+  color: #f8fafc;
 }
 
 .nitro-sub {
+  font-family: var(--font-mono-hud);
+  font-variant-numeric: tabular-nums;
   font-size: 0.58rem;
   font-weight: 800;
-  color: #00d2d3;
+  color: var(--accent-cyan);
 }
 
 .btn-nitro-pedal.ready {
-  border-color: #54a0ff;
-  box-shadow: 0 0 25px rgba(84, 160, 255, 0.85), inset 0 0 15px rgba(0, 210, 211, 0.5);
-  animation: nitroPulseReady 0.8s infinite alternate;
+  border-color: #67e8f9;
+  box-shadow: 0 0 24px rgba(34, 211, 238, 0.75), inset 0 0 14px rgba(34, 211, 238, 0.38);
+}
+
+.btn-nitro-pedal.ready::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 2px solid rgba(103, 232, 249, 0.85);
+  pointer-events: none;
+  animation: nitroPulseReady 0.9s infinite alternate;
 }
 
 @keyframes nitroPulseReady {
-  0% { transform: scale(1); filter: brightness(1); }
-  100% { transform: scale(1.06); filter: brightness(1.25); box-shadow: 0 0 35px #00d2d3; }
+  0% { opacity: 0.35; }
+  100% { opacity: 1; }
 }
 
 .btn-nitro-pedal.active {
-  background: linear-gradient(145deg, #0984e3, #00cec9);
-  border-color: #fff;
-  box-shadow: 0 0 40px #00d2d3, inset 0 0 20px #fff;
-  animation: nitroActiveShake 0.15s infinite alternate;
+  background: linear-gradient(155deg, #06b6d4, #0284c7);
+  border-color: #ffffff;
+  box-shadow: 0 0 36px var(--accent-cyan), inset 0 0 18px rgba(255, 255, 255, 0.7);
 }
 
-@keyframes nitroActiveShake {
-  0% { transform: scale(1.04) rotate(-1deg); }
-  100% { transform: scale(1.04) rotate(1deg); }
+.btn-nitro-pedal:active {
+  transform: translateY(3px) scale(0.93);
+}
+
+/* VARIATION BOISSON ÉNERGÉTIQUE (HOMME / CHEVAL / À PIED) */
+.btn-nitro-pedal.btn-energy-drink,
+.btn-nitro-pedal.mode-homme {
+  width: 110px;
+  height: 74px;
+  background: linear-gradient(160deg, #10b981 0%, #047857 56%, #022c22 100%) !important;
+  border: 1.5px solid #a3e635 !important;
+  border-bottom: 4px solid #022c22 !important;
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.65),
+    0 0 18px rgba(16, 185, 129, 0.45),
+    inset 0 2px 1px rgba(255, 255, 255, 0.32) !important;
+}
+
+.btn-nitro-pedal.btn-energy-drink .nitro-label,
+.btn-nitro-pedal.mode-homme .nitro-label {
+  font-size: 0.56rem !important;
+  font-weight: 950 !important;
+  line-height: 1.08 !important;
+  letter-spacing: 0.3px !important;
+  text-align: center !important;
+  white-space: normal !important;
+  color: #ecfccb !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9) !important;
+  max-width: 98px;
+}
+
+.btn-nitro-pedal.btn-energy-drink .nitro-sub,
+.btn-nitro-pedal.mode-homme .nitro-sub {
+  color: #bef264 !important;
+  font-weight: 900 !important;
+  font-size: 0.55rem !important;
+}
+
+.energy-fill-bar {
+  background: linear-gradient(90deg, #10b981, #84cc16, #fef08a) !important;
+  box-shadow: 0 0 10px #84cc16 !important;
+}
+
+.btn-nitro-pedal.btn-energy-drink.ready {
+  border-color: #d9f99d !important;
+  box-shadow: 0 0 28px rgba(132, 204, 22, 0.85), inset 0 0 14px rgba(163, 230, 53, 0.45) !important;
+}
+
+.btn-nitro-pedal.btn-energy-drink.active {
+  background: linear-gradient(145deg, #84cc16, #10b981) !important;
+  border-color: #ffffff !important;
+  box-shadow: 0 0 38px #a3e635, inset 0 0 18px #ffffff !important;
 }
 
 /* TOAST AVERTISSEMENT FEU ROUGE EN APPROCHE */
@@ -1398,15 +1589,6 @@ html, body {
 }
 
 .traffic-toast-sub {
-  font-size: 0.72rem;
-  color: #f1f2f6;
-  line-height: 1.2;
-}
-  color: #fff;
-  letter-spacing: 1px;
-}
-
-.traffic-toast-sub {
   font-size: 0.78rem;
   font-weight: 700;
   color: #ffeaa7;
@@ -1444,7 +1626,7 @@ html, body {
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
-  transition: all 0.15s ease;
+  transition: transform 0.12s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.15s ease;
   min-height: 36px;
   display: inline-flex;
   align-items: center;
@@ -2055,11 +2237,12 @@ html, body {
   100% { opacity: 0; }
 }
 
-.city-detail-card {
-  background: var(--glass-bg);
-  backdrop-filter: blur(14px);
-  border: 1.5px solid rgba(255, 255, 255, 0.18);
-  border-radius: 22px;
+.city-detail-card,
+#city-detail {
+  background: var(--glass-carbon);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--titanium-border);
+  border-radius: 20px;
   padding: 16px;
   margin-top: 12px;
   margin-bottom: 24px;
@@ -2071,7 +2254,7 @@ html, body {
   margin-left: auto;
   margin-right: auto;
   box-sizing: border-box;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.12);
   flex-shrink: 0;
 }
 
@@ -2361,7 +2544,7 @@ html, body {
   border-radius: 20px;
   padding: 6px 14px;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: transform 0.12s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.15s ease;
 }
 
 .stage-pill:hover, .stage-pill.active {
@@ -2426,7 +2609,7 @@ html, body {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: transform 0.12s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.15s ease;
   flex: 0 0 auto;
 }
 
@@ -2460,7 +2643,7 @@ html, body {
   border-radius: 14px;
   padding: 10px 14px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: transform 0.12s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.15s ease;
   white-space: nowrap;
 }
 
@@ -2525,7 +2708,7 @@ html, body {
   font-weight: 800;
   color: var(--text-muted);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: transform 0.12s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.15s ease;
   white-space: nowrap;
 }
 
@@ -2605,22 +2788,27 @@ html, body {
   max-width: 420px;
   max-height: calc(100vh - env(safe-area-inset-top, 32px) - 60px);
   overflow-y: auto;
-  background: var(--dark-bg);
-  border: 1px solid var(--border-light);
-  border-radius: 26px;
+  background: var(--glass-carbon);
+  backdrop-filter: blur(18px);
+  border: 1px solid var(--titanium-border);
+  border-radius: 22px;
   padding: 22px;
   display: flex;
   flex-direction: column;
   gap: 14px;
-  box-shadow: 0 15px 40px rgba(0,0,0,0.6);
-  animation: modalPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 18px 46px rgba(0, 0, 0, 0.72), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  animation: modalPop 0.25s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .modal-title {
-  font-size: 1.6rem;
-  font-weight: 900;
+  font-size: 1.48rem;
+  font-weight: 950;
   text-align: center;
-  color: #fffa65;
+  letter-spacing: 0.6px;
+  background: linear-gradient(180deg, #ffffff 0%, #cbd5e1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.7));
 }
 
 .results-stats {
@@ -2661,34 +2849,17 @@ html, body {
 }
 
 @keyframes pulseButton {
-  0%, 100% { transform: scale(1); box-shadow: 0 6px 20px var(--primary-glow); }
-  50% { transform: scale(1.04); box-shadow: 0 10px 28px rgba(255, 71, 87, 0.7); }
+  0%, 100% { box-shadow: 0 6px 20px var(--primary-glow); }
+  50% { box-shadow: 0 10px 28px rgba(244, 63, 94, 0.72); }
 }
 
 @keyframes modalPop {
-  0% { transform: scale(0.85); opacity: 0; }
+  0% { transform: scale(0.9); opacity: 0; }
   100% { transform: scale(1); opacity: 1; }
 }
 
 /* --- MENTIONS LÉGALES & COPYRIGHT EOMEDIA 2026 --- */
-.splash-badge-version {
-  position: absolute;
-  top: 18px;
-  right: 18px;
-  background: rgba(15, 23, 42, 0.75);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(8px);
-  color: #a4b0be;
-  font-size: 0.72rem;
-  font-weight: 700;
-  padding: 4px 10px;
-  border-radius: 12px;
-  letter-spacing: 0.5px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  z-index: 10;
-  display: flex;
-  align-items: center;
-}
+/* (splash-badge-version unifié dans .splash-header-bar en haut du fichier) */
 
 .badge-beta-pill {
   background: linear-gradient(135deg, #ff4757, #ff6b81);
@@ -2922,7 +3093,7 @@ html, body {
   padding: 10px 18px;
   border-radius: 12px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: transform 0.12s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.15s ease;
 }
 
 .ad-btn-skip:hover {
@@ -3620,14 +3791,24 @@ html, body {
   justify-content: center;
   gap: 6px;
   box-shadow: 0 4px 16px rgba(214, 48, 49, 0.5);
+  position: relative;
   margin: 0;
+  touch-action: manipulation;
+}
+
+.btn-wmd-strike::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  border: 1.5px solid rgba(244, 63, 94, 0.75);
+  pointer-events: none;
   animation: pulseWmdBtn 2s infinite ease-in-out;
 }
 
 @keyframes pulseWmdBtn {
-  0% { transform: scale(1); box-shadow: 0 4px 16px rgba(214, 48, 49, 0.5); }
-  50% { transform: scale(1.02); box-shadow: 0 4px 22px rgba(255, 56, 56, 0.85); }
-  100% { transform: scale(1); box-shadow: 0 4px 16px rgba(214, 48, 49, 0.5); }
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 1; }
 }
 
 .pill-rank-closed {
@@ -4731,7 +4912,7 @@ html, body {
   -webkit-tap-highlight-color: transparent;
   will-change: transform;
   transform: translateZ(0);
-  transition: transform 0.28s cubic-bezier(0.34, 1.8, 0.64, 1), filter 0.15s ease, box-shadow 0.18s ease;
+  transition: transform 0.12s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.15s ease;
 }
 
 .btn-arcade:active,
@@ -4898,7 +5079,7 @@ html, body {
   white-space: nowrap;
   flex-shrink: 0;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: transform 0.12s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.15s ease;
   user-select: none;
 }
 
@@ -4953,12 +5134,13 @@ html, body {
 }
 
 .region-tab-pill {
+  position: relative;
   flex: 1 1 auto;
-  min-height: 30px;
-  padding: 4px 10px;
-  border-radius: 999px;
-  background: rgba(15, 23, 42, 0.85);
-  border: 1.5px solid rgba(148, 163, 184, 0.35);
+  min-height: 34px;
+  padding: 5px 12px;
+  border-radius: 12px;
+  background: var(--glass-carbon);
+  border: 1px solid var(--titanium-border);
   color: #cbd5e1;
   font-family: var(--font-header);
   font-size: 0.68rem;
@@ -4966,7 +5148,8 @@ html, body {
   letter-spacing: 0.4px;
   white-space: nowrap;
   cursor: pointer;
-  transition: transform 0.14s ease, background 0.18s ease, border-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+  touch-action: manipulation;
+  transition: transform 0.12s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.15s ease;
   user-select: none;
 }
 
@@ -4975,10 +5158,11 @@ html, body {
 }
 
 .region-tab-pill.active {
-  background: linear-gradient(135deg, #00cec9 0%, #0984e3 100%);
-  border-color: #ffffff;
+  background: linear-gradient(180deg, rgba(19, 27, 43, 0.96), rgba(11, 16, 27, 0.96));
+  border-color: rgba(34, 211, 238, 0.55);
+  border-bottom: 2.5px solid var(--accent-cyan);
   color: #ffffff;
-  box-shadow: 0 3px 12px rgba(0, 206, 201, 0.45);
+  box-shadow: 0 4px 14px rgba(34, 211, 238, 0.28);
 }
 
 .city-pin.region-dimmed {
@@ -5424,206 +5608,8 @@ html, body {
 }
 
 /* ==========================================================================
-   ERGONOMIE COCKPIT DU HUD DE JEU MOBILE (COMMANDES DU BAS HAUTE RÉACTIVITÉ)
+   COCKPIT DU HUD DE JEU MOBILE (CONSOLIDÉ EN HAUT DU FICHIER)
    ========================================================================== */
-
-.hud-bottom-controls {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  width: 100%;
-  padding: 0 14px max(14px, env(safe-area-inset-bottom, 14px)) 14px;
-  box-sizing: border-box;
-  pointer-events: none;
-}
-
-.btn-pedal-brake {
-  width: 96px;
-  height: 74px;
-  border-radius: 22px;
-  background: linear-gradient(155deg, #d90429 0%, #8d0801 55%, #4a0404 100%);
-  border: 2.5px solid #ff758f;
-  color: #fff;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-  cursor: pointer;
-  pointer-events: auto;
-  box-shadow: 0 8px 24px rgba(217, 4, 41, 0.55), inset 0 2px 5px rgba(255, 255, 255, 0.38);
-  position: relative;
-  overflow: hidden;
-  transition: transform 0.08s ease, box-shadow 0.12s ease, background 0.15s ease;
-  user-select: none;
-  -webkit-user-select: none;
-}
-
-.btn-pedal-brake.mode-engin {
-  background: linear-gradient(155deg, #ef233c 0%, #b80d27 55%, #590d22 100%);
-  border-color: #ff8fa3;
-  box-shadow: 0 8px 26px rgba(239, 35, 60, 0.6), inset 0 2px 5px rgba(255, 255, 255, 0.4);
-}
-
-.btn-pedal-brake.mode-homme {
-  background: linear-gradient(155deg, #f59e0b 0%, #d97706 55%, #78350f 100%);
-  border-color: #fde047;
-  box-shadow: 0 8px 26px rgba(245, 158, 11, 0.6), inset 0 2px 5px rgba(255, 255, 255, 0.42);
-}
-
-.btn-pedal-brake.mode-homme .pedal-label {
-  color: #fef9c3;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.85);
-}
-
-.btn-pedal-brake:active, .btn-pedal-brake.active {
-  transform: scale(0.91) translateY(3px) !important;
-  background: linear-gradient(145deg, #ff0a54, #c9184a) !important;
-  border-color: #ffffff !important;
-  box-shadow: 0 0 32px #ff0a54, inset 0 4px 8px rgba(0, 0, 0, 0.65) !important;
-}
-
-.btn-pedal-brake.mode-homme:active, .btn-pedal-brake.mode-homme.active {
-  background: linear-gradient(145deg, #fbbf24, #d97706) !important;
-  border-color: #ffffff !important;
-  box-shadow: 0 0 32px #fbbf24, inset 0 4px 8px rgba(0, 0, 0, 0.6) !important;
-}
-
-.btn-nitro-pedal {
-  width: 96px;
-  height: 74px;
-  border-radius: 22px;
-  background: linear-gradient(155deg, #0077b6 0%, #023e8a 55%, #03045e 100%);
-  border: 2.5px solid #00f5d4;
-  color: #fff;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 4px 6px 8px;
-  box-sizing: border-box;
-  box-shadow: 0 8px 26px rgba(0, 180, 216, 0.55), inset 0 2px 5px rgba(255, 255, 255, 0.38);
-  cursor: pointer;
-  pointer-events: auto;
-  transition: all 0.12s ease;
-  position: relative;
-  overflow: hidden;
-  user-select: none;
-  -webkit-user-select: none;
-}
-
-.btn-nitro-pedal.mode-engin {
-  background: linear-gradient(155deg, #0096c7 0%, #00509d 55%, #001d3d 100%);
-  border-color: #48cae4;
-  box-shadow: 0 8px 26px rgba(0, 150, 199, 0.6), inset 0 2px 5px rgba(255, 255, 255, 0.4);
-}
-
-.btn-nitro-pedal.mode-engin .nitro-label {
-  font-size: 0.74rem;
-  font-weight: 950;
-  letter-spacing: 1.2px;
-  color: #e0fbfc;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
-}
-
-.btn-nitro-pedal:active {
-  transform: scale(0.91) translateY(3px) !important;
-  box-shadow: 0 0 32px #00f5d4, inset 0 4px 8px rgba(0, 0, 0, 0.6) !important;
-}
-
-/* VARIATION BOISSON ÉNERGÉTIQUE (HOMME / CHEVAL / À PIED) */
-.btn-nitro-pedal.btn-energy-drink,
-.btn-nitro-pedal.mode-homme {
-  width: 112px;
-  height: 76px;
-  background: linear-gradient(155deg, #10b981 0%, #059669 50%, #064e3b 100%) !important;
-  border: 2.5px solid #a3e635 !important;
-  box-shadow: 0 8px 26px rgba(16, 185, 129, 0.6), inset 0 2px 5px rgba(255, 255, 255, 0.42) !important;
-}
-
-.btn-nitro-pedal.btn-energy-drink .nitro-label,
-.btn-nitro-pedal.mode-homme .nitro-label {
-  font-size: 0.56rem !important;
-  font-weight: 950 !important;
-  line-height: 1.08 !important;
-  letter-spacing: 0.3px !important;
-  text-align: center !important;
-  white-space: normal !important;
-  color: #ecfccb !important;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9) !important;
-  max-width: 100px;
-}
-
-.btn-nitro-pedal.btn-energy-drink .nitro-sub,
-.btn-nitro-pedal.mode-homme .nitro-sub {
-  color: #bef264 !important;
-  font-weight: 900 !important;
-  font-size: 0.55rem !important;
-}
-
-.energy-fill-bar {
-  background: linear-gradient(90deg, #10b981, #84cc16, #fef08a) !important;
-  box-shadow: 0 0 10px #84cc16 !important;
-}
-
-.btn-nitro-pedal.btn-energy-drink.ready {
-  border-color: #d9f99d !important;
-  box-shadow: 0 0 30px rgba(132, 204, 22, 0.95), inset 0 0 16px rgba(163, 230, 53, 0.55) !important;
-  animation: energyPulseReady 0.85s infinite alternate !important;
-}
-
-@keyframes energyPulseReady {
-  0% { transform: scale(1); filter: brightness(1); }
-  100% { transform: scale(1.05); filter: brightness(1.22); box-shadow: 0 0 36px #84cc16; }
-}
-
-.btn-nitro-pedal.btn-energy-drink.active {
-  background: linear-gradient(145deg, #84cc16, #10b981) !important;
-  border-color: #fff !important;
-  box-shadow: 0 0 42px #a3e635, inset 0 0 20px #fff !important;
-}
-
-.btn-horn-pedal {
-  width: 72px;
-  height: 72px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #ffa502, #ff7f50);
-  border: 2px solid #ffbe76;
-  color: #fff;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 6px 20px rgba(255, 127, 80, 0.5);
-  cursor: pointer;
-  pointer-events: auto;
-  transition: transform 0.08s ease;
-  user-select: none;
-  -webkit-user-select: none;
-}
-
-.btn-horn-pedal:active {
-  transform: scale(0.88) !important;
-  filter: brightness(1.2);
-  box-shadow: 0 0 25px #ffa502 !important;
-}
-
-.btn-attack-pedal {
-  background: linear-gradient(135deg, #ff4757, #ff1744) !important;
-  border: 2px solid #ff6b81 !important;
-  box-shadow: 0 4px 20px rgba(255, 23, 68, 0.6), 0 0 14px rgba(255, 71, 87, 0.45) !important;
-  animation: attackPedalPulse 1.8s infinite ease-in-out !important;
-}
-
-.speedometer-center {
-  background: rgba(10, 16, 30, 0.9);
-  border: 1.5px solid rgba(255, 255, 255, 0.22);
-  border-radius: 22px;
-  padding: 8px 18px;
-  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
-}
-
 .touch-hint {
   display: none !important; /* Suppression radicale du texte encombrant sur l'asphalte */
 }
@@ -6049,8 +6035,8 @@ html, body {
 }
 
 @keyframes pulse-ret-btn {
-  0% { transform: scale(0.95); box-shadow: 0 0 10px rgba(46, 213, 115, 0.5); }
-  100% { transform: scale(1.05); box-shadow: 0 0 22px rgba(46, 213, 115, 0.95); }
+  0% { box-shadow: 0 0 10px rgba(16, 185, 129, 0.5); }
+  100% { box-shadow: 0 0 22px rgba(16, 185, 129, 0.95); }
 }
 
 .objective-100-complete {
@@ -6079,8 +6065,8 @@ html, body {
 }
 
 @keyframes pulse-assault-btn {
-  0% { transform: scale(0.98); box-shadow: 0 4px 14px rgba(55, 66, 250, 0.4); }
-  100% { transform: scale(1.02); box-shadow: 0 6px 26px rgba(55, 66, 250, 0.85); }
+  0% { box-shadow: 0 4px 14px rgba(34, 211, 238, 0.35); }
+  100% { box-shadow: 0 6px 26px rgba(34, 211, 238, 0.78); }
 }
 
 
@@ -6158,18 +6144,275 @@ html, body {
 .daily-mission-reward { color: #fffa65; font-weight: 900; }
 .daily-mission-done { color: #2ed573; font-weight: 900; }
 .daily-mission-claim {
-  background: linear-gradient(135deg, #ffd32a, #ff9f43);
-  color: #1e272e;
+  position: relative;
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  color: #0b101b;
   border: none;
   border-radius: 8px;
-  padding: 3px 10px;
+  padding: 4px 10px;
   font-size: 0.7rem;
   font-weight: 900;
   cursor: pointer;
   letter-spacing: 0.5px;
-  animation: pulse 1.2s ease-in-out infinite;
+  touch-action: manipulation;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.55);
 }
-@keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.06); }
+
+/* ==========================================================================
+   GARAGE, RESULTS MODAL & RUINS HUD — CARBON-TITANIUM COMPONENT CLASSES
+   ========================================================================== */
+.garage-bike-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+  gap: 10px;
+}
+.garage-bike-name {
+  font-size: 1.32rem;
+  font-weight: 950;
+  color: #f8fafc;
+  margin: 2px 0;
+  letter-spacing: 0.4px;
+}
+.garage-bike-tagline {
+  font-size: 0.78rem;
+  color: var(--accent-cyan);
+  font-weight: 800;
+}
+.garage-bike-desc {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  max-width: 48%;
+  text-align: right;
+  line-height: 1.32;
+}
+.garage-stat-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+.garage-stat-val-speed {
+  font-family: var(--font-mono-hud);
+  font-variant-numeric: tabular-nums;
+  color: #fbbf24;
+}
+.garage-stat-val-handling {
+  font-family: var(--font-mono-hud);
+  font-variant-numeric: tabular-nums;
+  color: var(--accent-emerald);
+}
+.garage-stat-val-accel {
+  font-family: var(--font-mono-hud);
+  font-variant-numeric: tabular-nums;
+  color: var(--accent-crimson);
+}
+.stat-fill-handling {
+  background: linear-gradient(90deg, #10b981, #34d399);
+}
+.stat-fill-accel {
+  background: linear-gradient(90deg, #f59e0b, #f43f5e);
+}
+.garage-color-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+}
+.garage-color-label {
+  font-size: 0.76rem;
+  font-weight: 800;
+  color: #cbd5e1;
+  letter-spacing: 0.4px;
+}
+.garage-cta-wrap {
+  margin-top: 12px;
+}
+.btn-garage-cta {
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 16px;
+  font-size: 0.96rem;
+  touch-action: manipulation;
+}
+
+/* Results Modal Clean Classes */
+.result-val-highlight {
+  font-family: var(--font-mono-hud);
+  font-variant-numeric: tabular-nums;
+  color: #fbbf24;
+}
+.result-row-divider {
+  border-top: 1px solid var(--titanium-border);
+  padding-top: 8px;
+}
+.result-val-gold {
+  font-family: var(--font-mono-hud);
+  font-variant-numeric: tabular-nums;
+  color: var(--gold);
+}
+.result-row-extermination {
+  background: rgba(244, 63, 94, 0.14);
+  border: 1px solid rgba(244, 63, 94, 0.35);
+  padding: 7px 10px;
+  border-radius: 10px;
+  margin-top: 4px;
+}
+.result-exterm-label {
+  color: var(--accent-crimson);
+  font-weight: 800;
+}
+.result-exterm-val {
+  font-family: var(--font-mono-hud);
+  font-variant-numeric: tabular-nums;
+  color: #fbbf24;
+  font-weight: 800;
+}
+.result-row-world {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  padding: 2px 4px;
+}
+.result-world-val {
+  font-family: var(--font-mono-hud);
+  font-variant-numeric: tabular-nums;
+  color: var(--accent-emerald);
+  font-weight: 800;
+}
+.result-unlock-banner {
+  background: rgba(16, 185, 129, 0.16);
+  border: 1px solid rgba(16, 185, 129, 0.48);
+  padding: 10px 12px;
+  border-radius: 14px;
+  text-align: center;
+}
+.result-unlock-title {
+  color: var(--accent-emerald);
+}
+.result-unlock-desc {
+  font-size: 0.84rem;
+  margin-top: 4px;
+}
+.results-actions-primary-dock {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  margin-top: 12px;
+}
+.btn-results-next-raid {
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  border: 1.5px solid rgba(167, 243, 208, 0.65);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+  font-size: 1rem;
+  font-weight: 950;
+}
+.btn-results-map-return {
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #0ea5e9, #1e293b);
+  border: 1.5px solid rgba(34, 211, 238, 0.55);
+  box-shadow: 0 6px 20px rgba(14, 165, 233, 0.35);
+  font-size: 0.98rem;
+  font-weight: 950;
+}
+.results-actions-secondary-row {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  margin-top: 8px;
+}
+.btn-results-sec {
+  flex: 1;
+  min-height: 44px;
+  padding: 10px;
+  font-size: 0.84rem;
+}
+.btn-results-wmd {
+  flex: 1.2;
+  min-height: 44px;
+  padding: 10px;
+  font-size: 0.82rem;
+  background: rgba(244, 63, 94, 0.22);
+  border: 1.5px solid rgba(244, 63, 94, 0.72);
+  color: #fda4af;
+}
+
+/* Ruins HUD Clean Classes */
+.ruins-hud-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--glass-carbon);
+  backdrop-filter: blur(12px);
+  border: 1.5px solid rgba(244, 63, 94, 0.7);
+  padding: 6px 12px;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.75);
+  pointer-events: auto;
+  flex: 1;
+  min-width: 0;
+}
+.ruins-hud-icon {
+  font-size: 1.25rem;
+}
+.ruins-hud-text {
+  min-width: 0;
+  overflow: hidden;
+}
+.ruins-hud-title {
+  font-size: 0.76rem;
+  font-weight: 950;
+  color: #fda4af;
+  letter-spacing: 0.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.ruins-hud-sub {
+  font-size: 0.62rem;
+  color: var(--text-muted);
+  font-weight: 800;
+}
+.btn-ruins-exit-top {
+  background: linear-gradient(135deg, #f43f5e, #be123c);
+  border: 1.5px solid rgba(251, 113, 133, 0.8);
+  color: #ffffff;
+  font-weight: 950;
+  font-size: 0.84rem;
+  padding: 8px 14px;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(244, 63, 94, 0.55);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.btn-ruins-exit-thumb {
+  width: 78px;
+  height: 78px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 25%, #f43f5e 0%, #be123c 60%, #4c0519 100%);
+  border: 2px solid rgba(251, 113, 133, 0.85);
+  box-shadow: 0 8px 24px rgba(244, 63, 94, 0.65);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  color: #ffffff;
+}
+.ruins-thumb-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+.ruins-thumb-label {
+  font-size: 0.66rem;
+  font-weight: 950;
+  letter-spacing: 0.5px;
 }

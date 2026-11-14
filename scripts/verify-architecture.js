@@ -108,6 +108,15 @@ assert(soundContent.includes('pauseGameplayAudio()') && soundContent.includes('r
 assert(!soundContent.includes('this.musicDelay'), 'Audio Qualité : Effet d\'écho gênant (musicDelay) supprimé du mixage musical');
 assert(gameStateContent.includes('maxSpeed: 6.7') && uiContent.includes('Math.round(bike.maxSpeed * 3.6)'), 'Équilibrage : Vitesses et paramètres des 14 engins/coureurs recalibrés logiquement (~24 km/h à pied)');
 
+// 11. Tests v0.9.55-beta : Refonte AAA Réaliste (PBR, Audio, Animation/VFX, UI Carbon-Titanium)
+const trafficContent = fs.readFileSync(path.join(rootDir, 'src', 'entities', 'Traffic.js'), 'utf8');
+const styleContent = fs.readFileSync(path.join(rootDir, 'src', 'ui', 'style.css'), 'utf8');
+assert(!envContent.includes('MeshToonMaterial') && !bikeContent.includes('MeshToonMaterial') && !charsContent.includes('MeshToonMaterial') && !trafficContent.includes('MeshToonMaterial'), 'Graphisme Réaliste : Zéro MeshToonMaterial cartoon dans Environment/Bike/Characters/Traffic');
+assert(bikeContent.includes('MeshPhysicalMaterial') && texContent.includes('getRoadRoughnessMap') && texContent.includes('THREE.NoColorSpace'), 'Graphisme PBR : Carrosseries clearcoat + normal/roughness maps procédurales linéaires actives');
+assert(soundContent.includes('ENGINE_PROFILES') && soundContent.includes('musicDuckGain') && soundContent.includes('_startLookaheadSequencer'), 'Audio Révolutionné : 5 profils moteurs réalistes, sidechain ducking et séquenceur lookahead 100ms');
+assert(bikeContent.includes('suspVel') && charsContent.includes('char.flyVelY = -char.flyVelY * 0.32'), 'Animation & VFX : Suspension ressort-amortisseur 2nd ordre et ragdoll piétons avec rebonds');
+assert(styleContent.includes('--glass-carbon') && !styleContent.includes('transition: all'), 'UI/UX Carbon-Titanium : Glassmorphisme sombre et zéro transition: all bloquant');
+
 console.log(`\n📊 RÉSULTAT DU CONTRÔLE QUALITÉ : ${passedTests}/${totalTests} tests réussis.`);
 if (passedTests === totalTests) {
   console.log('✨ Architecture certifiée propre, modulaire et conforme SOLID.');

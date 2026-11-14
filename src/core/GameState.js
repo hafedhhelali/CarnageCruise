@@ -2716,7 +2716,7 @@ export class GameState {
 
     const isNonMotorized = this.selectedBike && ['run_ak47', 'run_chainsaw', 'cheval'].includes(this.selectedBike.id);
     if (!isNonMotorized) {
-      soundManager.startEngine();
+      soundManager.startEngine(this.selectedBike?.id);
       soundManager.updateEngine(0.08); // Ronronnement au ralenti à l'arrêt
     } else {
       soundManager.stopEngine();

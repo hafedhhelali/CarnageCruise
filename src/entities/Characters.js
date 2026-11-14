@@ -208,8 +208,6 @@ export class CharacterSystem {
     this.poolSize = 50; // Foule dense pour l'épreuve d'extermination de la population mondiale
     this.characters = [];
     this.materialsCache = {};
-    // Palette cel-shading partagée (crêtes d'ombre cartoon concertées)
-    this.toonGradient = textureFactory.getToonGradientMap();
 
     this.initPool();
   }
@@ -217,11 +215,10 @@ export class CharacterSystem {
   getMaterial(color, roughness = 0.35) {
     const key = `${color}_${roughness}`;
     if (!this.materialsCache[key]) {
-      // NB : MeshToonMaterial ignore 'roughness' — on la conserve pour la clé de cache,
-      // et on garantit une couleur valide (cel-shading 4 bandes partagé)
-      this.materialsCache[key] = new THREE.MeshToonMaterial({
+      this.materialsCache[key] = new THREE.MeshStandardMaterial({
         color: color === undefined || color === null ? 0xf5f6fa : color,
-        gradientMap: this.toonGradient
+        roughness,
+        metalness: 0.02
       });
     }
     return this.materialsCache[key];
@@ -711,7 +708,9 @@ export class CharacterSystem {
         flyVelZ: 0,
         flySpinX: 0,
         flySpinY: 0,
-        flySpinZ: 0
+        flySpinZ: 0,
+        bounceCount: 0,
+        settleTimer: 0
       });
     }
   }
@@ -724,6 +723,8 @@ export class CharacterSystem {
       char.isHornPanicked = false;
       char.hornPanicTimer = 0;
       char.hasNearMissed = false;
+      char.bounceCount = 0;
+      char.settleTimer = 0;
       char.group.visible = false;
       char.group.position.set(0, -100, 0);
       char.group.rotation.set(0, 0, 0);
@@ -828,6 +829,8 @@ export class CharacterSystem {
     char.flySpinX = (Math.random() - 0.5) * 16.0;
     char.flySpinY = (Math.random() - 0.5) * 18.0;
     char.flySpinZ = dirX * (8.0 + Math.random() * 8.0);
+    char.bounceCount = 0;
+    char.settleTimer = 0;
   }
 
   update(delta, playerZ, bikeX, bikeSpeed, onCollision, roadCurveFunc, onNearMiss, isInvulnerable = false) {
@@ -836,8 +839,23 @@ export class CharacterSystem {
     this.characters.forEach(char => {
       if (!char.group.visible) return;
 
-      // 1. Chute et voltige burlesque après choc
+      // 1. Chute, rebonds ragdoll et voltige après choc
       if (char.isFlying) {
+        if (char.settleTimer > 0) {
+          char.settleTimer += delta;
+          char.group.position.x += char.flyVelX * delta;
+          char.group.position.z += char.flyVelZ * delta;
+          const damp = Math.exp(-8.0 * delta);
+          char.flyVelX *= damp;
+          char.flyVelZ *= damp;
+          if (char.settleTimer >= 0.35) {
+            char.isFlying = false;
+            char.group.visible = false;
+            if (char.dizzyGroup) char.dizzyGroup.visible = false;
+          }
+          return;
+        }
+
         char.group.position.x += char.flyVelX * delta;
         char.group.position.y += char.flyVelY * delta;
         char.group.position.z += char.flyVelZ * delta;
@@ -849,6 +867,13 @@ export class CharacterSystem {
         char.group.rotation.y += char.flySpinY * delta;
         char.group.rotation.z += char.flySpinZ * delta;
 
+        // Membres en moulinet pendant le vol
+        char.armL.rotation.x += delta * 14.0;
+        char.armR.rotation.x -= delta * 14.0;
+        const limbSwing = Math.sin(char.flyVelY * 1.4) * 0.9;
+        char.legL.rotation.x = limbSwing;
+        char.legR.rotation.x = -limbSwing;
+
         // Rotation des étoiles de vertige
         if (char.dizzyGroup && char.dizzyGroup.visible) {
           char.dizzyGroup.rotation.y += delta * 15.0;
@@ -856,9 +881,18 @@ export class CharacterSystem {
 
         if (char.group.position.y <= 0) {
           char.group.position.y = 0;
-          char.isFlying = false;
-          char.group.visible = false;
-          if (char.dizzyGroup) char.dizzyGroup.visible = false;
+          if (char.bounceCount < 2 && Math.abs(char.flyVelY) > 1.8) {
+            char.flyVelY = -char.flyVelY * 0.32;
+            char.flyVelX *= 0.65;
+            char.flyVelZ *= 0.65;
+            char.flySpinX *= 0.6;
+            char.flySpinY *= 0.6;
+            char.flySpinZ *= 0.6;
+            char.bounceCount++;
+          } else {
+            char.flyVelY = 0;
+            char.settleTimer = 0.001;
+          }
         }
         return;
       }
@@ -909,29 +943,31 @@ export class CharacterSystem {
           // Orientation vers la fuite
           char.group.rotation.y = char.fleeDirectionX > 0 ? Math.PI / 2 : -Math.PI / 2;
 
-          // Animation de panique : bras en l'air qui moulinent, tête tournée en arrière
+          // Animation de panique : bras en l'air qui moulinent (blend fluide), tête tournée en arrière
           char.walkPhase += delta * 18.0;
-          char.armL.rotation.x = 2.5 + Math.sin(char.fleeTimer * 24.0) * 0.7;
-          char.armR.rotation.x = 2.5 + Math.cos(char.fleeTimer * 24.0) * 0.7;
-          
+          const armBlend = 1.0 - Math.exp(-12.0 * delta);
+          const safeMargin = Math.abs(char.group.position.x - fleeCurveX) > 4.8;
+          const targetArmL = safeMargin ? 0 : (2.5 + Math.sin(char.fleeTimer * 24.0) * 0.7);
+          const targetArmR = safeMargin ? 0 : (2.5 + Math.cos(char.fleeTimer * 24.0) * 0.7);
+          char.armL.rotation.x += (targetArmL - char.armL.rotation.x) * armBlend;
+          char.armR.rotation.x += (targetArmR - char.armR.rotation.x) * armBlend;
+          if (char.torso) char.torso.rotation.y = Math.sin(char.walkPhase) * 0.16;
+
           // Regard terrifié en arrière vers le bolide qui arrive
           char.headGroup.rotation.y = (char.fleeDirectionX > 0 ? -0.55 : 0.55) + Math.sin(char.fleeTimer * 18.0) * 0.2;
-          
+
           // Bouche ouverte de cri
           if (char.mouth) {
-            char.mouth.scale.set(1.8, 1.6, 1.2);
+            if (safeMargin) char.mouth.scale.set(1.1, 0.6, 0.5);
+            else char.mouth.scale.set(1.8, 1.6, 1.2);
           }
 
-          // Foulées de sprint
+          // Foulées de sprint + rebond vertical subtil
           const legAngle = Math.sin(char.walkPhase) * 1.05;
           char.legL.rotation.x = legAngle;
           char.legR.rotation.x = -legAngle;
-
-          if (Math.abs(char.group.position.x - fleeCurveX) > 4.8) {
-            char.armL.rotation.x = 0;
-            char.armR.rotation.x = 0;
-            if (char.mouth) char.mouth.scale.set(1.1, 0.6, 0.5);
-          }
+          const baseY = char.isOnSidewalk ? 0.25 : 0.02;
+          char.group.position.y = baseY + Math.abs(Math.sin(char.walkPhase)) * 0.05;
         } else {
           // Marche normale décontractée avec animations spécifiques aux rôles
           char.isFleeing = false;
@@ -943,14 +979,17 @@ export class CharacterSystem {
 
           char.walkPhase += delta * 5.8;
           const legAngle = Math.sin(char.walkPhase) * 0.55;
+          const strideBob = Math.abs(Math.sin(char.walkPhase)) * 0.04;
+          const armBlend = 1.0 - Math.exp(-10.0 * delta);
           char.legL.rotation.x = legAngle;
           char.legR.rotation.x = -legAngle;
           char.headGroup.rotation.y = 0;
 
           if (char.typeDef.hasStroller) {
             // Parent poussant la poussette : les 2 bras fermement posés sur la poignée
-            char.armL.rotation.x = -0.72 + Math.sin(char.walkPhase) * 0.05;
-            char.armR.rotation.x = -0.72 - Math.sin(char.walkPhase) * 0.05;
+            char.armL.rotation.x += ((-0.72 + Math.sin(char.walkPhase) * 0.05) - char.armL.rotation.x) * armBlend;
+            char.armR.rotation.x += ((-0.72 - Math.sin(char.walkPhase) * 0.05) - char.armR.rotation.x) * armBlend;
+            if (char.torso) char.torso.rotation.y = Math.sin(char.walkPhase) * 0.05;
 
             // Rotation synchronisée des 4 roues de poussette sur le bitume
             if (char.strollerWheels && char.strollerWheels.length > 0) {
@@ -962,16 +1001,22 @@ export class CharacterSystem {
           } else if (char.typeDef.hasCane) {
             // Démarche claudicante du vieux : la canne tape le sol en cadence
             const hobble = Math.sin(char.walkPhase);
-            if (char.torso) char.torso.rotation.z = hobble * 0.08;
+            if (char.torso) {
+              char.torso.rotation.z = hobble * 0.08;
+              char.torso.rotation.y = hobble * 0.09;
+            }
             char.headGroup.rotation.z = -hobble * 0.06;
             // Bras droit avançant la canne pour la planter
-            char.armR.rotation.x = -0.38 + Math.max(0, hobble) * 0.42;
-            char.armL.rotation.x = -hobble * 0.35;
+            char.armR.rotation.x += ((-0.38 + Math.max(0, hobble) * 0.42) - char.armR.rotation.x) * armBlend;
+            char.armL.rotation.x += ((-hobble * 0.35) - char.armL.rotation.x) * armBlend;
           } else {
-            // Balancement classique des bras
-            char.armL.rotation.x = -legAngle * 0.65;
-            char.armR.rotation.x = legAngle * 0.65;
-            if (char.torso) char.torso.rotation.z = 0;
+            // Balancement classique des bras + torsion du torse
+            char.armL.rotation.x += ((-legAngle * 0.65) - char.armL.rotation.x) * armBlend;
+            char.armR.rotation.x += ((legAngle * 0.65) - char.armR.rotation.x) * armBlend;
+            if (char.torso) {
+              char.torso.rotation.z = 0;
+              char.torso.rotation.y = Math.sin(char.walkPhase) * 0.11;
+            }
             char.headGroup.rotation.z = 0;
           }
 
@@ -981,7 +1026,7 @@ export class CharacterSystem {
               char.group.position.z = char.crosswalkZ;
             }
             char.group.position.x += char.crossDirection * char.typeDef.speed * delta * 1.1;
-            char.group.position.y = 0.02;
+            char.group.position.y = 0.02 + strideBob;
             const curveX = roadCurveFunc ? roadCurveFunc(char.group.position.z) : 0;
             // Quand il atteint l'autre trottoir, demi-tour sur le passage piéton
             if (Math.abs(char.group.position.x - curveX) > 5.3) {
@@ -993,7 +1038,7 @@ export class CharacterSystem {
           } else {
             // Marche strictement le long de son trottoir à altitude 0.25m (ne traverse jamais la route)
             char.group.position.z += char.walkDirection * char.typeDef.speed * delta * 0.85;
-            char.group.position.y = 0.25;
+            char.group.position.y = 0.25 + strideBob;
             const curveX = roadCurveFunc ? roadCurveFunc(char.group.position.z) : 0;
             const side = char.sidewalkSide || (char.group.position.x >= curveX ? 1 : -1);
             char.sidewalkSide = side;

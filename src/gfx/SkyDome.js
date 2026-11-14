@@ -5,7 +5,6 @@
  */
 
 import * as THREE from 'three';
-import { textureFactory } from './TextureFactory.js';
 
 export class SkyDome {
   constructor(scene) {
@@ -64,10 +63,12 @@ export class SkyDome {
   }
 
   initClouds() {
-    // Cel-shading 4 bandes partagé : crêtes d'ombre cartoon cohérentes avec le reste du jeu
-    const cloudMat = new THREE.MeshToonMaterial({
+    // Matériau PBR mat et vaporeux pour les nuages (sans cel-shading)
+    const cloudMat = new THREE.MeshStandardMaterial({
       color: 0xffffff,
-      gradientMap: textureFactory.getToonGradientMap()
+      roughness: 0.95,
+      metalness: 0.0,
+      envMapIntensity: 0.35
     });
     this.cloudMat = cloudMat; // Teinté la nuit via setNight()
 
@@ -111,7 +112,7 @@ export class SkyDome {
       this.domeMesh.material.uniforms.topColor.value.set(topColorHex);
       this.domeMesh.material.uniforms.bottomColor.value.set(bottomColorHex);
       if (this.domeMesh.material.uniforms.horizonGlow) {
-        this.domeMesh.material.uniforms.horizonGlow.value.set(bottomColorHex).lerp(new THREE.Color(0x00f2fe), 0.18);
+        this.domeMesh.material.uniforms.horizonGlow.value.set(bottomColorHex).lerp(new THREE.Color(0xfff3e0), 0.18);
       }
     }
   }

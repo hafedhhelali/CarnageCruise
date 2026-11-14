@@ -285,7 +285,7 @@ class GameApp {
         soundManager.resumeGameplayAudio();
         const isNonMotorized = gameState.selectedBike && ['run_ak47', 'run_chainsaw', 'cheval'].includes(gameState.selectedBike.id);
         if (!isNonMotorized) {
-          soundManager.startEngine();
+          soundManager.startEngine(gameState.selectedBike?.id);
         }
       } else if (action === 'CHANGE_BIKE_IN_GAME') {
         const bikeObj = payload;
@@ -310,7 +310,7 @@ class GameApp {
           if (isNonMotorized) {
             soundManager.stopEngine();
           } else if (gameState.currentMode === 'PLAYING') {
-            soundManager.startEngine();
+            soundManager.startEngine(bikeId);
           }
         }
       } else if (action === 'PREVIEW_BIKE' || action === 'BIKE_EQUIPPED') {
@@ -1118,7 +1118,7 @@ class GameApp {
 
       // 11. Caméra dynamique en poursuite douce avec anticipation de la courbe routière
       const lookAheadRoadX = this.environment.getRoadCenterX(this.bike.z + 18.0) + this.bike.x * 0.7;
-      this.engine.updateCameraGameplay(delta, this.bike.mesh.position, currentSpeed, lookAheadRoadX, roadAngle);
+      this.engine.updateCameraGameplay(delta, this.bike.mesh.position, currentSpeed, lookAheadRoadX, roadAngle, gameState.isNitroActive);
 
       // 12. Mise à jour de l'état de course (accélération, décélération, combo, vitesse arrêtée lors d'un crash)
       gameState.update(delta, this.bike.isCrashed);

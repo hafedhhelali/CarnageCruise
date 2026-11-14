@@ -43,13 +43,13 @@ export class Traffic {
       headlightLED: new THREE.MeshStandardMaterial({
         color: 0xfffa65,
         emissive: 0xfffa65,
-        emissiveIntensity: 0.9,
+        emissiveIntensity: 1.6,
         roughness: 0.1
       }),
       taillightLED: new THREE.MeshStandardMaterial({
         color: 0xff1744,
         emissive: 0xff1744,
-        emissiveIntensity: 0.9,
+        emissiveIntensity: 1.6,
         roughness: 0.1
       }),
       chromeTrim: new THREE.MeshStandardMaterial({
@@ -111,11 +111,13 @@ export class Traffic {
     const metallicColors = [0x0984e3, 0xd63031, 0x2d3436, 0x6c5ce7, 0x00b894, 0xe17055, 0x1e3799];
     const carColor = type === 'taxi_luxe' ? 0xf1c40f : metallicColors[index % metallicColors.length];
 
-    const carPaint = new THREE.MeshStandardMaterial({
+    const carPaint = new THREE.MeshPhysicalMaterial({
       color: carColor,
-      metalness: 0.6,
-      roughness: 0.32,
-      envMapIntensity: 0.55 // Vernis nacré contenu : teinte lisibilité avant reflets
+      metalness: 0.65,
+      roughness: 0.28,
+      clearcoat: 0.9,
+      clearcoatRoughness: 0.08,
+      envMapIntensity: 0.85
     });
 
     const roofMat = new THREE.MeshStandardMaterial({
@@ -398,8 +400,18 @@ export class Traffic {
     const bodyMat = new THREE.MeshStandardMaterial({ color: 0xf5f6fa, roughness: 0.25, metalness: 0.1 });
     const glassMat = new THREE.MeshStandardMaterial({ color: 0x1e272e, roughness: 0.1, metalness: 0.9 });
     const redCrossMat = new THREE.MeshBasicMaterial({ color: 0xff3838 });
-    const strobeBlueMat = new THREE.MeshBasicMaterial({ color: 0x0984e3 });
-    const strobeRedMat = new THREE.MeshBasicMaterial({ color: 0xff4757 });
+    const strobeBlueMat = new THREE.MeshStandardMaterial({
+      color: 0x0984e3,
+      emissive: 0x0984e3,
+      emissiveIntensity: 2.0,
+      roughness: 0.15
+    });
+    const strobeRedMat = new THREE.MeshStandardMaterial({
+      color: 0xff4757,
+      emissive: 0xff4757,
+      emissiveIntensity: 2.0,
+      roughness: 0.15
+    });
 
     // Caisse principale d'ambulance
     const box = new THREE.Mesh(new THREE.BoxGeometry(2.1, 1.8, 4.6), bodyMat);
@@ -495,8 +507,8 @@ export class Traffic {
     if (this.sharedMats) {
       this.sharedMats.beam.opacity = night ? 0.22 : 0.1;
       this.sharedMats.underglowMat.opacity = night ? 0.3 : 0.22;
-      this.sharedMats.headlightLED.emissiveIntensity = night ? 1.15 : 0.9;
-      this.sharedMats.taillightLED.emissiveIntensity = night ? 1.05 : 0.9;
+      this.sharedMats.headlightLED.emissiveIntensity = night ? 1.85 : 1.6;
+      this.sharedMats.taillightLED.emissiveIntensity = night ? 1.75 : 1.6;
     }
   }
 

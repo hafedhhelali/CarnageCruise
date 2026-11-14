@@ -2739,49 +2739,49 @@ export class UIManager {
     const colors = ['#e74c3c', '#3498db', '#f39c12', '#2ecc71', '#9b59b6', '#1abc9c', '#34495e'];
 
     container.innerHTML = `
-      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+      <div class="garage-bike-header">
         <div>
           <div class="garage-category-tag">${bike.icon || '🏍️'} ${bike.category || 'MOTO'}</div>
-          <h3 style="font-size: 1.35rem; font-weight: 900; color: #fff; margin: 2px 0;">${bike.name}</h3>
-          <span style="font-size: 0.8rem; color: #fffa65; font-weight: 700;">${bike.tagline || bike.type}</span>
+          <h3 class="garage-bike-name">${bike.name}</h3>
+          <span class="garage-bike-tagline">${bike.tagline || bike.type}</span>
         </div>
-        <div style="font-size: 0.78rem; color: #ced6e0; max-width: 48%; text-align: right; line-height: 1.3;">
+        <div class="garage-bike-desc">
           ${bike.description}
         </div>
       </div>
 
       <div class="stats-grid">
         <div class="stat-item">
-          <div style="display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 800;">
+          <div class="garage-stat-row">
             <span class="stat-name">VITESSE</span>
-            <span style="color: #fffa65;">${Math.round(bike.maxSpeed * 3.6)} km/h</span>
+            <span class="garage-stat-val-speed">${Math.round(bike.maxSpeed * 3.6)} km/h</span>
           </div>
           <div class="stat-gauge-bar">
             <div class="stat-gauge-fill" style="width: ${(bike.speedRating / 5) * 100}%;"></div>
           </div>
         </div>
         <div class="stat-item">
-          <div style="display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 800;">
+          <div class="garage-stat-row">
             <span class="stat-name">MANIABILITÉ</span>
-            <span style="color: #38ada9;">${bike.handlingRating}/5</span>
+            <span class="garage-stat-val-handling">${bike.handlingRating}/5</span>
           </div>
           <div class="stat-gauge-bar">
-            <div class="stat-gauge-fill" style="width: ${(bike.handlingRating / 5) * 100}%; background: linear-gradient(90deg, #38ada9, #78e08f);"></div>
+            <div class="stat-gauge-fill stat-fill-handling" style="width: ${(bike.handlingRating / 5) * 100}%;"></div>
           </div>
         </div>
         <div class="stat-item">
-          <div style="display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 800;">
+          <div class="garage-stat-row">
             <span class="stat-name">ACCÉLÉRATION</span>
-            <span style="color: #ff6348;">${bike.bounceRating}/5</span>
+            <span class="garage-stat-val-accel">${bike.bounceRating}/5</span>
           </div>
           <div class="stat-gauge-bar">
-            <div class="stat-gauge-fill" style="width: ${(bike.bounceRating / 5) * 100}%; background: linear-gradient(90deg, #ffa502, #ff6348);"></div>
+            <div class="stat-gauge-fill stat-fill-accel" style="width: ${(bike.bounceRating / 5) * 100}%;"></div>
           </div>
         </div>
       </div>
 
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
-        <span style="font-size: 0.8rem; font-weight: 800; color: #dfe4ea;">PEINTURE PERSONNALISÉE :</span>
+      <div class="garage-color-row">
+        <span class="garage-color-label">PEINTURE PERSONNALISÉE :</span>
         <div class="color-picker-row">
           ${colors.map(col => `
             <div class="color-dot ${currentColor.toLowerCase() === col.toLowerCase() ? 'active' : ''}"
@@ -2792,17 +2792,17 @@ export class UIManager {
         </div>
       </div>
 
-      <div style="margin-top: 10px;">
+      <div class="garage-cta-wrap">
         ${isEquipped ? `
-          <button id="btn-already-equipped" class="btn-arcade btn-secondary" style="width: 100%; padding: 13px; font-size: 1rem;">
+          <button id="btn-already-equipped" class="btn-arcade btn-secondary btn-garage-cta">
             ✓ BOLIDE ÉQUIPÉ (RETOURNER AU TOUR)
           </button>
         ` : isUnlocked ? `
-          <button id="btn-equip-bike" class="btn-arcade btn-play-pulse" style="width: 100%; padding: 13px; font-size: 1rem;">
+          <button id="btn-equip-bike" class="btn-arcade btn-play-pulse btn-garage-cta">
             ⚡ ÉQUIPER ET ALLER AU TOUR
           </button>
         ` : `
-          <button id="btn-buy-bike" class="btn-arcade btn-accent" style="width: 100%; padding: 13px; font-size: 1rem;">
+          <button id="btn-buy-bike" class="btn-arcade btn-accent btn-garage-cta">
             DÉBLOQUER CE VÉHICULE (🪙 ${bike.cost})
           </button>
         `}
@@ -2955,14 +2955,14 @@ export class UIManager {
     hud.innerHTML = `
       <div class="hud-top-bar ${gameState.isRuinsMode ? 'hud-top-bar-ruins' : ''}">
         ${gameState.isRuinsMode ? `
-          <div class="ruins-hud-banner" style="display: flex; align-items: center; gap: 8px; background: rgba(14, 8, 8, 0.94); border: 2px solid #ff4757; padding: 6px 12px; border-radius: 12px; box-shadow: 0 4px 18px rgba(0,0,0,0.85); pointer-events: auto; flex: 1; min-width: 0;">
-            <span style="font-size: 1.3rem;">☢️</span>
-            <div style="min-width: 0; overflow: hidden;">
-              <div style="font-size: 0.78rem; font-weight: 950; color: #ff7675; letter-spacing: 0.5px; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">EXPLORATION • ${gameState.selectedCity.name.toUpperCase()}</div>
-              <div style="font-size: 0.62rem; color: #ced6e0; font-weight: 800;">Promenade libre • Zéro obstacle</div>
+          <div class="ruins-hud-banner">
+            <span class="ruins-hud-icon">☢️</span>
+            <div class="ruins-hud-text">
+              <div class="ruins-hud-title">EXPLORATION • ${gameState.selectedCity.name.toUpperCase()}</div>
+              <div class="ruins-hud-sub">Promenade libre • Zéro obstacle</div>
             </div>
           </div>
-          <button id="btn-hud-exit-ruins" class="btn-arcade btn-ruins-exit-top interactive" style="background: linear-gradient(135deg, #eb4d4b, #c0392b); border: 2.5px solid #ff7675; color: #ffffff; font-weight: 950; font-size: 0.88rem; padding: 10px 14px; border-radius: 14px; cursor: pointer; box-shadow: 0 6px 20px rgba(235,77,75,0.7); pointer-events: auto !important; z-index: 99999; display: flex; align-items: center; gap: 6px; flex-shrink: 0;" title="Quitter la reconnaissance et retourner à la carte">
+          <button id="btn-hud-exit-ruins" class="btn-arcade btn-ruins-exit-top interactive" title="Quitter la reconnaissance et retourner à la carte">
             <span>🗺️ QUITTER</span>
           </button>
         ` : `
@@ -3041,9 +3041,9 @@ ${gameState.isRuinsMode ? '' : `          <div class="hud-carnage-badge" id="hud
         <div class="hud-right-cluster">
 ${gameState.isRuinsMode ? `
           <!-- Bouton ergonomique pouce droit pour quitter le mode exploration -->
-          <button class="btn-arcade btn-ruins-exit-thumb interactive" id="btn-hud-exit-ruins-thumb" style="width: 82px; height: 82px; border-radius: 50%; background: linear-gradient(135deg, #eb4d4b, #c0392b); border: 3px solid #ff7675; box-shadow: 0 8px 24px rgba(235,77,75,0.85); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: #ffffff; cursor: pointer; pointer-events: auto !important; z-index: 99999;" title="Quitter l'exploration et revenir à la carte">
-            <span style="font-size: 1.6rem; line-height: 1;">🗺️</span>
-            <span style="font-size: 0.68rem; font-weight: 950; letter-spacing: 0.5px;">QUITTER</span>
+          <button class="btn-arcade btn-ruins-exit-thumb interactive" id="btn-hud-exit-ruins-thumb" title="Quitter l'exploration et revenir à la carte">
+            <span class="ruins-thumb-icon">🗺️</span>
+            <span class="ruins-thumb-label">QUITTER</span>
           </button>
 ` : `          <div class="hud-nitro-group">
             <button class="btn-nitro-pedal ${isFootOrHorse ? 'btn-energy-drink mode-homme' : 'mode-engin'} ${isFootOrHorse && gameState.energyDrinkCans > 0 ? 'ready' : ''}" id="btn-hud-nitro" title="${boostTitle}">
@@ -4227,7 +4227,7 @@ ${gameState.isRuinsMode ? `
         <div class="results-stats">
           <div class="result-row">
             <span>Score Final :</span>
-            <span style="color: #fffa65;">${data.score} pts ${data.isNewBest ? '🏆 NOUVEAU RECORD !' : ''}</span>
+            <span class="result-val-highlight">${data.score} pts ${data.isNewBest ? '🏆 NOUVEAU RECORD !' : ''}</span>
           </div>
           <div class="result-row">
             <span>Personnes Heurtées :</span>
@@ -4241,49 +4241,49 @@ ${gameState.isRuinsMode ? `
             <span>Distance Parcourue :</span>
             <span>${data.distance} mètres</span>
           </div>
-          <div class="result-row" style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 6px;">
+          <div class="result-row result-row-divider">
             <span>Pièces Gagnées :</span>
-            <span style="color: var(--gold);">🪙 +${data.coinsEarned}</span>
+            <span class="result-val-gold">🪙 +${data.coinsEarned}</span>
           </div>
-          <div class="result-row" style="background: rgba(255, 71, 87, 0.15); border: 1px solid rgba(255, 71, 87, 0.35); padding: 6px 10px; border-radius: 8px; margin-top: 6px;">
-            <span style="color: #ff4757; font-weight: 800;">💀 Extermination Étape :</span>
-            <span style="color: #fffa65; font-weight: 800;">+${(data.runVictims || data.kills || 35000).toLocaleString('fr-FR')} Humains</span>
+          <div class="result-row result-row-extermination">
+            <span class="result-exterm-label">💀 Extermination Étape :</span>
+            <span class="result-exterm-val">+${(data.runVictims || data.kills || 35000).toLocaleString('fr-FR')} Humains</span>
           </div>
-          <div class="result-row" style="font-size: 0.8rem; color: #a4b0be; padding: 2px 4px;">
+          <div class="result-row result-row-world">
             <span>🌍 Total Worldmageddon :</span>
-            <span style="color: #2ed573; font-weight: 800;">${(data.worldTotal || 0).toLocaleString('fr-FR')} / 8 000 000 000</span>
+            <span class="result-world-val">${(data.worldTotal || 0).toLocaleString('fr-FR')} / 8 000 000 000</span>
           </div>
         </div>
 
         ${data.newlyUnlockedCity ? `
-          <div style="background: rgba(46, 213, 115, 0.2); border: 1px solid #2ed573; padding: 10px; border-radius: 14px; text-align: center;">
-            <strong style="color: #2ed573;">✨ NOUVELLE VILLE DÉBLOQUÉE !</strong>
-            <p style="font-size: 0.85rem; margin-top: 4px;">Vous pouvez maintenant attaquer <strong>${data.newlyUnlockedCity.name}</strong> !</p>
+          <div class="result-unlock-banner">
+            <strong class="result-unlock-title">✨ NOUVELLE VILLE DÉBLOQUÉE !</strong>
+            <p class="result-unlock-desc">Vous pouvez maintenant attaquer <strong>${data.newlyUnlockedCity.name}</strong> !</p>
           </div>
         ` : ''}
 
-        <div class="results-actions-primary-dock" style="display: flex; flex-direction: column; gap: 8px; width: 100%; margin-top: 14px;">
+        <div class="results-actions-primary-dock">
           ${nextCity && isNextUnlocked ? `
-            <button id="btn-results-next" class="btn-arcade" style="width: 100%; padding: 14px; background: linear-gradient(135deg, #2ed573, #10ac84); font-size: 1.05rem; font-weight: 950; box-shadow: 0 4px 18px rgba(46, 213, 115, 0.5); border: 2px solid #7bed9f; display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <button id="btn-results-next" class="btn-arcade btn-results-next-raid">
               <span>💥 RAID SUIVANT : ${nextCity.name.toUpperCase()}</span>
             </button>
           ` : ''}
 
           <!-- BOUTON RETOUR SATELLITE À LA CARTE : HÉROS PRIORITAIRE, TRANSITION CINÉMATIQUE FLUIDE -->
-          <button id="btn-results-map" class="btn-arcade" style="width: 100%; padding: 13px; background: linear-gradient(135deg, #3742fa, #2f3542); font-size: 1.02rem; font-weight: 950; border: 2px solid #70a1ff; box-shadow: 0 4px 18px rgba(55, 66, 250, 0.45); display: flex; align-items: center; justify-content: center; gap: 8px;">
+          <button id="btn-results-map" class="btn-arcade btn-results-map-return">
             <span>🛰️ RETOUR SATELLITE À LA CARTE</span>
           </button>
         </div>
 
-        <div class="results-actions-secondary-row" style="display: flex; gap: 8px; width: 100%; margin-top: 8px;">
-          <button id="btn-results-retry" class="btn-arcade btn-ghost" style="flex: 1; padding: 10px; font-size: 0.85rem;">
+        <div class="results-actions-secondary-row">
+          <button id="btn-results-retry" class="btn-arcade btn-ghost btn-results-sec">
             <span>🔄 REJOUER</span>
           </button>
-          <button id="btn-results-garage" class="btn-arcade btn-accent" style="flex: 1; padding: 10px; font-size: 0.85rem;">
+          <button id="btn-results-garage" class="btn-arcade btn-accent btn-results-sec">
             <span>🪖 GARAGE</span>
           </button>
           ${!isAlreadyExterminated ? `
-            <button id="btn-results-wmd-exterminate" class="btn-arcade" style="flex: 1.2; padding: 10px; font-size: 0.82rem; background: rgba(235, 77, 75, 0.25); border: 1.5px solid #ff7675; color: #ff7675;">
+            <button id="btn-results-wmd-exterminate" class="btn-arcade btn-results-wmd">
               <span>☢️ NUCLÉAIRE</span>
             </button>
           ` : ''}

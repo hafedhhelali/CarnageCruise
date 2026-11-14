@@ -34,7 +34,8 @@ export class Engine {
         throw new Error('WebGL context creation failed: ' + e2.message);
       }
     }
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2.0));
+    this.isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, this.isMobile ? 1.5 : 2.0));
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -56,8 +57,9 @@ export class Engine {
       const domeMat = new THREE.ShaderMaterial({
         side: THREE.BackSide,
         uniforms: {
-          topColor: { value: new THREE.Color(0x8ec5f0) },
-          bottomColor: { value: new THREE.Color(0x535c68) }
+          groundColor: { value: new THREE.Color(0x4a443f) },
+          horizonColor: { value: new THREE.Color(0xcfe3f5) },
+          zenithColor: { value: new THREE.Color(0x6ba8e5) }
         },
         vertexShader: `
           varying vec3 vDir;
@@ -68,11 +70,15 @@ export class Engine {
         `,
         fragmentShader: `
           varying vec3 vDir;
-          uniform vec3 topColor;
-          uniform vec3 bottomColor;
+          uniform vec3 groundColor;
+          uniform vec3 horizonColor;
+          uniform vec3 zenithColor;
           void main() {
-            float h = vDir.y * 0.5 + 0.5;
-            gl_FragColor = vec4(mix(bottomColor, topColor, smoothstep(0.35, 0.75, h)), 1.0);
+            float y = vDir.y;
+            vec3 col = y < 0.0
+              ? mix(horizonColor, groundColor, smoothstep(0.0, -0.35, y))
+              : mix(horizonColor, zenithColor, smoothstep(0.0, 0.55, y));
+            gl_FragColor = vec4(col, 1.0);
           }
         `
       });
@@ -87,21 +93,25 @@ export class Engine {
       envScene.add(sun);
 
       this.scene.environment = pmrem.fromScene(envScene, 0.04).texture;
+      domeGeo.dispose();
+      domeMat.dispose();
+      sun.geometry.dispose();
+      sun.material.dispose();
       pmrem.dispose();
-      this.scene.environmentIntensity = 0.6; // Environnement plus sombre => marge de remontée
+      this.scene.environmentIntensity = 0.65;
     } catch (err) {
       console.warn('IBL PMREM indisponible, rendu standard conservé :', err);
       this.scene.environment = null;
     }
 
     // Caméra perspective grand angle arcade
+    this.baseFov = 72;
     this.camera = new THREE.PerspectiveCamera(
-      66,
+      72,
       window.innerWidth / window.innerHeight,
       0.1,
       600
     );
-    this.baseFov = 72;
 
     // Pool de PointLights dynamiques pour flashs d'armes et d'explosions (Zéro lag mobile)
     this.dynamicLights = [];
@@ -131,15 +141,15 @@ export class Engine {
     this.dirLight.shadow.camera.far = 110;
     this.dirLight.shadow.camera.left = -14;
     this.dirLight.shadow.camera.right = 14;
-    this.dirLight.shadow.camera.top = 18;
-    this.dirLight.shadow.camera.bottom = -14;
+    this.dirLight.shadow.camera.top = 24;
+    this.dirLight.shadow.camera.bottom = -10;
     this.dirLight.shadow.bias = -0.0005;
     this.dirLight.shadow.normalBias = 0.035;
     this.scene.add(this.dirLight);
     this.scene.add(this.dirLight.target);
 
-    // Lumière rasante de silhouette (Rim Light / Kicker) style studio AAA
-    this.rimLight = new THREE.DirectionalLight(0x00d2d3, 0.55);
+    // Lumière rasante de silhouette (Rim Light / Kicker) douce et naturelle
+    this.rimLight = new THREE.DirectionalLight(0x9ec5ff, 0.22);
     this.rimLight.position.set(0, 6, 25);
     this.scene.add(this.rimLight);
     this.scene.add(this.rimLight.target);
@@ -170,6 +180,9 @@ export class Engine {
     this.cameraOffset = new THREE.Vector3(0, 5.2, -11.2); // Position arcade reculée et surélevée offrant une visibilité dégagée
     this.shakeIntensity = 0;
     this.shakeDecay = 6.5;
+    this.shakeTime = 0;
+    this.cameraRoll = 0;
+    this.nitroFovBoost = 0;
 
     // Caméra cinématique pour le menu / garage
     this.cinematicAngle = 0;
@@ -241,6 +254,7 @@ export class Engine {
       this.dirLight.intensity = 0.22;
       this.dirLight.color.setHex(0xbfd0ff); // Lune froide
       this.rimLight.intensity = 0.0; // Éteint la rim light frontale la nuit (supprime le reflet gênant au milieu de la route)
+      this.scene.environmentIntensity = 0.14;
       this.renderer.toneMappingExposure = 0.95;
       this.scene.fog.color.setHex(0x0a0f1e);
       this.scene.fog.density = 0.0012;
@@ -256,7 +270,9 @@ export class Engine {
       this.hemiLight.intensity = 0.6;
       this.dirLight.intensity = 1.15;
       this.dirLight.color.setHex(0xfffdf7);
-      this.rimLight.intensity = 0.45;
+      this.rimLight.color.setHex(0x9ec5ff);
+      this.rimLight.intensity = 0.22;
+      this.scene.environmentIntensity = 0.65;
       this.renderer.toneMappingExposure = 1.0;
       this.scene.fog.color.setHex(0xd8e8f8);
       this.scene.fog.density = 0.0008;
@@ -301,7 +317,13 @@ export class Engine {
     }
   }
 
-  updateCameraGameplay(delta, bikePosition, bikeSpeed, lookAheadRoadX = null, roadAngle = 0) {
+  setNitroFovBoost(active) {
+    this.nitroFovBoost = active ? 5.0 : 0.0;
+  }
+
+  updateCameraGameplay(delta, bikePosition, bikeSpeed, lookAheadRoadX = null, roadAngle = 0, isNitroActive = false) {
+    delta = Math.min(delta, 0.05);
+    const safeSpeed = Number.isFinite(bikeSpeed) ? Math.max(0, bikeSpeed) : 0;
     this.updateDynamicLights(delta);
 
     // Mise à jour du dôme céleste
@@ -337,19 +359,21 @@ export class Engine {
     this.camera.position.y += (targetCamY - this.camera.position.y) * dampY;
     this.camera.position.z += (targetCamZ - this.camera.position.z) * dampZ;
 
-    // Secousse comique amortie proprement uniquement lors d'impacts avérés
+    // Micro-secousse trauma à décroissance exponentielle (sin/cos stratifiés)
+    this.shakeTime += delta;
     if (this.shakeIntensity > 0.001) {
-      const shakeX = (Math.random() - 0.5) * this.shakeIntensity;
-      const shakeY = (Math.random() - 0.5) * this.shakeIntensity;
+      const t = this.shakeTime;
+      const shakeX = (Math.sin(t * 47.0) * 0.6 + Math.cos(t * 83.0) * 0.4) * this.shakeIntensity * 0.5;
+      const shakeY = (Math.cos(t * 53.0) * 0.6 + Math.sin(t * 79.0) * 0.4) * this.shakeIntensity * 0.4;
       this.camera.position.x += shakeX;
       this.camera.position.y += shakeY;
-      this.shakeIntensity = Math.max(0, this.shakeIntensity - this.shakeDecay * delta);
+      this.shakeIntensity *= Math.exp(-this.shakeDecay * delta);
     } else {
       this.shakeIntensity = 0;
     }
 
     // LookAt lissé dans l'axe naturel du bolide (zéro rotation parasite en crabe)
-    const lookAheadZ = 16.5 + Math.min(4.5, (bikeSpeed / 28.0) * 3.5);
+    const lookAheadZ = 16.5 + Math.min(4.5, (safeSpeed / 28.0) * 3.5);
     const lookTargetX = lookAheadRoadX !== null
       ? (bikePosition.x * 0.78 + lookAheadRoadX * 0.22)
       : bikePosition.x * 0.96;
@@ -360,15 +384,24 @@ export class Engine {
     this.lookAtCurrent.x += (lookTargetX - this.lookAtCurrent.x) * dampLook;
     this.lookAtCurrent.y += (lookTargetY - this.lookAtCurrent.y) * dampLook;
     this.lookAtCurrent.z = lookTargetZ;
-    this.camera.up.set(0, 1, 0);
+
+    // Roulis de banking fluide via camera.up (jamais de rotation.z après lookAt)
+    const targetRoll = THREE.MathUtils.clamp(-roadAngle * 0.14, -0.09, 0.09);
+    const dampRoll = 1.0 - Math.exp(-8.0 * delta);
+    this.cameraRoll += (targetRoll - this.cameraRoll) * dampRoll;
+    this.camera.up.set(Math.sin(this.cameraRoll), Math.cos(this.cameraRoll), 0);
     this.camera.lookAt(this.lookAtCurrent.x, this.lookAtCurrent.y, this.lookAtCurrent.z);
 
-    // Élargissement dynamique et progressif du champ de vision (FOV) selon la vitesse
-    const speedBonusFov = Math.min(11.0, (bikeSpeed / 30.0) * 9.5);
-    const targetFov = this.baseFov + speedBonusFov;
+    // Élargissement dynamique et progressif du champ de vision (FOV) selon la vitesse + boost Nitro
+    const speedBonusFov = Math.min(11.0, (safeSpeed / 30.0) * 9.5);
+    const nitroBonusFov = isNitroActive ? 5.0 : (this.nitroFovBoost || 0);
+    const targetFov = this.baseFov + speedBonusFov + nitroBonusFov;
     const dampFov = 1.0 - Math.exp(-6.0 * delta);
+    const prevFov = this.camera.fov;
     this.camera.fov += (targetFov - this.camera.fov) * dampFov;
-    this.camera.updateProjectionMatrix();
+    if (Math.abs(prevFov - this.camera.fov) > 0.005) {
+      this.camera.updateProjectionMatrix();
+    }
   }
 
   updateCameraCinematic(delta, bikePosition) {
@@ -396,7 +429,8 @@ export class Engine {
     this.camera.aspect = window.innerWidth / window.innerHeight;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(window.innerWidth, window.innerHeight);
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2.0));
+    this.isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, this.isMobile ? 1.5 : 2.0));
     if (this.postProcessing) {
       this.postProcessing.setSize(window.innerWidth, window.innerHeight);
     }

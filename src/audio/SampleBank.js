@@ -121,6 +121,9 @@ export class SampleBank {
    * du moteur rugissant, sans toucher à la synthèse procédurale.
    */
   _ensureFilters() {
+    if (this.presence && this.presence.context !== this.sm.ctx) {
+      this.presence = null;
+    }
     if (this.presence || !this.sm.ctx) return;
     const ctx = this.sm.ctx;
     // 1. Bande de présence 3.2kHz (attaque/lisibilité)
@@ -155,10 +158,13 @@ export class SampleBank {
     }
     if (!allReady) { this.preload(); return false; } // précharge, repli synthèse ce tour
 
-    this._ensureFilters();
-    const out = this.sm.getMasterOutput();
-    const route = this.presence || out;
+    const useUiBus = !!opts.uiBus;
+    if (!useUiBus) this._ensureFilters();
+    const out = useUiBus && this.sm.getUiOutput
+      ? this.sm.getUiOutput()
+      : this.sm.getMasterOutput();
     if (!out) return false;
+    const route = useUiBus ? out : (this.presence || out);
     const now = this.sm.ctx.currentTime;
     const rotation = (this.playToggles.get(key) || 0) + 1;
     this.playToggles.set(key, rotation);
