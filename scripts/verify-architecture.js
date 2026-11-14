@@ -82,7 +82,7 @@ assert(envContent.includes('mesh.frustumCulled = false;') && envContent.includes
 assert(!envContent.includes('isCurveChevron: true'), 'Non-régression : Aucune indication/panneau chevron de virage parasite');
 assert(charsContent.includes('sidewalkSide') && charsContent.includes('nearestInterZ'), 'Non-régression : Piétons strictement sur les passages piétons ou trottoirs');
 assert(storageContent.includes('isBikeUnlocked(bikeId)'), 'Non-régression : storage.isBikeUnlocked(bikeId) présent (modale Pause 100% fluide sans blocage)');
-assert(uiContent.includes('hud-top-right-dock') && uiContent.includes('BOMBE NUCLÉAIRE'), 'Non-régression : Zone Pause/HUD ergonomique avec icône SVG et libellé BOMBE NUCLÉAIRE');
+assert(uiContent.includes('hud-top-right-dock') && uiContent.includes('EXTERMINER LA VILLE'), 'Non-régression : Zone Pause/HUD ergonomique avec icône SVG et libellé EXTERMINER LA VILLE');
 
 // 8. Tests d'expansion Proche-Orient & Afrique du Nord + 7 Biomes 3D
 assert(gameStateContent.includes("id: 'marrakech'") && gameStateContent.includes("id: 'constantine'") && gameStateContent.includes("id: 'petra'") && gameStateContent.includes("id: 'beyrouth'") && gameStateContent.includes("id: 'jerusalem'") && gameStateContent.includes("id: 'bagdad'"), 'Expansion Carte : Villes d\'Afrique du Nord et du Proche-Orient présentes');

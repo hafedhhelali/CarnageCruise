@@ -282,9 +282,15 @@ class GameApp {
         if (gameState.selectedBike) {
           gameState.targetSpeed = gameState.isRuinsMode ? 7.0 : gameState.selectedBike.maxSpeed;
         }
-        soundManager.resumeGameplayAudio();
         const isNonMotorized = gameState.selectedBike && ['run_ak47', 'run_chainsaw', 'cheval'].includes(gameState.selectedBike.id);
-        if (!isNonMotorized) {
+        if (gameState.selectedBike) {
+          soundManager.lastVehicleId = gameState.selectedBike.id;
+          soundManager.wasEnginePlaying = !isNonMotorized;
+        }
+        soundManager.resumeGameplayAudio();
+        if (isNonMotorized) {
+          soundManager.stopEngine();
+        } else {
           soundManager.startEngine(gameState.selectedBike?.id);
         }
       } else if (action === 'CHANGE_BIKE_IN_GAME') {
@@ -307,6 +313,8 @@ class GameApp {
           this.bike.mesh.position.x = prevWorldX;
           this.bike.mesh.position.z = prevZ;
           const isNonMotorized = ['run_ak47', 'run_chainsaw', 'cheval'].includes(bikeId);
+          soundManager.lastVehicleId = bikeId;
+          soundManager.wasEnginePlaying = !isNonMotorized;
           if (isNonMotorized) {
             soundManager.stopEngine();
           } else if (gameState.currentMode === 'PLAYING') {

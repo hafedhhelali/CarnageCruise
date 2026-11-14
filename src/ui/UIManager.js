@@ -1104,11 +1104,11 @@ export class UIManager {
               <span class="btn-enter-hero-desc">OBJECTIF : ${city.targetScore.toLocaleString('fr-FR')} PTS</span>
             </div>
           </button>
-          <button id="btn-wmd-city" class="btn-arcade btn-wmd-dock" title="Lancer une Bombe Nucléaire ou Frappe Stratégique">
+          <button id="btn-wmd-city" class="btn-arcade btn-wmd-dock" title="Choisir une arme d'extermination">
             <span class="wmd-dock-icon">☢️</span>
             <div class="wmd-dock-texts">
-              <span class="wmd-dock-title">BOMBE NUCLÉAIRE</span>
-              <span class="wmd-dock-sub">${cityDestruction > 0 ? `${cityDestruction}% DÉTRUITE` : 'FRAPPE MASSIVE'}</span>
+              <span class="wmd-dock-title">EXTERMINER LA VILLE</span>
+              <span class="wmd-dock-sub">${cityDestruction > 0 ? `${cityDestruction}% DÉTRUITE` : 'CHOISIR L\'ARME'}</span>
             </div>
           </button>
         ` : `
@@ -3039,13 +3039,7 @@ ${gameState.isRuinsMode ? '' : `          <div class="hud-carnage-badge" id="hud
 
         <!-- Groupe de commandes droit ergonomique -->
         <div class="hud-right-cluster">
-${gameState.isRuinsMode ? `
-          <!-- Bouton ergonomique pouce droit pour quitter le mode exploration -->
-          <button class="btn-arcade btn-ruins-exit-thumb interactive" id="btn-hud-exit-ruins-thumb" title="Quitter l'exploration et revenir à la carte">
-            <span class="ruins-thumb-icon">🗺️</span>
-            <span class="ruins-thumb-label">QUITTER</span>
-          </button>
-` : `          <div class="hud-nitro-group">
+${gameState.isRuinsMode ? '' : `          <div class="hud-nitro-group">
             <button class="btn-nitro-pedal ${isFootOrHorse ? 'btn-energy-drink mode-homme' : 'mode-engin'} ${isFootOrHorse && gameState.energyDrinkCans > 0 ? 'ready' : ''}" id="btn-hud-nitro" title="${boostTitle}">
               <div class="nitro-fill-track">
                 <div class="nitro-fill-bar ${isFootOrHorse ? 'energy-fill-bar' : ''}" id="hud-nitro-fill" style="width: ${isFootOrHorse ? (gameState.energyDrinkCans > 0 ? '100%' : '0%') : '0%'};"></div>
@@ -3114,7 +3108,6 @@ ${gameState.isRuinsMode ? `
     }
 
     const exitRuinsBtn = hud.querySelector('#btn-hud-exit-ruins');
-    const exitRuinsThumbBtn = hud.querySelector('#btn-hud-exit-ruins-thumb');
     const handleExitRuins = (e) => {
       if (e) {
         e.preventDefault();
@@ -3133,11 +3126,6 @@ ${gameState.isRuinsMode ? `
       exitRuinsBtn.addEventListener('pointerdown', handleExitRuins);
       exitRuinsBtn.addEventListener('touchstart', handleExitRuins, { passive: false });
       exitRuinsBtn.addEventListener('click', handleExitRuins);
-    }
-    if (exitRuinsThumbBtn) {
-      exitRuinsThumbBtn.addEventListener('pointerdown', handleExitRuins);
-      exitRuinsThumbBtn.addEventListener('touchstart', handleExitRuins, { passive: false });
-      exitRuinsThumbBtn.addEventListener('click', handleExitRuins);
     }
 
     const returnMap100 = hud.querySelector('#btn-hud-return-map-100');

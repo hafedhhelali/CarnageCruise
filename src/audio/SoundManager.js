@@ -2319,9 +2319,10 @@ export class SoundManager {
   resumeGameplayAudio() {
     this.isGameplayPaused = false;
     if (this.wasMusicPlayingBeforePause && !this.isMutedMusic) {
-      this.startMusic(this.wasTrackBeforePause || 'RACE');
+      this.startMusic(this.wasTrackBeforePause || 'SADISTIC_CARNAGE');
     }
-    if (this.wasEnginePlaying && !this.isMutedSfx) {
+    const isNonMotorized = ['run_ak47', 'run_chainsaw', 'cheval'].includes(this.lastVehicleId);
+    if (this.wasEnginePlaying && !this.isMutedSfx && !isNonMotorized) {
       this.startEngine(this.lastVehicleId || this.lastEngineProfile);
     }
   }
