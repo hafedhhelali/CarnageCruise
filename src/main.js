@@ -18,6 +18,8 @@ import { IntersectionManager } from './entities/Intersections.js';
 import { ProjectileManager } from './entities/Projectiles.js';
 import { Traffic } from './entities/Traffic.js';
 import { PigeonSystem } from './entities/Pigeons.js';
+import { SkidMarks } from './gfx/SkidMarks.js';
+import { WeatherSystem } from './gfx/WeatherSystem.js';
 import { UIManager } from './ui/UIManager.js';
 import { Haptic } from './services/HapticFeedback.js';
 import * as TWEEN from '@tweenjs/tween.js';
@@ -45,6 +47,10 @@ class GameApp {
     this.pigeons = new PigeonSystem(this.engine.scene);
     this.intersections = new IntersectionManager(this.engine.scene);
     this.projectiles = new ProjectileManager(this.engine.scene, this.particles, soundManager, this.engine);
+    this.skidMarks = new SkidMarks(this.engine.scene);
+    this.weatherSystem = new WeatherSystem(this.engine.scene);
+    this._bossRamCooldown = 0;
+    this._stormLightningTimer = 6.0;
 
     // Abonnement des missions quotidiennes aux événements de jeu
     gameState.subscribe((event, payload) => {
@@ -111,7 +117,18 @@ class GameApp {
 
   setupCity(cityDef) {
     if (gameState.isRuinsMode) {
+      this.isNightRun = false;
       this.engine.applyRuinsAtmosphere();
+      if (this.environment.setNightMode) this.environment.setNightMode(false);
+      if (this.bike.setNightMode) this.bike.setNightMode(false);
+      if (this.traffic && this.traffic.setNightMode) this.traffic.setNightMode(false);
+      if (this.environment.setChallengeMode) this.environment.setChallengeMode('STANDARD');
+      if (this.weatherSystem && this.weatherSystem.setBiome) {
+        const weatherInfo = this.weatherSystem.setBiome(cityDef, true, false, false);
+        if (this.environment.setWeatherWetness && weatherInfo) {
+          this.environment.setWeatherWetness(weatherInfo.wetness);
+        }
+      }
       this.environment.setCity(cityDef, null, true);
       this.characters.reset();
       if (this.traffic) this.traffic.reset();
@@ -120,7 +137,39 @@ class GameApp {
       return;
     }
 
-    this.engine.applyCityAtmosphere(cityDef);
+    const presets = ['DAY_CLEAR', 'GOLDEN_DUSK', 'OVERCAST_WET', 'NIGHT_NEON'];
+    let preset = presets[Math.floor(Math.random() * presets.length)];
+    if (gameState.challengeMode === 'EXTREME_STORM') {
+      preset = Math.random() < 0.5 ? 'OVERCAST_WET' : 'NIGHT_NEON';
+    }
+    this.isNightRun = preset === 'NIGHT_NEON';
+
+    if (this.engine.applyAtmospherePreset) {
+      this.engine.applyAtmospherePreset(cityDef, preset);
+    } else {
+      this.engine.applyCityAtmosphere(cityDef);
+      this.engine.applyNightAtmosphere(this.isNightRun);
+    }
+
+    if (this.environment.setNightMode) this.environment.setNightMode(this.isNightRun);
+    if (this.bike.setNightMode) this.bike.setNightMode(this.isNightRun);
+    if (this.traffic && this.traffic.setNightMode) this.traffic.setNightMode(this.isNightRun);
+
+    if (this.weatherSystem && this.weatherSystem.setBiome) {
+      const weatherInfo = this.weatherSystem.setBiome(
+        cityDef,
+        false,
+        this.isNightRun,
+        gameState.challengeMode === 'EXTREME_STORM'
+      );
+      if (this.environment.setWeatherWetness && weatherInfo) {
+        this.environment.setWeatherWetness(weatherInfo.wetness);
+      }
+    }
+    if (this.environment.setChallengeMode) {
+      this.environment.setChallengeMode(gameState.challengeMode || 'STANDARD');
+    }
+
     this.environment.setCity(cityDef, null, false);
     this.characters.reset();
     if (this.traffic) this.traffic.reset();
@@ -207,15 +256,22 @@ class GameApp {
   handleUIAction(action, payload) {
     try {
       if (action === 'START_RUN') {
-        const city = payload || gameState.selectedCity;
+        const city = (payload && payload.city) ? payload.city : (payload || gameState.selectedCity);
+        const challengeMode = (payload && payload.challengeMode) || gameState.challengeMode || 'STANDARD';
         if (city && city.id) {
           gameState.selectCity(city.id);
         }
+        gameState.challengeMode = gameState.isRuinsMode ? 'STANDARD' : challengeMode;
 
         // Équipement et reconstruction immédiate de l'engin sélectionné
         const equippedBikeId = gameState.selectedBike?.id || storage.getEquippedBike() || 'tank';
         this.bike.buildCurrentBike(equippedBikeId);
         this.bike.buildRider();
+
+        if (this.skidMarks && this.skidMarks.reset) this.skidMarks.reset();
+        if (this.weatherSystem && this.weatherSystem.reset) this.weatherSystem.reset();
+        this._bossRamCooldown = 0;
+        this._stormLightningTimer = 6.0;
 
         this.setupCity(gameState.selectedCity);
 
@@ -246,20 +302,25 @@ class GameApp {
             this.ui.showToastUnlock({ name: '🏚️ BALLADE LIBRE — RUINES DE LA VILLE ANÉANTIE' });
           }
         } else {
-          // MODE NUIT ALÉATOIRE (~35% des runs) : bascule l'ambiance 3D après
-          // l'atmosphère de la ville — phares, réverbères et fenêtres en vedette
-          this.isNightRun = Math.random() < 0.35;
-          this.engine.applyNightAtmosphere(this.isNightRun);
-          if (this.traffic && this.traffic.setNightMode) this.traffic.setNightMode(this.isNightRun);
           if (this.isNightRun && this.ui) {
             this.ui.showToastUnlock({ name: '🌙 COURSE DE NUIT — PLEINS PHARES !' });
           }
+          if (gameState.challengeMode === 'CONVOY_BOSS' && this.traffic && this.traffic.spawnConvoyBoss) {
+            this.traffic.spawnConvoyBoss(this.bike.z + 65, (z) => this.environment.getRoadCenterX(z));
+          } else if (gameState.challengeMode === 'MANHUNT' && this.traffic && this.traffic.spawnPoliceRoadblock) {
+            [95, 210, 330, 450].forEach(zOffset => {
+              this.traffic.spawnPoliceRoadblock(this.bike.z + zOffset, (z) => this.environment.getRoadCenterX(z));
+            });
+          }
         }
 
-        gameState.startRun();
+        gameState.startRun(gameState.selectedCity?.id, gameState.challengeMode);
       } else if (action === 'EXIT_RUINS' || action === 'RETURN_MAP') {
         gameState.isRuinsMode = false;
+        gameState.challengeMode = 'STANDARD';
         gameState.currentMode = 'MAP';
+        if (this.skidMarks && this.skidMarks.reset) this.skidMarks.reset();
+        if (this.weatherSystem && this.weatherSystem.reset) this.weatherSystem.reset();
         if (this.bike) {
           this.bike.speed = 0;
           this.bike.targetSpeed = 0;
@@ -427,11 +488,15 @@ class GameApp {
             const vZ = v.position.z - bikeZ;
             const vX = Math.abs(v.position.x - bikeX);
             if (vZ > 1.5 && vZ < attack.range && vX < attack.radius) {
-              this.traffic.blowUpVehicle(v, this.bike.mesh.position);
-              gameState.score += 1200;
-              this.particles.spawnComicBurst(v.position, 1200, gameState.combo);
-              if (this.ui) this.ui.spawnFloatingCombatText('+1200', 'INFERNO !', '#ff9f43', 50, 38);
-              Haptic.impactHeavy();
+              if (v.userData.isConvoyBoss) {
+                this.damageConvoyBoss(v, 20, v.position);
+              } else {
+                this.traffic.blowUpVehicle(v, this.bike.mesh.position);
+                gameState.score += 1200;
+                this.particles.spawnComicBurst(v.position, 1200, gameState.combo);
+                if (this.ui) this.ui.spawnFloatingCombatText('+1200', 'INFERNO !', '#ff9f43', 50, 38);
+                Haptic.impactHeavy();
+              }
             }
           }
         });
@@ -465,12 +530,16 @@ class GameApp {
             const vZ = v.position.z - bikeZ;
             const vX = Math.abs(v.position.x - bikeX);
             if (vZ > 1.5 && vZ < attack.range && vX < attack.radius) {
-              this.traffic.blowUpVehicle(v, this.bike.mesh.position);
-              gameState.score += 1100;
-              this.particles.spawnComicBurst(v.position, 1100, gameState.combo);
-              soundManager.playCrash();
-              if (this.ui) this.ui.spawnFloatingCombatText('+1100', 'BLAST !', '#ffd32a', 50, 38);
-              Haptic.impactHeavy();
+              if (v.userData.isConvoyBoss) {
+                this.damageConvoyBoss(v, 20, v.position);
+              } else {
+                this.traffic.blowUpVehicle(v, this.bike.mesh.position);
+                gameState.score += 1100;
+                this.particles.spawnComicBurst(v.position, 1100, gameState.combo);
+                soundManager.playCrash();
+                if (this.ui) this.ui.spawnFloatingCombatText('+1100', 'BLAST !', '#ffd32a', 50, 38);
+                Haptic.impactHeavy();
+              }
             }
           }
         });
@@ -504,12 +573,16 @@ class GameApp {
             const vZ = v.position.z - bikeZ;
             const vX = Math.abs(v.position.x - bikeX);
             if (vZ > 1.0 && vZ < attack.range && vX < attack.radius) {
-              this.traffic.blowUpVehicle(v, this.bike.mesh.position);
-              gameState.score += 1600;
-              this.particles.spawnComicBurst(v.position, 1600, gameState.combo);
-              soundManager.playCrash();
-              if (this.ui) this.ui.spawnFloatingCombatText('+1600', 'ÉCRASÉ !', '#f368e0', 50, 38);
-              Haptic.impactHeavy();
+              if (v.userData.isConvoyBoss) {
+                this.damageConvoyBoss(v, 25, v.position);
+              } else {
+                this.traffic.blowUpVehicle(v, this.bike.mesh.position);
+                gameState.score += 1600;
+                this.particles.spawnComicBurst(v.position, 1600, gameState.combo);
+                soundManager.playCrash();
+                if (this.ui) this.ui.spawnFloatingCombatText('+1600', 'ÉCRASÉ !', '#f368e0', 50, 38);
+                Haptic.impactHeavy();
+              }
             }
           }
         });
@@ -580,10 +653,245 @@ class GameApp {
     this.triggerCityCataclysm();
   }
 
+  /**
+   * Applique des dégâts au Boss du Convoi Blindé, largue des caisses tous les 25% PV
+   * et déclenche la miniature d'explosion nucléaire +8000 pts à la destruction.
+   */
+  damageConvoyBoss(boss, amount, hitPos) {
+    if (!boss || gameState.challengeMode !== 'CONVOY_BOSS') return;
+    const cs = gameState.challengeState;
+    if (!cs || cs.defeated) return;
+
+    cs.bossHp = Math.max(0, (cs.bossHp ?? 100) - amount);
+    if (this.particles.spawnDirectionalSparks && hitPos) {
+      this.particles.spawnDirectionalSparks(hitPos, new THREE.Vector3(0, 0.8, -1), 14);
+    }
+    this.engine.triggerCameraShake(0.45);
+    soundManager.playCrash();
+
+    const expectedStages = Math.floor((100 - cs.bossHp) / 25);
+    while ((cs.stagesDropped || 0) < expectedStages && cs.bossHp > 0) {
+      cs.stagesDropped = (cs.stagesDropped || 0) + 1;
+      if (this.traffic && this.traffic.spawnObstacleCrate) {
+        this.traffic.spawnObstacleCrate(boss.position.z - 5.0, boss.position.x);
+      } else {
+        this.particles.spawnCrashBurst(boss.position);
+      }
+      if (this.ui) {
+        this.ui.spawnFloatingCombatText('📦 CAISSE LARGUÉE !', `BOSS ${cs.bossHp}% PV`, '#ffa502', 50, 34);
+      }
+    }
+
+    if (cs.bossHp <= 0 && !cs.defeated) {
+      cs.defeated = true;
+      if (this.traffic && this.traffic.blowUpVehicle) {
+        this.traffic.blowUpVehicle(boss, this.bike.mesh.position);
+      }
+      if (this.particles.spawnNuclearBlast) {
+        this.particles.spawnNuclearBlast(boss.position, 0.45);
+      }
+      if (!cs.defeatScoreAwarded) {
+        gameState.score += 8000;
+        cs.defeatScoreAwarded = true;
+      }
+      if (this.engine.triggerHitStop) {
+        this.engine.triggerHitStop(0.06, 0.08);
+      }
+      this.engine.triggerCameraShake(0.95);
+      soundManager.playExplosion();
+      if (this.ui) {
+        this.ui.spawnFloatingCombatText('+8000', 'CONVOI DÉTRUIT ! 💥', '#ff4757', 50, 35);
+      }
+      Haptic.impactHeavy();
+    }
+  }
+
+  /**
+   * Met à jour les mécaniques et collisions spécifiques aux 5 Épreuves Spéciales.
+   */
+  updateChallengeHooks(simDelta, currentSpeed, isFlyingCraft) {
+    const mode = gameState.challengeMode;
+    if (!mode || mode === 'STANDARD' || gameState.isRuinsMode) return;
+    const cs = gameState.challengeState || {};
+
+    if (this._bossRamCooldown > 0) {
+      this._bossRamCooldown = Math.max(0, this._bossRamCooldown - simDelta);
+    }
+
+    if (mode === 'CONVOY_BOSS' && this.traffic && this.traffic.vehicles && !cs.defeated) {
+      const boss = this.traffic.vehicles.find(v => v.userData && v.userData.isConvoyBoss && v.userData.active && !v.userData.isCrashed);
+      if (boss && !isFlyingCraft) {
+        const dZ = Math.abs(boss.position.z - this.bike.z);
+        const dX = Math.abs(boss.position.x - this.bike.mesh.position.x);
+        if (dZ < 4.2 && dX < 2.1 && this._bossRamCooldown <= 0) {
+          this._bossRamCooldown = 0.6;
+          const canRam = gameState.isNitroActive || this.bike.isInvulnerable() || this.bike.currentBikeId === 'tank' || this.bike.currentBikeId === 'rouleau';
+          if (canRam) {
+            this.damageConvoyBoss(boss, 25, boss.position);
+            if (this.engine.triggerHitStop) this.engine.triggerHitStop(0.045, 0.08);
+            const pushDir = this.bike.mesh.position.x >= boss.position.x ? 1 : -1;
+            this.bike.x = THREE.MathUtils.clamp(this.bike.x + pushDir * 1.4, -5.5, 5.5);
+          } else {
+            const crashed = this.bike.triggerCrash();
+            if (crashed) {
+              if (this.engine.triggerHitStop) this.engine.triggerHitStop(0.045, 0.08);
+              if (this.particles.spawnDirectionalSparks) {
+                this.particles.spawnDirectionalSparks(this.bike.mesh.position, new THREE.Vector3(0, 0.8, -1), 14);
+              }
+              soundManager.playCrash();
+              gameState.applyVehicleCrashPenalty(300);
+            }
+          }
+        }
+      }
+    } else if (mode === 'SLALOM_CHRONO' && this.environment) {
+      const gates = this.environment.slalomGates || [];
+      for (const gate of gates) {
+        if (gate.passed) continue;
+        const gateZ = gate.chunk ? (gate.chunk.position.z + (gate.localZ || 0)) : (gate.z || 0);
+        const gateX = gate.chunk ? (gate.chunk.position.x + (gate.localX || 0)) : (gate.x || 0);
+        if (Math.abs(this.bike.z - gateZ) < 2.2) {
+          if (Math.abs(this.bike.mesh.position.x - gateX) < (gate.halfWidth || 2.5)) {
+            gate.passed = true;
+            cs.timeLeft = (cs.timeLeft || 0) + 3.5;
+            cs.gatesPassed = (cs.gatesPassed || 0) + 1;
+            cs.gateStreak = (cs.gateStreak || 0) + 1;
+            gameState.score += 400;
+            gameState.chargeNitro(15);
+            soundManager.playNearMiss();
+            if (this.particles.spawnComicBurst) {
+              this.particles.spawnComicBurst(this.bike.mesh.position, 400, gameState.combo);
+            }
+            if (this.ui) {
+              this.ui.spawnFloatingCombatText('+3.5s / +400', `PORTIQUE ${cs.gatesPassed} ! ⏱️`, '#00d2d3', 50, 38);
+            }
+            Haptic.tap();
+          }
+        }
+      }
+    } else if (mode === 'MANHUNT' && this.traffic && this.traffic.vehicles && !isFlyingCraft) {
+      for (const rb of this.traffic.vehicles) {
+        if (!rb.userData || !rb.userData.isRoadblock || rb.userData.cleared) continue;
+        const dZ = Math.abs(this.bike.z - rb.position.z);
+        const dX = Math.abs(this.bike.mesh.position.x - rb.position.x);
+        if (dZ < 2.2 && dX < 1.9) {
+          rb.userData.cleared = true;
+          const canSmash = gameState.isNitroActive || this.bike.isInvulnerable() || this.bike.currentBikeId === 'tank' || this.bike.currentBikeId === 'rouleau';
+          if (canSmash) {
+            cs.roadblocksCleared = (cs.roadblocksCleared || 0) + 1;
+            cs.wantedLevel = Math.min(5, (cs.wantedLevel || 1) + 1);
+            if (this.traffic.blowUpVehicle) this.traffic.blowUpVehicle(rb, this.bike.mesh.position);
+            if (this.engine.triggerHitStop) this.engine.triggerHitStop(0.045, 0.08);
+            if (this.particles.spawnDirectionalSparks) {
+              this.particles.spawnDirectionalSparks(rb.position, new THREE.Vector3(0, 0.8, -1), 16);
+            }
+            if (this.particles.spawnGlassShatter) this.particles.spawnGlassShatter(rb.position);
+            gameState.score += 650;
+            soundManager.playCrash();
+            if (this.ui) {
+              this.ui.spawnFloatingCombatText('+650', `BARRAGE PULVÉRISÉ ! ★${cs.wantedLevel}`, '#5352ed', 50, 38);
+            }
+            Haptic.impactHeavy();
+          } else {
+            cs.shieldHp = Math.max(0, (cs.shieldHp ?? 3) - 1);
+            this.bike.triggerCrash();
+            if (this.engine.triggerHitStop) this.engine.triggerHitStop(0.045, 0.08);
+            if (this.particles.spawnDirectionalSparks) {
+              this.particles.spawnDirectionalSparks(this.bike.mesh.position, new THREE.Vector3(0, 0.8, -1), 16);
+            }
+            if (this.particles.spawnGlassShatter) this.particles.spawnGlassShatter(rb.position);
+            soundManager.playCrash();
+            if (this.ui) {
+              this.ui.spawnFloatingCombatText('BOUCLIER -1', `🛡️ ${cs.shieldHp}/3`, '#ff4757', 50, 35);
+            }
+            Haptic.impactHeavy();
+            if (cs.shieldHp <= 0) {
+              this.hasCrossedFinish = true;
+              gameState.endRun();
+              return;
+            }
+          }
+        } else if (this.bike.z > rb.position.z + 2.8) {
+          rb.userData.cleared = true;
+          cs.roadblocksCleared = (cs.roadblocksCleared || 0) + 1;
+          cs.wantedLevel = Math.min(5, (cs.wantedLevel || 1) + 1);
+          gameState.score += 500;
+          soundManager.playNearMiss();
+          if (this.ui) {
+            this.ui.spawnFloatingCombatText('+500', `BARRAGE FRANCHI ! ★${cs.wantedLevel}`, '#5352ed', 50, 38);
+          }
+          Haptic.tap();
+        }
+      }
+    } else if (mode === 'STUNT_RAMPS' && this.environment && !isFlyingCraft) {
+      const ramps = this.environment.stuntRamps || [];
+      for (const ramp of ramps) {
+        if (ramp.hit) continue;
+        const rampZ = ramp.chunk ? (ramp.chunk.position.z + (ramp.localZ || 0)) : (ramp.z || 0);
+        const rampX = ramp.chunk ? (ramp.chunk.position.x + (ramp.localX || 0)) : (ramp.x || 0);
+        if (Math.abs(this.bike.z - rampZ) < 2.4 && Math.abs(this.bike.mesh.position.x - rampX) < 2.6) {
+          ramp.hit = true;
+          this.bike.triggerSpeedBumpJump(currentSpeed * 1.35);
+          this.bike.jumpVelocity = Math.max(this.bike.jumpVelocity || 0, 11.0) * 1.5;
+          cs.jumpsLanded = (cs.jumpsLanded || 0) + 1;
+          soundManager.playSpeedBumpBoingFwump(1.35);
+          this.engine.triggerCameraShake(0.35);
+          if (this.ui) {
+            this.ui.spawnFloatingCombatText('MÉGA SAUT !', '🛫 AIR TIME !', '#ffa502', 50, 38);
+          }
+          Haptic.impactMedium();
+        }
+      }
+
+      const rings = this.environment.aerialRings || [];
+      for (const ring of rings) {
+        if (ring.collected) continue;
+        const ringZ = ring.chunk ? (ring.chunk.position.z + (ring.localZ || 0)) : (ring.z || 0);
+        const ringX = ring.chunk ? (ring.chunk.position.x + (ring.localX || 0)) : (ring.x || 0);
+        if (Math.abs(this.bike.z - ringZ) < 2.6 && Math.abs(this.bike.mesh.position.x - ringX) < 2.8 && this.bike.jumpAltitude > 0.5) {
+          ring.collected = true;
+          if (ring.mesh) ring.mesh.visible = false;
+          cs.ringsCollected = (cs.ringsCollected || 0) + 1;
+          cs.stuntPoints = (cs.stuntPoints || 0) + 1500;
+          gameState.score += 1500;
+          gameState.chargeNitro(35);
+          soundManager.playCoin();
+          if (this.ui) {
+            this.ui.spawnFloatingCombatText('+1500 / +35% NITRO', 'ANNEAU AÉRIEN ! ⭕', '#ffd32a', 50, 35);
+          }
+          Haptic.impactLight();
+        }
+      }
+    } else if (mode === 'EXTREME_STORM') {
+      if (Math.abs(cs.windForce || 0) > 0.01 && !this.bike.isCrashed) {
+        this.bike.x = THREE.MathUtils.clamp(this.bike.x + cs.windForce * simDelta, -5.6, 5.6);
+      }
+      if (cs.warningJustStarted) {
+        cs.warningJustStarted = false;
+        const dirLabel = (cs.nextWindDir || 1) > 0 ? 'RAFALE DROITE ➡️' : '⬅️ RAFALE GAUCHE';
+        if (this.ui) {
+          this.ui.spawnFloatingCombatText('⚠️ VENT VIOLENT', dirLabel, '#1e90ff', 50, 32);
+        }
+      }
+      if (cs.gustJustStarted) {
+        cs.gustJustStarted = false;
+        if (this.engine.triggerLightningFlash) this.engine.triggerLightningFlash();
+      }
+      this._stormLightningTimer -= simDelta;
+      if (this._stormLightningTimer <= 0) {
+        this._stormLightningTimer = 5.0 + Math.random() * 4.5;
+        if (this.engine.triggerLightningFlash) this.engine.triggerLightningFlash();
+      }
+    }
+  }
+
   loop() {
     requestAnimationFrame(() => this.loop());
 
-    const delta = Math.min(this.clock.getDelta(), 0.1); // Sécurité contre les sauts de frame
+    const rawDelta = Math.min(this.clock.getDelta(), 0.1); // Sécurité contre les sauts de frame
+    if (this.engine.updateTimeScale) this.engine.updateTimeScale(rawDelta);
+    const timeScale = this.engine.getTimeScale ? this.engine.getTimeScale() : 1.0;
+    const delta = rawDelta * timeScale;
     TWEEN.update();
 
     // Calcul du braquage final (tactile ou clavier) — verrouillé à 0 pendant le freinage / arrêt
@@ -697,6 +1005,16 @@ class GameApp {
         }
       }
 
+      // 6b. Traces de gomme (skidMarks) & Météo dynamique
+      if (this.skidMarks && this.skidMarks.emit && !isFlyingCraft && !isNonMotorized && currentSpeed > 5 &&
+          (gameState.isBraking || (Math.abs(currentSteer) > 0.65 && currentSpeed > 16))) {
+        const rearPos = new THREE.Vector3(this.bike.mesh.position.x, 0.04, this.bike.z - 0.65);
+        this.skidMarks.emit(rearPos, this.bike.mesh.rotation.y, gameState.isBraking ? 0.9 : 0.55);
+      }
+      if (this.weatherSystem && this.weatherSystem.update) {
+        this.weatherSystem.update(delta, this.bike.z, currentSpeed);
+      }
+
       // 7. Génération et recyclage du monde 3D
       this.environment.update(this.bike.z, delta);
 
@@ -775,9 +1093,14 @@ class GameApp {
               if (isFlyingCraft) return; // En vol dans les airs, la circulation au sol ne heurte pas le jet
               if (isPlayerInvuln || gameState.isNitroActive || this.bike.currentBikeId === 'rouleau' || this.bike.currentBikeId === 'tank') {
                 // Carambolage royal ! La voiture vole en éclats
+                if (this.engine.triggerHitStop) this.engine.triggerHitStop(0.045, 0.08);
                 this.engine.triggerCameraShake(0.65);
                 soundManager.playCrash();
                 this.particles.spawnCrashBurst(car.position);
+                if (this.particles.spawnDirectionalSparks) {
+                  this.particles.spawnDirectionalSparks(car.position, new THREE.Vector3(0, 0.8, -1), 16);
+                }
+                if (this.particles.spawnGlassShatter) this.particles.spawnGlassShatter(car.position);
                 gameState.recordKill(280, 'CARAMBOLAGE', 'car');
                 this.particles.spawnComicBurst(car.position, 280, gameState.combo);
                 if (this.ui) this.ui.spawnFloatingCombatText('+280', 'WRECKAGE !', '#ffa502', 50, 40);
@@ -786,10 +1109,15 @@ class GameApp {
                 // Collision avec un véhicule de circulation
                 const crashed = this.bike.triggerCrash();
                 if (crashed) {
+                  if (this.engine.triggerHitStop) this.engine.triggerHitStop(0.045, 0.08);
                   this.engine.triggerCameraShake(0.75);
                   soundManager.playCrash();
                   soundManager.playPenaltyBuzzer();
                   this.particles.spawnCrashBurst(this.bike.mesh.position);
+                  if (this.particles.spawnDirectionalSparks) {
+                    this.particles.spawnDirectionalSparks(car.position, new THREE.Vector3(0, 0.8, -1), 16);
+                  }
+                  if (this.particles.spawnGlassShatter) this.particles.spawnGlassShatter(car.position);
                   gameState.applyVehicleCrashPenalty(300);
                   if (this.ui) {
                     this.ui.triggerCrashPenaltyUI(300);
@@ -824,19 +1152,24 @@ class GameApp {
             }
           });
 
-          // Impact des balles sur les véhicules de circulation
+          // Impact des balles sur les véhicules de circulation & Boss Convoi
           if (this.traffic) {
             this.traffic.vehicles.forEach(v => {
               if (!v.visible || v.userData.isCrashed) return;
+              const isBoss = !!(v.userData && v.userData.isConvoyBoss);
               const dZ = Math.abs(v.position.z - b.position.z);
               const dX = Math.abs(v.position.x - b.position.x);
-              if (dZ < 2.4 && dX < 1.4) {
+              if (dZ < (isBoss ? 4.5 : 2.4) && dX < (isBoss ? 2.2 : 1.4)) {
                 b.userData.active = false;
                 b.visible = false;
-                this.traffic.triggerCrash(v, 28, (b.position.x > v.position.x ? 1 : -1));
-                this.particles.spawnCrashBurst(v.position);
-                gameState.score += 180;
-                this.particles.spawnComicBurst(v.position, 180, gameState.combo);
+                if (isBoss) {
+                  this.damageConvoyBoss(v, 10, b.position);
+                } else {
+                  this.traffic.triggerCrash(v, 28, (b.position.x > v.position.x ? 1 : -1));
+                  this.particles.spawnCrashBurst(v.position);
+                  gameState.score += 180;
+                  this.particles.spawnComicBurst(v.position, 180, gameState.combo);
+                }
               }
             });
           }
@@ -941,6 +1274,13 @@ class GameApp {
                   Haptic.impactLight();
 
                   this.particles.spawnPropShatter(propPos, prop.userData.type || 'lamp');
+                  if (prop.userData.type === 'lamp') {
+                    if (this.engine.triggerHitStop) this.engine.triggerHitStop(0.045, 0.08);
+                    if (this.particles.spawnDirectionalSparks) {
+                      this.particles.spawnDirectionalSparks(propPos, new THREE.Vector3(0, 0.7, -1), 12);
+                    }
+                    if (this.particles.spawnGlassShatter) this.particles.spawnGlassShatter(propPos);
+                  }
 
                   // Animation physique d'éjection et fracas de l'objet
                   prop.position.y += 2.2;
@@ -1011,9 +1351,14 @@ class GameApp {
               crossingCar.rotX = 6.0;
               crossingCar.rotY = 8.0;
               this.engine.triggerCameraShake(0.85);
+              if (this.engine.triggerHitStop) this.engine.triggerHitStop(0.045, 0.08);
               soundManager.playCrash();
               soundManager.playExplosion();
               this.particles.spawnCrashBurst(crossingCar.mesh.position);
+              if (this.particles.spawnDirectionalSparks) {
+                this.particles.spawnDirectionalSparks(crossingCar.mesh.position, new THREE.Vector3(0, 0.8, -1), 16);
+              }
+              if (this.particles.spawnGlassShatter) this.particles.spawnGlassShatter(crossingCar.mesh.position);
               gameState.recordKill(450, 'CARAMBOLAGE T-BONE', 'car');
               this.particles.spawnComicBurst(crossingCar.mesh.position, 450, gameState.combo);
               if (this.ui) this.ui.spawnFloatingCombatText('+450', 'T-BONE CARAMBOLAGE ! 💥', '#ff9f43', 50, 42);
@@ -1022,10 +1367,15 @@ class GameApp {
               // Accident transversal violent au carrefour !
               const crashed = this.bike.triggerCrash();
               if (crashed) {
+                if (this.engine.triggerHitStop) this.engine.triggerHitStop(0.045, 0.08);
                 this.engine.triggerCameraShake(0.9);
                 soundManager.playCrash();
                 soundManager.playPenaltyBuzzer();
                 this.particles.spawnCrashBurst(this.bike.mesh.position);
+                if (this.particles.spawnDirectionalSparks) {
+                  this.particles.spawnDirectionalSparks(crossingCar.mesh.position, new THREE.Vector3(0, 0.8, -1), 16);
+                }
+                if (this.particles.spawnGlassShatter) this.particles.spawnGlassShatter(crossingCar.mesh.position);
                 gameState.applyVehicleCrashPenalty(350);
                 if (this.ui) {
                   this.ui.triggerCrashPenaltyUI(350);
@@ -1124,12 +1474,15 @@ class GameApp {
         }
       }
 
+      // 10d. Mécaniques et collisions des 5 Épreuves Spéciales
+      this.updateChallengeHooks(delta, currentSpeed, isFlyingCraft);
+
       // 11. Caméra dynamique en poursuite douce avec anticipation de la courbe routière
       const lookAheadRoadX = this.environment.getRoadCenterX(this.bike.z + 18.0) + this.bike.x * 0.7;
       this.engine.updateCameraGameplay(delta, this.bike.mesh.position, currentSpeed, lookAheadRoadX, roadAngle, gameState.isNitroActive);
 
       // 12. Mise à jour de l'état de course (accélération, décélération, combo, vitesse arrêtée lors d'un crash)
-      gameState.update(delta, this.bike.isCrashed);
+      gameState.update(delta, this.bike.isCrashed, this.bike.jumpAltitude > 0.35);
 
       // 13. Conquête de la zone d'assaut urbain (Périmètre purgé au feu - Fin de l'épreuve)
       if (!gameState.isRuinsMode && !this.hasCrossedFinish && (this.bike.z >= this.environment.finishDistance || (this.bike.z / this.environment.finishDistance) >= 1.0)) {

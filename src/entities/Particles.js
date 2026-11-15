@@ -6,6 +6,7 @@
  */
 
 import * as THREE from 'three';
+import { textureFactory } from '../gfx/TextureFactory.js';
 
 export class ParticleSystem {
   constructor(scene) {
@@ -33,6 +34,7 @@ export class ParticleSystem {
       cubeDebris: new THREE.BoxGeometry(0.22, 0.22, 0.22),
       bloodSphere: new THREE.SphereGeometry(0.16, 6, 5),
       ring: new THREE.RingGeometry(0.4, 0.6, 20),
+      shockwavePlane: new THREE.PlaneGeometry(1.4, 1.4),
       confetti: new THREE.PlaneGeometry(0.18, 0.28),
       splatCircle: new THREE.CircleGeometry(0.3, 8),
       speedCylinder: new THREE.CylinderGeometry(0.006, 0.006, 1.8, 4),
@@ -102,6 +104,8 @@ export class ParticleSystem {
       new THREE.MeshBasicMaterial({ color: c, side: THREE.DoubleSide })
     );
 
+    this.sharedMatSet = new Set(Object.values(this.sharedMats));
+
     this.initSpeedLines();
   }
 
@@ -121,7 +125,7 @@ export class ParticleSystem {
       this.speedLines.push({
         mesh,
         relAngle: Math.random() * Math.PI * 2,
-        radius: 6.2 + Math.random() * 4.0,
+        radius: 7.8 + Math.random() * 3.7,
         offsetY: 1.6 + Math.random() * 3.6,
         offsetZ: Math.random() * 36.0,
         speed: 55 + Math.random() * 35
@@ -174,27 +178,109 @@ export class ParticleSystem {
     });
   }
 
-  // Onde de choc circulaire cartoon au sol
-  spawnShockwave(pos, colorHex = 0xffa502) {
+  // Onde de choc circulaire cartoon au sol (AdditiveBlending + texture procédurale)
+  spawnShockwave(pos, colorHex = 0xffa502, maxScale = 3.3) {
+    const tex = typeof textureFactory.getShockwaveTexture === 'function'
+      ? textureFactory.getShockwaveTexture()
+      : null;
     const mat = new THREE.MeshBasicMaterial({
       color: colorHex,
+      map: tex,
       transparent: true,
       opacity: 0.85,
+      blending: THREE.AdditiveBlending,
       side: THREE.DoubleSide,
       depthWrite: false
     });
-    const ring = new THREE.Mesh(this.sharedGeos.ring, mat);
+    const geo = tex ? this.sharedGeos.shockwavePlane : this.sharedGeos.ring;
+    const ring = new THREE.Mesh(geo, mat);
     ring.rotation.x = -Math.PI / 2;
     ring.position.set(pos.x, 0.04, pos.z);
     ring.scale.setScalar(0.4);
 
+    const maxLife = 0.45;
     this.scene.add(ring);
     this.shockwaves.push({
       mesh: ring,
-      growSpeed: 6.5,
-      life: 0.45,
-      maxLife: 0.45
+      growSpeed: Math.max(2.0, (maxScale - 0.4) / maxLife),
+      life: maxLife,
+      maxLife
     });
+  }
+
+  /**
+   * Gerbe d'étincelles directionnelles sur impact métal/route.
+   */
+  spawnDirectionalSparks(pos, dirVec, count = 8, colorHex = 0xffa502) {
+    const dx = dirVec && Number.isFinite(dirVec.x) ? dirVec.x : 0;
+    const dy = dirVec && Number.isFinite(dirVec.y) ? dirVec.y : 0.4;
+    const dz = dirVec && Number.isFinite(dirVec.z) ? dirVec.z : -1;
+    const len = Math.hypot(dx, dy, dz) || 1;
+    const nx = dx / len;
+    const ny = dy / len;
+    const nz = dz / len;
+
+    let mat = this.sharedMats.sparkAmber;
+    if (colorHex !== 0xffa502) {
+      if (!this._customSparkMats) this._customSparkMats = new Map();
+      mat = this._customSparkMats.get(colorHex);
+      if (!mat) {
+        mat = new THREE.MeshBasicMaterial({ color: colorHex });
+        this._customSparkMats.set(colorHex, mat);
+      }
+    }
+
+    for (let i = 0; i < count; i++) {
+      const spark = new THREE.Mesh(this.sharedGeos.sparkBox, mat);
+      spark.position.set(pos.x, (pos.y || 0) + 0.55, pos.z);
+      spark.scale.set(0.65, 0.65, 1.8);
+      this.scene.add(spark);
+
+      const speed = 7.0 + Math.random() * 8.0;
+      const spread = 0.55;
+      this.debris.push({
+        mesh: spark,
+        velX: (nx + (Math.random() - 0.5) * spread) * speed,
+        velY: (ny + 0.25 + Math.random() * 0.45) * speed,
+        velZ: (nz + (Math.random() - 0.5) * spread) * speed,
+        gravity: 16.0,
+        bounce: 0.42,
+        rotVelX: (Math.random() - 0.5) * 18,
+        rotVelY: (Math.random() - 0.5) * 18,
+        life: 0.35 + Math.random() * 0.25
+      });
+    }
+  }
+
+  /**
+   * Éclats de verre cyan lors des impacts pare-brise / vitrines.
+   */
+  spawnGlassShatter(pos) {
+    const count = 12;
+    for (let i = 0; i < count; i++) {
+      const shard = new THREE.Mesh(this.sharedGeos.sparkBox, this.sharedMats.glassCyan);
+      shard.position.set(
+        pos.x + (Math.random() - 0.5) * 0.6,
+        (pos.y || 0) + 0.8 + Math.random() * 0.5,
+        pos.z + (Math.random() - 0.5) * 0.6
+      );
+      shard.scale.set(1.3, 0.35, 1.5);
+      this.scene.add(shard);
+
+      const angle = Math.random() * Math.PI * 2;
+      const spd = 3.5 + Math.random() * 5.5;
+      this.debris.push({
+        mesh: shard,
+        velX: Math.cos(angle) * spd,
+        velY: 3.0 + Math.random() * 4.5,
+        velZ: Math.sin(angle) * spd,
+        gravity: 19.0,
+        bounce: 0.28,
+        rotVelX: (Math.random() - 0.5) * 24,
+        rotVelY: (Math.random() - 0.5) * 24,
+        life: 0.6 + Math.random() * 0.35
+      });
+    }
   }
 
   // Impact cartoon riche avec étoiles, étincelles et onde de choc
@@ -1072,7 +1158,7 @@ export class ParticleSystem {
     }
 
     // 4. Mettre à jour les taches de sang au sol
-    const sharedMatSet = new Set(Object.values(this.sharedMats));
+    const sharedMatSet = this.sharedMatSet;
     for (let s = this.bloodSplats.length - 1; s >= 0; s--) {
       const splat = this.bloodSplats[s];
       splat.life -= delta;
@@ -1239,7 +1325,7 @@ export class ParticleSystem {
   }
 
   reset() {
-    const sharedMatSet = new Set(Object.values(this.sharedMats));
+    const sharedMatSet = this.sharedMatSet;
     this.particles.forEach(p => {
       this.scene.remove(p.mesh);
       if (p.ownsMaterial && p.mesh?.material && !sharedMatSet.has(p.mesh.material)) {
@@ -1280,5 +1366,47 @@ export class ParticleSystem {
     this.smokePuffs = [];
     this.fireballs = [];
     this.scorchMarks = [];
+  }
+
+  dispose() {
+    this.reset();
+
+    if (this.speedLines) {
+      this.speedLines.forEach(sl => {
+        if (sl.mesh) this.scene.remove(sl.mesh);
+      });
+      this.speedLines = [];
+    }
+
+    if (this.sharedGeos) {
+      Object.values(this.sharedGeos).forEach(geo => {
+        if (geo && typeof geo.dispose === 'function') geo.dispose();
+      });
+    }
+
+    if (this.sharedMats) {
+      Object.values(this.sharedMats).forEach(mat => {
+        if (mat && typeof mat.dispose === 'function') mat.dispose();
+      });
+    }
+
+    if (this.confettiMats) {
+      this.confettiMats.forEach(mat => {
+        if (mat && typeof mat.dispose === 'function') mat.dispose();
+      });
+    }
+
+    if (this.speedLineMats) {
+      Object.values(this.speedLineMats).forEach(mat => {
+        if (mat && typeof mat.dispose === 'function') mat.dispose();
+      });
+    }
+
+    if (this._customSparkMats) {
+      this._customSparkMats.forEach(mat => {
+        if (mat && typeof mat.dispose === 'function') mat.dispose();
+      });
+      this._customSparkMats.clear();
+    }
   }
 }

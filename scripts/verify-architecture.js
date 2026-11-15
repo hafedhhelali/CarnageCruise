@@ -117,6 +117,39 @@ assert(soundContent.includes('ENGINE_PROFILES') && soundContent.includes('musicD
 assert(bikeContent.includes('suspVel') && charsContent.includes('char.flyVelY = -char.flyVelY * 0.32'), 'Animation & VFX : Suspension ressort-amortisseur 2nd ordre et ragdoll piétons avec rebonds');
 assert(styleContent.includes('--glass-carbon') && !styleContent.includes('transition: all'), 'UI/UX Carbon-Titanium : Glassmorphisme sombre et zéro transition: all bloquant');
 
+// 12. Tests v0.9.58-beta : Hygiène mémoire GPU, SkidMarks/WeatherSystem & 5 Épreuves
+assert(envContent.includes('dispose(') && envContent.includes('disposeSharedMaterials(') && envContent.includes('setCity('), 'Mémoire GPU : Environment.js implémente dispose() et disposeSharedMaterials() dans setCity()');
+assert(particlesContent.includes('dispose(') && particlesContent.includes('sharedMatSet'), 'Mémoire GPU : Particles.js implémente dispose() et met en cache sharedMatSet');
+assert(bikeContent.includes('dispose(') && bikeContent.includes('reset('), 'Mémoire GPU : Bike.js implémente dispose() et reset()');
+
+const skidMarksPath = path.join(rootDir, 'src', 'gfx', 'SkidMarks.js');
+const weatherSysPath = path.join(rootDir, 'src', 'gfx', 'WeatherSystem.js');
+const skidMarksExists = fs.existsSync(skidMarksPath);
+const weatherSysExists = fs.existsSync(weatherSysPath);
+const skidMarksContent = skidMarksExists ? fs.readFileSync(skidMarksPath, 'utf8') : '';
+const weatherSysContent = weatherSysExists ? fs.readFileSync(weatherSysPath, 'utf8') : '';
+assert(skidMarksExists && skidMarksContent.includes('InstancedMesh'), 'VFX Piste : SkidMarks.js présent et utilise THREE.InstancedMesh');
+assert(weatherSysExists && weatherSysContent.includes('Points'), 'Météo 3D : WeatherSystem.js présent et utilise THREE.Points');
+
+assert(
+  gameStateContent.includes('CONVOY_BOSS') &&
+  gameStateContent.includes('SLALOM_CHRONO') &&
+  gameStateContent.includes('MANHUNT') &&
+  gameStateContent.includes('STUNT_RAMPS') &&
+  gameStateContent.includes('EXTREME_STORM'),
+  'Épreuves : GameState.js définit les 5 épreuves (CONVOY_BOSS, SLALOM_CHRONO, MANHUNT, STUNT_RAMPS, EXTREME_STORM)'
+);
+assert(
+  uiContent.includes('city-challenge-selector') &&
+  uiContent.includes('hud-speed-vignette') &&
+  !styleContent.includes('transition: all') &&
+  !envContent.includes('MeshToonMaterial') &&
+  !bikeContent.includes('MeshToonMaterial') &&
+  !charsContent.includes('MeshToonMaterial') &&
+  !trafficContent.includes('MeshToonMaterial'),
+  'UI/UX Épreuves & Vignette : Sélecteur + vignette présents avec zéro transition: all et zéro MeshToonMaterial'
+);
+
 console.log(`\n📊 RÉSULTAT DU CONTRÔLE QUALITÉ : ${passedTests}/${totalTests} tests réussis.`);
 if (passedTests === totalTests) {
   console.log('✨ Architecture certifiée propre, modulaire et conforme SOLID.');

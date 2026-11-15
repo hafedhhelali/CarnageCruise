@@ -922,34 +922,59 @@ class TextureFactoryService {
   }
 
   getRoadRoughnessMap() {
-    return this.getOrCreateDataMap('road_roughness_v1', (canvas) => {
+    return this.getOrCreateDataMap('road_roughness_v2', (canvas) => {
       canvas.width = 256;
       canvas.height = 512;
       const ctx = canvas.getContext('2d');
 
-      // Accotements et granulats rugueux (~0.92 => 235)
-      ctx.fillStyle = 'rgb(235, 235, 235)';
+      // Accotements et granulats rugueux (0.84-0.94 => 214-240)
+      ctx.fillStyle = 'rgb(228, 228, 228)';
       ctx.fillRect(0, 0, 256, 512);
 
-      // Bandes de roulement lissées par les pneus (~0.52 => 133)
+      // Bandes de roulement lissées par les pneus (0.22-0.34 => 56-87)
       const drawLaneWear = (x0, x1) => {
         const grad = ctx.createLinearGradient(x0, 0, x1, 0);
-        grad.addColorStop(0, 'rgba(235, 235, 235, 0)');
-        grad.addColorStop(0.28, 'rgba(133, 133, 133, 1)');
-        grad.addColorStop(0.5, 'rgba(180, 180, 180, 0.75)');
-        grad.addColorStop(0.72, 'rgba(133, 133, 133, 1)');
-        grad.addColorStop(1, 'rgba(235, 235, 235, 0)');
+        grad.addColorStop(0, 'rgba(228, 228, 228, 0)');
+        grad.addColorStop(0.28, 'rgba(66, 66, 66, 0.92)');
+        grad.addColorStop(0.5, 'rgba(138, 138, 138, 0.65)');
+        grad.addColorStop(0.72, 'rgba(66, 66, 66, 0.92)');
+        grad.addColorStop(1, 'rgba(228, 228, 228, 0)');
         ctx.fillStyle = grad;
         ctx.fillRect(x0, 0, x1 - x0, 512);
       };
-      drawLaneWear(30, 110);
-      drawLaneWear(146, 226);
+      drawLaneWear(28, 112);
+      drawLaneWear(144, 228);
 
-      // Micro-variation minérale
+      // Flaques d'eau / zones polies très lisses (0.14-0.26 => 36-66) pour reflets humides/nocturnes
+      const puddles = [
+        { x: 64, y: 88, rx: 28, ry: 54, v: 38 },
+        { x: 188, y: 175, rx: 32, ry: 68, v: 42 },
+        { x: 78, y: 310, rx: 34, ry: 62, v: 36 },
+        { x: 172, y: 410, rx: 26, ry: 58, v: 45 },
+        { x: 128, y: 240, rx: 22, ry: 44, v: 52 }
+      ];
+      puddles.forEach(p => {
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.scale(1, p.ry / p.rx);
+        const rad = ctx.createRadialGradient(0, 0, p.rx * 0.18, 0, 0, p.rx);
+        rad.addColorStop(0, `rgba(${p.v}, ${p.v}, ${p.v}, 0.96)`);
+        rad.addColorStop(0.55, `rgba(${p.v + 18}, ${p.v + 18}, ${p.v + 18}, 0.72)`);
+        rad.addColorStop(1, 'rgba(228, 228, 228, 0)');
+        ctx.fillStyle = rad;
+        ctx.beginPath();
+        ctx.arc(0, 0, p.rx, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      });
+
+      // Micro-variation minérale (préserve les flaques 36..71 et asphalte 214..240)
       const imgData = ctx.getImageData(0, 0, 256, 512);
       const data = imgData.data;
       for (let i = 0; i < data.length; i += 4) {
-        const v = Math.max(90, Math.min(250, data[i] + (Math.random() - 0.5) * 18));
+        const base = data[i];
+        const jitter = base < 90 ? (Math.random() - 0.5) * 10 : (Math.random() - 0.5) * 20;
+        const v = Math.max(36, Math.min(242, base + jitter));
         data[i] = data[i + 1] = data[i + 2] = v;
       }
       ctx.putImageData(imgData, 0, 0);
@@ -1107,10 +1132,179 @@ class TextureFactoryService {
     });
   }
 
+  getFacadeEmissiveMap(styleVariant = 0) {
+    const v = styleVariant % 4;
+    return this.getOrCreate(`facade_emissive_v1_${v}`, (canvas) => {
+      canvas.width = 256;
+      canvas.height = 512;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(0, 0, 256, 512);
+
+      // Hash déterministe pour allumage réaliste des fenêtres
+      const hash = (a, b, c) => {
+        const n = Math.sin(a * 127.1 + b * 311.7 + c * 74.7) * 43758.5453;
+        return n - Math.floor(n);
+      };
+
+      if (v === 1) {
+        // Tour vitrée moderne : bureaux allumés par plateaux / baies
+        const colX = [14, 74, 136, 198];
+        const rowY = [36, 115, 195, 275, 355];
+        rowY.forEach((fy, r) => {
+          colX.forEach((wx, c) => {
+            const h = hash(v + 1, r, c);
+            if (h > 0.34) {
+              const warm = h > 0.72;
+              const grad = ctx.createLinearGradient(wx, fy, wx, fy + 66);
+              grad.addColorStop(0, warm ? '#ffe4a8' : '#bce6ff');
+              grad.addColorStop(1, warm ? '#ffaa44' : '#69a8dd');
+              ctx.fillStyle = grad;
+              ctx.fillRect(wx, fy, 44, 66);
+            }
+          });
+        });
+      } else {
+        // Immeubles résidentiels/classiques : fenêtres sélectives chaudes
+        const floors = [40, 120, 200, 280, 360];
+        const cols = [18, 76, 134, 192];
+        floors.forEach((fy, r) => {
+          cols.forEach((wx, c) => {
+            const h = hash(v + 2, r, c);
+            if (h > 0.38) {
+              const tone = h > 0.82 ? '#fff0c8' : (h > 0.56 ? '#ffca6e' : '#e08b36');
+              ctx.fillStyle = tone;
+              ctx.fillRect(wx + 3, fy + 3, 36, 50);
+              // Croisillon sombre
+              ctx.fillStyle = '#1a1208';
+              ctx.fillRect(wx + 20, fy + 3, 2, 50);
+              ctx.fillRect(wx + 3, fy + 26, 36, 2);
+            }
+          });
+        });
+      }
+
+      // Devantures de commerces au rez-de-chaussée (toujours accueillantes la nuit)
+      const shopColors = ['#ffcf78', '#7be3ff', '#ff9b6a', '#ffe8a3'];
+      const shopX = [14, 76, 138, 198];
+      shopX.forEach((sx, i) => {
+        if (hash(v + 5, i, 9) > 0.22) {
+          ctx.fillStyle = shopColors[(i + v) % shopColors.length];
+          ctx.fillRect(sx, 450, 44, 52);
+          // Enseigne lumineuse au-dessus de la vitrine
+          ctx.fillStyle = (i + v) % 2 === 0 ? '#ff6a3d' : '#38bdf8';
+          ctx.fillRect(sx + 2, 438, 40, 6);
+        }
+      });
+    });
+  }
+
+  getHeadlightPoolTexture() {
+    const key = 'fx_headlight_pool_v1';
+    if (this.cache.has(key)) return this.cache.get(key);
+    const canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 256;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, 256, 256);
+
+    // Double faisceau projeté vers le haut du canvas (avant du véhicule)
+    const drawBeam = (cx) => {
+      const grad = ctx.createRadialGradient(cx, 232, 4, cx, 118, 128);
+      grad.addColorStop(0, 'rgba(255, 248, 224, 0.92)');
+      grad.addColorStop(0.35, 'rgba(255, 238, 188, 0.45)');
+      grad.addColorStop(0.75, 'rgba(255, 226, 160, 0.14)');
+      grad.addColorStop(1, 'rgba(255, 220, 140, 0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.moveTo(cx - 10, 244);
+      ctx.lineTo(cx - 68, 12);
+      ctx.lineTo(cx + 68, 12);
+      ctx.lineTo(cx + 10, 244);
+      ctx.closePath();
+      ctx.fill();
+    };
+    drawBeam(92);
+    drawBeam(164);
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.wrapS = THREE.ClampToEdgeWrapping;
+    texture.wrapT = THREE.ClampToEdgeWrapping;
+    this.cache.set(key, texture);
+    return texture;
+  }
+
+  getSkidMarkTexture() {
+    const key = 'fx_skid_mark_v1';
+    if (this.cache.has(key)) return this.cache.get(key);
+    const canvas = document.createElement('canvas');
+    canvas.width = 128;
+    canvas.height = 256;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, 128, 256);
+
+    // Double bande de gomme brûlée avec bords adoucis
+    const drawTire = (x, w) => {
+      const grad = ctx.createLinearGradient(0, 0, 0, 256);
+      grad.addColorStop(0, 'rgba(12, 12, 14, 0)');
+      grad.addColorStop(0.15, 'rgba(14, 14, 16, 0.78)');
+      grad.addColorStop(0.85, 'rgba(14, 14, 16, 0.78)');
+      grad.addColorStop(1, 'rgba(12, 12, 14, 0)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(x, 0, w, 256);
+      // Rainures centrales légères
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
+      ctx.fillRect(x + w * 0.35, 16, 2, 224);
+      ctx.fillRect(x + w * 0.65, 16, 2, 224);
+    };
+    drawTire(22, 26);
+    drawTire(80, 26);
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.wrapS = THREE.ClampToEdgeWrapping;
+    texture.wrapT = THREE.ClampToEdgeWrapping;
+    this.cache.set(key, texture);
+    return texture;
+  }
+
+  getShockwaveTexture() {
+    const key = 'fx_shockwave_v1';
+    if (this.cache.has(key)) return this.cache.get(key);
+    const canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 256;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, 256, 256);
+
+    const grad = ctx.createRadialGradient(128, 128, 36, 128, 128, 124);
+    grad.addColorStop(0, 'rgba(255, 255, 255, 0)');
+    grad.addColorStop(0.45, 'rgba(255, 220, 140, 0.12)');
+    grad.addColorStop(0.68, 'rgba(255, 255, 255, 0.92)');
+    grad.addColorStop(0.82, 'rgba(140, 220, 255, 0.55)');
+    grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(128, 128, 124, 0, Math.PI * 2);
+    ctx.fill();
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.wrapS = THREE.ClampToEdgeWrapping;
+    texture.wrapT = THREE.ClampToEdgeWrapping;
+    this.cache.set(key, texture);
+    return texture;
+  }
+
   // Nettoyage complet
   clear() {
     this.cache.forEach(texture => texture.dispose());
     this.cache.clear();
+    if (this.toonGradient) {
+      this.toonGradient.dispose();
+      this.toonGradient = null;
+    }
   }
 }
 

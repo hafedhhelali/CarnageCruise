@@ -26,6 +26,7 @@ const DEFAULT_SAVE = {
     bordeaux: { bestScore: 0, stars: 0, completed: false },
     strasbourg: { bestScore: 0, stars: 0, completed: false }
   },
+  challengeCompletions: {},
   cityDestruction: {},
   exterminatedCities: [],
   unlockedBikes: ['tank', 'aero_jet', 'hovercraft', 'rad_rover', 'snowmobile', 'scooter', 'chopper', 'decapotable', 'trottinette_hache', 'cheval', 'run_ak47', 'run_chainsaw', 'rouleau', 'dragster'],
@@ -103,6 +104,7 @@ export class Storage {
           unlockedCities: Array.from(new Set([...DEFAULT_SAVE.unlockedCities, ...(parsed.unlockedCities || [])])),
           unlockedBikes: Array.from(new Set([...DEFAULT_SAVE.unlockedBikes, ...(parsed.unlockedBikes || [])])),
           exterminatedCities: Array.from(new Set(parsed.exterminatedCities || [])),
+          challengeCompletions: { ...DEFAULT_SAVE.challengeCompletions, ...(parsed.challengeCompletions || {}) },
           cityDestruction: { ...DEFAULT_SAVE.cityDestruction, ...(parsed.cityDestruction || {}) },
           cityScores: { ...DEFAULT_SAVE.cityScores, ...(parsed.cityScores || {}) },
           bikeColors: { ...DEFAULT_SAVE.bikeColors, ...(parsed.bikeColors || {}) },
@@ -128,6 +130,33 @@ export class Storage {
 
   getCityData(cityId) {
     return this.data.cityScores[cityId] || { bestScore: 0, stars: 0, completed: false };
+  }
+
+  getCityChallengeCompletions(cityId) {
+    if (!cityId) return {};
+    if (!this.data.challengeCompletions || typeof this.data.challengeCompletions !== 'object') {
+      this.data.challengeCompletions = {};
+    }
+    return this.data.challengeCompletions[cityId] || {};
+  }
+
+  recordChallengeCompletion(cityId, challengeId) {
+    if (!cityId || !challengeId) return false;
+    if (!this.data.challengeCompletions || typeof this.data.challengeCompletions !== 'object') {
+      this.data.challengeCompletions = {};
+    }
+    if (!this.data.challengeCompletions[cityId] || typeof this.data.challengeCompletions[cityId] !== 'object') {
+      this.data.challengeCompletions[cityId] = {};
+    }
+    const prev = this.data.challengeCompletions[cityId][challengeId];
+    const count = (prev && typeof prev === 'object' ? (prev.count || 0) : (prev ? 1 : 0)) + 1;
+    this.data.challengeCompletions[cityId][challengeId] = {
+      completed: true,
+      count,
+      lastCompletedAt: new Date().toISOString()
+    };
+    this.save();
+    return true;
   }
 
   isCityUnlocked(cityId) {

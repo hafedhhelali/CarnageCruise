@@ -5,7 +5,7 @@
  * et correction de la navigation du Garage.
  */
 
-import { gameState, CITIES, BIKES, getCityBiomeInfo, getCityRegion } from '../core/GameState.js';
+import { gameState, CITIES, BIKES, getCityBiomeInfo, getCityRegion, getCityChallenge, CHALLENGE_DEFS } from '../core/GameState.js';
 import { storage } from '../core/Storage.js';
 import { dailyMissions, loginStreak } from '../core/DailyMissions.js';
 import { soundManager } from '../audio/SoundManager.js';
@@ -29,6 +29,8 @@ export class UIManager {
     this.selectedGarageBike = gameState.selectedBike;
     this.activeModals = []; // Pile des modales actives pour le bouton retour
     this.mapZoom = 1.0;
+    this.selectedChallengeMode = 'STANDARD';
+    this.selectedChallengeCityId = gameState.selectedCity?.id || null;
 
     this.init();
     this.bindGameState();
@@ -1023,6 +1025,21 @@ export class UIManager {
     const starsHtml = isExterminated ? '★★★' : ('★'.repeat(cityData.stars) + '☆'.repeat(3 - cityData.stars));
     const biomeInfo = getCityBiomeInfo(city);
     const cityRegion = getCityRegion(city);
+    const cityChallenge = typeof getCityChallenge === 'function' ? getCityChallenge(city) : null;
+    const challengeCompletions = typeof storage.getCityChallengeCompletions === 'function'
+      ? (storage.getCityChallengeCompletions(city.id) || {})
+      : {};
+    if (this.selectedChallengeCityId !== city.id) {
+      this.selectedChallengeCityId = city.id;
+      this.selectedChallengeMode = 'STANDARD';
+    } else if (this.selectedChallengeMode !== 'STANDARD' && (!cityChallenge || this.selectedChallengeMode !== cityChallenge.id)) {
+      this.selectedChallengeMode = 'STANDARD';
+    }
+    const isChallengeDone = cityChallenge
+      ? (Array.isArray(challengeCompletions)
+        ? challengeCompletions.includes(cityChallenge.id)
+        : Boolean(challengeCompletions[cityChallenge.id]))
+      : false;
 
     detailCard.innerHTML = `
       <!-- 1. BARRE DE NAVIGATION PRÉCISE : CHEVRONS ERGONOMIQUES 44x44 & TITRE PLEINE LARGEUR (ZÉRO TEXTE COUPÉ) -->
@@ -1066,6 +1083,28 @@ export class UIManager {
           <span class="cstat-val cstat-stars">${starsHtml}</span>
         </div>
       </div>
+
+      ${!isExterminated && unlocked ? `
+        <div class="city-challenge-selector" role="group" aria-label="Sélecteur d'épreuve">
+          <button type="button" class="challenge-pill-btn ${this.selectedChallengeMode === 'STANDARD' ? 'active' : ''}" data-challenge="STANDARD">
+            <span class="challenge-pill-icon">⚡</span>
+            <div class="challenge-pill-texts">
+              <span class="challenge-pill-title">ASSAUT STANDARD</span>
+              <span class="challenge-pill-rule">Carnage &amp; objectif classique</span>
+            </div>
+          </button>
+          ${cityChallenge ? `
+            <button type="button" class="challenge-pill-btn ${this.selectedChallengeMode === cityChallenge.id ? 'active' : ''}" data-challenge="${cityChallenge.id}">
+              <span class="challenge-pill-icon">${cityChallenge.icon || '🏆'}</span>
+              <div class="challenge-pill-texts">
+                <span class="challenge-pill-title">${(cityChallenge.title || cityChallenge.name || cityChallenge.id).toUpperCase()}</span>
+                <span class="challenge-pill-rule">${cityChallenge.shortRule || cityChallenge.rule || cityChallenge.description || ''}</span>
+              </div>
+              ${isChallengeDone ? '<span class="challenge-done-badge" title="Épreuve réussie">✔</span>' : ''}
+            </button>
+          ` : ''}
+        </div>
+      ` : ''}
 
       <!-- 3. BANNIÈRE SÉLECTEUR D'ENGIN D'ASSAUT DÉDIÉE (PLEINE LARGEUR ET HAUTE VISIBILITÉ) -->
       <button id="btn-city-vehicle-shortcut" class="city-vehicle-dock-btn" title="Modifier votre bolide dans le Garage">
@@ -1133,6 +1172,20 @@ export class UIManager {
       if (this.navigateMapCity) this.navigateMapCity(1);
     });
 
+    // Sélecteur d'épreuve (Standard vs Épreuve spéciale de la ville)
+    detailCard.querySelectorAll('.challenge-pill-btn').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e?.stopPropagation();
+        soundManager.playClick();
+        const mode = btn.getAttribute('data-challenge') || 'STANDARD';
+        this.selectedChallengeMode = mode;
+        gameState.pendingChallengeMode = mode;
+        detailCard.querySelectorAll('.challenge-pill-btn').forEach((b) => {
+          b.classList.toggle('active', b.getAttribute('data-challenge') === mode);
+        });
+      });
+    });
+
     // Raccourci engin actif
     const cityVehBtn = detailCard.querySelector('#btn-city-vehicle-shortcut');
     if (cityVehBtn) {
@@ -1156,6 +1209,8 @@ export class UIManager {
         soundManager.playClick();
         gameState.selectCity(city.id);
         gameState.isRuinsMode = false;
+        gameState.pendingChallengeMode = this.selectedChallengeMode || 'STANDARD';
+        gameState.challengeMode = gameState.pendingChallengeMode;
         this.triggerCityEntryCinematic(city);
       };
 
@@ -2631,6 +2686,7 @@ export class UIManager {
       try {
         overlay.classList.add('fade-out');
         if (this.onAction) {
+          gameState.pendingChallengeMode = gameState.isRuinsMode ? 'STANDARD' : (this.selectedChallengeMode || 'STANDARD');
           this.onAction('START_RUN', city);
         }
       } catch (err) {
@@ -2953,6 +3009,7 @@ export class UIManager {
     }
 
     hud.innerHTML = `
+      <div class="speed-vignette" id="hud-speed-vignette"></div>
       <div class="hud-top-bar ${gameState.isRuinsMode ? 'hud-top-bar-ruins' : ''}">
         ${gameState.isRuinsMode ? `
           <div class="ruins-hud-banner">
@@ -3725,6 +3782,17 @@ ${gameState.isRuinsMode ? '' : `          <div class="hud-nitro-group">
       const pct = Math.min(100, Math.floor((data.speed / 220) * 100));
       speedGauge.style.width = `${pct}%`;
     }
+
+    const speedVignette = this.root.querySelector('#hud-speed-vignette');
+    if (speedVignette) {
+      const maxRefSpeed = 160;
+      const speedNorm = Math.max(0, Math.min(1, (Number(data.speed) || 0) / maxRefSpeed));
+      const alpha = data.isNitroActive
+        ? Math.max(0.55, speedNorm * 0.85)
+        : Math.max(0, (speedNorm - 0.25) / 0.75) * 0.65;
+      speedVignette.style.setProperty('--speed-alpha', alpha.toFixed(3));
+      speedVignette.classList.toggle('nitro-active', Boolean(data.isNitroActive));
+    }
     if (progressFill) {
       const pct = Math.min(100, Math.floor(data.progressRatio * 100));
       progressFill.style.width = `${pct}%`;
@@ -3788,6 +3856,49 @@ ${gameState.isRuinsMode ? '' : `          <div class="hud-nitro-group">
       if (targetPts) {
         const icon = (dType === 'NUCLEAR') ? '☢️' : (dType === 'DAM' ? '🌊' : '🏔️');
         targetPts.innerHTML = `<span style="color: #2ed573;">${icon} ${distToCore}m</span>`;
+      }
+    } else if (gameState.challengeMode && gameState.challengeMode !== 'STANDARD') {
+      const chMode = gameState.challengeMode;
+      let chPct = null;
+      if (chMode === 'CONVOY_BOSS') {
+        const hp = Math.max(0, data.bossHp ?? gameState.convoyBossHp ?? 100);
+        const maxHp = Math.max(1, data.bossMaxHp ?? gameState.convoyBossMaxHp ?? 100);
+        chPct = Math.min(100, Math.max(0, Math.round(((maxHp - hp) / maxHp) * 100)));
+        if (cityName) cityName.innerHTML = `<span style="color: #fbbf24; font-weight: 900;">🚛 CONVOI BLINDÉ • PV ${hp}/${maxHp}</span>`;
+        if (targetPts) targetPts.innerHTML = `<span style="color: #f43f5e; font-weight: 900;">💥 DÉTRUISEZ LE CONVOI</span>`;
+      } else if (chMode === 'SLALOM_CHRONO') {
+        const timer = Math.max(0, data.slalomTimer ?? gameState.slalomTimer ?? 0);
+        const gates = data.slalomGates ?? gameState.slalomGates ?? 0;
+        const target = Math.max(1, data.slalomTarget ?? gameState.slalomTargetGates ?? 12);
+        chPct = Math.min(100, Math.round((gates / target) * 100));
+        if (cityName) cityName.innerHTML = `<span style="color: #22d3ee; font-weight: 900;">🚩 SLALOM • ${gates}/${target} PORTES</span>`;
+        if (targetPts) targetPts.innerHTML = `<span style="color: ${timer < 10 ? '#f43f5e' : '#fbbf24'}; font-weight: 900;">⏱️ ${timer.toFixed(1)}s</span>`;
+      } else if (chMode === 'MANHUNT') {
+        const stars = Math.max(1, Math.min(5, data.wantedStars ?? gameState.wantedStars ?? 1));
+        const maxHearts = Math.max(1, data.maxHearts ?? 3);
+        const hearts = Math.max(0, Math.min(maxHearts, data.shieldHearts ?? gameState.shieldHearts ?? maxHearts));
+        const heartsHtml = '❤️'.repeat(hearts) + '🖤'.repeat(Math.max(0, maxHearts - hearts));
+        if (cityName) cityName.innerHTML = `<span style="color: #f43f5e; font-weight: 900;">🚨 CHASSE • ${'★'.repeat(stars)}</span>`;
+        if (targetPts) targetPts.innerHTML = `<span>${heartsHtml}</span>`;
+      } else if (chMode === 'STUNT_RAMPS') {
+        const airTime = Math.max(0, data.airTime ?? gameState.totalAirTime ?? 0);
+        const stuntPts = Math.max(0, data.stuntPoints ?? gameState.stuntPoints ?? 0);
+        const stuntTarget = Math.max(1, data.stuntTarget ?? gameState.stuntTarget ?? 1500);
+        chPct = Math.min(100, Math.round((stuntPts / stuntTarget) * 100));
+        if (cityName) cityName.innerHTML = `<span style="color: #a855f7; font-weight: 900;">🛫 STUNT • ${airTime.toFixed(1)}s AIR</span>`;
+        if (targetPts) targetPts.innerHTML = `<span style="color: #fbbf24; font-weight: 900;">🔥 ${stuntPts.toLocaleString('fr-FR')} / ${stuntTarget.toLocaleString('fr-FR')}</span>`;
+      } else if (chMode === 'EXTREME_STORM') {
+        const nearMisses = Math.max(0, data.nearMisses ?? gameState.nearMissCount ?? 0);
+        const nearTarget = Math.max(1, data.nearMissTarget ?? gameState.nearMissTarget ?? 10);
+        const windGust = data.windGust ?? gameState.windDirection ?? 0;
+        const windWarn = Math.abs(windGust) > 0.35 ? (windGust > 0 ? '💨 RAFALE ➔' : '⬅ RAFALE 💨') : '⚡ ORAGE';
+        chPct = Math.min(100, Math.round((nearMisses / nearTarget) * 100));
+        if (cityName) cityName.innerHTML = `<span style="color: #38bdf8; font-weight: 900;">⛈️ TEMPÊTE • ${windWarn}</span>`;
+        if (targetPts) targetPts.innerHTML = `<span style="color: #fbbf24; font-weight: 900;">⚡ FRÔLEMENTS ${nearMisses}/${nearTarget}</span>`;
+      }
+      if (chPct !== null && progressFill) {
+        progressFill.style.width = `${chPct}%`;
+        if (progressPct) progressPct.textContent = chPct >= 100 ? '100% ✔' : `${chPct}%`;
       }
     } else {
       if (cityName) {
@@ -4207,6 +4318,12 @@ ${gameState.isRuinsMode ? '' : `          <div class="hud-nitro-group">
     const currentIndex = CITIES.findIndex(c => c.id === currentCityId);
     const nextCity = (currentIndex >= 0 && currentIndex < CITIES.length - 1) ? CITIES[currentIndex + 1] : null;
     const isNextUnlocked = nextCity && (storage.isCityUnlocked(nextCity.id) || (data.newlyUnlockedCity && data.newlyUnlockedCity.id === nextCity.id));
+    const hasChallengeResult = Boolean(data.challengeMode && data.challengeMode !== 'STANDARD');
+    const challengeSuccess = Boolean(data.challengeCompleted ?? data.challengeSuccess ?? (data.stars >= 1));
+    const challengeBonusCoins = Number(data.challengeBonusCoins || 0);
+    const challengeDef = (hasChallengeResult && typeof CHALLENGE_DEFS === 'object' && CHALLENGE_DEFS)
+      ? CHALLENGE_DEFS[data.challengeMode]
+      : null;
 
     overlay.innerHTML = `
       <div class="modal-card">
@@ -4215,6 +4332,17 @@ ${gameState.isRuinsMode ? '' : `          <div class="hud-nitro-group">
         <div class="stars-awarded">
           ${starsHtml}
         </div>
+
+        ${hasChallengeResult ? `
+          <div class="result-challenge-badge ${challengeSuccess ? 'challenge-success' : 'challenge-failed'}">
+            <span class="result-challenge-icon">${challengeDef?.icon || (challengeSuccess ? '🏆' : '💥')}</span>
+            <div class="result-challenge-texts">
+              <span class="result-challenge-status">${challengeSuccess ? 'ÉPREUVE RÉUSSIE' : 'ÉPREUVE ÉCHOUÉE'}</span>
+              <span class="result-challenge-name">${(challengeDef?.title || challengeDef?.name || data.challengeMode).toUpperCase()}</span>
+            </div>
+            ${challengeSuccess && challengeBonusCoins > 0 ? `<span class="result-challenge-bonus">+${challengeBonusCoins} 🪙</span>` : ''}
+          </div>
+        ` : ''}
 
         <div class="results-stats">
           <div class="result-row">
@@ -4301,6 +4429,9 @@ ${gameState.isRuinsMode ? '' : `          <div class="hud-nitro-group">
         this.activeModals = this.activeModals.filter(m => m !== overlay);
         gameState.selectCity(nextCity.id);
         this.selectedMapCity = nextCity;
+        this.selectedChallengeCityId = nextCity.id;
+        this.selectedChallengeMode = 'STANDARD';
+        gameState.pendingChallengeMode = 'STANDARD';
         if (this.onAction) this.onAction('START_RUN', nextCity);
       });
     }
@@ -4309,6 +4440,7 @@ ${gameState.isRuinsMode ? '' : `          <div class="hud-nitro-group">
       soundManager.playClick();
       overlay.remove();
       this.activeModals = this.activeModals.filter(m => m !== overlay);
+      gameState.pendingChallengeMode = data.challengeMode || this.selectedChallengeMode || 'STANDARD';
       if (this.onAction) this.onAction('START_RUN', gameState.selectedCity);
     });
 

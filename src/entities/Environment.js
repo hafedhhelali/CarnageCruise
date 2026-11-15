@@ -6,7 +6,7 @@
 
 import * as THREE from 'three';
 import { textureFactory } from '../gfx/TextureFactory.js';
-import { getCityBiomeInfo } from '../core/GameState.js';
+import { getCityBiomeInfo, getCityRegion } from '../core/GameState.js';
 
 export class Environment {
   constructor(scene) {
@@ -21,6 +21,9 @@ export class Environment {
     this.finishReached = false;
     this.animTime = 0;
     this.animatedFlags = [];
+    this.isNightMode = false;
+    this.weatherWetness = 0.0;
+    this.challengeMode = null;
 
     this.container = new THREE.Group();
     this.scene.add(this.container);
@@ -63,6 +66,42 @@ export class Environment {
       amphoraBelly: new THREE.SphereGeometry(0.35, 8, 8),
       balconyBase: new THREE.BoxGeometry(0.5, 0.1, 3.2),
       balconyRailing: new THREE.BoxGeometry(0.08, 0.55, 3.2),
+      balconySlab: new THREE.BoxGeometry(0.62, 0.08, 3.2),
+      balconyBracket: new THREE.BoxGeometry(0.42, 0.24, 0.08),
+      balconyTopRail: new THREE.BoxGeometry(0.06, 0.06, 3.2),
+      balconyPost: new THREE.BoxGeometry(0.05, 0.52, 0.05),
+      corniceBar: new THREE.BoxGeometry(0.42, 0.28, 1.0),
+      pilaster: new THREE.BoxGeometry(0.24, 3.6, 0.34),
+      rooftopHVAC: new THREE.BoxGeometry(1.4, 0.75, 1.2),
+      rooftopAntenna: new THREE.CylinderGeometry(0.03, 0.06, 2.8, 6),
+      rooftopWaterTower: new THREE.CylinderGeometry(0.58, 0.58, 1.25, 10),
+      domeGeo: new THREE.SphereGeometry(1.45, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2),
+      parapetTooth: new THREE.BoxGeometry(0.32, 0.52, 0.55),
+      mashrabiyaPanel: new THREE.BoxGeometry(0.2, 1.35, 1.5),
+      archTop: new THREE.CylinderGeometry(0.65, 0.65, 0.24, 10, 1, false, 0, Math.PI),
+      palmSegment: new THREE.CylinderGeometry(0.16, 0.21, 1.05, 6),
+      coconut: new THREE.SphereGeometry(0.13, 6, 6),
+      pineTier: new THREE.ConeGeometry(1.0, 1.4, 7),
+      pineTrunk: new THREE.CylinderGeometry(0.14, 0.22, 1.6, 6),
+      benchSeat: new THREE.BoxGeometry(0.45, 0.07, 1.35),
+      benchBack: new THREE.BoxGeometry(0.07, 0.38, 1.35),
+      hydrantBody: new THREE.CylinderGeometry(0.14, 0.16, 0.62, 8),
+      cafeChair: new THREE.BoxGeometry(0.38, 0.42, 0.38),
+      slalomPoleGeo: new THREE.CylinderGeometry(0.12, 0.14, 3.2, 8),
+      slalomFlagGeo: new THREE.BoxGeometry(0.85, 0.45, 0.08),
+      stuntRampGeo: (() => {
+        const s = new THREE.Shape();
+        s.moveTo(0, 0);
+        s.lineTo(6.4, 0);
+        s.lineTo(6.4, 1.55);
+        s.closePath();
+        const g = new THREE.ExtrudeGeometry(s, { depth: 3.4, bevelEnabled: false });
+        g.rotateY(-Math.PI / 2);
+        g.translate(1.7, 0, -3.2);
+        g.computeVertexNormals();
+        return g;
+      })(),
+      aerialRingGeo: new THREE.TorusGeometry(2.1, 0.18, 8, 20),
       storeSign: new THREE.BoxGeometry(2.4, 0.45, 0.12),
       // Stands de rue (primeurs, bouquinistes, marchand ambulant, fleuriste)
       stallCrate: new THREE.BoxGeometry(0.55, 0.22, 0.4),
@@ -157,6 +196,9 @@ export class Environment {
         bumpMap: textureFactory.getFacadeBumpMap(v),
         bumpScale: 0.12,
         roughnessMap: textureFactory.getFacadeRoughnessMap(v),
+        emissiveMap: textureFactory.getFacadeEmissiveMap(v),
+        emissive: new THREE.Color(0xffd580),
+        emissiveIntensity: this.isNightMode ? 1.15 : 0.0,
         roughness: 1.0,
         metalness: v === 1 ? 0.25 : 0.06
       });
@@ -184,6 +226,9 @@ export class Environment {
         bumpMap: textureFactory.getFacadeBumpMap(0),
         bumpScale: 0.12,
         roughnessMap: textureFactory.getFacadeRoughnessMap(0),
+        emissiveMap: textureFactory.getFacadeEmissiveMap(0),
+        emissive: new THREE.Color(0xffd580),
+        emissiveIntensity: this.isNightMode ? 1.15 : 0.0,
         roughness: 1.0,
         metalness: 0.05
       }),
@@ -263,8 +308,126 @@ export class Environment {
       tentFabric: new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.85 }),
       parasolCyan: new THREE.MeshStandardMaterial({ color: 0x00d2d3, roughness: 0.82, metalness: 0.0 }),
       parasolCoral: new THREE.MeshStandardMaterial({ color: 0xff6b6b, roughness: 0.82, metalness: 0.0 }),
-      goldDome: new THREE.MeshStandardMaterial({ color: 0xfbbf24, roughness: 0.22, metalness: 0.85 })
+      goldDome: new THREE.MeshStandardMaterial({ color: 0xfbbf24, roughness: 0.22, metalness: 0.85 }),
+      foliage3: new THREE.MeshStandardMaterial({ color: 0x38a169, roughness: 0.84, metalness: 0.0 }),
+      rooftopMetal: new THREE.MeshStandardMaterial({ color: 0x636e72, roughness: 0.42, metalness: 0.65 }),
+      turquoiseDome: new THREE.MeshStandardMaterial({ color: 0x0ea5e9, roughness: 0.28, metalness: 0.35 }),
+      limestone: new THREE.MeshStandardMaterial({ color: 0xe8dcc4, roughness: 0.85, metalness: 0.03 }),
+      whitewash: new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.85, metalness: 0.02 }),
+      hydrantRed: new THREE.MeshStandardMaterial({ color: 0xd63031, roughness: 0.45, metalness: 0.35 }),
+      snowMat: new THREE.MeshStandardMaterial({ color: 0xf5f6fa, roughness: 0.78, metalness: 0.02 }),
+      slalomRed: new THREE.MeshStandardMaterial({ color: 0xff4757, emissive: 0xff4757, emissiveIntensity: 0.35, roughness: 0.35 }),
+      slalomBlue: new THREE.MeshStandardMaterial({ color: 0x1e90ff, emissive: 0x1e90ff, emissiveIntensity: 0.35, roughness: 0.35 }),
+      rampMat: new THREE.MeshStandardMaterial({ color: 0xf59e0b, emissive: 0xd97706, emissiveIntensity: 0.28, roughness: 0.4, metalness: 0.35 }),
+      ringMat: new THREE.MeshStandardMaterial({ color: 0x38bdf8, emissive: 0x0ea5e9, emissiveIntensity: 0.85, roughness: 0.25, metalness: 0.5 })
     };
+
+    if (this.weatherWetness > 0) {
+      this.setWeatherWetness(this.weatherWetness);
+    }
+    if (this.isNightMode) {
+      this.setNightMode(true);
+    }
+  }
+
+  disposeSharedMaterials() {
+    if (!this.sharedMats) return;
+    Object.values(this.sharedMats).forEach(entry => {
+      if (Array.isArray(entry)) {
+        entry.forEach(mat => { if (mat && typeof mat.dispose === 'function') mat.dispose(); });
+      } else if (entry && typeof entry.dispose === 'function') {
+        entry.dispose();
+      }
+    });
+    this.sharedMats = null;
+  }
+
+  disposeObjectTree(obj) {
+    if (!obj) return;
+    const sharedGeoSet = new Set(Object.values(this.sharedGeos || {}));
+    const sharedMatSet = new Set();
+    if (this.sharedMats) {
+      Object.values(this.sharedMats).forEach(entry => {
+        if (Array.isArray(entry)) entry.forEach(m => m && sharedMatSet.add(m));
+        else if (entry) sharedMatSet.add(entry);
+      });
+    }
+    obj.traverse(node => {
+      if (node.geometry && !sharedGeoSet.has(node.geometry)) {
+        node.geometry.dispose();
+      }
+      if (node.material) {
+        if (Array.isArray(node.material)) {
+          node.material.forEach(m => { if (m && !sharedMatSet.has(m)) m.dispose(); });
+        } else if (!sharedMatSet.has(node.material)) {
+          node.material.dispose();
+        }
+      }
+    });
+  }
+
+  dispose() {
+    if (this.container) {
+      while (this.container.children.length > 0) {
+        const child = this.container.children[0];
+        this.disposeObjectTree(child);
+        this.container.remove(child);
+      }
+      this.scene.remove(this.container);
+    }
+    this.disposeSharedMaterials();
+    if (this.sharedGeos) {
+      Object.values(this.sharedGeos).forEach(g => { if (g && typeof g.dispose === 'function') g.dispose(); });
+      this.sharedGeos = {};
+    }
+    this.chunks = [];
+    this.animatedFlags = [];
+  }
+
+  setNightMode(isNight) {
+    this.isNightMode = !!isNight;
+    if (!this.sharedMats) return;
+    const facadeIntensity = this.isNightMode ? 1.15 : 0.0;
+    if (Array.isArray(this.sharedMats.facades)) {
+      this.sharedMats.facades.forEach(mat => {
+        if (mat) {
+          mat.emissive.setHex(0xffd580);
+          mat.emissiveIntensity = facadeIntensity;
+        }
+      });
+    }
+    if (this.sharedMats.facade) {
+      this.sharedMats.facade.emissive.setHex(0xffd580);
+      this.sharedMats.facade.emissiveIntensity = facadeIntensity;
+    }
+    if (Array.isArray(this.sharedMats.storeSigns)) {
+      this.sharedMats.storeSigns.forEach(mat => {
+        if (mat) mat.emissiveIntensity = this.isNightMode ? 0.85 : 0.12;
+      });
+    }
+    if (this.sharedMats.storeSign) {
+      this.sharedMats.storeSign.emissiveIntensity = this.isNightMode ? 0.9 : 0.35;
+    }
+  }
+
+  setWeatherWetness(wetness) {
+    const w = Math.max(0, Math.min(1, Number(wetness) || 0));
+    this.weatherWetness = w;
+    if (!this.sharedMats) return;
+    if (this.sharedMats.road) {
+      this.sharedMats.road.roughness = 1.0 - w * 0.66;        // 1.0 -> 0.34
+      this.sharedMats.road.metalness = 0.05 + w * 0.17;       // 0.05 -> 0.22
+      this.sharedMats.road.envMapIntensity = 1.0 + w * 0.85;  // 1.0 -> 1.85
+    }
+    if (this.sharedMats.sidewalk) {
+      this.sharedMats.sidewalk.roughness = 1.0 - w * 0.55;
+      this.sharedMats.sidewalk.metalness = 0.05 + w * 0.12;
+      this.sharedMats.sidewalk.envMapIntensity = 1.0 + w * 0.65;
+    }
+  }
+
+  setChallengeMode(mode) {
+    this.challengeMode = mode || null;
   }
 
   setCity(cityDef, finishDistance = null, isRuins = false) {
@@ -292,14 +455,19 @@ export class Environment {
     this.finishReached = false;
     this.animatedFlags = [];
 
+    // Nettoyer la scène et libérer la VRAM avant de reconstruire
+    while (this.container.children.length > 0) {
+      const child = this.container.children[0];
+      this.disposeObjectTree(child);
+      this.container.remove(child);
+    }
+    this.landmark = null;
+    this.finishArch = null;
+    this.chunks = [];
+    this.disposeSharedMaterials();
+
     // Matériaux partagés et optimisés pour le GPU
     this.initSharedMaterials(cityDef);
-
-    // Nettoyer la scène
-    while (this.container.children.length > 0) {
-      this.container.remove(this.container.children[0]);
-    }
-    this.chunks = [];
 
     // Monument lointain
     this.createCityLandmark(cityDef);
@@ -1495,10 +1663,85 @@ export class Environment {
     // Accessoires urbains, arbres de boulevard, panneaux de virage et stands
     this.populateStreetProps(chunk);
 
+    // Accessoires de mode Défi (Slalom Chrono / Rampes & Anneaux Aériens)
+    this.populateChallengeProps(chunk, index);
+
     // Déformer le ruban routier et aligner tous les éléments sur la courbe exacte à zPos
     this.alignChunkToCurve(chunk, zPos);
 
     return chunk;
+  }
+
+  populateChallengeProps(chunk, index = 0) {
+    if (!this.challengeMode || index === 0) return;
+
+    if (this.challengeMode === 'SLALOM_CHRONO') {
+      const redMat = this.sharedMats?.slalomRed || new THREE.MeshStandardMaterial({ color: 0xff4757 });
+      const blueMat = this.sharedMats?.slalomBlue || new THREE.MeshStandardMaterial({ color: 0x1e90ff });
+      [-15, 15].forEach((localZ, idx) => {
+        const gateSide = (index + idx) % 2 === 0 ? -1 : 1;
+        const baseX = gateSide * 2.1;
+        const gateGroup = new THREE.Group();
+        gateGroup.position.set(baseX, 0, localZ);
+        gateGroup.userData = {
+          isSlalomGate: true,
+          gatePassed: false,
+          gateSide,
+          baseX,
+          localZ,
+          baseRotY: 0,
+          initialY: 0,
+          isHit: false
+        };
+
+        const poleMat = gateSide < 0 ? redMat : blueMat;
+        const poleL = new THREE.Mesh(this.sharedGeos.slalomPoleGeo, poleMat);
+        poleL.position.set(-1.35, 1.6, 0);
+        const poleR = new THREE.Mesh(this.sharedGeos.slalomPoleGeo, poleMat);
+        poleR.position.set(1.35, 1.6, 0);
+        const flagL = new THREE.Mesh(this.sharedGeos.slalomFlagGeo, poleMat);
+        flagL.position.set(-0.95, 2.9, 0);
+        const flagR = new THREE.Mesh(this.sharedGeos.slalomFlagGeo, poleMat);
+        flagR.position.set(0.95, 2.9, 0);
+        gateGroup.add(poleL, poleR, flagL, flagR);
+
+        chunk.add(gateGroup);
+        chunk.userData.props.push(gateGroup);
+      });
+    } else if (this.challengeMode === 'STUNT_RAMPS') {
+      const rampMat = this.sharedMats?.rampMat || new THREE.MeshStandardMaterial({ color: 0xf59e0b });
+      const ringMat = this.sharedMats?.ringMat || new THREE.MeshStandardMaterial({ color: 0x38bdf8 });
+      const baseX = ((index % 3) - 1) * 2.0; // -2, 0, +2
+      const rampZ = -6;
+
+      const ramp = new THREE.Mesh(this.sharedGeos.stuntRampGeo, rampMat);
+      ramp.position.set(baseX, 0, rampZ);
+      ramp.userData = {
+        isStuntRamp: true,
+        baseX,
+        localZ: rampZ,
+        baseRotY: 0,
+        initialY: 0,
+        isHit: false
+      };
+      chunk.add(ramp);
+      chunk.userData.props.push(ramp);
+
+      const ringZ = rampZ + 11;
+      const ring = new THREE.Mesh(this.sharedGeos.aerialRingGeo, ringMat);
+      ring.position.set(baseX, 4.2, ringZ);
+      ring.userData = {
+        isAerialRing: true,
+        ringCollected: false,
+        baseX,
+        localZ: ringZ,
+        baseRotY: 0,
+        initialY: 4.2,
+        isHit: false
+      };
+      chunk.add(ring);
+      chunk.userData.props.push(ring);
+    }
   }
 
   alignChunkToCurve(chunk, zPos) {
@@ -1730,23 +1973,107 @@ export class Environment {
       bMesh.castShadow = true;
       buildingGroup.add(bMesh);
 
-      // Toiture mansardée 3D avec lucarnes et cheminées ou acrotère contemporain selon le style
-      const roofH = styleIdx === 1 ? 0.9 : 2.6;
-      const roofGeo = new THREE.BoxGeometry(bDepth * 0.94, roofH, bWidth * 0.96);
-      const roof = new THREE.Mesh(roofGeo, roofMat);
-      roof.position.set(side * (bDepth / 2), bHeight + roofH / 2, 0);
-      buildingGroup.add(roof);
+      // Toiture & Silhouettes régionales 3D (Europe / Afrique du Nord / Proche-Orient)
+      const region = getCityRegion(this.cityTheme);
+      const rooftopMat = this.sharedMats?.rooftopMetal || balconyMat;
+      const whitewashMat = this.sharedMats?.whitewash || randomMat;
+      const limestoneMat = this.sharedMats?.limestone || randomMat;
 
-      // Lucarnes 3D et cheminées sur les toits mansardés
-      if (styleIdx !== 1) {
-        [-bWidth * 0.26, bWidth * 0.26].forEach(dz => {
-          const dormer = new THREE.Mesh(new THREE.BoxGeometry(0.9, 1.3, 1.0), randomMat);
-          dormer.position.set(side * 0.45, bHeight + 0.9, dz);
-          buildingGroup.add(dormer);
+      if (region === 'AFRIQUE DU NORD') {
+        // Parapet blanchi à la chaux + créneaux + coupole blanche + arches au RDC
+        const parapet = new THREE.Mesh(new THREE.BoxGeometry(bDepth * 0.96, 0.75, bWidth * 0.98), whitewashMat);
+        parapet.position.set(side * (bDepth / 2), bHeight + 0.37, 0);
+        buildingGroup.add(parapet);
+
+        for (let mz = -bWidth * 0.4; mz <= bWidth * 0.4; mz += 1.25) {
+          const tooth = new THREE.Mesh(this.sharedGeos.parapetTooth, whitewashMat);
+          tooth.position.set(side * 0.16, bHeight + 0.98, mz);
+          buildingGroup.add(tooth);
+        }
+        if (parcelIndex % 2 === 0) {
+          const dome = new THREE.Mesh(this.sharedGeos.domeGeo, whitewashMat);
+          dome.position.set(side * (bDepth * 0.35), bHeight + 0.75, 0);
+          buildingGroup.add(dome);
+        }
+        // Arches de rez-de-chaussée
+        [-bWidth * 0.28, bWidth * 0.28].forEach(az => {
+          const arch = new THREE.Mesh(this.sharedGeos.archTop, whitewashMat);
+          arch.rotation.y = side > 0 ? -Math.PI / 2 : Math.PI / 2;
+          arch.position.set(-side * 0.12, 2.55, az);
+          buildingGroup.add(arch);
         });
-        const chimney = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1.4, 1.2), this.sharedMats?.terracotta || roofMat);
-        chimney.position.set(side * (bDepth / 2), bHeight + roofH + 0.5, -bWidth * 0.2);
-        buildingGroup.add(chimney);
+      } else if (region === 'PROCHE-ORIENT') {
+        // Calcaire doré, dôme turquoise/or, moucharabiehs en encorbellement
+        const parapet = new THREE.Mesh(new THREE.BoxGeometry(bDepth * 0.95, 0.85, bWidth * 0.96), limestoneMat);
+        parapet.position.set(side * (bDepth / 2), bHeight + 0.42, 0);
+        buildingGroup.add(parapet);
+
+        const domeMat = parcelIndex % 2 === 0
+          ? (this.sharedMats?.turquoiseDome || roofMat)
+          : (this.sharedMats?.goldDome || roofMat);
+        const dome = new THREE.Mesh(this.sharedGeos.domeGeo, domeMat);
+        dome.scale.set(1.1, 1.25, 1.1);
+        dome.position.set(side * (bDepth * 0.38), bHeight + 0.85, 0);
+        buildingGroup.add(dome);
+
+        // Moucharabiehs saillants
+        [5.2, 8.8].forEach(my => {
+          if (my < bHeight - 1.5) {
+            const mash = new THREE.Mesh(this.sharedGeos.mashrabiyaPanel, this.sharedMats?.wood || balconyMat);
+            mash.position.set(-side * 0.14, my, 0);
+            buildingGroup.add(mash);
+          }
+        });
+      } else {
+        // Europe : toiture mansardée 3D avec lucarnes et cheminées ou acrotère contemporain
+        const roofH = styleIdx === 1 ? 0.9 : 2.6;
+        const roofGeo = new THREE.BoxGeometry(bDepth * 0.94, roofH, bWidth * 0.96);
+        const roof = new THREE.Mesh(roofGeo, roofMat);
+        roof.position.set(side * (bDepth / 2), bHeight + roofH / 2, 0);
+        buildingGroup.add(roof);
+
+        if (styleIdx !== 1) {
+          [-bWidth * 0.26, bWidth * 0.26].forEach(dz => {
+            const dormer = new THREE.Mesh(new THREE.BoxGeometry(0.9, 1.3, 1.0), randomMat);
+            dormer.position.set(side * 0.45, bHeight + 0.9, dz);
+            buildingGroup.add(dormer);
+          });
+          const chimney = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1.4, 1.2), this.sharedMats?.terracotta || roofMat);
+          chimney.position.set(side * (bDepth / 2), bHeight + roofH + 0.5, -bWidth * 0.2);
+          buildingGroup.add(chimney);
+        }
+      }
+
+      // Corniche saillante & Pilastres au rez-de-chaussée
+      const trimMat = region === 'PROCHE-ORIENT' ? limestoneMat : (region === 'AFRIQUE DU NORD' ? whitewashMat : randomMat);
+      const cornice = new THREE.Mesh(this.sharedGeos.corniceBar, trimMat);
+      cornice.scale.z = bWidth + 0.2;
+      cornice.position.set(-side * 0.14, bHeight - 0.12, 0);
+      buildingGroup.add(cornice);
+
+      [-bWidth * 0.42, 0, bWidth * 0.42].forEach(pz => {
+        const pil = new THREE.Mesh(this.sharedGeos.pilaster, trimMat);
+        pil.position.set(-side * 0.1, 1.8, pz);
+        buildingGroup.add(pil);
+      });
+
+      // Équipements de toiture (CVC, antenne ou château d'eau sur toits plats)
+      if (styleIdx === 1 || region !== 'EUROPE') {
+        const kitChoice = parcelIndex % 3;
+        const roofTopY = bHeight + 0.9;
+        if (kitChoice === 0) {
+          const hvac = new THREE.Mesh(this.sharedGeos.rooftopHVAC, rooftopMat);
+          hvac.position.set(side * 2.2, roofTopY + 0.38, -bWidth * 0.22);
+          buildingGroup.add(hvac);
+        } else if (kitChoice === 1) {
+          const ant = new THREE.Mesh(this.sharedGeos.rooftopAntenna, rooftopMat);
+          ant.position.set(side * 1.6, roofTopY + 1.4, bWidth * 0.24);
+          buildingGroup.add(ant);
+        } else {
+          const tower = new THREE.Mesh(this.sharedGeos.rooftopWaterTower, this.sharedMats?.wood || rooftopMat);
+          tower.position.set(side * 2.5, roofTopY + 0.65, bWidth * 0.18);
+          buildingGroup.add(tower);
+        }
       }
 
       // Façade Architecturale HD (4 styles variés : Haussmann, Cyber-Verre, Brique Patrimoine, Art-Déco)
@@ -1755,16 +2082,28 @@ export class Environment {
       facadeMesh.rotation.y = side > 0 ? -Math.PI / 2 : Math.PI / 2;
       buildingGroup.add(facadeMesh);
 
-      // Balcons filants 3D en fer forgé
+      // Balcons ajourés 3D (dalle fine + corbeaux + lisse haute + poteaux)
       [4.2, 8.0].forEach(by => {
         if (by < bHeight - 1.5) {
-          const balcBBox = new THREE.Mesh(this.sharedGeos.balconyBase, balconyMat);
-          balcBBox.position.set(-side * 0.35, by, 0);
-          buildingGroup.add(balcBBox);
+          const balcSlab = new THREE.Mesh(this.sharedGeos.balconySlab, balconyMat);
+          balcSlab.position.set(-side * 0.36, by, 0);
+          buildingGroup.add(balcSlab);
 
-          const balcRail = new THREE.Mesh(this.sharedGeos.balconyRailing, balconyMat);
-          balcRail.position.set(-side * 0.62, by + 0.35, 0);
-          buildingGroup.add(balcRail);
+          [-1.1, 1.1].forEach(bz => {
+            const bracket = new THREE.Mesh(this.sharedGeos.balconyBracket, balconyMat);
+            bracket.position.set(-side * 0.24, by - 0.16, bz);
+            buildingGroup.add(bracket);
+          });
+
+          const topRail = new THREE.Mesh(this.sharedGeos.balconyTopRail, balconyMat);
+          topRail.position.set(-side * 0.64, by + 0.54, 0);
+          buildingGroup.add(topRail);
+
+          [-1.4, -0.5, 0.5, 1.4].forEach(pz => {
+            const post = new THREE.Mesh(this.sharedGeos.balconyPost, balconyMat);
+            post.position.set(-side * 0.64, by + 0.28, pz);
+            buildingGroup.add(post);
+          });
         }
       });
 
@@ -2687,6 +3026,117 @@ export class Environment {
     chunk.userData.props.push(stallGroup);
   }
 
+  buildPalmTree(targetGroup, x = 0, yBase = 0, z = 0, leanDir = 1) {
+    const woodMat = this.sharedMats?.wood || new THREE.MeshStandardMaterial({ color: 0x5d4037, roughness: 0.88 });
+    const f1 = this.sharedMats?.foliage1 || new THREE.MeshStandardMaterial({ color: 0x27ae60, roughness: 0.86 });
+    const f2 = this.sharedMats?.foliage2 || f1;
+    const f3 = this.sharedMats?.foliage3 || f1;
+
+    // Tronc courbé en 4 segments articulés
+    let curX = x;
+    let curY = yBase;
+    const segCount = 4;
+    for (let s = 0; s < segCount; s++) {
+      const seg = new THREE.Mesh(this.sharedGeos.palmSegment, woodMat);
+      const tilt = leanDir * (0.06 + s * 0.045);
+      const scale = 1.0 - s * 0.1;
+      seg.scale.set(scale, 1.0, scale);
+      seg.rotation.z = -tilt;
+      curX += Math.sin(tilt) * 0.48;
+      curY += Math.cos(tilt) * 0.92;
+      seg.position.set(curX, curY - 0.42, z);
+      targetGroup.add(seg);
+    }
+
+    // Noix de coco sous la couronne
+    for (let c = 0; c < 3; c++) {
+      const ang = (c * Math.PI * 2) / 3 + 0.4;
+      const nut = new THREE.Mesh(this.sharedGeos.coconut, woodMat);
+      nut.position.set(curX + Math.sin(ang) * 0.22, curY - 0.08, z + Math.cos(ang) * 0.22);
+      targetGroup.add(nut);
+    }
+
+    // 2 étages de palmes arquées (couronne inférieure retombante + couronne supérieure)
+    const tiers = [
+      { count: 6, pitch: 0.48, yOff: 0.05, radius: 0.92, mat: f2 },
+      { count: 5, pitch: 0.16, yOff: 0.24, radius: 0.82, mat: f3 }
+    ];
+    tiers.forEach((tier, tIdx) => {
+      for (let f = 0; f < tier.count; f++) {
+        const ang = (f * Math.PI * 2) / tier.count + tIdx * 0.35;
+        const frond = new THREE.Mesh(this.sharedGeos.palmLeaf, f % 2 === 0 ? f1 : tier.mat);
+        frond.position.set(
+          curX + Math.sin(ang) * tier.radius,
+          curY + tier.yOff,
+          z + Math.cos(ang) * tier.radius
+        );
+        frond.rotation.y = ang;
+        frond.rotation.x = tier.pitch;
+        targetGroup.add(frond);
+      }
+    });
+  }
+
+  buildBranchingTree(targetGroup, x = 0, yBase = 0, z = 0) {
+    const woodMat = this.sharedMats?.wood || new THREE.MeshStandardMaterial({ color: 0x5d4037, roughness: 0.88 });
+    const f1 = this.sharedMats?.foliage1 || new THREE.MeshStandardMaterial({ color: 0x27ae60, roughness: 0.86 });
+    const f2 = this.sharedMats?.foliage2 || f1;
+    const f3 = this.sharedMats?.foliage3 || f1;
+
+    const trunk = new THREE.Mesh(this.sharedGeos.treeTrunk, woodMat);
+    trunk.position.set(x, yBase + 1.0, z);
+    targetGroup.add(trunk);
+
+    // 2 branches charpentières obliques
+    const brL = new THREE.Mesh(this.sharedGeos.treeTrunk, woodMat);
+    brL.scale.set(0.55, 0.65, 0.55);
+    brL.rotation.z = 0.55;
+    brL.position.set(x - 0.32, yBase + 1.95, z + 0.15);
+    const brR = new THREE.Mesh(this.sharedGeos.treeTrunk, woodMat);
+    brR.scale.set(0.5, 0.6, 0.5);
+    brR.rotation.z = -0.5;
+    brR.position.set(x + 0.3, yBase + 2.05, z - 0.15);
+    targetGroup.add(brL, brR);
+
+    // Multi-houppier 3 tons (foliage1 / foliage2 / foliage3)
+    const cMain = new THREE.Mesh(this.sharedGeos.treeFoliage, f1);
+    cMain.scale.set(1.05, 0.95, 1.05);
+    cMain.position.set(x, yBase + 2.95, z);
+    const cLeft = new THREE.Mesh(this.sharedGeos.treeFoliage, f2);
+    cLeft.scale.set(0.78, 0.72, 0.78);
+    cLeft.position.set(x - 0.62, yBase + 2.48, z + 0.32);
+    const cRight = new THREE.Mesh(this.sharedGeos.treeFoliage, f3);
+    cRight.scale.set(0.74, 0.7, 0.74);
+    cRight.position.set(x + 0.56, yBase + 2.6, z - 0.34);
+    targetGroup.add(cMain, cLeft, cRight);
+  }
+
+  buildSnowyPine(targetGroup, x = 0, yBase = 0, z = 0) {
+    const woodMat = this.sharedMats?.wood || new THREE.MeshStandardMaterial({ color: 0x4a2e1b });
+    const needle1 = this.sharedMats?.foliage2 || new THREE.MeshStandardMaterial({ color: 0x1e3728 });
+    const needle2 = this.sharedMats?.foliage1 || needle1;
+    const snowMat = this.sharedMats?.snowMat || new THREE.MeshStandardMaterial({ color: 0xf5f6fa });
+
+    const trunk = new THREE.Mesh(this.sharedGeos.pineTrunk, woodMat);
+    trunk.position.set(x, yBase + 0.8, z);
+    targetGroup.add(trunk);
+
+    // 4 étages irréguliers de sapin de montagne enneigé
+    const tiers = [
+      { y: 1.8, sx: 1.55, sy: 1.35, rot: 0.1, mat: needle1 },
+      { y: 2.75, sx: 1.25, sy: 1.2, rot: 0.75, mat: needle2 },
+      { y: 3.6, sx: 0.92, sy: 1.05, rot: 1.35, mat: needle1 },
+      { y: 4.35, sx: 0.58, sy: 0.82, rot: 2.0, mat: snowMat }
+    ];
+    tiers.forEach(t => {
+      const cone = new THREE.Mesh(this.sharedGeos.pineTier, t.mat);
+      cone.scale.set(t.sx, t.sy, t.sx * 0.94);
+      cone.rotation.y = t.rot;
+      cone.position.set(x, yBase + t.y, z);
+      targetGroup.add(cone);
+    });
+  }
+
   populateStreetProps(chunk) {
     if (this.isRuinsMode) {
       this.populateRuinsProps(chunk);
@@ -2733,24 +3183,13 @@ export class Environment {
     }
 
     if (this.isMountainMission) {
-      // --- ACCESSOIRES MONTAGNE : SAPINS ENNEIGÉS & BALISES DE PISTE DE SKI ---
-      const pineWoodMat = new THREE.MeshStandardMaterial({ color: 0x4a2e1b });
-      const pineNeedleMat = new THREE.MeshStandardMaterial({ color: 0x1e3728 });
-      const snowMat = new THREE.MeshStandardMaterial({ color: 0xf5f6fa });
+      // --- ACCESSOIRES MONTAGNE : SAPINS ENNEIGÉS 4 ÉTAGES ---
       [-20, -5, 12].forEach((z, idx) => {
         const side = idx % 2 === 0 ? 1 : -1;
         const pine = new THREE.Group();
         pine.position.set(side * 4.8, 0, z);
         pine.userData = { type: 'tree', isHit: false, initialY: 0, baseX: side * 4.8, localZ: z, baseRotY: 0 };
-        const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.18, 1.4, 6), pineWoodMat);
-        trunk.position.y = 0.7;
-        const cone1 = new THREE.Mesh(new THREE.ConeGeometry(1.6, 2.2, 6), pineNeedleMat);
-        cone1.position.y = 2.0;
-        const cone2 = new THREE.Mesh(new THREE.ConeGeometry(1.2, 1.8, 6), pineNeedleMat);
-        cone2.position.y = 3.2;
-        const snowTop = new THREE.Mesh(new THREE.ConeGeometry(0.7, 1.0, 6), snowMat);
-        snowTop.position.y = 3.9;
-        pine.add(trunk, cone1, cone2, snowTop);
+        this.buildSnowyPine(pine, 0, 0, 0);
         chunk.add(pine);
         chunk.userData.props.push(pine);
       });
@@ -2837,37 +3276,47 @@ export class Environment {
       treeGroup.add(grate);
 
       if (isMed && idx % 2 === 0) {
-        // Palmier méditerranéen majestueux
-        const pTrunk = new THREE.Mesh(this.sharedGeos.palmTrunk, woodMat);
-        pTrunk.position.y = 2.1;
-        treeGroup.add(pTrunk);
-        for (let f = 0; f < 6; f++) {
-          const frond = new THREE.Mesh(this.sharedGeos.palmLeaf, f % 2 === 0 ? foliageMat1 : foliageMat2);
-          const ang = (f * Math.PI) / 3;
-          frond.position.set(Math.sin(ang) * 0.85, 3.95, Math.cos(ang) * 0.85);
-          frond.rotation.y = ang;
-          frond.rotation.x = 0.38;
-          treeGroup.add(frond);
-        }
+        // Palmier méditerranéen courbé à 2 étages de palmes et noix de coco
+        this.buildPalmTree(treeGroup, 0, 0.25, 0, treeSide);
       } else {
-        // Platane de boulevard à triple houppier organique volumétrique
-        const trunk = new THREE.Mesh(this.sharedGeos.treeTrunk, woodMat);
-        trunk.position.y = 1.15;
-        treeGroup.add(trunk);
-
-        const cMain = new THREE.Mesh(this.sharedGeos.treeFoliage, foliageMat1);
-        cMain.position.set(0, 2.75, 0);
-        const cLeft = new THREE.Mesh(this.sharedGeos.treeFoliage, foliageMat2);
-        cLeft.scale.set(0.75, 0.72, 0.75);
-        cLeft.position.set(-0.55, 2.4, 0.35);
-        const cRight = new THREE.Mesh(this.sharedGeos.treeFoliage, foliageMat2);
-        cRight.scale.set(0.7, 0.68, 0.7);
-        cRight.position.set(0.5, 2.5, -0.4);
-        treeGroup.add(cMain, cLeft, cRight);
+        // Platane de boulevard branchu à triple houppier (foliage1/2/3)
+        this.buildBranchingTree(treeGroup, 0, 0.25, 0);
       }
 
       chunk.add(treeGroup);
       chunk.userData.props.push(treeGroup);
+
+      // Mobilier léger de trottoir : bancs, bornes d'incendie, chaises de café
+      if (idx === 1) {
+        const bench = new THREE.Group();
+        const bx = xSidewalk + side * 0.45;
+        const bz = z + 2.8;
+        bench.position.set(bx, 0, bz);
+        bench.userData = { type: 'lamp', isHit: false, initialY: 0, baseX: bx, localZ: bz, baseRotY: 0, hideAtIntersection: true, interClearance: 13.0 };
+        const seat = new THREE.Mesh(this.sharedGeos.benchSeat, this.sharedMats?.benchWood || woodMat);
+        seat.position.y = 0.46;
+        const back = new THREE.Mesh(this.sharedGeos.benchBack, this.sharedMats?.benchWood || woodMat);
+        back.position.set(side * 0.2, 0.68, 0);
+        bench.add(seat, back);
+        chunk.add(bench);
+        chunk.userData.props.push(bench);
+      } else if (idx === 2) {
+        const hydrant = new THREE.Mesh(this.sharedGeos.hydrantBody, this.sharedMats?.hydrantRed || lampMat);
+        const hx = side * 4.55;
+        const hz = z - 2.6;
+        hydrant.position.set(hx, 0.56, hz);
+        hydrant.userData = { type: 'lamp', isHit: false, initialY: 0.56, baseX: hx, localZ: hz, baseRotY: 0, hideAtIntersection: true, interClearance: 13.0 };
+        chunk.add(hydrant);
+        chunk.userData.props.push(hydrant);
+      } else if (idx === 3) {
+        const chair = new THREE.Mesh(this.sharedGeos.cafeChair, this.sharedMats?.awningRed || woodMat);
+        const cx = xSidewalk + side * 0.85;
+        const cz = z - 2.2;
+        chair.position.set(cx, 0.46, cz);
+        chair.userData = { type: 'lamp', isHit: false, initialY: 0.46, baseX: cx, localZ: cz, baseRotY: 0, hideAtIntersection: true, interClearance: 13.0 };
+        chunk.add(chair);
+        chunk.userData.props.push(chair);
+      }
 
       // 3. Spécificités par Pays / Région au trottoir
       if (idx === 0) {
@@ -2953,10 +3402,12 @@ export class Environment {
           });
         }
 
-        // Réinitialiser les accessoires urbains (lampadaires, arbres, stands de rue)
+        // Réinitialiser les accessoires urbains (lampadaires, arbres, stands, portes de slalom, anneaux)
         if (chunk.userData && chunk.userData.props) {
           chunk.userData.props.forEach(prop => {
             prop.userData.isHit = false;
+            if (prop.userData.isSlalomGate) prop.userData.gatePassed = false;
+            if (prop.userData.isAerialRing) prop.userData.ringCollected = false;
             prop.visible = true;
             prop.position.y = prop.userData.initialY !== undefined ? prop.userData.initialY : 0;
             if (prop.userData.initialRot) {
@@ -2969,6 +3420,14 @@ export class Environment {
 
         // Recalculer la courbure exacte du ruban routier, des trottoirs et le dégagement des carrefours à newZ !
         this.alignChunkToCurve(chunk, newZ);
+      }
+
+      if (chunk.userData && chunk.userData.props) {
+        chunk.userData.props.forEach(prop => {
+          if (prop.userData && prop.userData.isAerialRing && prop.visible) {
+            prop.rotation.z += delta * 2.2;
+          }
+        });
       }
     });
 

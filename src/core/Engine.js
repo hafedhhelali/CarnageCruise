@@ -187,30 +187,139 @@ export class Engine {
     // Caméra cinématique pour le menu / garage
     this.cinematicAngle = 0;
 
+    // État atmosphère & micro Hit-Stop / Éclair d'orage
+    this.isNight = false;
+    this._currentCityDef = null;
+    this._currentPreset = 'DAY_CLEAR';
+    this.timeScale = 1.0;
+    this.hitStopTimer = 0;
+    this.hitStopCooldown = 0;
+    this._lightningFlashTimer = 0;
+    this._lightningFlashDuration = 0.22;
+    this._baseAmbientIntensity = 0.3;
+    this._baseExposure = 1.0;
+
     // Gestion du redimensionnement
     window.addEventListener('resize', () => this.onResize());
   }
 
+  /**
+   * Applique un preset d'atmosphère complet tout en préservant le brouillard de la ville.
+   * Presets supportés : 'DAY_CLEAR', 'GOLDEN_DUSK', 'OVERCAST_WET', 'NIGHT_NEON'.
+   */
+  applyAtmospherePreset(cityDef, preset = 'DAY_CLEAR') {
+    if (cityDef) {
+      this._currentCityDef = cityDef;
+    }
+    const def = cityDef || this._currentCityDef || {};
+    this._currentPreset = preset;
+
+    if (preset === 'NIGHT_NEON') {
+      this.isNight = true;
+      this.ambientLight.intensity = 0.14;
+      this.ambientLight.color.setHex(0x8fa3c8);
+      this.hemiLight.intensity = 0.22;
+      this.hemiLight.color.setHex(0x9fb8e8);
+      this.hemiLight.groundColor.setHex(0x1a2030);
+      this.dirLight.intensity = 0.22;
+      this.dirLight.color.setHex(0xbfd0ff);
+      this.rimLight.intensity = 0.0;
+      this.scene.environmentIntensity = 0.14;
+      this.renderer.toneMappingExposure = 0.95;
+      this.scene.fog.color.setHex(0x0a0f1e);
+      this.scene.fog.density = def.fogDensity ? Math.max(def.fogDensity, 0.0012) : 0.0012;
+      this.scene.background = new THREE.Color(0x05070f);
+      if (this.skyDome) {
+        this.skyDome.setColors(0x0a1030, 0x151d33);
+        this.skyDome.setNight(true);
+      }
+    } else if (preset === 'GOLDEN_DUSK') {
+      this.isNight = false;
+      this.ambientLight.intensity = 0.32;
+      this.ambientLight.color.setHex(0xffd2a6);
+      this.hemiLight.intensity = 0.58;
+      this.hemiLight.color.setHex(0xffb87a);
+      this.hemiLight.groundColor.setHex(def.ambientColor !== undefined ? def.ambientColor : 0x4a3525);
+      this.dirLight.intensity = 1.2;
+      this.dirLight.color.setHex(0xffa959);
+      this.rimLight.color.setHex(0xff6b4a);
+      this.rimLight.intensity = def.isNuclearMission ? 0.75 : 0.45;
+      this.scene.environmentIntensity = 0.65;
+      this.renderer.toneMappingExposure = 1.02;
+      const duskSky = 0xff9f68;
+      const duskFog = def.fogColor !== undefined ? def.fogColor : 0xd9805f;
+      this.scene.background = new THREE.Color(duskSky);
+      this.scene.fog.color.setHex(duskFog);
+      this.scene.fog.density = def.fogDensity || 0.0011;
+      if (this.skyDome) {
+        this.skyDome.setColors(duskSky, duskFog);
+        this.skyDome.setNight(false);
+      }
+    } else if (preset === 'OVERCAST_WET') {
+      this.isNight = false;
+      this.ambientLight.intensity = 0.36;
+      this.ambientLight.color.setHex(0xb8c8d8);
+      this.hemiLight.intensity = 0.52;
+      this.hemiLight.color.setHex(0x9fb3c8);
+      this.hemiLight.groundColor.setHex(def.ambientColor !== undefined ? def.ambientColor : 0x3b4450);
+      this.dirLight.intensity = 0.75;
+      this.dirLight.color.setHex(0xdce6f2);
+      this.rimLight.color.setHex(def.accentColor !== undefined ? def.accentColor : 0x74b9ff);
+      this.rimLight.intensity = def.isNuclearMission ? 0.75 : 0.32;
+      this.scene.environmentIntensity = 0.65;
+      this.renderer.toneMappingExposure = 0.96;
+      const wetSky = 0x7c8f9e;
+      const wetFog = def.fogColor !== undefined ? def.fogColor : 0x8ea0b0;
+      this.scene.background = new THREE.Color(wetSky);
+      this.scene.fog.color.setHex(wetFog);
+      this.scene.fog.density = def.fogDensity ? Math.max(def.fogDensity, 0.0018) : 0.0018;
+      if (this.skyDome) {
+        this.skyDome.setColors(wetSky, wetFog);
+        this.skyDome.setNight(false);
+      }
+    } else {
+      // 'DAY_CLEAR' (calibrage jour validé + conservation du fog ville)
+      this.isNight = false;
+      this.ambientLight.intensity = 0.3;
+      this.ambientLight.color.setHex(0xcfe8ff);
+      this.hemiLight.intensity = 0.6;
+      if (def.skyColor !== undefined) {
+        this.hemiLight.color.setHex(def.skyColor);
+        this.scene.background = new THREE.Color(def.skyColor);
+      } else {
+        this.hemiLight.color.setHex(0xdff9fb);
+      }
+      if (def.ambientColor !== undefined) {
+        this.hemiLight.groundColor.setHex(def.ambientColor);
+      } else {
+        this.hemiLight.groundColor.setHex(0x535c68);
+      }
+      this.dirLight.intensity = def.skyColor !== undefined ? 1.0 : 1.15;
+      this.dirLight.color.setHex(0xfffdf7);
+      this.rimLight.color.setHex(def.accentColor !== undefined ? def.accentColor : 0x9ec5ff);
+      this.rimLight.intensity = def.isNuclearMission ? 0.75 : (def.skyColor !== undefined ? 0.45 : 0.22);
+      this.scene.environmentIntensity = 0.65;
+      this.renderer.toneMappingExposure = 1.0;
+      if (def.fogColor !== undefined) {
+        this.scene.fog.color.setHex(def.fogColor);
+      } else {
+        this.scene.fog.color.setHex(0xd8e8f8);
+      }
+      this.scene.fog.density = def.fogDensity || 0.0008;
+      if (this.skyDome) {
+        if (def.skyColor !== undefined && def.fogColor !== undefined) {
+          this.skyDome.setColors(def.skyColor, def.fogColor);
+        }
+        this.skyDome.setNight(false);
+      }
+    }
+
+    this._baseAmbientIntensity = this.ambientLight.intensity;
+    this._baseExposure = this.renderer.toneMappingExposure;
+  }
+
   applyCityAtmosphere(cityDef) {
-    this.scene.background = new THREE.Color(cityDef.skyColor);
-    this.scene.fog.color = new THREE.Color(cityDef.fogColor);
-    // Densité de brume par ville (différenciation : glace épaisse, désert clair)
-    if (cityDef.fogDensity) this.scene.fog.density = cityDef.fogDensity;
-    if (this.skyDome) {
-      this.skyDome.setColors(cityDef.skyColor, cityDef.fogColor);
-    }
-    if (this.hemiLight) {
-      this.hemiLight.color = new THREE.Color(cityDef.skyColor);
-      this.hemiLight.groundColor = new THREE.Color(cityDef.ambientColor);
-    }
-    if (this.dirLight) {
-      this.dirLight.color = new THREE.Color(0xfffaed);
-      this.dirLight.intensity = 1.0;
-    }
-    if (this.rimLight) {
-      this.rimLight.color = new THREE.Color(cityDef.accentColor || 0x00cec9);
-      this.rimLight.intensity = cityDef.isNuclearMission ? 0.75 : 0.45;
-    }
+    this.applyAtmospherePreset(cityDef, this.isNight ? 'NIGHT_NEON' : 'DAY_CLEAR');
   }
 
   applyRuinsAtmosphere() {
@@ -234,49 +343,54 @@ export class Engine {
       this.rimLight.color = new THREE.Color(0xff4757);
       this.rimLight.intensity = 0.95;
     }
+    this._baseAmbientIntensity = this.ambientLight.intensity;
+    this._baseExposure = this.renderer.toneMappingExposure;
   }
 
   /**
    * MODE NUIT ALÉATOIRE : bascule complète jour/nuit de l'ambiance 3D.
-   * La nuit, les phares, réverbères, fenêtres éclairées et feux tricolores
-   * deviennent les sources lumineuses principales (le bloom fait le reste).
-   * Les valeurs jour sont le calibrage validé — ne pas les modifier ici.
+   * Délègue à applyAtmospherePreset pour préserver le brouillard de la ville.
    */
   applyNightAtmosphere(night = false) {
-    this.isNight = !!night;
-    if (night) {
-      // Clapotis lunaire froid : tout s'éteint sauf les émissifs urbains
-      this.ambientLight.intensity = 0.14;
-      this.ambientLight.color.setHex(0x8fa3c8);
-      this.hemiLight.intensity = 0.22;
-      this.hemiLight.color.setHex(0x9fb8e8);
-      this.hemiLight.groundColor.setHex(0x1a2030);
-      this.dirLight.intensity = 0.22;
-      this.dirLight.color.setHex(0xbfd0ff); // Lune froide
-      this.rimLight.intensity = 0.0; // Éteint la rim light frontale la nuit (supprime le reflet gênant au milieu de la route)
-      this.scene.environmentIntensity = 0.14;
-      this.renderer.toneMappingExposure = 0.95;
-      this.scene.fog.color.setHex(0x0a0f1e);
-      this.scene.fog.density = 0.0012;
-      this.scene.background = new THREE.Color(0x05070f);
-      if (this.skyDome) {
-        this.skyDome.setColors(0x0a1030, 0x151d33);
-        this.skyDome.setNight(true);
+    this.applyAtmospherePreset(this._currentCityDef, night ? 'NIGHT_NEON' : 'DAY_CLEAR');
+  }
+
+  /**
+   * Micro Hit-Stop : ralentit brièvement l'échelle temporelle sur impact lourd.
+   */
+  triggerHitStop(duration = 0.045, scale = 0.08) {
+    if (this.hitStopCooldown > 0) return;
+    this.hitStopTimer = Math.max(this.hitStopTimer, duration);
+    this.timeScale = THREE.MathUtils.clamp(scale, 0.02, 1.0);
+    this.hitStopCooldown = duration + 0.14;
+  }
+
+  updateTimeScale(rawDelta) {
+    const dt = Math.min(rawDelta, 0.05);
+    if (this.hitStopCooldown > 0) {
+      this.hitStopCooldown = Math.max(0, this.hitStopCooldown - dt);
+    }
+    if (this.hitStopTimer > 0) {
+      this.hitStopTimer -= dt;
+      if (this.hitStopTimer <= 0) {
+        this.hitStopTimer = 0;
+        this.timeScale = 1.0;
       }
-    } else {
-      // Retour au calibrage jour validé
-      this.ambientLight.intensity = 0.3;
-      this.ambientLight.color.setHex(0xcfe8ff);
-      this.hemiLight.intensity = 0.6;
-      this.dirLight.intensity = 1.15;
-      this.dirLight.color.setHex(0xfffdf7);
-      this.rimLight.color.setHex(0x9ec5ff);
-      this.rimLight.intensity = 0.22;
-      this.scene.environmentIntensity = 0.65;
-      this.renderer.toneMappingExposure = 1.0;
-      this.scene.fog.color.setHex(0xd8e8f8);
-      this.scene.fog.density = 0.0008;
-      if (this.skyDome) this.skyDome.setNight(false);
+    }
+    return this.timeScale;
+  }
+
+  getTimeScale() {
+    return this.timeScale;
+  }
+
+  /**
+   * Flash d'éclair pour le mode EXTREME_STORM.
+   */
+  triggerLightningFlash() {
+    this._lightningFlashTimer = this._lightningFlashDuration;
+    if (this.postProcessing) {
+      this.postProcessing.triggerBloomFlash(1.35, 0.18);
     }
   }
 
@@ -303,6 +417,19 @@ export class Engine {
   }
 
   updateDynamicLights(delta) {
+    if (this._lightningFlashTimer > 0) {
+      this._lightningFlashTimer = Math.max(0, this._lightningFlashTimer - delta);
+      if (this._lightningFlashTimer <= 0) {
+        this.ambientLight.intensity = this._baseAmbientIntensity;
+        this.renderer.toneMappingExposure = this._baseExposure;
+      } else {
+        const p = this._lightningFlashTimer / this._lightningFlashDuration;
+        const flicker = Math.sin(p * Math.PI * 3.0) * 0.5 + 0.5;
+        const boost = p * (0.4 + 0.6 * flicker);
+        this.ambientLight.intensity = this._baseAmbientIntensity + boost * 1.15;
+        this.renderer.toneMappingExposure = this._baseExposure + boost * 0.45;
+      }
+    }
     if (!this.dynamicLights) return;
     for (let l of this.dynamicLights) {
       if (!l.active) continue;

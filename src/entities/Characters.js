@@ -258,9 +258,10 @@ export class CharacterSystem {
       const torsoGroup = new THREE.Group();
       torsoGroup.position.y = 0.88;
 
-      const torsoGeo = new THREE.BoxGeometry(0.38, 0.48, 0.25);
+      const torsoGeo = this._capsuleTorsoGeo || (this._capsuleTorsoGeo = new THREE.CapsuleGeometry(0.17, 0.18, 6, 12));
       const torsoMat = this.getMaterial(typeDef.bodyColor);
       const torsoMesh = new THREE.Mesh(torsoGeo, torsoMat);
+      torsoMesh.scale.set(1.12, 1.0, 0.78);
       torsoMesh.castShadow = true;
       torsoGroup.add(torsoMesh);
 
@@ -441,12 +442,13 @@ export class CharacterSystem {
 
       charGroup.add(headGroup);
 
-      // 3. Jambes articulées avec chaussures
+      // 3. Jambes articulées avec chaussures (CapsuleGeometry anatomique)
       const pantsMat = this.getMaterial(typeDef.pantsColor);
+      const legGeo = this._capsuleLegGeo || (this._capsuleLegGeo = new THREE.CapsuleGeometry(0.068, 0.32, 4, 8));
 
       const legLGroup = new THREE.Group();
       legLGroup.position.set(-0.11, 0.65, 0);
-      const legLMesh = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.46, 0.15), pantsMat);
+      const legLMesh = new THREE.Mesh(legGeo, pantsMat);
       legLMesh.position.y = -0.23;
       legLMesh.castShadow = true;
       legLGroup.add(legLMesh);
@@ -457,7 +459,7 @@ export class CharacterSystem {
 
       const legRGroup = new THREE.Group();
       legRGroup.position.set(0.11, 0.65, 0);
-      const legRMesh = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.46, 0.15), pantsMat);
+      const legRMesh = new THREE.Mesh(legGeo, pantsMat);
       legRMesh.position.y = -0.23;
       legRMesh.castShadow = true;
       legRGroup.add(legRMesh);
@@ -466,10 +468,11 @@ export class CharacterSystem {
       legRGroup.add(shoeR);
       charGroup.add(legRGroup);
 
-      // 4. Bras articulés avec mains
+      // 4. Bras articulés avec mains (CapsuleGeometry anatomique)
+      const armGeo = this._capsuleArmGeo || (this._capsuleArmGeo = new THREE.CapsuleGeometry(0.055, 0.30, 4, 8));
       const armLGroup = new THREE.Group();
       armLGroup.position.set(-0.25, 1.05, 0);
-      const armLMesh = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.42, 0.11), torsoMat);
+      const armLMesh = new THREE.Mesh(armGeo, torsoMat);
       armLMesh.position.y = -0.21;
       armLGroup.add(armLMesh);
       const handL = new THREE.Mesh(new THREE.SphereGeometry(0.06, 6, 6), skinMat);
@@ -479,7 +482,7 @@ export class CharacterSystem {
 
       const armRGroup = new THREE.Group();
       armRGroup.position.set(0.25, 1.05, 0);
-      const armRMesh = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.42, 0.11), torsoMat);
+      const armRMesh = new THREE.Mesh(armGeo, torsoMat);
       armRMesh.position.y = -0.21;
       armRGroup.add(armRMesh);
       const handR = new THREE.Mesh(new THREE.SphereGeometry(0.06, 6, 6), skinMat);

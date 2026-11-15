@@ -144,7 +144,90 @@ export class Bike {
     this.axeSlashTrail.position.set(0.2, 0.6, 0.8);
     this.mesh.add(this.axeSlashTrail);
 
+    // Phare volumétrique Fresnel + Halo au sol (Mode Nuit uniquement, masqué sur entités organiques)
+    this.isNightMode = false;
+    this.headlightRig = this._createHeadlightRig();
+    this.headlightRig.visible = false;
+    this.mesh.add(this.headlightRig);
+
     this.buildCurrentBike();
+  }
+
+  _createHeadlightRig() {
+    const rig = new THREE.Group();
+    rig.name = 'HeadlightRig';
+
+    const coneGeo = new THREE.ConeGeometry(2.35, 11.5, 20, 1, true);
+    const coneMat = new THREE.ShaderMaterial({
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+      uniforms: {
+        uColor: { value: new THREE.Color(0xfff1c4) },
+        uOpacity: { value: 0.26 }
+      },
+      vertexShader: `
+        varying vec2 vUv;
+        varying vec3 vNormal;
+        varying vec3 vViewDir;
+        void main() {
+          vUv = uv;
+          vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
+          vNormal = normalize(normalMatrix * normal);
+          vViewDir = normalize(-mvPos.xyz);
+          gl_Position = projectionMatrix * mvPos;
+        }
+      `,
+      fragmentShader: `
+        uniform vec3 uColor;
+        uniform float uOpacity;
+        varying vec2 vUv;
+        varying vec3 vNormal;
+        varying vec3 vViewDir;
+        void main() {
+          float fresnel = pow(abs(dot(normalize(vNormal), normalize(vViewDir))), 1.6);
+          float axial = smoothstep(0.0, 0.22, vUv.y) * smoothstep(1.0, 0.72, vUv.y);
+          float alpha = fresnel * axial * uOpacity;
+          gl_FragColor = vec4(uColor, alpha);
+        }
+      `
+    });
+    this.headlightCone = new THREE.Mesh(coneGeo, coneMat);
+    this.headlightCone.rotation.x = -Math.PI / 2;
+    this.headlightCone.position.set(0, 0.45, 6.8);
+    rig.add(this.headlightCone);
+
+    const poolTex = typeof textureFactory.getHeadlightPoolTexture === 'function'
+      ? textureFactory.getHeadlightPoolTexture()
+      : null;
+    const poolGeo = new THREE.PlaneGeometry(4.8, 12.0);
+    const poolMat = new THREE.MeshBasicMaterial({
+      map: poolTex,
+      color: 0xfff3cc,
+      transparent: true,
+      opacity: poolTex ? 0.44 : 0.16,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+    this.headlightPool = new THREE.Mesh(poolGeo, poolMat);
+    this.headlightPool.rotation.x = -Math.PI / 2;
+    this.headlightPool.position.set(0, 0.035, 7.0);
+    rig.add(this.headlightPool);
+
+    return rig;
+  }
+
+  /**
+   * Active/désactive le faisceau de phare volumétrique selon le mode nuit.
+   * Toujours masqué pour les entités organiques (run_ak47, run_chainsaw, cheval).
+   */
+  setNightMode(isNight) {
+    this.isNightMode = !!isNight;
+    const isOrganicEntity = ['run_ak47', 'run_chainsaw', 'cheval'].includes(this.currentBikeId);
+    if (this.headlightRig) {
+      this.headlightRig.visible = this.isNightMode && !isOrganicEntity;
+    }
   }
 
   disposeGroupChildren(group) {
@@ -184,6 +267,7 @@ export class Bike {
 
     const bikeId = previewBikeId || gameState.selectedBike?.id || storage.getEquippedBike() || 'tank';
     this.currentBikeId = bikeId;
+    this.setNightMode(this.isNightMode);
     const bodyColorHex = storage.getBikeColor(bikeId);
     const bodyMaterial = new THREE.MeshPhysicalMaterial({
       color: bodyColorHex,
@@ -2855,5 +2939,81 @@ export class Bike {
     const pos = new THREE.Vector3();
     pos.set(this.mesh.position.x + 0.2, this.mesh.position.y + 0.3, this.mesh.position.z - 0.7);
     return pos;
+  }
+
+  reset() {
+    this.jumpAltitude = 0;
+    this.jumpVelocity = 0;
+    this.pitchAngle = 0;
+    this.suspOffset = 0;
+    this.suspVel = 0;
+    this.isCrashed = false;
+    this.crashTimer = 0;
+    this.invulnerableTimer = 0;
+    this.isFlyingEscape = false;
+    this.isAttacking = false;
+    this.attackTimer = 0;
+
+    if (this.nitroFlames) {
+      this.nitroFlames.visible = false;
+    }
+    if (this.axeSlashTrail && this.axeSlashTrail.material) {
+      this.axeSlashTrail.material.opacity = 0;
+    }
+    if (this.bulletPool) {
+      this.bulletPool.forEach(b => {
+        b.visible = false;
+        if (b.userData) b.userData.active = false;
+      });
+    }
+  }
+
+  dispose() {
+    this.disposeGroupChildren(this.bikeModelGroup);
+    this.disposeGroupChildren(this.riderGroup);
+
+    if (this.contactShadow) {
+      this.mesh.remove(this.contactShadow);
+      if (this.contactShadow.geometry) this.contactShadow.geometry.dispose();
+      if (this.contactShadow.material) this.contactShadow.material.dispose();
+      this.contactShadow = null;
+    }
+
+    if (this.underglowMesh) {
+      this.mesh.remove(this.underglowMesh);
+      if (this.underglowMesh.geometry) this.underglowMesh.geometry.dispose();
+      if (this.underglowMesh.material) this.underglowMesh.material.dispose();
+      this.underglowMesh = null;
+    }
+
+    if (this.nitroFlames) {
+      this.disposeGroupChildren(this.nitroFlames);
+      this.mesh.remove(this.nitroFlames);
+      this.nitroFlames = null;
+    }
+
+    if (this.axeSlashTrail) {
+      this.mesh.remove(this.axeSlashTrail);
+      if (this.axeSlashTrail.geometry) this.axeSlashTrail.geometry.dispose();
+      if (this.axeSlashTrail.material) this.axeSlashTrail.material.dispose();
+      this.axeSlashTrail = null;
+    }
+
+    if (this.headlightRig) {
+      this.disposeGroupChildren(this.headlightRig);
+      this.mesh.remove(this.headlightRig);
+      this.headlightRig = null;
+    }
+
+    if (this.bulletGroup) {
+      this.disposeGroupChildren(this.bulletGroup);
+      if (this.scene) this.scene.remove(this.bulletGroup);
+      this.bulletGroup = null;
+    }
+    this.bulletPool = [];
+
+    if (this.scene && this.mesh) {
+      this.scene.remove(this.mesh);
+    }
   }
 }

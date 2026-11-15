@@ -51,6 +51,45 @@ export class IntersectionManager {
     this.nextSpawnZ = 95; // Premier grand carrefour à 95m
     this.spawnInterval = 160; // Espacement régulier et équilibré
     this.streetNameIndex = 0;
+
+    this.sharedCarGeos = this.createSharedCarGeos();
+  }
+
+  createSharedCarGeos() {
+    const makeProfile = (pts, width) => {
+      const s = new THREE.Shape();
+      s.moveTo(pts[0][0], pts[0][1]);
+      for (let i = 1; i < pts.length; i++) s.lineTo(pts[i][0], pts[i][1]);
+      s.closePath();
+      const geo = new THREE.ExtrudeGeometry(s, {
+        depth: width,
+        bevelEnabled: true,
+        bevelThickness: 0.08,
+        bevelSize: 0.06,
+        bevelSegments: 2
+      });
+      geo.translate(0, 0, -width / 2);
+      geo.computeVertexNormals();
+      return geo;
+    };
+
+    return {
+      // Berline / Taxi : capot bas, pare-brise incliné, coffre net
+      sedan: makeProfile([
+        [-2.25, 0.34], [-2.2, 0.88], [-1.55, 0.94], [-1.0, 1.46],
+        [0.45, 1.46], [1.15, 0.94], [2.15, 0.82], [2.28, 0.48], [2.2, 0.32]
+      ], 1.78),
+      // Supercar GT : nez plongeant, toit fastback bas
+      supercar: makeProfile([
+        [-2.08, 0.30], [-2.02, 0.82], [-1.2, 0.92], [-0.65, 1.28],
+        [0.42, 1.28], [1.08, 0.86], [2.05, 0.62], [2.12, 0.36], [2.02, 0.28]
+      ], 1.80),
+      // SUV : capot haut, toit long
+      suv: makeProfile([
+        [-2.15, 0.42], [-2.1, 1.62], [-0.85, 1.68], [0.75, 1.66],
+        [1.28, 1.12], [2.15, 1.04], [2.22, 0.56], [2.12, 0.42]
+      ], 1.92)
+    };
   }
 
   // --- CRÉATION DU PORTIQUE DE FEUX TRICOLORES FRANÇAIS HAUTE FIDÉLITÉ (MÂT + POTENCE SURPLOMBANTE + PLAQUE DE RUE LISIBLE) ---
@@ -329,7 +368,7 @@ export class IntersectionManager {
       roughness: 0.32
     });
 
-    // 1. Châssis principal sculpté selon le type
+    // 1. Châssis principal biseauté (ExtrudeGeometry cachée selon le type)
     const isSUV = (type === 'van');
     const isGT = (type === 'compact');
     const chassisL = isGT ? 4.2 : (isSUV ? 4.4 : 4.6);
@@ -337,9 +376,8 @@ export class IntersectionManager {
     const chassisW = isSUV ? 2.1 : 1.95;
     const chassisY = isSUV ? 0.82 : 0.62;
 
-    const chassisGeo = new THREE.BoxGeometry(chassisL, chassisH, chassisW);
-    const chassis = new THREE.Mesh(chassisGeo, bodyMat);
-    chassis.position.y = chassisY;
+    const bodyGeo = isGT ? this.sharedCarGeos.supercar : (isSUV ? this.sharedCarGeos.suv : this.sharedCarGeos.sedan);
+    const chassis = new THREE.Mesh(bodyGeo, bodyMat);
     chassis.castShadow = true;
     carGroup.add(chassis);
 
@@ -349,21 +387,14 @@ export class IntersectionManager {
     grille.position.set(chassisL / 2 + 0.02, chassisY, 0);
     carGroup.add(grille);
 
-    // 2. Habitacle et vitrage profilé
-    const cabinL = isGT ? 2.2 : (isSUV ? 2.7 : 2.5);
-    const cabinH = isGT ? 0.68 : (isSUV ? 0.88 : 0.78);
+    // 2. Vitrage teinté profilé
+    const cabinL = isGT ? 1.85 : (isSUV ? 2.45 : 2.15);
+    const cabinH = isGT ? 0.36 : (isSUV ? 0.52 : 0.44);
     const cabinW = chassisW * 0.88;
-    const cabinX = isGT ? -0.32 : -0.15;
-    const cabinY = chassisY + (chassisH / 2) + (cabinH / 2);
+    const cabinX = isGT ? -0.18 : -0.15;
+    const cabinY = isGT ? 1.06 : (isSUV ? 1.38 : 1.18);
 
-    const cabinGeo = new THREE.BoxGeometry(cabinL, cabinH, cabinW);
-    const cabin = new THREE.Mesh(cabinGeo, bodyMat);
-    cabin.position.set(cabinX, cabinY, 0);
-    cabin.castShadow = true;
-    carGroup.add(cabin);
-
-    // Vitrage teinté réfléchissant
-    const winGeo = new THREE.BoxGeometry(cabinL + 0.04, cabinH * 0.85, cabinW + 0.04);
+    const winGeo = new THREE.BoxGeometry(cabinL, cabinH, cabinW);
     const win = new THREE.Mesh(winGeo, glassMat);
     win.position.set(cabinX, cabinY, 0);
     carGroup.add(win);

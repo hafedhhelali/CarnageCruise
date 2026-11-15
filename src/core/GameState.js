@@ -2276,6 +2276,100 @@ export function getCityBiomeInfo(city) {
   return BIOME_CATALOG.park;
 }
 
+export const CHALLENGE_DEFS = {
+  CONVOY_BOSS: {
+    id: 'CONVOY_BOSS',
+    name: 'Convoi Blindé',
+    shortName: 'Boss Convoi',
+    icon: '🚛',
+    color: '#ff4757',
+    description: 'Détruisez le camion-forteresse du convoi avant la ligne d\'arrivée !',
+    objectiveText: 'Détruire le Boss Convoi (100% PV)',
+    rewardCoins: 150,
+    rewardScore: 8000
+  },
+  SLALOM_CHRONO: {
+    id: 'SLALOM_CHRONO',
+    name: 'Slalom Chrono',
+    shortName: 'Slalom',
+    icon: '⏱️',
+    color: '#00d2d3',
+    description: 'Franchissez les portiques lumineux pour gagner +3.5s avant la fin du chrono !',
+    objectiveText: 'Passer les portiques avant 0.0s',
+    rewardCoins: 120,
+    rewardScore: 3000
+  },
+  MANHUNT: {
+    id: 'MANHUNT',
+    name: 'Chasse à l\'Homme',
+    shortName: 'Manhunt',
+    icon: '🚓',
+    color: '#5352ed',
+    description: 'Forcez les barrages de police et survivez avec votre bouclier à 3 charges !',
+    objectiveText: 'Franchir les barrages & survivre',
+    rewardCoins: 140,
+    rewardScore: 4000
+  },
+  STUNT_RAMPS: {
+    id: 'STUNT_RAMPS',
+    name: 'Méga-Rampes Stunt',
+    shortName: 'Stunt',
+    icon: '🛫',
+    color: '#ffa502',
+    description: 'Enchaînez les sauts géants et traversez les anneaux aériens pour cumuler 6.5s de vol !',
+    objectiveText: 'Cumuler 6.5s d\'Air Time',
+    rewardCoins: 130,
+    rewardScore: 3500
+  },
+  EXTREME_STORM: {
+    id: 'EXTREME_STORM',
+    name: 'Tempête Extrême',
+    shortName: 'Tempête',
+    icon: '⛈️',
+    color: '#1e90ff',
+    description: 'Affrontez des rafales latérales violentes sous l\'orage et réussissez 6 frôlements !',
+    objectiveText: 'Réussir 6 frôlements sous l\'orage',
+    rewardCoins: 160,
+    rewardScore: 5000
+  }
+};
+
+export function getCityChallenge(city) {
+  if (!city) return CHALLENGE_DEFS.MANHUNT;
+  const biomeId = getCityBiomeInfo(city).id;
+  const tag = `${city.typeTag || ''} ${city.subtitle || ''}`.toLowerCase();
+  const country = (city.country || '').toLowerCase();
+
+  if (biomeId === 'canyon' || biomeId === 'cliffs') {
+    return CHALLENGE_DEFS.STUNT_RAMPS;
+  }
+  if (biomeId === 'desert' || biomeId === 'steppe') {
+    return CHALLENGE_DEFS.CONVOY_BOSS;
+  }
+  if (biomeId === 'corniche') {
+    return CHALLENGE_DEFS.EXTREME_STORM;
+  }
+  if (biomeId === 'beach') {
+    return CHALLENGE_DEFS.SLALOM_CHRONO;
+  }
+
+  // Biome 'park' ou urbain : répartition déterministe basée sur typeTag & country
+  if (tag.includes('industriel') || tag.includes('forteresse') || tag.includes('impérial') || tag.includes('nucléaire')) {
+    return CHALLENGE_DEFS.CONVOY_BOSS;
+  }
+  if (tag.includes('viaduc') || tag.includes('pont') || tag.includes('alpes') || tag.includes('volcan')) {
+    return CHALLENGE_DEFS.STUNT_RAMPS;
+  }
+  if (country.includes('irlande') || country.includes('islande') || country.includes('norvège') || country.includes('royaume-uni')) {
+    return CHALLENGE_DEFS.EXTREME_STORM;
+  }
+  if (tag.includes('avenue') || tag.includes('boulevard') || tag.includes('grand-place')) {
+    const seed = (city.id || city.name || '').split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
+    return (seed % 2 === 0) ? CHALLENGE_DEFS.MANHUNT : CHALLENGE_DEFS.SLALOM_CHRONO;
+  }
+  return CHALLENGE_DEFS.MANHUNT;
+}
+
 export const BIKES = [
   {
     id: 'tank',
@@ -2631,6 +2725,10 @@ export class GameState {
     this.nuclearEscapeTimer = 22.0;
     this.nuclearDetonated = false;
 
+    // Épreuves Spéciales (5 modes)
+    this.challengeMode = 'STANDARD';
+    this.challengeState = {};
+
     this.listeners = [];
   }
 
@@ -2670,7 +2768,27 @@ export class GameState {
     }
   }
 
-  startRun() {
+  startRun(cityId = null, challengeMode = 'STANDARD') {
+    if (cityId && (!this.selectedCity || this.selectedCity.id !== cityId)) {
+      this.selectCity(cityId);
+    }
+    const validModes = ['STANDARD', 'CONVOY_BOSS', 'SLALOM_CHRONO', 'MANHUNT', 'STUNT_RAMPS', 'EXTREME_STORM'];
+    this.challengeMode = validModes.includes(challengeMode) ? challengeMode : 'STANDARD';
+
+    if (this.challengeMode === 'CONVOY_BOSS') {
+      this.challengeState = { bossHp: 100, bossMaxHp: 100, stagesDropped: 0, defeated: false };
+    } else if (this.challengeMode === 'SLALOM_CHRONO') {
+      this.challengeState = { timeLeft: 32.0, gatesPassed: 0, gatesTotal: 12, gateStreak: 0 };
+    } else if (this.challengeMode === 'MANHUNT') {
+      this.challengeState = { wantedLevel: 1, roadblocksCleared: 0, roadblocksTotal: 4, shieldHp: 3 };
+    } else if (this.challengeMode === 'STUNT_RAMPS') {
+      this.challengeState = { airTimeTotal: 0, airTimeTarget: 6.5, jumpsLanded: 0, stuntPoints: 0, ringsCollected: 0 };
+    } else if (this.challengeMode === 'EXTREME_STORM') {
+      this.challengeState = { windForce: 0, windTimer: 4.0, windWarning: 0, nearMissCount: 0, nearMissTarget: 6 };
+    } else {
+      this.challengeState = {};
+    }
+
     this.score = 0;
     this.drivingScoreAccumulator = 0;
     this.combo = 1;
@@ -2723,7 +2841,12 @@ export class GameState {
     }
     const track = (this.disasterType !== 'STREET') ? 'NUCLEAR' : 'GAMEPLAY';
     soundManager.switchMusicTrack(track);
-    this.notify('run_started', { city: this.selectedCity, bike: this.selectedBike });
+    this.notify('run_started', {
+      city: this.selectedCity,
+      bike: this.selectedBike,
+      challengeMode: this.challengeMode,
+      challengeState: this.challengeState
+    });
   }
 
   triggerCataclysm(forcedType = null) {
@@ -2956,6 +3079,10 @@ export class GameState {
     this.chargeNitro(15);
     soundManager.playNearMiss();
 
+    if (this.challengeMode === 'EXTREME_STORM' && this.challengeState) {
+      this.challengeState.nearMissCount = (this.challengeState.nearMissCount || 0) + 1;
+    }
+
     this.notify('score_updated', {
       score: this.score,
       added: nearMissPoints,
@@ -3007,7 +3134,7 @@ export class GameState {
     }
   }
 
-  update(delta, isCrashed = false) {
+  update(delta, isCrashed = false, isAirborne = false) {
     if (this.currentMode === 'COUNTDOWN' || isCrashed) {
       this.speed = 0;
       this.drivingScoreAccumulator = 0;
@@ -3024,7 +3151,9 @@ export class GameState {
         nitroTimer: Math.max(0, this.nitroTimer),
         kills: this.killsCount,
         killQuota: this.selectedCity.killQuota || 30,
-        worldTotal: this.worldPopulationEliminated
+        worldTotal: this.worldPopulationEliminated,
+        challengeMode: this.challengeMode,
+        challengeState: { ...this.challengeState }
       });
       return;
     }
@@ -3144,6 +3273,43 @@ export class GameState {
       this.nuclearEscapeTimer = this.cataclysmEscapeTimer;
     }
 
+    // Suivi spécifique des 5 Épreuves Spéciales
+    if (this.challengeMode === 'SLALOM_CHRONO') {
+      this.challengeState.timeLeft = Math.max(0, (this.challengeState.timeLeft || 0) - delta);
+      if (this.challengeState.timeLeft <= 0) {
+        this.challengeState.failed = true;
+        this.endRun();
+        return;
+      }
+    } else if (this.challengeMode === 'STUNT_RAMPS') {
+      if (isAirborne) {
+        this.challengeState.airTimeTotal = (this.challengeState.airTimeTotal || 0) + delta;
+      }
+    } else if (this.challengeMode === 'EXTREME_STORM') {
+      if (Math.abs(this.challengeState.windForce || 0) > 0.01) {
+        this.challengeState.windTimer -= delta;
+        if (this.challengeState.windTimer <= 0) {
+          this.challengeState.windForce = 0;
+          this.challengeState.windTimer = 3.5 + Math.random() * 2.5;
+        }
+      } else if ((this.challengeState.windWarning || 0) > 0) {
+        this.challengeState.windWarning -= delta;
+        if (this.challengeState.windWarning <= 0) {
+          const dir = this.challengeState.nextWindDir || (Math.random() < 0.5 ? -1 : 1);
+          this.challengeState.windForce = dir * (2.2 + Math.random() * 1.3);
+          this.challengeState.windTimer = 2.2;
+          this.challengeState.gustJustStarted = true;
+        }
+      } else {
+        this.challengeState.windTimer -= delta;
+        if (this.challengeState.windTimer <= 0) {
+          this.challengeState.windWarning = 1.1;
+          this.challengeState.nextWindDir = Math.random() < 0.5 ? -1 : 1;
+          this.challengeState.warningJustStarted = true;
+        }
+      }
+    }
+
     // Distance parcourue
     this.distance += this.speed * delta;
     this.notify('stats_tick', {
@@ -3164,7 +3330,9 @@ export class GameState {
       cataclysmPhase: this.cataclysmPhase,
       cataclysmEscapeTimer: this.cataclysmEscapeTimer,
       nuclearPhase: this.nuclearPhase,
-      nuclearEscapeTimer: this.nuclearEscapeTimer
+      nuclearEscapeTimer: this.nuclearEscapeTimer,
+      challengeMode: this.challengeMode,
+      challengeState: { ...this.challengeState }
     });
   }
 
@@ -3181,6 +3349,52 @@ export class GameState {
     }
     this.isGameOver = true;
     soundManager.stopAllGameplaySounds(); // Coupe immédiatement tous les sons persistants de l'épreuve
+
+    // Évaluation & récompenses des 5 Épreuves Spéciales
+    let challengeSuccess = false;
+    let challengeRewardCoins = 0;
+    if (this.challengeMode && this.challengeMode !== 'STANDARD') {
+      const cs = this.challengeState || {};
+      if (this.challengeMode === 'CONVOY_BOSS') {
+        challengeSuccess = !!cs.defeated;
+        if (challengeSuccess) {
+          challengeRewardCoins = 150;
+          if (!cs.defeatScoreAwarded) {
+            this.score += 8000;
+            cs.defeatScoreAwarded = true;
+          }
+        }
+      } else if (this.challengeMode === 'SLALOM_CHRONO') {
+        challengeSuccess = !cs.failed && (cs.timeLeft > 0) && ((cs.gatesPassed || 0) >= 6);
+        if (challengeSuccess) {
+          challengeRewardCoins = 120 + (cs.gatesPassed || 0) * 10;
+          this.score += 1500 + (cs.gatesPassed || 0) * 200;
+        }
+      } else if (this.challengeMode === 'MANHUNT') {
+        challengeSuccess = (cs.shieldHp > 0) && ((cs.roadblocksCleared || 0) >= 2);
+        if (challengeSuccess) {
+          challengeRewardCoins = 140 + (cs.roadblocksCleared || 0) * 25;
+          this.score += 2000 + (cs.roadblocksCleared || 0) * 300;
+        }
+      } else if (this.challengeMode === 'STUNT_RAMPS') {
+        challengeSuccess = (cs.airTimeTotal || 0) >= (cs.airTimeTarget || 6.5);
+        if (challengeSuccess) {
+          challengeRewardCoins = 130 + (cs.ringsCollected || 0) * 20;
+          this.score += 2000 + (cs.ringsCollected || 0) * 250;
+        }
+      } else if (this.challengeMode === 'EXTREME_STORM') {
+        challengeSuccess = (cs.nearMissCount || 0) >= (cs.nearMissTarget || 6);
+        if (challengeSuccess) {
+          challengeRewardCoins = 160;
+          this.score += 3000;
+        }
+      }
+
+      if (challengeSuccess) {
+        this.coinsEarned += challengeRewardCoins;
+        storage.recordChallengeCompletion(this.selectedCity.id, this.challengeMode);
+      }
+    }
 
     // Extermination proportionnelle à la vraie population de la métropole
     const cityPop = this.selectedCity.population || this.selectedCity.exterminationTarget || 500000;
@@ -3231,7 +3445,10 @@ export class GameState {
       distance: Math.floor(this.distance),
       maxCombo: this.comboMax,
       city: this.selectedCity,
-      newlyUnlockedCity
+      newlyUnlockedCity,
+      challengeMode: this.challengeMode,
+      challengeSuccess,
+      challengeRewardCoins
     });
   }
 }

@@ -18,8 +18,42 @@ export class Traffic {
     this.container = new THREE.Group();
     this.scene.add(this.container);
 
+    const makeChassisGeo = (pts, width) => {
+      const s = new THREE.Shape();
+      s.moveTo(pts[0][0], pts[0][1]);
+      for (let i = 1; i < pts.length; i++) s.lineTo(pts[i][0], pts[i][1]);
+      s.closePath();
+      const geo = new THREE.ExtrudeGeometry(s, {
+        depth: width,
+        bevelEnabled: true,
+        bevelThickness: 0.08,
+        bevelSize: 0.06,
+        bevelSegments: 2
+      });
+      geo.translate(0, 0, -width / 2);
+      geo.rotateY(-Math.PI / 2);
+      geo.computeVertexNormals();
+      return geo;
+    };
+
     // Géométries partagées optimisées
     this.sharedGeos = {
+      chassisSupercar: makeChassisGeo([
+        [-2.25, 0.24], [-2.18, 0.72], [-1.25, 0.80], [-0.68, 1.08],
+        [0.35, 1.08], [1.05, 0.72], [2.20, 0.48], [2.28, 0.26]
+      ], 1.92),
+      chassisSedan: makeChassisGeo([
+        [-2.30, 0.30], [-2.22, 0.84], [-1.52, 0.90], [-0.95, 1.40],
+        [0.45, 1.40], [1.12, 0.90], [2.22, 0.78], [2.32, 0.36]
+      ], 1.82),
+      chassisSUV: makeChassisGeo([
+        [-2.25, 0.34], [-2.18, 1.56], [-0.90, 1.64], [0.75, 1.62],
+        [1.26, 1.04], [2.20, 0.96], [2.28, 0.42]
+      ], 1.92),
+      chassisAmbulance: makeChassisGeo([
+        [-2.32, 0.36], [-2.28, 2.02], [0.85, 2.02], [1.18, 1.48],
+        [2.12, 1.18], [2.26, 0.46]
+      ], 1.98),
       wheelTire: new THREE.CylinderGeometry(0.36, 0.36, 0.24, 18),
       wheelRim: new THREE.CylinderGeometry(0.24, 0.24, 0.25, 10),
       wheelCap: new THREE.SphereGeometry(0.08, 8, 8),
@@ -78,6 +112,10 @@ export class Traffic {
     // Initialiser l'ambulance d'urgence après avoir défini les géométries et matériaux partagés
     this.ambulance = this.createAmbulance();
     this.container.add(this.ambulance);
+
+    // Boss de convoi et barrages de police (modes Défi)
+    this.bossTruck = null;
+    this.roadblocks = [];
   }
 
   initPool() {
@@ -134,28 +172,19 @@ export class Traffic {
     });
 
     if (type === 'supercar') {
-      // 1. HYPERCAR CYBER-GT SURBAISSÉE & AÉRODYNAMIQUE
-      // Châssis principal profilé
-      const chassis = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.38, 4.6), carPaint);
-      chassis.position.y = 0.38;
+      // 1. HYPERCAR CYBER-GT SURBAISSÉE & AÉRODYNAMIQUE (profil biseauté)
+      const chassis = new THREE.Mesh(this.sharedGeos.chassisSupercar, carPaint);
       chassis.castShadow = true;
       group.add(chassis);
-
-      // Capot plongeant sculpté
-      const hood = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.16, 1.4), carPaint);
-      hood.position.set(0, 0.46, 1.4);
-      hood.rotation.x = 0.08;
-      group.add(hood);
 
       // Lame avant aérodynamique (Front Splitter Carbone)
       const splitter = new THREE.Mesh(new THREE.BoxGeometry(2.14, 0.06, 0.5), darkTrimMat);
       splitter.position.set(0, 0.22, 2.25);
       group.add(splitter);
 
-      // Cockpit profilé avec verrière panoramique fumée
-      const canopy = new THREE.Mesh(new THREE.BoxGeometry(1.55, 0.44, 2.1), this.sharedMats.tintedGlass);
-      canopy.position.set(0, 0.76, -0.15);
-      canopy.castShadow = true;
+      // Verrière panoramique fumée
+      const canopy = new THREE.Mesh(new THREE.BoxGeometry(1.52, 0.28, 1.65), this.sharedMats.tintedGlass);
+      canopy.position.set(0, 0.88, -0.15);
       group.add(canopy);
 
       // Toit profilé en carbone
@@ -200,23 +229,14 @@ export class Traffic {
       }
 
     } else if (type === 'taxi_luxe') {
-      // 2. TAXI PARISIEN HAUT DE GAMME (BI-TON JAUNE ÉLÉGANT & TOIT NOIR LAQUÉ)
-      const body = new THREE.Mesh(new THREE.BoxGeometry(1.96, 0.62, 4.65), carPaint);
-      body.position.y = 0.55;
+      // 2. TAXI PARISIEN HAUT DE GAMME (profil biseauté)
+      const body = new THREE.Mesh(this.sharedGeos.chassisSedan, carPaint);
       body.castShadow = true;
       group.add(body);
 
-      // Capot avant légèrement fuyant
-      const hood = new THREE.Mesh(new THREE.BoxGeometry(1.85, 0.12, 1.3), carPaint);
-      hood.position.set(0, 0.72, 1.45);
-      hood.rotation.x = 0.06;
-      group.add(hood);
-
-      // Habitacle spacieux avec vitrage teinté et montants laqués
-      const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.72, 0.62, 2.5), roofMat);
-      cabin.position.set(0, 1.12, -0.15);
-      cabin.castShadow = true;
-      group.add(cabin);
+      const cabinGlass = new THREE.Mesh(new THREE.BoxGeometry(1.92, 0.38, 1.85), this.sharedMats.tintedGlass);
+      cabinGlass.position.set(0, 1.12, -0.18);
+      group.add(cabinGlass);
 
       // Vitrages latéraux et pare-brises avant/arrière
       const windshield = new THREE.Mesh(new THREE.PlaneGeometry(1.64, 0.72), this.sharedMats.tintedGlass);
@@ -247,22 +267,19 @@ export class Traffic {
       }
 
     } else if (type === 'suv_urban') {
-      // 3. SUV CITADIN ROBUSTE & SPORTIF
-      const lowerBody = new THREE.Mesh(new THREE.BoxGeometry(2.05, 0.75, 4.6), carPaint);
-      lowerBody.position.y = 0.65;
+      // 3. SUV CITADIN ROBUSTE & SPORTIF (profil biseauté)
+      const lowerBody = new THREE.Mesh(this.sharedGeos.chassisSUV, carPaint);
       lowerBody.castShadow = true;
       group.add(lowerBody);
 
       // Sabot de protection noir et passages de roues robustes
-      const skidPlate = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.18, 4.65), darkTrimMat);
+      const skidPlate = new THREE.Mesh(new THREE.BoxGeometry(2.05, 0.18, 4.5), darkTrimMat);
       skidPlate.position.y = 0.32;
       group.add(skidPlate);
 
-      // Pavillon & vitrages surélevés
-      const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.85, 0.72, 2.7), roofMat);
-      cabin.position.set(0, 1.34, -0.15);
-      cabin.castShadow = true;
-      group.add(cabin);
+      const cabinGlass = new THREE.Mesh(new THREE.BoxGeometry(1.98, 0.44, 2.25), this.sharedMats.tintedGlass);
+      cabinGlass.position.set(0, 1.32, -0.18);
+      group.add(cabinGlass);
 
       // Barres de toit aérodynamiques chromées
       for (let s of [-0.78, 0.78]) {
@@ -285,23 +302,14 @@ export class Traffic {
       }
 
     } else {
-      // 4. BERLINE ALLEMANDE DE PRESTIGE (GRAN COUPE SPORTIF)
-      const body = new THREE.Mesh(new THREE.BoxGeometry(1.98, 0.62, 4.7), carPaint);
-      body.position.y = 0.55;
+      // 4. BERLINE ALLEMANDE DE PRESTIGE (profil biseauté)
+      const body = new THREE.Mesh(this.sharedGeos.chassisSedan, carPaint);
       body.castShadow = true;
       group.add(body);
 
-      // Capot élégant à nervures
-      const hood = new THREE.Mesh(new THREE.BoxGeometry(1.86, 0.12, 1.4), carPaint);
-      hood.position.set(0, 0.7, 1.45);
-      hood.rotation.x = 0.05;
-      group.add(hood);
-
-      // Ligne de toit fuyante fastback
-      const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.74, 0.6, 2.5), roofMat);
-      cabin.position.set(0, 1.12, -0.15);
-      cabin.castShadow = true;
-      group.add(cabin);
+      const cabinGlass = new THREE.Mesh(new THREE.BoxGeometry(1.90, 0.38, 1.85), this.sharedMats.tintedGlass);
+      cabinGlass.position.set(0, 1.12, -0.18);
+      group.add(cabinGlass);
 
       const windshield = new THREE.Mesh(new THREE.PlaneGeometry(1.68, 0.72), this.sharedMats.tintedGlass);
       windshield.position.set(0, 1.12, 1.14);
@@ -413,20 +421,14 @@ export class Traffic {
       roughness: 0.15
     });
 
-    // Caisse principale d'ambulance
-    const box = new THREE.Mesh(new THREE.BoxGeometry(2.1, 1.8, 4.6), bodyMat);
-    box.position.y = 1.25;
+    // Caisse & cabine profilées d'ambulance (ExtrudeGeometry biseautée)
+    const box = new THREE.Mesh(this.sharedGeos.chassisAmbulance, bodyMat);
     box.castShadow = true;
     group.add(box);
 
-    // Cabine avant
-    const cabin = new THREE.Mesh(new THREE.BoxGeometry(2.05, 1.35, 1.5), bodyMat);
-    cabin.position.set(0, 0.95, 2.2);
-    group.add(cabin);
-
     // Pare-brise
-    const windshield = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.75, 0.1), glassMat);
-    windshield.position.set(0, 1.15, 2.92);
+    const windshield = new THREE.Mesh(new THREE.BoxGeometry(1.88, 0.68, 0.1), glassMat);
+    windshield.position.set(0, 1.48, 1.24);
     windshield.rotation.x = 0.28;
     group.add(windshield);
 
@@ -522,6 +524,176 @@ export class Traffic {
       this.ambulance.visible = false;
       this.ambulance.userData.active = false;
     }
+    if (this.bossTruck) {
+      this.bossTruck.visible = false;
+      this.bossTruck.userData.active = false;
+      this.bossTruck.userData.hp = this.bossTruck.userData.maxHp || 100;
+    }
+    if (this.roadblocks && this.roadblocks.length > 0) {
+      this.roadblocks.forEach(rb => this.container.remove(rb));
+      this.roadblocks = [];
+    }
+  }
+
+  /**
+   * Fait apparaître le camion blindé du Boss de convoi (mode CONVOY_BOSS)
+   */
+  spawnConvoyBoss(zPos = 120) {
+    if (!this.bossTruck) {
+      const group = new THREE.Group();
+      const armorMat = new THREE.MeshStandardMaterial({ color: 0x2f3640, roughness: 0.45, metalness: 0.72 });
+      const trimMat = new THREE.MeshStandardMaterial({ color: 0x1e272e, roughness: 0.5, metalness: 0.6 });
+      const hazardMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.4, metalness: 0.25 });
+      const strobeMat = new THREE.MeshStandardMaterial({
+        color: 0xff2e43,
+        emissive: 0xff2e43,
+        emissiveIntensity: 2.2,
+        roughness: 0.15
+      });
+
+      // Caisson blindé arrière
+      const cargo = new THREE.Mesh(new THREE.BoxGeometry(2.55, 2.35, 6.2), armorMat);
+      cargo.position.set(0, 1.72, -1.2);
+      cargo.castShadow = true;
+      group.add(cargo);
+
+      // Bandes de blindage latérales
+      for (const sx of [-1.3, 1.3]) {
+        const rib = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.35, 5.8), hazardMat);
+        rib.position.set(sx, 1.25, -1.2);
+        group.add(rib);
+      }
+
+      // Cabine blindée avant + pare-buffle
+      const cab = new THREE.Mesh(new THREE.BoxGeometry(2.45, 2.1, 2.3), armorMat);
+      cab.position.set(0, 1.58, 3.05);
+      cab.castShadow = true;
+      group.add(cab);
+
+      const visor = new THREE.Mesh(new THREE.BoxGeometry(2.25, 0.48, 0.12), this.sharedMats.tintedGlass);
+      visor.position.set(0, 1.92, 4.2);
+      group.add(visor);
+
+      const ramBumper = new THREE.Mesh(new THREE.BoxGeometry(2.65, 0.65, 0.45), trimMat);
+      ramBumper.position.set(0, 0.68, 4.35);
+      group.add(ramBumper);
+
+      // Gyrophare stroboscopique rouge sur le toit
+      const strobe = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.24, 0.35), strobeMat);
+      strobe.position.set(0, 2.78, 3.0);
+      group.add(strobe);
+
+      // 6 roues lourdes
+      const wheelMeshes = [];
+      [
+        [-1.32, 0.46, 3.1], [1.32, 0.46, 3.1],
+        [-1.32, 0.46, -0.4], [1.32, 0.46, -0.4],
+        [-1.32, 0.46, -3.1], [1.32, 0.46, -3.1]
+      ].forEach(([wx, wy, wz]) => {
+        const wg = new THREE.Group();
+        wg.position.set(wx, wy, wz);
+        const tire = new THREE.Mesh(this.sharedGeos.wheelTire, this.sharedMats.rubber);
+        tire.scale.set(1.28, 1.28, 1.28);
+        tire.rotation.z = Math.PI / 2;
+        const rim = new THREE.Mesh(this.sharedGeos.wheelRim, this.sharedMats.rim);
+        rim.scale.set(1.28, 1.28, 1.28);
+        rim.rotation.z = Math.PI / 2;
+        wg.add(tire, rim);
+        group.add(wg);
+        wheelMeshes.push(wg);
+      });
+
+      group.userData = {
+        isBossTruck: true,
+        active: true,
+        hp: 100,
+        maxHp: 100,
+        speed: 23.5,
+        lane: 0,
+        wheelMeshes,
+        bossStrobe: strobe,
+        strobeTimer: 0
+      };
+
+      this.bossTruck = group;
+      this.container.add(group);
+    }
+
+    this.bossTruck.position.set(0, 0, zPos);
+    this.bossTruck.rotation.set(0, 0, 0);
+    this.bossTruck.visible = true;
+    this.bossTruck.userData.active = true;
+    this.bossTruck.userData.hp = 100;
+    this.bossTruck.userData.maxHp = 100;
+    return this.bossTruck;
+  }
+
+  /**
+   * Fait apparaître un barrage de police (2 patrouilleurs en biais + herse centrale) pour MANHUNT
+   */
+  spawnPoliceRoadblock(zPos = 140) {
+    const rbGroup = new THREE.Group();
+    const policeWhite = new THREE.MeshStandardMaterial({ color: 0xf5f6fa, roughness: 0.28, metalness: 0.25 });
+    const policeDark = new THREE.MeshStandardMaterial({ color: 0x192a56, roughness: 0.35, metalness: 0.4 });
+    const strobeBlueMat = new THREE.MeshStandardMaterial({
+      color: 0x0984e3, emissive: 0x0984e3, emissiveIntensity: 2.1, roughness: 0.15
+    });
+    const strobeRedMat = new THREE.MeshStandardMaterial({
+      color: 0xff4757, emissive: 0xff4757, emissiveIntensity: 2.1, roughness: 0.15
+    });
+    const spikeMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.4, metalness: 0.6 });
+
+    const strobes = [];
+    const buildCruiser = (xOff, angleY) => {
+      const car = new THREE.Group();
+      car.position.set(xOff, 0, 0);
+      car.rotation.y = angleY;
+
+      const body = new THREE.Mesh(this.sharedGeos.chassisSedan, policeWhite);
+      body.castShadow = true;
+      car.add(body);
+
+      const doorBand = new THREE.Mesh(new THREE.BoxGeometry(1.92, 0.42, 1.55), policeDark);
+      doorBand.position.set(0, 0.58, -0.05);
+      car.add(doorBand);
+
+      const glass = new THREE.Mesh(new THREE.BoxGeometry(1.88, 0.36, 1.75), this.sharedMats.tintedGlass);
+      glass.position.set(0, 1.12, -0.18);
+      car.add(glass);
+
+      const barBase = new THREE.Mesh(new THREE.BoxGeometry(1.25, 0.12, 0.28), policeDark);
+      barBase.position.set(0, 1.48, -0.2);
+      const sBlue = new THREE.Mesh(new THREE.BoxGeometry(0.54, 0.16, 0.26), strobeBlueMat);
+      sBlue.position.set(-0.3, 1.52, -0.2);
+      const sRed = new THREE.Mesh(new THREE.BoxGeometry(0.54, 0.16, 0.26), strobeRedMat);
+      sRed.position.set(0.3, 1.52, -0.2);
+      car.add(barBase, sBlue, sRed);
+      strobes.push(sBlue, sRed);
+
+      rbGroup.add(car);
+    };
+
+    // Deux voitures inclinées laissant un passage central étroit / destructible
+    buildCruiser(-2.65, 0.48);
+    buildCruiser(2.65, -0.48);
+
+    // Herse / bande d'arrêt visuelle au centre
+    const spikeStrip = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.12, 0.38), spikeMat);
+    spikeStrip.position.set(0, 0.06, 0.35);
+    rbGroup.add(spikeStrip);
+
+    rbGroup.position.set(0, 0, zPos);
+    rbGroup.userData = {
+      isRoadblock: true,
+      active: true,
+      isHit: false,
+      strobes,
+      strobeTimer: 0
+    };
+
+    this.container.add(rbGroup);
+    this.roadblocks.push(rbGroup);
+    return rbGroup;
   }
 
   spawnAhead(playerZ, roadCurveFunc) {
@@ -680,6 +852,58 @@ export class Traffic {
       if (amb.position.z < playerZ - 45 || amb.position.z > playerZ + 280) {
         amb.visible = false;
         amb.userData.active = false;
+      }
+    }
+
+    // 4. Animation et déplacement du Boss de convoi (CONVOY_BOSS)
+    if (this.bossTruck && this.bossTruck.userData.active) {
+      const boss = this.bossTruck;
+      boss.position.z += boss.userData.speed * delta;
+      const curveX = roadCurveFunc ? roadCurveFunc(boss.position.z) : 0;
+      const aheadX = roadCurveFunc ? roadCurveFunc(boss.position.z + 3.0) : 0;
+      boss.position.x = curveX + (boss.userData.lane || 0);
+      boss.rotation.y = Math.atan2(aheadX - curveX, 3.0);
+
+      boss.userData.strobeTimer = (boss.userData.strobeTimer || 0) + delta;
+      if (boss.userData.bossStrobe) {
+        boss.userData.bossStrobe.visible = Math.sin(boss.userData.strobeTimer * 18.0) > 0;
+      }
+      if (boss.userData.wheelMeshes) {
+        boss.userData.wheelMeshes.forEach(w => {
+          w.children.forEach(part => part.rotation.x += delta * 22.0);
+        });
+      }
+      if (boss.userData.hp <= 0) {
+        boss.visible = false;
+        boss.userData.active = false;
+      }
+    }
+
+    // 5. Barrages de police (MANHUNT) : gyrophares + alignement courbe + recyclage
+    if (this.roadblocks && this.roadblocks.length > 0) {
+      for (let i = this.roadblocks.length - 1; i >= 0; i--) {
+        const rb = this.roadblocks[i];
+        if (!rb.userData.active) continue;
+
+        const curveX = roadCurveFunc ? roadCurveFunc(rb.position.z) : 0;
+        const aheadX = roadCurveFunc ? roadCurveFunc(rb.position.z + 3.0) : 0;
+        rb.position.x = curveX;
+        rb.rotation.y = Math.atan2(aheadX - curveX, 3.0);
+
+        rb.userData.strobeTimer = (rb.userData.strobeTimer || 0) + delta;
+        const toggle = Math.sin(rb.userData.strobeTimer * 24.0) > 0;
+        if (rb.userData.strobes) {
+          rb.userData.strobes.forEach((s, idx) => {
+            s.visible = (idx % 2 === 0) ? toggle : !toggle;
+          });
+        }
+
+        if (rb.position.z < playerZ - 35) {
+          rb.userData.active = false;
+          rb.visible = false;
+          this.container.remove(rb);
+          this.roadblocks.splice(i, 1);
+        }
       }
     }
   }
