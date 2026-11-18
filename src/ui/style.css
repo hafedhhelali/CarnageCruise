@@ -6597,12 +6597,12 @@ html, body {
   inset: 0;
   pointer-events: none;
   z-index: 1;
-  opacity: var(--speed-alpha, 0);
+  opacity: calc(var(--speed-alpha, 0) * 0.45);
   background: radial-gradient(
     ellipse at center,
-    rgba(6, 8, 13, 0) 60%,
-    rgba(244, 63, 94, 0.26) 86%,
-    rgba(6, 8, 13, 0.72) 100%
+    rgba(6, 8, 13, 0) 74%,
+    rgba(244, 63, 94, 0.14) 90%,
+    rgba(6, 8, 13, 0.35) 100%
   );
   transition: opacity 0.12s ease;
 }
@@ -6610,8 +6610,8 @@ html, body {
 .speed-vignette.nitro-active {
   background: radial-gradient(
     ellipse at center,
-    rgba(34, 211, 238, 0) 60%,
-    rgba(34, 211, 238, 0.34) 84%,
-    rgba(245, 158, 11, 0.55) 100%
+    rgba(34, 211, 238, 0) 74%,
+    rgba(34, 211, 238, 0.18) 90%,
+    rgba(245, 158, 11, 0.28) 100%
   );
 }

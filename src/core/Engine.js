@@ -241,9 +241,9 @@ export class Engine {
   }
 
   _getBackgroundIntensity(preset) {
-    if (preset === 'NIGHT_NEON') return 0.52;
-    if (preset === 'OVERCAST_WET') return 0.62;
-    return 0.88;
+    if (preset === 'NIGHT_NEON') return 0.42;
+    if (preset === 'OVERCAST_WET') return 0.55;
+    return 0.64;
   }
 
   _setSkyDomeVisible(visible) {

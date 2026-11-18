@@ -1019,31 +1019,53 @@ class GameApp {
       this.bike.mesh.position.z = this.bike.z;
       this.bike.mesh.rotation.y = roadAngle * 0.28 - (this.bike.smoothedSteer || 0) * 0.18;
 
-      // 4b. EFFETS DE SURFACE : montée de trottoir & frôlement des façades
-      // Montée sur le trottoir (|x| > 4.25m) : gerbe d'étincelles de bordure,
-      // poussière, micro-secousse caméra et retour haptique à l'impact
+      // 4b. EFFETS DE SURFACE : montée de trottoir, atterrissage de saut & frottement aux murs
       const bikeAbsX = Math.abs(this.bike.x);
-      const onSidewalkNow = bikeAbsX > 4.25;
+      const onSidewalkNow = bikeAbsX > 5.4;
       if (onSidewalkNow !== this._wasOnSidewalk) {
         this._wasOnSidewalk = onSidewalkNow;
         if (onSidewalkNow && currentSpeed > 4 && !isFlyingCraft) {
           const curbPos = new THREE.Vector3(this.bike.mesh.position.x, 0.12, this.bike.z);
-          this.particles.spawnSparks(curbPos, 10, 0xb2bec3);
-          // Dérapage prononcé : 4 volutes de fumée épaisses le long du trottoir
-          if (this.particles.spawnSkidSmoke) {
-            for (let i = 0; i < 4; i++) {
-              this.particles.spawnSkidSmoke(new THREE.Vector3(
-                this.bike.mesh.position.x + (Math.random() - 0.5) * 0.6,
-                0.1, this.bike.z - i * 0.6
-              ));
-            }
+          if (this.particles.spawnDirectionalSparks) {
+            this.particles.spawnDirectionalSparks(curbPos, new THREE.Vector3(0, 0.6, -1), 10);
           }
-          this.engine.triggerCameraShake(0.15);
+          this.engine.triggerCameraShake(0.18);
           Haptic.impactLight();
         }
       }
 
-      // Frôlement des façades (proche de la bordure extrême |x| > 5.45m) :
+      if (this.bike.justLandedIntensity > 0) {
+        const landIntensity = this.bike.justLandedIntensity;
+        this.bike.justLandedIntensity = 0;
+        const landPos = new THREE.Vector3(this.bike.mesh.position.x, 0.12, this.bike.z);
+        if (this.particles.spawnSkidSmoke) {
+          this.particles.spawnSkidSmoke(landPos);
+        }
+        if (this.particles.spawnDirectionalSparks) {
+          this.particles.spawnDirectionalSparks(landPos, new THREE.Vector3(0, 0.45, -1), landIntensity >= 1.0 ? 14 : 8);
+        }
+        this.engine.triggerCameraShake(0.28 * landIntensity);
+        Haptic.impactMedium();
+      }
+
+      if (bikeAbsX >= 6.45 && currentSpeed > 4.0 && !isFlyingCraft) {
+        const nowMs = performance.now();
+        if (!this._lastWallScrapeAt || nowMs - this._lastWallScrapeAt > 280) {
+          this._lastWallScrapeAt = nowMs;
+          const sideSign = this.bike.x >= 0 ? 1 : -1;
+          const wallPos = new THREE.Vector3(this.bike.mesh.position.x + sideSign * 0.6, 0.45, this.bike.z);
+          if (this.particles.spawnDirectionalSparks) {
+            this.particles.spawnDirectionalSparks(wallPos, new THREE.Vector3(-sideSign * 0.8, 0.5, -1), 12, 0xffa502);
+          }
+          this.bike.x -= sideSign * 0.22;
+          this.bike.curbRollKick = -sideSign * 0.18;
+          this.engine.triggerCameraShake(0.16);
+          soundManager.playCurbMount();
+          Haptic.impactLight();
+        }
+      }
+
+      // Frôlement des façades (proche de la bordure extrême |x| > 6.45m) :
       // gerbe d'étincelles continue le long du mur + grincement régulier
       if (bikeAbsX > 5.45 && currentSpeed > 6 && !isFlyingCraft && !this.bike.isCrashed) {
         this._wallScrapeTimer = (this._wallScrapeTimer || 0) - delta;

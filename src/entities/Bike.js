@@ -97,15 +97,15 @@ export class Bike {
 
     const createFlameJet = (xOffset) => {
       const jet = new THREE.Group();
-      jet.position.set(xOffset, 0.45, -1.2);
+      jet.position.set(xOffset, 0.52, -1.85);
 
-      const outerCone = new THREE.Mesh(new THREE.ConeGeometry(0.18, 0.9, 8), flameMat);
+      const outerCone = new THREE.Mesh(new THREE.ConeGeometry(0.24, 1.35, 10), flameMat);
       outerCone.rotation.x = -Math.PI / 2;
-      outerCone.position.z = -0.45;
+      outerCone.position.z = -0.65;
 
-      const innerCone = new THREE.Mesh(new THREE.ConeGeometry(0.09, 0.6, 6), flameCoreMat);
+      const innerCone = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.9, 8), flameCoreMat);
       innerCone.rotation.x = -Math.PI / 2;
-      innerCone.position.z = -0.3;
+      innerCone.position.z = -0.45;
 
       jet.add(outerCone);
       jet.add(innerCone);
@@ -2536,11 +2536,12 @@ export class Bike {
         this.pitchAngle = THREE.MathUtils.lerp(this.pitchAngle, 0.15, 1 - Math.exp(-6.0 * delta)); // nez plongeant à la retombée
       }
       if (this.jumpAltitude <= 0) {
+        this.justLandedIntensity = this.isMegaJump ? 1.0 : 0.6;
         this.jumpAltitude = 0;
         this.jumpVelocity = 0;
         this.isMegaJump = false;
-        this.pitchAngle = 0;
-        this.suspVel -= 3.2;
+        this.pitchAngle = 0.14;
+        this.suspVel -= 3.8;
         soundManager.playSuspensionThud();
       }
     } else {
@@ -2566,6 +2567,10 @@ export class Bike {
       this.bikeModelGroup.rotation.z = totalRoll;
     }
     this.bikeModelGroup.rotation.x = this.pitchAngle;
+    if (this.nitroFlames) {
+      this.nitroFlames.rotation.z = this.bikeModelGroup.rotation.z;
+      this.nitroFlames.rotation.x = this.bikeModelGroup.rotation.x;
+    }
 
     // Orientation de la fourche avant
     if (this.frontFork) {

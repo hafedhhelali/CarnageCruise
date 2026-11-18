@@ -62,7 +62,7 @@ export class PostProcessingManager {
       bloomResolution,
       this.baseStrength, // 0.22 mobile / 0.26 desktop
       0.2,               // rayon resserré : halo précis, pas de voile généralisé
-      1.2                // seuil : seuls les émissifs HDR (> 1.2) luisent — le ciel et les nuages restent nets
+      1.38               // seuil : seuls les émissifs HDR (> 1.38) luisent — le ciel et les nuages restent nets
     );
     this.composer.addPass(this.bloomPass);
 

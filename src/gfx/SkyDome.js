@@ -66,8 +66,8 @@ export class SkyDome {
   }
 
   initCelestial() {
-    // Disque solaire / lunaire + halo additif aligné sur sunDirection
-    const discGeo = new THREE.CircleGeometry(15, 24);
+    // Disque solaire / lunaire discret + halo doux (sans éblouissement)
+    const discGeo = new THREE.CircleGeometry(6, 20);
     this.celestialDiscMat = new THREE.MeshBasicMaterial({
       color: 0xfff5d1,
       fog: false,
@@ -81,20 +81,20 @@ export class SkyDome {
     haloCanvas.height = 64;
     const hctx = haloCanvas.getContext('2d');
     const grad = hctx.createRadialGradient(32, 32, 4, 32, 32, 32);
-    grad.addColorStop(0, 'rgba(255, 244, 200, 0.85)');
-    grad.addColorStop(0.35, 'rgba(255, 224, 150, 0.35)');
+    grad.addColorStop(0, 'rgba(255, 244, 200, 0.45)');
+    grad.addColorStop(0.35, 'rgba(255, 224, 150, 0.16)');
     grad.addColorStop(1, 'rgba(255, 200, 120, 0)');
     hctx.fillStyle = grad;
     hctx.fillRect(0, 0, 64, 64);
 
     this.haloTexture = new THREE.CanvasTexture(haloCanvas);
     this.haloTexture.colorSpace = THREE.SRGBColorSpace;
-    const haloGeo = new THREE.PlaneGeometry(96, 96);
+    const haloGeo = new THREE.PlaneGeometry(26, 26);
     this.celestialHaloMat = new THREE.MeshBasicMaterial({
       map: this.haloTexture,
       color: 0xffdf9a,
       transparent: true,
-      opacity: 0.48,
+      opacity: 0.14,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
       fog: false

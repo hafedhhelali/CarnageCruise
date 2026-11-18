@@ -1025,7 +1025,10 @@ export class UIManager {
     const starsHtml = isExterminated ? '★★★' : ('★'.repeat(cityData.stars) + '☆'.repeat(3 - cityData.stars));
     const biomeInfo = getCityBiomeInfo(city);
     const cityRegion = getCityRegion(city);
-    const cityChallenge = typeof getCityChallenge === 'function' ? getCityChallenge(city) : null;
+    const rawChallenge = typeof getCityChallenge === 'function' ? getCityChallenge(city) : null;
+    const cityChallenge = (currentBike?.isFlyingCraft && rawChallenge?.id === 'STUNT_RAMPS' && CHALLENGE_DEFS?.SLALOM_CHRONO)
+      ? CHALLENGE_DEFS.SLALOM_CHRONO
+      : rawChallenge;
     const challengeCompletions = typeof storage.getCityChallengeCompletions === 'function'
       ? (storage.getCityChallengeCompletions(city.id) || {})
       : {};

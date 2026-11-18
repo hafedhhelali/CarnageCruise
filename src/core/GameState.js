@@ -2458,26 +2458,6 @@ export const BIKES = [
     terrainSpecialty: 'NUCLEAR'
   },
   {
-    id: 'scooter',
-    name: 'Guêpe 50cc',
-    shortName: 'Guêpe 50cc',
-    category: 'SCOOTER VINTAGE',
-    icon: '🛵',
-    tagline: 'Léger & Agile en ville',
-    type: 'Scooter Rétro',
-    description: 'Le charme vintage à la française ! Léger, vif et parfait pour se faufiler entre les terrasses de café.',
-    speedRating: 2,
-    handlingRating: 5,
-    bounceRating: 3,
-    cost: 0,
-    unlocked: true,
-    scale: 1.0,
-    maxSpeed: 13.9,
-    accel: 15,
-    steerSpeed: 24,
-    accelProfile: 'peppy'
-  },
-  {
     id: 'decapotable',
     name: 'Cabriolet Riviera 68',
     shortName: 'Décapotable Sport',
@@ -3128,8 +3108,14 @@ export class GameState {
     let baseAccel = this.isNitroActive ? (this.selectedBike.accel * 1.6) : this.selectedBike.accel;
 
     if (this.isBraking) {
-      // Décélération rapide jusqu'à l'arrêt complet
-      this.speed = Math.max(0, this.speed - delta * 30.0);
+      if (this.selectedBike?.isFlyingCraft) {
+        // Un avion/Aéro-Jet ralentit en frein aérien jusqu'à sa vitesse de croisière minimale sans jamais s'immobiliser en vol
+        const minCruiseSpeed = Math.max(18.0, maxSpeedCap * 0.42);
+        this.speed = Math.max(minCruiseSpeed, this.speed - delta * 26.0);
+      } else {
+        // Décélération rapide jusqu'à l'arrêt complet
+        this.speed = Math.max(0, this.speed - delta * 30.0);
+      }
     } else {
       const speedRatio = Math.max(0, Math.min(1.0, this.speed / Math.max(1, maxSpeedCap)));
       let curveFactor = 1.0;

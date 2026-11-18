@@ -1728,21 +1728,6 @@ export class Environment {
       };
       chunk.add(ramp);
       chunk.userData.props.push(ramp);
-
-      const ringZ = rampZ + 11;
-      const ring = new THREE.Mesh(this.sharedGeos.aerialRingGeo, ringMat);
-      ring.position.set(baseX, 3.8, ringZ);
-      ring.userData = {
-        isAerialRing: true,
-        ringCollected: false,
-        baseX,
-        localZ: ringZ,
-        baseRotY: 0,
-        initialY: 3.8,
-        isHit: false
-      };
-      chunk.add(ring);
-      chunk.userData.props.push(ring);
     }
   }
 
@@ -1953,33 +1938,7 @@ export class Environment {
         }
       }
 
-      // Alternance avec bâtiments 3D sculptés (.glb CC0) pour enrichir les silhouettes de rue
-      const glbBuildingKeys = ['building-small-a', 'building-small-b', 'building-small-c', 'building-small-d', 'building-garage'];
-      const glbKey = glbBuildingKeys[parcelIndex % glbBuildingKeys.length];
-      if ((parcelIndex + chunkIdx) % 2 === 0 && modelBank.has(glbKey)) {
-        const targetH = glbKey === 'building-garage'
-          ? 9.0 + (parcelIndex % 3) * 1.0
-          : 10.0 + (parcelIndex % 5) * 1.0;
-        const glbBuilding = modelBank.cloneNormalized(glbKey, targetH);
-        if (glbBuilding) {
-          const glbX = side * 9.8;
-          const glbGroup = new THREE.Group();
-          glbGroup.position.set(glbX, 0, centerZ);
-          glbGroup.userData = {
-            baseX: glbX,
-            localZ: centerZ,
-            baseRotY: 0,
-            hideAtIntersection: true,
-            interClearance: 12.0 + bWidth * 0.5
-          };
-          glbBuilding.rotation.y = side > 0 ? -Math.PI / 2 : Math.PI / 2;
-          glbBuilding.position.set(side * 3.0, 0, 0);
-          glbGroup.add(glbBuilding);
-          chunk.add(glbGroup);
-          currentZ += bWidth;
-          continue;
-        }
-      }
+      // Bâtiments 2.5D texturés & silhouettes régionales (alignés strictement hors chaussée)
 
       // Pivot placé directement sur l'alignement de la façade (bord extérieur du trottoir)
       // pour que la façade reste 100% parallèle et collée au trottoir dans tous les virages !
@@ -2340,21 +2299,9 @@ export class Environment {
     curbWall.position.set(-side * (bDepth / 2 - 0.2), 0.32, 0);
     parkGroup.add(curbWall);
 
-    // Bosquet d'arbres majestueux & Cyprès (modèles .glb CC0 ou fallback procédural)
+    // Bosquet d'arbres verts branchus
     [-bWidth * 0.28, 0, bWidth * 0.28].forEach((tz, i) => {
       const treeX = (i % 2 === 0 ? 0.6 : 2.6) * side;
-      const treeGlbKey = (i % 2 === 0 && modelBank.has('grass-trees-tall'))
-        ? 'grass-trees-tall'
-        : (modelBank.has('grass-trees') ? 'grass-trees' : (modelBank.has('grass-trees-tall') ? 'grass-trees-tall' : null));
-      if (treeGlbKey) {
-        const glbTree = modelBank.cloneNormalized(treeGlbKey, treeGlbKey === 'grass-trees-tall' ? 4.9 : 3.9);
-        if (glbTree) {
-          glbTree.position.set(treeX, 0.28, tz);
-          glbTree.rotation.y = (i * 1.45 + parcelIndex * 0.7) % (Math.PI * 2);
-          parkGroup.add(glbTree);
-          return;
-        }
-      }
       const trunk = new THREE.Mesh(this.sharedGeos.treeTrunk, woodMat);
       trunk.position.set(treeX, 1.2, tz);
       const crown = new THREE.Mesh(this.sharedGeos.treeFoliage, i % 2 === 0 ? foliage1 : foliage2);
@@ -2363,21 +2310,13 @@ export class Environment {
       parkGroup.add(trunk, crown);
     });
 
-    // Bassin miroir / fontaine .glb ou parterre floral
+    // Bassin miroir ou parterre floral
     if (parcelIndex % 2 === 0) {
-      const glbFountain = modelBank.has('pavement-fountain')
-        ? modelBank.cloneNormalized('pavement-fountain', 2.8)
-        : null;
-      if (glbFountain) {
-        glbFountain.position.set(-side * 1.0, 0.28, 0);
-        parkGroup.add(glbFountain);
-      } else {
-        const poolRim = new THREE.Mesh(new THREE.CylinderGeometry(1.9, 2.0, 0.38, 14), stoneMat);
-        poolRim.position.set(-side * 1.0, 0.3, 0);
-        const poolWater = new THREE.Mesh(new THREE.CylinderGeometry(1.65, 1.65, 0.1, 14), waterMat);
-        poolWater.position.set(-side * 1.0, 0.46, 0);
-        parkGroup.add(poolRim, poolWater);
-      }
+      const poolRim = new THREE.Mesh(new THREE.CylinderGeometry(1.9, 2.0, 0.38, 14), stoneMat);
+      poolRim.position.set(-side * 1.0, 0.3, 0);
+      const poolWater = new THREE.Mesh(new THREE.CylinderGeometry(1.65, 1.65, 0.1, 14), waterMat);
+      poolWater.position.set(-side * 1.0, 0.46, 0);
+      parkGroup.add(poolRim, poolWater);
     } else {
       const flowerBed = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.25, bWidth * 0.55), flowerMat);
       flowerBed.position.set(-side * 1.2, 0.28, 0);
@@ -3325,23 +3264,9 @@ export class Environment {
       grate.position.y = 0.26;
       treeGroup.add(grate);
 
-      const treeGlbKey = (idx % 2 === 0 && modelBank.has('grass-trees-tall'))
-        ? 'grass-trees-tall'
-        : (modelBank.has('grass-trees') ? 'grass-trees' : (modelBank.has('grass-trees-tall') ? 'grass-trees-tall' : null));
-
       if (isMed && idx % 2 === 0) {
         // Palmier méditerranéen courbé à 2 étages de palmes et noix de coco
         this.buildPalmTree(treeGroup, 0, 0.25, 0, treeSide);
-      } else if (treeGlbKey) {
-        const treeHeight = treeGlbKey === 'grass-trees-tall' ? 4.8 : 3.9;
-        const glbTree = modelBank.cloneNormalized(treeGlbKey, treeHeight);
-        if (glbTree) {
-          glbTree.position.y = 0.25;
-          glbTree.rotation.y = (idx * 1.37) % (Math.PI * 2);
-          treeGroup.add(glbTree);
-        } else {
-          this.buildBranchingTree(treeGroup, 0, 0.25, 0);
-        }
       } else {
         // Platane de boulevard branchu à triple houppier (foliage1/2/3)
         this.buildBranchingTree(treeGroup, 0, 0.25, 0);
