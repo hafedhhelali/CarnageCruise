@@ -819,10 +819,13 @@ class GameApp {
     const activeCops = (this.traffic.vehicles || []).filter(v => v.userData && v.userData.isPursuitPolice && v.userData.active && !v.userData.isCrashed);
     this._pursuitSpawnTimer = (this._pursuitSpawnTimer || 0) - simDelta;
     if (activeCops.length < 3 && this._pursuitSpawnTimer <= 0 && this.traffic.spawnPursuitCruiser) {
-      this._pursuitSpawnTimer = 2.8;
-      const curveX = this.environment ? this.environment.getRoadCenterX(this.bike.z + 75) : 0;
-      const laneX = (Math.random() < 0.5 ? -2.6 : 2.6);
-      this.traffic.spawnPursuitCruiser(this.bike.z + 75 + Math.random() * 25, curveX + laneX);
+      this._pursuitSpawnTimer = 2.4;
+      const fromBehind = Math.random() < 0.5;
+      const zSpawn = fromBehind ? (this.bike.z - 14) : (this.bike.z + 32);
+      const curveX = this.environment ? this.environment.getRoadCenterX(zSpawn) : 0;
+      const laneX = (Math.random() < 0.5 ? -2.4 : 2.4);
+      const initSpeed = fromBehind ? Math.max(gameState.speed + 10.0, 26.0) : Math.max(8.0, gameState.speed * 0.55);
+      this.traffic.spawnPursuitCruiser(zSpawn, curveX + laneX, initSpeed);
     }
 
     const bid = this.bike.currentBikeId;
@@ -923,9 +926,15 @@ class GameApp {
         gameState.challengeState.shieldHp = 3;
       }
       if (this.traffic && this.traffic.spawnPursuitCruiser && this.environment) {
-        const zSpawn = this.bike.z + 60;
-        const curveX = this.environment.getRoadCenterX(zSpawn);
-        this.traffic.spawnPursuitCruiser(zSpawn, curveX + (Math.random() < 0.5 ? -2.6 : 2.6));
+        const zAhead = this.bike.z + 28;
+        const zBehind = this.bike.z - 12;
+        const curveAhead = this.environment.getRoadCenterX(zAhead);
+        const curveBehind = this.environment.getRoadCenterX(zBehind);
+        this.traffic.spawnPursuitCruiser(zAhead, curveAhead + 2.2, Math.max(8.0, gameState.speed * 0.55));
+        this.traffic.spawnPursuitCruiser(zBehind, curveBehind - 2.2, Math.max(gameState.speed + 10.0, 26.0));
+        if (this.traffic.spawnPoliceRoadblock) {
+          this.traffic.spawnPoliceRoadblock(this.bike.z + 95);
+        }
       }
       soundManager.playNearMiss();
       if (this.ui) {
@@ -1157,8 +1166,9 @@ class GameApp {
   loop() {
     requestAnimationFrame(() => this.loop());
 
-    const rawDelta = Math.min(this.clock.getDelta(), 0.1); // Sécurité contre les sauts de frame
-    if (this.engine.updateTimeScale) this.engine.updateTimeScale(rawDelta);
+    try {
+      const rawDelta = Math.min(this.clock.getDelta(), 0.05); // Sécurité contre les sauts de frame / freezes
+      if (this.engine.updateTimeScale) this.engine.updateTimeScale(rawDelta);
     const timeScale = this.engine.getTimeScale ? this.engine.getTimeScale() : 1.0;
     const delta = rawDelta * timeScale;
     TWEEN.update();
@@ -1361,6 +1371,7 @@ class GameApp {
             }
             Haptic.impactLight();
             gameState.recordKill(bonusPts, categoryLabel, hitChar.typeDef.category);
+            this.triggerPolicePursuitIfCrime('DÉLIT DE FUITE');
 
             // Si série de carnages ou choc sur piéton, dépêcher l'ambulance d'urgence !
             if (this.traffic && (gameState.combo >= 2 || Math.random() < 0.4)) {
@@ -1915,6 +1926,9 @@ class GameApp {
 
     // Rendu Three.js
     this.engine.render();
+    } catch (loopErr) {
+      console.error('[CarnageCruise] Loop error:', loopErr);
+    }
   }
 }
 

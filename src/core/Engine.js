@@ -49,7 +49,7 @@ export class Engine {
       }
     }
     this.isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, this.isMobile ? 1.5 : 2.0));
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, this.isMobile ? 1.15 : 1.75));
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -149,8 +149,9 @@ export class Engine {
     this.dirLight = new THREE.DirectionalLight(0xfffdf7, 1.15);
     this.dirLight.position.set(22, 42, 22);
     this.dirLight.castShadow = true;
-    this.dirLight.shadow.mapSize.width = 1024;
-    this.dirLight.shadow.mapSize.height = 1024;
+    const shadowRes = this.isMobile ? 512 : 1024;
+    this.dirLight.shadow.mapSize.width = shadowRes;
+    this.dirLight.shadow.mapSize.height = shadowRes;
     this.dirLight.shadow.camera.near = 1.0;
     this.dirLight.shadow.camera.far = 110;
     this.dirLight.shadow.camera.left = -14;
@@ -680,7 +681,7 @@ export class Engine {
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, this.isMobile ? 1.5 : 2.0));
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, this.isMobile ? 1.15 : 1.75));
     if (this.postProcessing) {
       this.postProcessing.setSize(window.innerWidth, window.innerHeight);
     }

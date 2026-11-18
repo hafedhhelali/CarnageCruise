@@ -715,69 +715,117 @@ export class Traffic {
   }
 
   /**
-   * Construit un Intercepteur de Police réaliste (bleu nuit / toit & portes blancs, pare-buffle, phares, gyrophares)
+   * Initialise et met en cache les matériaux & géométries partagés de la Police (zéro lag GPU)
+   */
+  _initPoliceAssets() {
+    if (this._policeAssets) return this._policeAssets;
+    this._policeAssets = {
+      navy: new THREE.MeshPhysicalMaterial({ color: 0x0a142e, roughness: 0.22, metalness: 0.55, clearcoat: 0.9, clearcoatRoughness: 0.12 }),
+      white: new THREE.MeshPhysicalMaterial({ color: 0xf8fafc, roughness: 0.24, metalness: 0.15, clearcoat: 0.85, clearcoatRoughness: 0.14 }),
+      stripe: new THREE.MeshStandardMaterial({ color: 0x38bdf8, emissive: 0x0284c7, emissiveIntensity: 0.5, roughness: 0.3 }),
+      gold: new THREE.MeshStandardMaterial({ color: 0xfbbf24, metalness: 0.85, roughness: 0.25 }),
+      bumper: new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.45, metalness: 0.85 }),
+      tire: new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.85, metalness: 0.1 }),
+      rim: new THREE.MeshStandardMaterial({ color: 0xcbd5e1, roughness: 0.25, metalness: 0.9 }),
+      glass: this.sharedMats.tintedGlass,
+      headlight: new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xfff3cc, emissiveIntensity: 2.5, roughness: 0.1 }),
+      taillight: new THREE.MeshStandardMaterial({ color: 0xff2e43, emissive: 0xff2e43, emissiveIntensity: 2.0, roughness: 0.2 }),
+      strobeBlue: new THREE.MeshStandardMaterial({ color: 0x0ea5e9, emissive: 0x0ea5e9, emissiveIntensity: 3.0, roughness: 0.15 }),
+      strobeRed: new THREE.MeshStandardMaterial({ color: 0xff3838, emissive: 0xff3838, emissiveIntensity: 3.0, roughness: 0.15 }),
+      beam: new THREE.MeshBasicMaterial({ color: 0x93c5fd, transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending, depthWrite: false }),
+      lowerGeo: new THREE.BoxGeometry(1.94, 0.52, 4.35),
+      hoodGeo: new THREE.BoxGeometry(1.86, 0.24, 1.45),
+      doorGeo: new THREE.BoxGeometry(1.98, 0.48, 1.65),
+      cabinGeo: new THREE.BoxGeometry(1.74, 0.52, 1.85),
+      roofGeo: new THREE.BoxGeometry(1.70, 0.08, 1.45),
+      stripeGeo: new THREE.BoxGeometry(2.0, 0.10, 3.8),
+      spoilerGeo: new THREE.BoxGeometry(1.76, 0.08, 0.28),
+      pushBarGeo: new THREE.BoxGeometry(1.62, 0.36, 0.22),
+      lightGeo: new THREE.BoxGeometry(0.36, 0.14, 0.08),
+      barBaseGeo: new THREE.BoxGeometry(1.28, 0.09, 0.24),
+      strobeGeo: new THREE.BoxGeometry(0.54, 0.14, 0.22),
+      wheelGeo: new THREE.CylinderGeometry(0.35, 0.35, 0.26, 14),
+      rimGeo: new THREE.CylinderGeometry(0.20, 0.20, 0.28, 10),
+      beamGeo: new THREE.PlaneGeometry(2.6, 8.0)
+    };
+    this._policeAssets.wheelGeo.rotateZ(Math.PI / 2);
+    this._policeAssets.rimGeo.rotateZ(Math.PI / 2);
+    return this._policeAssets;
+  }
+
+  /**
+   * Construit un Intercepteur de Police réaliste (silhouette sportive, 4 roues alliage, clearcoat, pare-buffle, gyrophares)
    */
   _buildPoliceCruiserMesh() {
-    const policeNavy = new THREE.MeshStandardMaterial({ color: 0x0b1736, roughness: 0.24, metalness: 0.45 });
-    const policeWhite = new THREE.MeshStandardMaterial({ color: 0xf1f5f9, roughness: 0.28, metalness: 0.2 });
-    const stripeCyan = new THREE.MeshStandardMaterial({ color: 0x38bdf8, emissive: 0x0284c7, emissiveIntensity: 0.55, roughness: 0.3 });
-    const bumperDark = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.5, metalness: 0.8 });
-    const headlightMat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xfff3cc, emissiveIntensity: 2.6, roughness: 0.1 });
-    const taillightMat = new THREE.MeshStandardMaterial({ color: 0xff2e43, emissive: 0xff2e43, emissiveIntensity: 2.0, roughness: 0.2 });
-    const strobeBlueMat = new THREE.MeshStandardMaterial({
-      color: 0x0ea5e9, emissive: 0x0ea5e9, emissiveIntensity: 3.2, roughness: 0.15
-    });
-    const strobeRedMat = new THREE.MeshStandardMaterial({
-      color: 0xff3838, emissive: 0xff3838, emissiveIntensity: 3.2, roughness: 0.15
-    });
-
+    const a = this._initPoliceAssets();
     const car = new THREE.Group();
     const strobes = [];
+    const wheelMeshes = [];
 
-    // Carrosserie principale bleu nuit intercepteur
-    const body = new THREE.Mesh(this.sharedGeos.chassisSedan, policeNavy);
-    body.castShadow = true;
-    car.add(body);
+    // Châssis bas sportif + capot sculpté + toit/portes blancs contrastés
+    const lower = new THREE.Mesh(a.lowerGeo, a.navy);
+    lower.position.set(0, 0.44, 0);
+    lower.castShadow = true;
 
-    // Portières et toit blancs contrastés (livrée police classique)
-    const doorWhite = new THREE.Mesh(new THREE.BoxGeometry(1.94, 0.46, 1.65), policeWhite);
-    doorWhite.position.set(0, 0.56, -0.05);
-    const roofWhite = new THREE.Mesh(new THREE.BoxGeometry(1.78, 0.08, 1.65), policeWhite);
-    roofWhite.position.set(0, 1.38, -0.18);
-    car.add(doorWhite, roofWhite);
+    const hood = new THREE.Mesh(a.hoodGeo, a.navy);
+    hood.position.set(0, 0.72, 1.25);
 
-    // Bande latérale cyan/police + pare-buffle avant
-    const sideStripe = new THREE.Mesh(new THREE.BoxGeometry(1.97, 0.12, 3.6), stripeCyan);
-    sideStripe.position.set(0, 0.54, 0);
-    const pushBar = new THREE.Mesh(new THREE.BoxGeometry(1.65, 0.42, 0.24), bumperDark);
-    pushBar.position.set(0, 0.46, 2.28);
-    car.add(sideStripe, pushBar);
+    const doors = new THREE.Mesh(a.doorGeo, a.white);
+    doors.position.set(0, 0.48, -0.05);
 
-    // Vitres teintées
-    const glass = new THREE.Mesh(new THREE.BoxGeometry(1.88, 0.36, 1.75), this.sharedMats.tintedGlass);
-    glass.position.set(0, 1.12, -0.18);
-    car.add(glass);
+    const cabin = new THREE.Mesh(a.cabinGeo, a.glass);
+    cabin.position.set(0, 0.96, -0.18);
 
-    // Phares avant lumineux & feux arrière
+    const roof = new THREE.Mesh(a.roofGeo, a.white);
+    roof.position.set(0, 1.24, -0.2);
+
+    const stripe = new THREE.Mesh(a.stripeGeo, a.stripe);
+    stripe.position.set(0, 0.52, 0);
+
+    const spoiler = new THREE.Mesh(a.spoilerGeo, a.navy);
+    spoiler.position.set(0, 0.86, -1.96);
+
+    const pushBar = new THREE.Mesh(a.pushBarGeo, a.bumper);
+    pushBar.position.set(0, 0.42, 2.24);
+
+    car.add(lower, hood, doors, cabin, roof, stripe, spoiler, pushBar);
+
+    // 4 roues 3D avec jantes alliage
+    [
+      [-0.94, 0.35, 1.32],
+      [0.94, 0.35, 1.32],
+      [-0.94, 0.35, -1.32],
+      [0.94, 0.35, -1.32]
+    ].forEach(([wx, wy, wz]) => {
+      const wg = new THREE.Group();
+      wg.position.set(wx, wy, wz);
+      const tire = new THREE.Mesh(a.wheelGeo, a.tire);
+      const rim = new THREE.Mesh(a.rimGeo, a.rim);
+      wg.add(tire, rim);
+      car.add(wg);
+      wheelMeshes.push(wg);
+    });
+
+    // Phares LED & feux arrière
     [-0.64, 0.64].forEach(lx => {
-      const hl = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.16, 0.08), headlightMat);
-      hl.position.set(lx, 0.58, 2.18);
-      const tl = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.16, 0.08), taillightMat);
-      tl.position.set(lx, 0.62, -2.18);
+      const hl = new THREE.Mesh(a.lightGeo, a.headlight);
+      hl.position.set(lx, 0.52, 2.18);
+      const tl = new THREE.Mesh(a.lightGeo, a.taillight);
+      tl.position.set(lx, 0.56, -2.18);
       car.add(hl, tl);
     });
 
-    // Rampe de gyrophares rouge / bleu haute intensité
-    const barBase = new THREE.Mesh(new THREE.BoxGeometry(1.32, 0.12, 0.3), bumperDark);
-    barBase.position.set(0, 1.48, -0.2);
-    const sBlue = new THREE.Mesh(new THREE.BoxGeometry(0.56, 0.18, 0.28), strobeBlueMat);
-    sBlue.position.set(-0.32, 1.54, -0.2);
-    const sRed = new THREE.Mesh(new THREE.BoxGeometry(0.56, 0.18, 0.28), strobeRedMat);
-    sRed.position.set(0.32, 1.54, -0.2);
+    // Rampe de gyrophares profilée
+    const barBase = new THREE.Mesh(a.barBaseGeo, a.bumper);
+    barBase.position.set(0, 1.31, -0.2);
+    const sBlue = new THREE.Mesh(a.strobeGeo, a.strobeBlue);
+    sBlue.position.set(-0.32, 1.36, -0.2);
+    const sRed = new THREE.Mesh(a.strobeGeo, a.strobeRed);
+    sRed.position.set(0.32, 1.36, -0.2);
     car.add(barBase, sBlue, sRed);
     strobes.push(sBlue, sRed);
 
-    return { car, strobes };
+    return { car, strobes, wheelMeshes };
   }
 
   /**
@@ -832,19 +880,12 @@ export class Traffic {
   /**
    * Fait apparaître un intercepteur de police en poursuite active (mode POLICE_PURSUIT)
    */
-  spawnPursuitCruiser(zPos, laneX = 0) {
-    const { car, strobes } = this._buildPoliceCruiserMesh();
-    // Faisceau de phares au sol pour bien visualiser l'intercepteur et anticiper l'esquive
-    const beamMat = new THREE.MeshBasicMaterial({
-      color: 0x93c5fd,
-      transparent: true,
-      opacity: 0.24,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false
-    });
-    const beam = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 8.5), beamMat);
+  spawnPursuitCruiser(zPos, laneX = 0, initialSpeed = 16.0) {
+    const a = this._initPoliceAssets();
+    const { car, strobes, wheelMeshes } = this._buildPoliceCruiserMesh();
+    const beam = new THREE.Mesh(a.beamGeo, a.beam);
     beam.rotation.x = -Math.PI / 2;
-    beam.position.set(0, 0.04, 6.2);
+    beam.position.set(0, 0.04, 6.0);
     car.add(beam);
 
     car.position.set(laneX, 0, zPos);
@@ -853,11 +894,12 @@ export class Traffic {
       isPursuitPolice: true,
       laneOffset: laneX,
       targetLaneOffset: laneX,
-      laneTimer: 1.8 + Math.random() * 1.4,
-      speed: 22.0 + Math.random() * 5.0,
+      laneTimer: 1.1 + Math.random() * 0.9,
+      speed: initialSpeed,
       isHit: false,
       dodged: false,
       strobes,
+      wheelMeshes,
       strobeTimer: Math.random() * 2.0
     };
 
@@ -1078,6 +1120,19 @@ export class Traffic {
 
       // 2. Véhicule actif circulant dans sa voie
       if (v.userData.active) {
+        // Poursuite policière active : ajuste sa vitesse pour rattraper, bloquer et arrêter le joueur (jamais fuir au loin !)
+        if (v.userData.isPursuitPolice) {
+          const dzRel = v.position.z - playerZ;
+          let targetCopSpeed = bikeSpeed;
+          if (dzRel < 1.5) {
+            targetCopSpeed = Math.max(bikeSpeed + 10.5, 26.0); // Rattrape par derrière
+          } else if (dzRel > 22.0) {
+            targetCopSpeed = Math.max(6.0, bikeSpeed * 0.45); // Ralentit devant pour couper la route
+          } else {
+            targetCopSpeed = Math.max(9.0, bikeSpeed * 0.88); // Reste à portée d'interception
+          }
+          v.userData.speed = THREE.MathUtils.lerp(v.userData.speed || bikeSpeed, targetCopSpeed, Math.min(1.0, delta * 3.5));
+        }
         // Avancement selon sa vitesse
         v.position.z += v.userData.speed * delta;
 
@@ -1096,12 +1151,12 @@ export class Traffic {
         if (v.userData.isPursuitPolice) {
           v.userData.laneTimer = (v.userData.laneTimer || 0) - delta;
           if (v.userData.laneTimer <= 0) {
-            v.userData.laneTimer = 1.6 + Math.random() * 1.4;
+            v.userData.laneTimer = 1.0 + Math.random() * 0.8;
             const relX = bikeX - curveX;
-            v.userData.targetLaneOffset = THREE.MathUtils.clamp(relX + (Math.random() - 0.5) * 3.2, -4.0, 4.0);
+            v.userData.targetLaneOffset = THREE.MathUtils.clamp(relX + (Math.random() - 0.5) * 1.4, -4.4, 4.4);
           }
           const prevLane = v.userData.laneOffset || 0;
-          v.userData.laneOffset = THREE.MathUtils.lerp(prevLane, v.userData.targetLaneOffset || 0, Math.min(1.0, delta * 2.4));
+          v.userData.laneOffset = THREE.MathUtils.lerp(prevLane, v.userData.targetLaneOffset || 0, Math.min(1.0, delta * 3.2));
           v.position.x = curveX + v.userData.laneOffset;
           v.rotation.z = THREE.MathUtils.clamp((prevLane - v.userData.laneOffset) * 2.5, -0.14, 0.14);
 

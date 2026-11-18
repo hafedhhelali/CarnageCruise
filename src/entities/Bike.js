@@ -217,11 +217,6 @@ export class Bike {
     this.headlightPool.position.set(0, 0.035, 9.5);
     rig.add(this.headlightPool);
 
-    // Éclairage dynamique réel de la chaussée et des piétons en mode nuit
-    this.headlightBeamLight = new THREE.PointLight(0xfff2cc, 4.2, 42, 1.3);
-    this.headlightBeamLight.position.set(0, 1.5, 9.5);
-    rig.add(this.headlightBeamLight);
-
     return rig;
   }
 

@@ -20,6 +20,13 @@ export class PostProcessingManager {
     this.isMobile = isMobile;
     this.baseStrength = isMobile ? 0.22 : 0.26; // Force de bloom calibrée PBR/HDR (mobile vs desktop)
 
+    // Sur mobile, le rendu direct hardware (sans HalfFloat MSAA + UnrealBloomPass multi-passes)
+    // évite les artefacts WebGL et garantit 60 FPS stables sans surchauffe.
+    if (this.isMobile) {
+      this.enabled = false;
+      return;
+    }
+
     try {
       this.initComposer();
     } catch (err) {
