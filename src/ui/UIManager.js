@@ -1878,6 +1878,22 @@ export class UIManager {
       { x: w * 0.82, phase: 3.1 }
     ];
 
+    // Escadron d'avions de chasse & bombardiers furtifs survolant la ville
+    const squadron = [
+      { ox: 0, oy: 0, scale: 1.15, isLead: true },
+      { ox: -34, oy: -14, scale: 0.92, isLead: false },
+      { ox: 34, oy: -14, scale: 0.92, isLead: false },
+      { ox: -66, oy: -28, scale: 0.78, isLead: false },
+      { ox: 66, oy: -28, scale: 0.78, isLead: false }
+    ];
+
+    // Traceurs anti-aériens DCA tirés depuis les toits pendant l'approche
+    const aaTracers = Array.from({ length: 12 }, (_, idx) => ({
+      x: w * (0.12 + (idx / 11) * 0.76),
+      phase: idx * 0.53,
+      angle: -Math.PI / 2 + (Math.random() - 0.5) * 0.55
+    }));
+
     // 5. PARTICULES, DÉBRIS DE BÉTON ET BOULES DE FEU
     const particles = [];
     const spawnParticle = (x, y, vx, vy, color, size, life, decay, gravity = 0) => {
@@ -2307,8 +2323,30 @@ export class UIManager {
         ctx.fillRect(centerX - rw * (1 + r * 0.08) + Math.sin(elapsed * 2 + r) * 14, ry, rw * (2 + r * 0.15), 2);
       }
 
-      // Pont routier traversant le premier plan + trafic automobile
+      // Pont à haubans réaliste traversant le premier plan + trafic automobile
       const bridgeY = horizonY + 14;
+      const pylonPositions = [w * 0.26, w * 0.74];
+      ctx.strokeStyle = 'rgba(148, 163, 184, 0.35)';
+      ctx.lineWidth = 0.9;
+      pylonPositions.forEach(px => {
+        const pylonTopY = bridgeY - 46;
+        for (let c = -3; c <= 3; c++) {
+          if (c === 0) continue;
+          ctx.beginPath();
+          ctx.moveTo(px, pylonTopY + 4);
+          ctx.lineTo(px + c * 26, bridgeY);
+          ctx.stroke();
+        }
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(px - 2.5, pylonTopY, 5, 48);
+        if (Math.floor(elapsed * 3) % 2 === 0) {
+          ctx.fillStyle = '#ff3838';
+          ctx.beginPath();
+          ctx.arc(px, pylonTopY, 2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      });
+
       ctx.fillStyle = '#0f1722';
       ctx.fillRect(0, bridgeY, w, 9);
       ctx.strokeStyle = 'rgba(255, 211, 105, 0.45)';
@@ -2330,6 +2368,90 @@ export class UIManager {
           ctx.fillStyle = car.color;
           ctx.fillRect(car.x - 2, bridgeY + 3, 4, 2.2);
         }
+      });
+
+      // Traceurs DCA anti-aériens pendant l'approche
+      if (simPhase === 'APPROACH') {
+        aaTracers.forEach(tr => {
+          const cycle = (elapsed * 1.8 + tr.phase) % 1.0;
+          const dist = cycle * horizonY * 0.85;
+          const tx = tr.x + Math.cos(tr.angle) * dist;
+          const ty = horizonY - 12 + Math.sin(tr.angle) * dist;
+          ctx.strokeStyle = 'rgba(255, 211, 42, 0.75)';
+          ctx.lineWidth = 1.6;
+          ctx.beginPath();
+          ctx.moveTo(tx, ty);
+          ctx.lineTo(tx - Math.cos(tr.angle) * 14, ty - Math.sin(tr.angle) * 14);
+          ctx.stroke();
+        });
+      }
+
+      // Escadron d'avions de chasse / bombardiers en formation réaliste
+      const flightT = Math.min(1.4, elapsed / 3.2);
+      const leadX = -60 + (w + 160) * flightT;
+      const leadY = horizonY * 0.24 + Math.sin(elapsed * 2.2) * 5;
+      squadron.forEach((jet, idx) => {
+        const jx = leadX + jet.ox;
+        const jy = leadY + jet.oy;
+        if (jx < -80 || jx > w + 80) return;
+        const sc = jet.scale;
+
+        // Traînées de condensation blanches
+        ctx.strokeStyle = 'rgba(226, 232, 240, 0.28)';
+        ctx.lineWidth = 1.4 * sc;
+        ctx.beginPath();
+        ctx.moveTo(jx - 16 * sc, jy - 6 * sc);
+        ctx.lineTo(jx - 95 * sc, jy - 6 * sc);
+        ctx.moveTo(jx - 16 * sc, jy + 6 * sc);
+        ctx.lineTo(jx - 95 * sc, jy + 6 * sc);
+        ctx.stroke();
+
+        ctx.save();
+        ctx.translate(jx, jy);
+        ctx.scale(sc, sc);
+
+        // Post-combustion réacteur
+        const abFlicker = 0.7 + Math.random() * 0.45;
+        const abGrad = ctx.createLinearGradient(-14, 0, -30 * abFlicker, 0);
+        abGrad.addColorStop(0, 'rgba(56, 189, 248, 0.95)');
+        abGrad.addColorStop(0.5, 'rgba(251, 146, 60, 0.75)');
+        abGrad.addColorStop(1, 'rgba(251, 146, 60, 0)');
+        ctx.fillStyle = abGrad;
+        ctx.beginPath();
+        ctx.moveTo(-14, -2.5);
+        ctx.lineTo(-30 * abFlicker, 0);
+        ctx.lineTo(-14, 2.5);
+        ctx.closePath();
+        ctx.fill();
+
+        // Fuselage & ailes en flèche réalistes
+        ctx.fillStyle = '#334155';
+        ctx.beginPath();
+        ctx.moveTo(18, 0);
+        ctx.lineTo(-6, -12);
+        ctx.lineTo(-14, -10);
+        ctx.lineTo(-10, -2.5);
+        ctx.lineTo(-15, 0);
+        ctx.lineTo(-10, 2.5);
+        ctx.lineTo(-14, 10);
+        ctx.lineTo(-6, 12);
+        ctx.closePath();
+        ctx.fill();
+
+        // Verrière cockpit
+        ctx.fillStyle = '#38bdf8';
+        ctx.beginPath();
+        ctx.ellipse(6, 0, 4.5, 1.6, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Feux de navigation clignotants
+        if ((Math.floor(elapsed * 5) + idx) % 2 === 0) {
+          ctx.fillStyle = '#ef4444';
+          ctx.fillRect(-10, -11, 2, 2);
+          ctx.fillStyle = '#22c55e';
+          ctx.fillRect(-10, 9, 2, 2);
+        }
+        ctx.restore();
       });
 
       // Rendu PixiJS v8 Accéléré GPU (halos additifs)
@@ -2952,9 +3074,9 @@ export class UIManager {
       actionTitle = 'Rafale Kalachnikov AK-47 !';
       isWeapon = true;
     } else if (equippedBikeId === 'run_chainsaw') {
-      actionIcon = '⚡';
-      actionLabel = 'TRONÇON';
-      actionTitle = 'Tronçonner les obstacles !';
+      actionIcon = '🪚';
+      actionLabel = 'SCIER';
+      actionTitle = 'Tronçonner les obstacles devant vous !';
       isWeapon = true;
     } else if (equippedBikeId === 'tank') {
       actionIcon = '💥';
@@ -2987,14 +3109,14 @@ export class UIManager {
       actionTitle = 'Lance-flammes thermique !';
       isWeapon = true;
     } else if (equippedBikeId === 'decapotable') {
-      actionIcon = '💥';
-      actionLabel = 'CALIBRE 12';
-      actionTitle = 'Tir de chevrotine !';
+      actionIcon = '🔫';
+      actionLabel = 'FUSIL';
+      actionTitle = 'Tirer au fusil à pompe devant vous !';
       isWeapon = true;
     } else if (equippedBikeId === 'chopper') {
       actionIcon = '⛓️';
-      actionLabel = 'CHAÎNE';
-      actionTitle = 'Fouetter à la chaîne lourde !';
+      actionLabel = 'FRAPPER';
+      actionTitle = 'Coup de chaîne lourd sur voitures et piétons !';
       isWeapon = true;
     } else if (equippedBikeId === 'scooter') {
       actionIcon = '🔫';
@@ -3003,7 +3125,7 @@ export class UIManager {
       isWeapon = true;
     } else if (equippedBikeId === 'rouleau') {
       actionIcon = '🚜';
-      actionLabel = 'ONDE CHOC';
+      actionLabel = 'ÉCRASER';
       actionTitle = 'Onde de choc 50 Tonnes !';
       isWeapon = true;
     }

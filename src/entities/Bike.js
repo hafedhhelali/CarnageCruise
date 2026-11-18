@@ -2516,13 +2516,14 @@ export class Bike {
       ? 0.06
       : THREE.MathUtils.clamp(-accel * 0.0035, -0.07, 0.08);
 
-    // Mise à jour de la physique de saut (Gravité 18 m/s² et amorti de suspension)
+    // Mise à jour de la physique de saut (Gravité 18 m/s² ou 24 m/s² en méga-saut et amorti de suspension)
     if (this.jumpAltitude > 0 || this.jumpVelocity > 0) {
-      this.jumpVelocity -= 18.0 * delta;
+      const gravity = this.isMegaJump ? 24.0 : 18.0;
+      this.jumpVelocity -= gravity * delta;
       this.jumpAltitude = Math.max(0, this.jumpAltitude + this.jumpVelocity * delta);
       if (this.isMegaJump && this.jumpAltitude > 0) {
-        const targetPitch = THREE.MathUtils.clamp(-this.jumpVelocity * 0.025, -0.45, 0.25);
-        this.pitchAngle = THREE.MathUtils.lerp(this.pitchAngle, targetPitch, 1 - Math.exp(-5.0 * delta));
+        const targetPitch = THREE.MathUtils.clamp(-this.jumpVelocity * 0.032, -0.42, 0.28);
+        this.pitchAngle = THREE.MathUtils.lerp(this.pitchAngle, targetPitch, 1 - Math.exp(-6.0 * delta));
       } else if (this.jumpVelocity < 0) {
         this.pitchAngle = THREE.MathUtils.lerp(this.pitchAngle, 0.15, 1 - Math.exp(-6.0 * delta)); // nez plongeant à la retombée
       }
@@ -2946,9 +2947,9 @@ export class Bike {
 
   triggerMegaRampJump(speed = 18.0) {
     if (this.currentBikeId === 'aero_jet' || this.isFlyingEscape) return;
-    this.jumpVelocity = Math.max(16.5, speed * 0.72);
+    this.jumpVelocity = THREE.MathUtils.clamp(9.5 + speed * 0.14, 10.5, 14.5);
     this.isMegaJump = true;
-    this.pitchAngle = -0.45;
+    this.pitchAngle = -0.38;
     this.suspVel = -1.6;
     soundManager.playSuspensionThud();
   }

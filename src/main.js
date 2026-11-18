@@ -521,8 +521,12 @@ class GameApp {
     if (attack.type === 'shotgun') {
       const bikeZ = this.bike.z;
       const bikeX = this.bike.mesh.position.x;
-      this.particles.spawnShockwave(new THREE.Vector3(bikeX, this.bike.mesh.position.y + 0.8, bikeZ + 2.0), 0xfffa65);
-      this.engine.triggerCameraShake(0.55);
+      if (this.bike.spawnTracerBurst) this.bike.spawnTracerBurst();
+      if (this.particles.spawnDirectionalSparks) {
+        this.particles.spawnDirectionalSparks(new THREE.Vector3(bikeX, this.bike.mesh.position.y + 0.9, bikeZ + 2.0), new THREE.Vector3(0, 0.15, 1), 10, 0xfffa65);
+      }
+      this.particles.spawnShockwave(new THREE.Vector3(bikeX, this.bike.mesh.position.y + 0.8, bikeZ + 2.0), 0xfffa65, 2.2);
+      this.engine.triggerCameraShake(0.45);
 
       if (this.traffic) {
         this.traffic.vehicles.forEach(v => {
