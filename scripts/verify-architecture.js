@@ -106,7 +106,7 @@ assert(mainContent.includes('if (!isNonMotorized) {') && mainContent.includes('s
 assert(bikeContent.includes('isOrganicEntity') && bikeContent.includes('this.nitroFlames.visible = false'), 'Visuel : Homme et cheval ne dégagent aucune flamme sous boisson énergétique');
 assert(soundContent.includes('pauseGameplayAudio()') && soundContent.includes('resumeGameplayAudio()') && mainContent.includes('soundManager.pauseGameplayAudio()'), 'Audio Pause : La pause coupe immédiatement moteur, course et musique');
 assert(!soundContent.includes('this.musicDelay'), 'Audio Qualité : Effet d\'écho gênant (musicDelay) supprimé du mixage musical');
-assert(gameStateContent.includes('maxSpeed: 6.7') && uiContent.includes('Math.round(bike.maxSpeed * 3.6)'), 'Équilibrage : Vitesses et paramètres des 14 engins/coureurs recalibrés logiquement (~24 km/h à pied)');
+assert(gameStateContent.includes("id: 'cheval'") && gameStateContent.includes('maxSpeed: 18.0') && !gameStateContent.includes("id: 'run_ak47'") && !gameStateContent.includes("id: 'run_chainsaw'") && !gameStateContent.includes("id: 'trottinette_hache'") && uiContent.includes('Math.round(bike.maxSpeed * 3.6)'), 'Équilibrage : À pied / trottinette retirés et vitesses logiques des engins calibrées');
 
 // 11. Tests v0.9.55-beta : Refonte AAA Réaliste (PBR, Audio, Animation/VFX, UI Carbon-Titanium)
 const trafficContent = fs.readFileSync(path.join(rootDir, 'src', 'entities', 'Traffic.js'), 'utf8');

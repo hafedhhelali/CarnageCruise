@@ -29,17 +29,14 @@ const DEFAULT_SAVE = {
   challengeCompletions: {},
   cityDestruction: {},
   exterminatedCities: [],
-  unlockedBikes: ['tank', 'aero_jet', 'hovercraft', 'rad_rover', 'snowmobile', 'scooter', 'chopper', 'decapotable', 'trottinette_hache', 'cheval', 'run_ak47', 'run_chainsaw', 'rouleau', 'dragster'],
+  unlockedBikes: ['tank', 'aero_jet', 'hovercraft', 'rad_rover', 'snowmobile', 'scooter', 'chopper', 'decapotable', 'cheval', 'rouleau', 'dragster'],
   equippedBike: 'tank',
   bikeColors: {
     tank: '#3d4f36',
     scooter: '#e74c3c',
     chopper: '#f39c12',
     decapotable: '#c0392b',
-    trottinette_hache: '#2ecc71',
     cheval: '#8b4513',
-    run_ak47: '#2c3e50',
-    run_chainsaw: '#e67e22',
     rouleau: '#f1c40f',
     dragster: '#111111',
     aero_jet: '#00cec9',
@@ -328,6 +325,10 @@ export class Storage {
   }
 
   getEquippedBike() {
+    const removed = ['run_ak47', 'run_chainsaw', 'trottinette_hache'];
+    if (!this.data.equippedBike || removed.includes(this.data.equippedBike)) {
+      this.data.equippedBike = 'tank';
+    }
     return this.data.equippedBike;
   }
 

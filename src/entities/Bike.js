@@ -2488,16 +2488,24 @@ export class Bike {
 
     // Détection de montée / descente du trottoir (|x| > 5.4m) -> impulsion suspension
     const onSidewalk = Math.abs(this.x) > 5.4;
+    const sideSign = this.x >= 0 ? 1 : -1;
     if (onSidewalk && !this.wasOnSidewalk) {
       soundManager.playCurbMount();
-      this.suspVel -= 1.8;
+      this.suspVel -= 2.2;
+      this.curbRollKick = -sideSign * 0.28;
+      this.pitchAngle -= 0.10;
     } else if (!onSidewalk && this.wasOnSidewalk) {
-      this.suspVel += 1.4;
+      this.suspVel += 1.6;
+      this.curbRollKick = sideSign * 0.24;
+      this.pitchAngle += 0.08;
     }
     this.wasOnSidewalk = onSidewalk;
 
+    this.curbRollKick = (this.curbRollKick || 0) * Math.exp(-7.5 * delta);
+    const edgeStraddleTilt = (Math.abs(this.x) >= 5.15 && Math.abs(this.x) <= 5.65) ? (-sideSign * 0.09) : 0;
+
     const curveBank = (speed > 2.0) ? (-roadAngle * 0.32) : 0;
-    this.targetLean = this.smoothedSteer * 0.35 + curveBank;
+    this.targetLean = this.smoothedSteer * 0.35 + curveBank + edgeStraddleTilt;
     this.currentLean += (this.targetLean - this.currentLean) * (1 - Math.exp(-8.2 * delta));
 
     // Positionnement et rotation du bolide
@@ -2547,14 +2555,15 @@ export class Bike {
     const targetY = baseAltitude + suspensionBounce + this.jumpAltitude + this.suspOffset;
     this.mesh.position.y = THREE.MathUtils.lerp(this.mesh.position.y, targetY, 1 - Math.exp(-12.0 * delta));
 
-    // Inclinaison du châssis (atténuée pour la décapotable 4 roues)
+    // Inclinaison du châssis (atténuée pour la décapotable 4 roues, avec rebond latéral de bordure)
+    const totalRoll = this.currentLean + (this.curbRollKick || 0);
     if (this.currentBikeId === 'decapotable') {
-      this.bikeModelGroup.rotation.z = this.currentLean * 0.35;
+      this.bikeModelGroup.rotation.z = totalRoll * 0.42;
       if (this.carSteeringWheel) {
         this.carSteeringWheel.rotation.z = -this.smoothedSteer * 1.2;
       }
     } else {
-      this.bikeModelGroup.rotation.z = this.currentLean;
+      this.bikeModelGroup.rotation.z = totalRoll;
     }
     this.bikeModelGroup.rotation.x = this.pitchAngle;
 

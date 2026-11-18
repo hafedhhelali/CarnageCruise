@@ -290,8 +290,10 @@ export class SoundManager {
   }
 
   handleAppPause() {
-    if (this.isDestroyed) return;
+    if (this.isDestroyed || this.isAppBackgrounded) return;
+    this.isAppBackgrounded = true;
     this.wasMusicPlaying = this.musicPlaying;
+    this.wasTrackBeforeAppPause = this.currentTrack;
     this.wasEnginePlaying = !!this.engineOsc;
 
     this.stopEngine();
@@ -304,10 +306,30 @@ export class SoundManager {
 
   handleAppResume() {
     if (this.isDestroyed) return;
-    this.resumeContext();
+    this.isAppBackgrounded = false;
 
-    if (this.wasMusicPlaying && !this.isMutedMusic) {
-      this.startMusic();
+    const restoreAudio = () => {
+      if (this.isDestroyed || this.isAppBackgrounded) return;
+      if (this.masterGain && this.ctx && (!this.isMutedMusic || !this.isMutedSfx)) {
+        try {
+          this.masterGain.gain.cancelScheduledValues(this.ctx.currentTime);
+          this.masterGain.gain.setValueAtTime(0.92, this.ctx.currentTime);
+        } catch (e) {}
+      }
+      if (this.wasMusicPlaying && !this.isMutedMusic && !this.isGameplayPaused) {
+        this.startMusic(this.wasTrackBeforeAppPause || 'MENU');
+      }
+      const isNonMotorized = ['run_ak47', 'run_chainsaw', 'cheval'].includes(this.lastVehicleId);
+      if (this.wasEnginePlaying && !this.isMutedSfx && !this.isGameplayPaused && !isNonMotorized) {
+        this.startEngine(this.lastVehicleId || this.lastEngineProfile);
+      }
+    };
+
+    if (this.ctx && this.ctx.state === 'suspended') {
+      this.ctx.resume().then(restoreAudio).catch(restoreAudio);
+    } else {
+      this.resumeContext();
+      restoreAudio();
     }
   }
 
