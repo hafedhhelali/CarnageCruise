@@ -2487,9 +2487,138 @@ export class SoundManager {
       this.playMenuSynthwaveTheme();
     } else if (track === 'NUCLEAR') {
       this.playNuclearDarksynthTheme();
+    } else if (track === 'PURSUIT') {
+      this.playPursuitChaseTheme();
     } else {
       this.playSadisticCarnageTheme(this.musicIntensity || 'TENSION');
     }
+  }
+
+  /**
+   * Musique dynamique de poursuite policière (148 BPM, basse tendue + sirène synthétique rythmée)
+   */
+  playPursuitChaseTheme() {
+    const bassNotes = [55.0, 55.0, 65.41, 55.0, 73.42, 65.41, 55.0, 49.0]; // A1 tension
+    this._startLookaheadSequencer('PURSUIT', 0.101, (step, time) => {
+      const dest = this.getMusicOutput();
+      if (!dest || !this.ctx) return;
+
+      // Basse pulsante
+      const bOsc = this.ctx.createOscillator();
+      const bGain = this.ctx.createGain();
+      bOsc.type = 'sawtooth';
+      bOsc.frequency.setValueAtTime(bassNotes[step % bassNotes.length], time);
+      bGain.gain.setValueAtTime(0.16, time);
+      bGain.gain.exponentialRampToValueAtTime(0.001, time + 0.09);
+      bOsc.connect(bGain);
+      bGain.connect(dest);
+      bOsc.start(time);
+      bOsc.stop(time + 0.095);
+
+      // Kick sur temps pairs (0, 4, 8, 12)
+      if (step % 4 === 0) {
+        const kOsc = this.ctx.createOscillator();
+        const kGain = this.ctx.createGain();
+        kOsc.type = 'sine';
+        kOsc.frequency.setValueAtTime(135, time);
+        kOsc.frequency.exponentialRampToValueAtTime(38, time + 0.09);
+        kGain.gain.setValueAtTime(0.32, time);
+        kGain.gain.exponentialRampToValueAtTime(0.001, time + 0.1);
+        kOsc.connect(kGain);
+        kGain.connect(dest);
+        kOsc.start(time);
+        kOsc.stop(time + 0.11);
+      }
+
+      // Sirène deux tons discrète tous les 16 temps
+      if (step % 16 === 0 || step % 16 === 8) {
+        const sOsc = this.ctx.createOscillator();
+        const sGain = this.ctx.createGain();
+        sOsc.type = 'triangle';
+        sOsc.frequency.setValueAtTime(step % 16 === 0 ? 660 : 520, time);
+        sGain.gain.setValueAtTime(0.055, time);
+        sGain.gain.exponentialRampToValueAtTime(0.001, time + 0.28);
+        sOsc.connect(sGain);
+        sGain.connect(dest);
+        sOsc.start(time);
+        sOsc.stop(time + 0.3);
+      }
+    });
+  }
+
+  /**
+   * Effet sonore complet d'arrestation : freinage d'urgence, radio police & accord dramatique
+   */
+  playArrestSimulation() {
+    if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
+    this.resumeContext();
+    const dest = this.getMasterOutput();
+    const now = this.ctx.currentTime;
+
+    // 1. Sirène qui s'éteint (wind-down)
+    const siren = this.ctx.createOscillator();
+    const sirenGain = this.ctx.createGain();
+    siren.type = 'sawtooth';
+    siren.frequency.setValueAtTime(780, now);
+    siren.frequency.exponentialRampToValueAtTime(190, now + 1.1);
+    sirenGain.gain.setValueAtTime(0.22, now);
+    sirenGain.gain.exponentialRampToValueAtTime(0.001, now + 1.15);
+    siren.connect(sirenGain);
+    sirenGain.connect(dest);
+    siren.start(now);
+    siren.stop(now + 1.2);
+
+    // 2. Bip radio police + sommation
+    [1.2, 1.38].forEach((offset, idx) => {
+      const beep = this.ctx.createOscillator();
+      const bGain = this.ctx.createGain();
+      beep.type = 'sine';
+      beep.frequency.setValueAtTime(idx === 0 ? 1280 : 960, now + offset);
+      bGain.gain.setValueAtTime(0.16, now + offset);
+      bGain.gain.exponentialRampToValueAtTime(0.001, now + offset + 0.12);
+      beep.connect(bGain);
+      bGain.connect(dest);
+      beep.start(now + offset);
+      beep.stop(now + offset + 0.14);
+    });
+
+    // 3. Accord mineur grave dramatique (arrestation)
+    [110.0, 130.81, 164.81].forEach(freq => {
+      const ch = this.ctx.createOscillator();
+      const chGain = this.ctx.createGain();
+      ch.type = 'triangle';
+      ch.frequency.setValueAtTime(freq, now + 2.4);
+      chGain.gain.setValueAtTime(0.18, now + 2.4);
+      chGain.gain.exponentialRampToValueAtTime(0.001, now + 4.3);
+      ch.connect(chGain);
+      chGain.connect(dest);
+      ch.start(now + 2.4);
+      ch.stop(now + 4.35);
+    });
+  }
+
+  /**
+   * Claquement métallique lourd des barreaux de prison
+   */
+  playPrisonSlam() {
+    if (this.isMutedSfx || !this.ctx || this.isDestroyed) return;
+    this.resumeContext();
+    const dest = this.getMasterOutput();
+    const now = this.ctx.currentTime;
+
+    [95, 190, 310].forEach((freq, i) => {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = i === 0 ? 'sine' : 'square';
+      osc.frequency.setValueAtTime(freq, now);
+      osc.frequency.exponentialRampToValueAtTime(freq * 0.45, now + 0.35);
+      gain.gain.setValueAtTime(i === 0 ? 0.55 : 0.18, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+      osc.connect(gain);
+      gain.connect(dest);
+      osc.start(now);
+      osc.stop(now + 0.42);
+    });
   }
 
   switchMusicTrack(track) {

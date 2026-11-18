@@ -989,7 +989,7 @@ class GameApp {
           this.traffic.spawnPoliceRoadblock(this.bike.z + 95);
         }
       }
-      soundManager.playNearMiss();
+      soundManager.switchMusicTrack('PURSUIT');
       if (this.ui) {
         this.ui.spawnFloatingCombatText('🚨 POLICE !', `${reason} — POURSUITE LANCÉE !`, '#38bdf8', 50, 26);
       }
@@ -1008,7 +1008,7 @@ class GameApp {
 
     soundManager.stopAllGameplaySounds();
     soundManager.stopEngine();
-    soundManager.playPenaltyBuzzer();
+    soundManager.playArrestSimulation();
     Haptic.impactHeavy();
 
     const roadX = this.environment ? this.environment.getRoadCenterX(this.bike.z) : 0;
@@ -1018,7 +1018,8 @@ class GameApp {
 
     this._arrestCinematic = {
       timer: 0,
-      duration: 3.2,
+      duration: 4.6,
+      phase: 1,
       cine
     };
 
@@ -1911,22 +1912,35 @@ class GameApp {
       // 10d. Mécaniques et collisions des 5 Épreuves Spéciales
       this.updateChallengeHooks(delta, currentSpeed, isFlyingCraft);
 
-      // 11. Caméra dynamique en poursuite douce avec anticipation de la courbe routière
-      const lookAheadRoadX = this.environment.getRoadCenterX(this.bike.z + 18.0) + this.bike.x * 0.7;
-      this.engine.updateCameraGameplay(delta, this.bike.mesh.position, currentSpeed, lookAheadRoadX, roadAngle, gameState.isNitroActive);
+      // 11. Caméra dynamique (simulation d'arrestation cinématique ou poursuite gameplay)
+      if (this._arrestCinematic && this.engine.updateCameraArrest) {
+        this.engine.updateCameraArrest(delta, this.bike.mesh.position, this._arrestCinematic.timer);
+      } else {
+        const lookAheadRoadX = this.environment.getRoadCenterX(this.bike.z + 18.0) + this.bike.x * 0.7;
+        this.engine.updateCameraGameplay(delta, this.bike.mesh.position, currentSpeed, lookAheadRoadX, roadAngle, gameState.isNitroActive);
+      }
 
       // 12. Mise à jour de l'état de course (accélération, décélération, combo, vitesse arrêtée lors d'un crash)
       gameState.update(delta, this.bike.isCrashed, this.bike.jumpAltitude > 0.35);
 
-      // 12b. Mise à jour de la cinématique d'arrestation policière si active
+      // 12b. Mise à jour de la simulation complète d'arrestation policière si active
       if (this._arrestCinematic) {
         this._arrestCinematic.timer += delta;
         if (this._arrestCinematic.cine) {
           this._arrestCinematic.cine.update(delta);
         }
-        if (this._arrestCinematic.timer >= this._arrestCinematic.duration) {
+        const t = this._arrestCinematic.timer;
+        if (t >= 1.1 && this._arrestCinematic.phase < 2) {
+          this._arrestCinematic.phase = 2;
+          if (this.ui && this.ui.updateArrestBannerPhase) this.ui.updateArrestBannerPhase(2);
+        } else if (t >= 2.5 && this._arrestCinematic.phase < 3) {
+          this._arrestCinematic.phase = 3;
+          if (this.ui && this.ui.updateArrestBannerPhase) this.ui.updateArrestBannerPhase(3);
+        }
+        if (t >= this._arrestCinematic.duration) {
           if (this._arrestCinematic.cine) this._arrestCinematic.cine.dispose();
           this._arrestCinematic = null;
+          soundManager.playPrisonSlam();
           const bailCost = 1500;
           storage.setPrisonState(true, bailCost, gameState.selectedCity?.id || null);
           gameState.endRun();

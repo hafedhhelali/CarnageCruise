@@ -28,11 +28,14 @@ export class Engine {
     // Scène
     this.scene = new THREE.Scene();
 
+    this.isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
     // Rendu WebGL haute performance mobile & colorimétrie dynamique
     try {
       this.renderer = new THREE.WebGLRenderer({
         canvas: this.canvas,
-        antialias: true,
+        antialias: !this.isMobile,
+        stencil: false,
         powerPreference: 'high-performance'
       });
     } catch (e) {
@@ -41,6 +44,7 @@ export class Engine {
         this.renderer = new THREE.WebGLRenderer({
           canvas: this.canvas,
           antialias: false,
+          stencil: false,
           powerPreference: 'default'
         });
       } catch (e2) {
@@ -48,7 +52,6 @@ export class Engine {
         throw new Error('WebGL context creation failed: ' + e2.message);
       }
     }
-    this.isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, this.isMobile ? 1.0 : 1.5));
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -118,13 +121,13 @@ export class Engine {
       this.scene.environment = null;
     }
 
-    // Caméra perspective grand angle arcade
+    // Caméra perspective grand angle arcade (near=0.65 pour précision Z-buffer optimale sans clignotement)
     this.baseFov = 72;
     this.camera = new THREE.PerspectiveCamera(
       72,
       window.innerWidth / window.innerHeight,
-      0.1,
-      this.isMobile ? 420 : 600
+      0.65,
+      this.isMobile ? 320 : 500
     );
 
     // Pool de PointLights dynamiques pour flashs d'armes et d'explosions (Zéro lag mobile)
@@ -674,6 +677,35 @@ export class Engine {
     this.camera.updateProjectionMatrix();
 
     this.dirLight.position.set(12, 26, 12);
+  }
+
+  /**
+   * Caméra cinématique réaliste pour la simulation complète d'arrestation policière (plan bas côté conducteur)
+   */
+  updateCameraArrest(delta, bikePosition, elapsed = 0) {
+    if (this.skyDome) {
+      this.skyDome.update(delta, bikePosition.z);
+    }
+    const t = Math.min(1.0, elapsed / 4.3);
+    const orbitAngle = THREE.MathUtils.lerp(-0.85, -2.05, t);
+    const radius = THREE.MathUtils.lerp(6.8, 4.9, t);
+    const height = THREE.MathUtils.lerp(2.15, 1.55, t);
+
+    const targetCamX = bikePosition.x + Math.sin(orbitAngle) * radius;
+    const targetCamY = bikePosition.y + height;
+    const targetCamZ = bikePosition.z + 1.6 + Math.cos(orbitAngle) * radius;
+
+    const damp = 1.0 - Math.exp(-5.0 * delta);
+    this.camera.position.x = THREE.MathUtils.lerp(this.camera.position.x, targetCamX, damp);
+    this.camera.position.y = THREE.MathUtils.lerp(this.camera.position.y, targetCamY, damp);
+    this.camera.position.z = THREE.MathUtils.lerp(this.camera.position.z, targetCamZ, damp);
+
+    this.camera.up.set(0, 1, 0);
+    this.camera.lookAt(bikePosition.x - 0.35, bikePosition.y + 1.05, bikePosition.z + 1.6);
+    if (Math.abs(this.camera.fov - 52) > 0.1) {
+      this.camera.fov = THREE.MathUtils.lerp(this.camera.fov, 52, damp);
+      this.camera.updateProjectionMatrix();
+    }
   }
 
   onResize() {

@@ -4361,7 +4361,7 @@ ${gameState.isRuinsMode ? '' : `          <div class="hud-nitro-group">
   }
 
   /**
-   * Bandeau d'interpellation pendant la cinématique 3D ("DESCENDEZ ! MAINS SUR LA TÊTE !")
+   * Bandeau d'interpellation pendant la simulation 3D d'arrestation en 4 phases
    */
   showArrestBanner() {
     const existing = document.getElementById('arrest-banner-overlay');
@@ -4371,14 +4371,27 @@ ${gameState.isRuinsMode ? '' : `          <div class="hud-nitro-group">
     banner.className = 'arrest-banner-overlay';
     banner.innerHTML = `
       <div class="arrest-siren-bar">
-        <span class="arrest-badge">🚨 POLICE — INTERPELLATION</span>
-        <div class="arrest-order">DESCENDEZ DU VÉHICULE ! MAINS SUR LA TÊTE !</div>
+        <span class="arrest-badge" id="arrest-phase-badge">🚨 POLICE — ENCERCLAGE DU VÉHICULE</span>
+        <div class="arrest-order" id="arrest-phase-order">ARRÊT FORCÉ ! COUPEZ LE MOTEUR !</div>
       </div>
     `;
     this.root.appendChild(banner);
     setTimeout(() => {
       if (banner.parentNode) banner.remove();
-    }, 3300);
+    }, 4800);
+  }
+
+  updateArrestBannerPhase(phase) {
+    const badge = document.getElementById('arrest-phase-badge');
+    const order = document.getElementById('arrest-phase-order');
+    if (!badge || !order) return;
+    if (phase === 2) {
+      badge.textContent = '🚔 POLICE ARMÉE — SOMMATION';
+      order.textContent = 'DESCENDEZ DU VÉHICULE ! MAINS SUR LA TÊTE !';
+    } else if (phase === 3) {
+      badge.textContent = '⛓️ INTERPELLATION EN COURS';
+      order.textContent = 'INDIVIDU MAÎTRISÉ — TRANSFERT EN CELLULE...';
+    }
   }
 
   /**
