@@ -1048,49 +1048,53 @@ class GameApp {
         Haptic.impactMedium();
       }
 
-      if (bikeAbsX >= 6.45 && currentSpeed > 4.0 && !isFlyingCraft) {
-        const nowMs = performance.now();
-        if (!this._lastWallScrapeAt || nowMs - this._lastWallScrapeAt > 280) {
-          this._lastWallScrapeAt = nowMs;
-          const sideSign = this.bike.x >= 0 ? 1 : -1;
-          const wallPos = new THREE.Vector3(this.bike.mesh.position.x + sideSign * 0.6, 0.45, this.bike.z);
-          if (this.particles.spawnDirectionalSparks) {
-            this.particles.spawnDirectionalSparks(wallPos, new THREE.Vector3(-sideSign * 0.8, 0.5, -1), 12, 0xffa502);
-          }
-          this.bike.x -= sideSign * 0.22;
-          this.bike.curbRollKick = -sideSign * 0.14;
-          this.engine.triggerCameraShake(0.06);
-          soundManager.playCurbMount();
-          Haptic.impactLight();
-        }
-      }
+      // Frottement réaliste contre les murs latéraux (|x| >= 6.35m) — dépend du véhicule
+      if (bikeAbsX >= 6.35 && currentSpeed > 2.5 && !isFlyingCraft && !this.bike.isCrashed) {
+        const side = Math.sign(this.bike.x);
+        const bid = this.bike.currentBikeId;
+        const isHeavyArmor = (bid === 'tank' || bid === 'rouleau' || bid === 'rad_rover');
+        const isHover = (bid === 'hovercraft');
+        const isHorse = (bid === 'cheval');
 
-      // Frôlement des façades (proche de la bordure extrême |x| > 6.45m) :
-      // gerbe d'étincelles continue le long du mur + grincement régulier
-      if (bikeAbsX > 6.45 && currentSpeed > 6 && !isFlyingCraft && !this.bike.isCrashed) {
+        // Décélération par frottement selon la masse/type du véhicule
+        const frictionRate = isHeavyArmor ? 0.12 : (isHover ? 0.24 : (isHorse ? 0.55 : 0.42));
+        gameState.speed = Math.max(2.0, gameState.speed * Math.max(0.5, 1.0 - frictionRate * delta));
+        this.bike.x = side * 6.35;
+
         this._wallScrapeTimer = (this._wallScrapeTimer || 0) - delta;
         if (this._wallScrapeTimer <= 0) {
-          this._wallScrapeTimer = 0.14;
-          const side = Math.sign(this.bike.x);
+          this._wallScrapeTimer = isHeavyArmor ? 0.09 : 0.12;
           const wallPos = new THREE.Vector3(
-            this.bike.mesh.position.x + side * 0.55,
-            0.45 + Math.random() * 0.5,
-            this.bike.z - 0.3 + Math.random() * 0.8
+            this.bike.mesh.position.x + side * 0.58,
+            0.45 + Math.random() * 0.4,
+            this.bike.z - 0.2 + Math.random() * 0.6
           );
-          this.particles.spawnSparks(wallPos, 6, 0xffd32a);
-          if (this.particles.spawnSkidSmoke) {
-            this.particles.spawnSkidSmoke(new THREE.Vector3(wallPos.x, 0.1, wallPos.z));
+          if (isHorse) {
+            if (this.particles.spawnSkidSmoke) this.particles.spawnSkidSmoke(new THREE.Vector3(wallPos.x, 0.1, wallPos.z));
+            this.bike.x -= side * 0.28;
+            soundManager.playCurbMount();
+          } else {
+            const sparkColor = isHover ? 0x00d2d3 : (isHeavyArmor ? 0xff793f : 0xffd32a);
+            const sparkCount = isHeavyArmor ? 12 : 8;
+            if (this.particles.spawnDirectionalSparks) {
+              this.particles.spawnDirectionalSparks(wallPos, new THREE.Vector3(-side * 0.75, 0.45, -1), sparkCount, sparkColor);
+            } else {
+              this.particles.spawnSparks(wallPos, sparkCount, sparkColor);
+            }
+            if (this.particles.spawnSkidSmoke) {
+              this.particles.spawnSkidSmoke(new THREE.Vector3(wallPos.x, 0.1, wallPos.z));
+            }
+            soundManager.playWallScrape(side);
           }
-          soundManager.playWallScrape(side);
-          this.engine.triggerCameraShake(0.06);
+          this.engine.triggerCameraShake(isHeavyArmor ? 0.04 : 0.03);
         }
-        // Inclinaison visuelle de la moto vers le mur (frottement)
-        const side = Math.sign(this.bike.x);
+
+        // Inclinaison de frottement réaliste le long du mur
+        const scrapeTilt = isHeavyArmor ? 0.06 : 0.13;
         this.bike.mesh.rotation.z = THREE.MathUtils.lerp(
-          this.bike.mesh.rotation.z, side * 0.12, delta * 8
+          this.bike.mesh.rotation.z, side * scrapeTilt, delta * 8
         );
       } else {
-        // Récupération de l'inclinaison
         this.bike.mesh.rotation.z = THREE.MathUtils.lerp(this.bike.mesh.rotation.z, 0, delta * 10);
       }
 
@@ -1398,11 +1402,10 @@ class GameApp {
                     if (this.particles.spawnGlassShatter) this.particles.spawnGlassShatter(propPos);
                   }
 
-                  // Animation physique d'éjection et fracas de l'objet
-                  prop.position.y += 2.2;
-                  prop.rotation.x = Math.PI * 0.85;
-                  prop.rotation.z = (prop.position.x > 0 ? 1 : -1) * 1.2;
-                  setTimeout(() => { prop.visible = false; }, 550);
+                  // Basculement physique réaliste au sol (recyclé avec le chunk sans disparition brusque)
+                  prop.position.y = Math.max(0.1, prop.position.y - 0.12);
+                  prop.rotation.x = Math.PI * 0.44;
+                  prop.rotation.z = (prop.position.x > 0 ? -1 : 1) * 0.85;
 
                   if (!gameState.isRuinsMode) {
                     if (prop.userData.type === 'lamp') {

@@ -2487,35 +2487,41 @@ export class Bike {
     this.x = Math.max(-MAX_WIDTH, Math.min(MAX_WIDTH, this.x));
 
     // Détection de montée / descente du trottoir (|x| > 5.4m) -> impulsion suspension
-    const onSidewalk = Math.abs(this.x) > 5.4;
+    const absX = Math.abs(this.x);
+    const onSidewalk = absX > 5.4;
     const sideSign = this.x >= 0 ? 1 : -1;
     if (onSidewalk && !this.wasOnSidewalk) {
       soundManager.playCurbMount();
-      this.suspVel -= 2.2;
-      this.curbRollKick = -sideSign * 0.28;
-      this.pitchAngle -= 0.10;
+      this.suspVel -= 1.8;
+      this.curbRollKick = -sideSign * 0.18;
+      this.pitchAngle -= 0.08;
     } else if (!onSidewalk && this.wasOnSidewalk) {
-      this.suspVel += 1.6;
-      this.curbRollKick = sideSign * 0.24;
-      this.pitchAngle += 0.08;
+      this.suspVel += 1.4;
+      this.curbRollKick = sideSign * 0.16;
+      this.pitchAngle += 0.06;
     }
     this.wasOnSidewalk = onSidewalk;
 
-    this.curbRollKick = (this.curbRollKick || 0) * Math.exp(-7.5 * delta);
-    const edgeStraddleTilt = (Math.abs(this.x) >= 5.15 && Math.abs(this.x) <= 5.65) ? (-sideSign * 0.09) : 0;
+    this.curbRollKick = (this.curbRollKick || 0) * Math.exp(-8.5 * delta);
+    // Quand 2 roues sont sur le trottoir et 2 roues sur la route (4.75..6.05m), inclinaison progressive réaliste
+    const straddleFactor = (absX >= 4.75 && absX <= 6.05)
+      ? Math.max(0, 1.0 - Math.abs(absX - 5.4) / 0.65)
+      : 0;
+    const edgeStraddleTilt = -sideSign * 0.21 * straddleFactor;
 
     const curveBank = (speed > 2.0) ? (-roadAngle * 0.32) : 0;
     this.targetLean = this.smoothedSteer * 0.35 + curveBank + edgeStraddleTilt;
-    this.currentLean += (this.targetLean - this.currentLean) * (1 - Math.exp(-8.2 * delta));
+    this.currentLean += (this.targetLean - this.currentLean) * (1 - Math.exp(-8.5 * delta));
 
     // Positionnement et rotation du bolide
     this.mesh.position.x = this.x;
     this.mesh.rotation.z = 0;
 
-    // Suspension ressort-amortisseur 2nd ordre + dénivelé trottoir (+0.25m) / vol (4.2m)
+    // Suspension ressort-amortisseur 2nd ordre + dénivelé trottoir progressif (+0.25m) / vol (4.2m)
     this.bouncePhase += delta * (speed * 0.8 + 2.0);
     const suspensionBounce = Math.sin(this.bouncePhase) * 0.015;
-    const baseAltitude = this.isFlyingEscape ? 38.0 : (this.currentBikeId === 'aero_jet' ? (4.2 + Math.sin(this.bouncePhase * 0.45) * 0.25) : (onSidewalk ? 0.25 : 0.0));
+    const curbLift = absX >= 6.05 ? 0.25 : (absX <= 4.75 ? 0.0 : THREE.MathUtils.clamp((absX - 4.75) / 1.3, 0, 1) * 0.25);
+    const baseAltitude = this.isFlyingEscape ? 38.0 : (this.currentBikeId === 'aero_jet' ? (4.2 + Math.sin(this.bouncePhase * 0.45) * 0.25) : curbLift);
 
     // Plongée au freinage / cabrage à l'accélération
     const accel = (speed - this.prevSpeed) / Math.max(delta, 0.001);
