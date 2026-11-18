@@ -3395,6 +3395,7 @@ export class Environment {
         if (chunk.userData && chunk.userData.props) {
           chunk.userData.props.forEach(prop => {
             prop.userData.isHit = false;
+            prop.userData.fallAnim = null;
             if (prop.userData.isStuntRamp) prop.userData.isHit = false;
             if (prop.userData.isSlalomGate) prop.userData.gatePassed = false;
             if (prop.userData.isAerialRing) {
@@ -3402,6 +3403,8 @@ export class Environment {
               prop.visible = true;
             }
             prop.visible = true;
+            if (prop.userData.baseX !== undefined) prop.position.x = prop.userData.baseX;
+            if (prop.userData.localZ !== undefined) prop.position.z = prop.userData.localZ;
             prop.position.y = prop.userData.initialY !== undefined ? prop.userData.initialY : 0;
             if (prop.userData.initialRot) {
               prop.rotation.copy(prop.userData.initialRot);
@@ -3419,6 +3422,38 @@ export class Environment {
         chunk.userData.props.forEach(prop => {
           if (prop.userData && prop.userData.isAerialRing && prop.visible) {
             prop.rotation.z += delta * 2.2;
+          }
+          const fa = prop.userData && prop.userData.fallAnim;
+          if (fa && !fa.settled) {
+            fa.vy -= 18.0 * delta;
+            prop.position.x += fa.vx * delta;
+            prop.position.y += fa.vy * delta;
+            prop.position.z += fa.vz * delta;
+
+            const nextRotX = prop.rotation.x + fa.rotVelX * delta;
+            prop.rotation.x = Math.min(Math.PI * 0.46, nextRotX);
+            if (fa.rotVelZ !== 0) {
+              const targetZ = Math.sign(fa.rotVelZ) * 0.92;
+              const nextRotZ = prop.rotation.z + fa.rotVelZ * delta;
+              prop.rotation.z = fa.rotVelZ > 0 ? Math.min(targetZ, nextRotZ) : Math.max(targetZ, nextRotZ);
+            }
+
+            if (prop.position.y <= fa.groundY) {
+              prop.position.y = fa.groundY;
+              if (!fa.bounced && Math.abs(fa.vy) > 1.8) {
+                fa.vy = -fa.vy * 0.26;
+                fa.vx *= 0.45;
+                fa.vz *= 0.45;
+                fa.bounced = true;
+              } else {
+                fa.vy = 0;
+                fa.vx *= Math.exp(-8.0 * delta);
+                fa.vz *= Math.exp(-8.0 * delta);
+                if (prop.rotation.x >= Math.PI * 0.44) {
+                  fa.settled = true;
+                }
+              }
+            }
           }
         });
       }

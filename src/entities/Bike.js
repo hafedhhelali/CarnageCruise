@@ -2477,10 +2477,10 @@ export class Bike {
       this.smoothedSteer += (steerInput - this.smoothedSteer) * Math.min(1.0, delta * 9.6);
     }
 
-    // Largeur étendue : Chaussée (-5.4 à +5.4) + Trottoirs (-6.8 à +6.8)
-    // Permet de rouler confortablement sur le trottoir sans heurter les façades de bâtiments
+    // Largeur étendue : Chaussée (-5.4 à +5.4) + Trottoirs jusqu'aux façades (-7.4 à +7.4)
+    // Permet de s'approcher et frotter contre les murs/façades de bâtiments
     // Sensibilité latérale accrue (10.2 m/s max) pour un slalom réactif et esquives précises
-    const MAX_WIDTH = 6.8;
+    const MAX_WIDTH = 7.4;
     if (!gameState.isBraking) {
       this.x -= this.smoothedSteer * 10.2 * delta;
     }
@@ -3006,6 +3006,16 @@ export class Bike {
         if (b.userData) b.userData.active = false;
       });
     }
+  }
+
+  /**
+   * Applique une secousse physique réaliste directement sur le châssis du véhicule
+   * (roulis latéral, tangage avant/arrière, impulsion verticale de suspension)
+   */
+  triggerChassisJolt(rollImp = 0, pitchImp = 0, vertImp = 0) {
+    this.curbRollKick = THREE.MathUtils.clamp((this.curbRollKick || 0) + rollImp, -0.38, 0.38);
+    this.pitchAngle = THREE.MathUtils.clamp((this.pitchAngle || 0) + pitchImp, -0.26, 0.26);
+    this.suspVel = THREE.MathUtils.clamp((this.suspVel || 0) + vertImp, -5.0, 5.0);
   }
 
   dispose() {

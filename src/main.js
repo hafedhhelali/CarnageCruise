@@ -1048,8 +1048,8 @@ class GameApp {
         Haptic.impactMedium();
       }
 
-      // Frottement réaliste contre les murs latéraux (|x| >= 6.35m) — dépend du véhicule
-      if (bikeAbsX >= 6.35 && currentSpeed > 2.5 && !isFlyingCraft && !this.bike.isCrashed) {
+      // Frottement réaliste contre les murs latéraux (|x| >= 7.25m) — dépend du véhicule
+      if (bikeAbsX >= 7.25 && currentSpeed > 2.5 && !isFlyingCraft && !this.bike.isCrashed) {
         const side = Math.sign(this.bike.x);
         const bid = this.bike.currentBikeId;
         const isHeavyArmor = (bid === 'tank' || bid === 'rouleau' || bid === 'rad_rover');
@@ -1059,7 +1059,7 @@ class GameApp {
         // Décélération par frottement selon la masse/type du véhicule
         const frictionRate = isHeavyArmor ? 0.12 : (isHover ? 0.24 : (isHorse ? 0.55 : 0.42));
         gameState.speed = Math.max(2.0, gameState.speed * Math.max(0.5, 1.0 - frictionRate * delta));
-        this.bike.x = side * 6.35;
+        this.bike.x = side * 7.25;
 
         this._wallScrapeTimer = (this._wallScrapeTimer || 0) - delta;
         if (this._wallScrapeTimer <= 0) {
@@ -1086,7 +1086,10 @@ class GameApp {
             }
             soundManager.playWallScrape(side);
           }
-          this.engine.triggerCameraShake(isHeavyArmor ? 0.04 : 0.03);
+          if (this.bike.triggerChassisJolt) {
+            this.bike.triggerChassisJolt(-side * (isHeavyArmor ? 0.04 : 0.08), -0.02, -0.45);
+          }
+          this.engine.triggerCameraShake(0.015);
         }
 
         // Inclinaison de frottement réaliste le long du mur
@@ -1389,7 +1392,16 @@ class GameApp {
                   setTimeout(() => { prop.visible = false; }, 550);
 
                 } else {
-                  this.engine.triggerCameraShake(0.12);
+                  this.engine.triggerCameraShake(0.03);
+                  if (this.bike.triggerChassisJolt) {
+                    const impactSide = prop.position.x >= this.bike.mesh.position.x ? -1 : 1;
+                    this.bike.triggerChassisJolt(impactSide * 0.14, 0.09, -1.6);
+                  }
+                  const bid = this.bike.currentBikeId;
+                  const isHeavyArmor = (bid === 'tank' || bid === 'rouleau' || bid === 'rad_rover');
+                  const slowFactor = isHeavyArmor ? 0.95 : (prop.userData.type === 'terrace' ? 0.85 : 0.90);
+                  gameState.speed = Math.max(2.0, gameState.speed * slowFactor);
+
                   soundManager.playPropSmash();
                   Haptic.impactLight();
 
@@ -1402,10 +1414,19 @@ class GameApp {
                     if (this.particles.spawnGlassShatter) this.particles.spawnGlassShatter(propPos);
                   }
 
-                  // Basculement physique réaliste au sol (recyclé avec le chunk sans disparition brusque)
-                  prop.position.y = Math.max(0.1, prop.position.y - 0.12);
-                  prop.rotation.x = Math.PI * 0.44;
-                  prop.rotation.z = (prop.position.x > 0 ? -1 : 1) * 0.85;
+                  // Basculement physique progressif avec gravité et rebond (recyclé avec le chunk)
+                  const fallSide = prop.position.x > this.bike.mesh.position.x ? 1 : -1;
+                  const forwardSpeed = Math.max(6.0, gameState.speed * 0.42);
+                  prop.userData.fallAnim = {
+                    vx: fallSide * (2.2 + Math.random() * 1.4),
+                    vy: 2.6 + Math.random() * 1.2,
+                    vz: forwardSpeed,
+                    rotVelX: 3.8 + Math.random() * 1.2,
+                    rotVelZ: -fallSide * (2.4 + Math.random() * 0.8),
+                    groundY: 0.14,
+                    bounced: false,
+                    settled: false
+                  };
 
                   if (!gameState.isRuinsMode) {
                     if (prop.userData.type === 'lamp') {

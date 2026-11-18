@@ -516,8 +516,8 @@ export class Engine {
     }
   }
 
-  triggerCameraShake(intensity = 0.25) {
-    this.shakeIntensity = Math.max(this.shakeIntensity, Math.min(intensity, 0.52));
+  triggerCameraShake(intensity = 0.15) {
+    this.shakeIntensity = Math.max(this.shakeIntensity, Math.min(intensity, 0.22));
   }
 
   triggerDynamicLight(position, colorHex = 0xffa502, intensity = 4.8, duration = 0.25) {
@@ -612,11 +612,11 @@ export class Engine {
     this.shakeTime += delta;
     if (this.shakeIntensity > 0.001) {
       const t = this.shakeTime;
-      const shakeX = (Math.sin(t * 47.0) * 0.6 + Math.cos(t * 83.0) * 0.4) * this.shakeIntensity * 0.22;
-      const shakeY = (Math.cos(t * 53.0) * 0.6 + Math.sin(t * 79.0) * 0.4) * this.shakeIntensity * 0.16;
+      const shakeX = (Math.sin(t * 47.0) * 0.6 + Math.cos(t * 83.0) * 0.4) * this.shakeIntensity * 0.08;
+      const shakeY = (Math.cos(t * 53.0) * 0.6 + Math.sin(t * 79.0) * 0.4) * this.shakeIntensity * 0.05;
       this.camera.position.x += shakeX;
       this.camera.position.y += shakeY;
-      this.shakeIntensity *= Math.exp(-this.shakeDecay * 1.35 * delta);
+      this.shakeIntensity *= Math.exp(-this.shakeDecay * 1.6 * delta);
     } else {
       this.shakeIntensity = 0;
     }
