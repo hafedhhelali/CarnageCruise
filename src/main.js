@@ -295,6 +295,9 @@ class GameApp {
         if (this.intersections) this.intersections.reset();
         if (this.particles) this.particles.reset();
 
+        this.policePursuitActive = (gameState.challengeMode === 'POLICE_PURSUIT');
+        this._crimeHeatCount = 0;
+
         if (gameState.isRuinsMode) {
           soundManager.stopMusic();
           soundManager.playGeigerClick();
@@ -805,6 +808,133 @@ class GameApp {
   }
 
   /**
+   * Met à jour la poursuite policière (mode POLICE_PURSUIT ou déclenchée dès les premiers accidents)
+   */
+  updatePolicePursuit(simDelta, isFlyingCraft) {
+    if (!this.traffic || isFlyingCraft || this.hasCrossedFinish) return;
+    if (!gameState.challengeState) gameState.challengeState = { shieldHp: 3 };
+    const cs = gameState.challengeState;
+    if (cs.shieldHp === undefined) cs.shieldHp = 3;
+
+    const activeCops = (this.traffic.vehicles || []).filter(v => v.userData && v.userData.isPursuitPolice && v.userData.active && !v.userData.isCrashed);
+    this._pursuitSpawnTimer = (this._pursuitSpawnTimer || 0) - simDelta;
+    if (activeCops.length < 3 && this._pursuitSpawnTimer <= 0 && this.traffic.spawnPursuitCruiser) {
+      this._pursuitSpawnTimer = 2.8;
+      const curveX = this.environment ? this.environment.getRoadCenterX(this.bike.z + 75) : 0;
+      const laneX = (Math.random() < 0.5 ? -2.6 : 2.6);
+      this.traffic.spawnPursuitCruiser(this.bike.z + 75 + Math.random() * 25, curveX + laneX);
+    }
+
+    const bid = this.bike.currentBikeId;
+    const canSmashPolice = gameState.isNitroActive || this.bike.isInvulnerable() ||
+      ['tank', 'rouleau', 'rad_rover', 'bat_moto', 'moto_tron'].includes(bid);
+
+    for (const cop of (this.traffic.vehicles || [])) {
+      if (!cop.userData || !cop.userData.isPursuitPolice || !cop.userData.active || cop.userData.isCrashed) continue;
+      const dZ = Math.abs(this.bike.z - cop.position.z);
+      const dX = Math.abs(this.bike.mesh.position.x - cop.position.x);
+
+      if (dZ < 2.6 && dX < 1.8) {
+        if (canSmashPolice) {
+          cs.policeDestroyed = (cs.policeDestroyed || 0) + 1;
+          cs.wantedLevel = Math.min(5, (cs.wantedLevel || 2) + 1);
+          if (this.traffic.blowUpVehicle) this.traffic.blowUpVehicle(cop, this.bike.mesh.position);
+          if (this.bike.triggerChassisJolt) this.bike.triggerChassisJolt(0.08, -0.05, -0.9);
+          if (this.particles.spawnDirectionalSparks) this.particles.spawnDirectionalSparks(cop.position, new THREE.Vector3(0, 0.8, -1), 14);
+          if (this.particles.spawnGlassShatter) this.particles.spawnGlassShatter(cop.position);
+          gameState.score += 750;
+          soundManager.playCrash();
+          if (this.ui) this.ui.spawnFloatingCombatText('+750', 'INTERCEPTEUR ÉCRASÉ ! 💥', '#38bdf8', 50, 38);
+          Haptic.impactHeavy();
+        } else {
+          cop.userData.isCrashed = true;
+          cop.userData.active = false;
+          cs.shieldHp = Math.max(0, (cs.shieldHp ?? 3) - 1);
+          cs.bustedProgress = Math.min(100, (cs.bustedProgress || 0) + 40);
+          gameState.speed = Math.max(3.5, gameState.speed * 0.48);
+          if (this.bike.triggerChassisJolt) {
+            const sideImp = cop.position.x >= this.bike.mesh.position.x ? -1 : 1;
+            this.bike.triggerChassisJolt(sideImp * 0.22, 0.12, -2.0);
+          }
+          if (this.particles.spawnDirectionalSparks) this.particles.spawnDirectionalSparks(this.bike.mesh.position, new THREE.Vector3(0, 0.8, -1), 12);
+          soundManager.playCrash();
+          if (this.ui) this.ui.spawnFloatingCombatText('ESQUIVE RATÉE !', `🚔 BOUCLIER ${cs.shieldHp}/3`, '#ff4757', 50, 35);
+          Haptic.impactHeavy();
+          if (cs.shieldHp <= 0 || cs.bustedProgress >= 100) {
+            this.triggerPoliceArrest();
+            return;
+          }
+        }
+      } else if (!cop.userData.dodged && dZ < 3.6 && dX >= 1.8 && dX < 3.5 && this.bike.z > cop.position.z - 0.5) {
+        cop.userData.dodged = true;
+        cs.dodgesCount = (cs.dodgesCount || 0) + 1;
+        gameState.score += 350;
+        soundManager.playNearMiss();
+        if (this.ui) this.ui.spawnFloatingCombatText('+350', 'ESQUIVE POLICE ! 💨', '#38bdf8', 50, 38);
+        Haptic.tap();
+      }
+    }
+
+    for (const rb of (this.traffic.roadblocks || [])) {
+      if (!rb.userData || !rb.userData.active || rb.userData.cleared) continue;
+      const dZ = Math.abs(this.bike.z - rb.position.z);
+      const relX = Math.abs(this.bike.mesh.position.x - rb.position.x);
+      if (dZ < 2.2 && relX >= 1.65 && relX <= 4.75) {
+        rb.userData.cleared = true;
+        if (canSmashPolice) {
+          cs.policeDestroyed = (cs.policeDestroyed || 0) + 1;
+          if (this.traffic.blowUpVehicle) this.traffic.blowUpVehicle(rb, this.bike.mesh.position);
+          gameState.score += 650;
+          soundManager.playCrash();
+          if (this.ui) this.ui.spawnFloatingCombatText('+650', 'BARRAGE PULVÉRISÉ !', '#38bdf8', 50, 38);
+          Haptic.impactHeavy();
+        } else {
+          cs.shieldHp = Math.max(0, (cs.shieldHp ?? 3) - 1);
+          gameState.speed = Math.max(3.5, gameState.speed * 0.45);
+          if (this.bike.triggerChassisJolt) this.bike.triggerChassisJolt(0.24, 0.14, -2.2);
+          soundManager.playCrash();
+          if (this.ui) this.ui.spawnFloatingCombatText('BARRAGE HEURTÉ !', `🚔 BOUCLIER ${cs.shieldHp}/3`, '#ff4757', 50, 35);
+          if (cs.shieldHp <= 0) {
+            this.triggerPolicePursuitIfCrime('BARRAGE');
+            this.triggerPoliceArrest();
+            return;
+          }
+        }
+      } else if (this.bike.z > rb.position.z + 2.8) {
+        rb.userData.cleared = true;
+        cs.dodgesCount = (cs.dodgesCount || 0) + 1;
+        gameState.score += 450;
+        soundManager.playNearMiss();
+        if (this.ui) this.ui.spawnFloatingCombatText('+450', 'BARRAGE ESQUIVÉ ! 💨', '#38bdf8', 50, 38);
+      }
+    }
+  }
+
+  /**
+   * Déclenche la poursuite policière dès les premiers accidents / infractions
+   */
+  triggerPolicePursuitIfCrime(reason = 'ACCIDENT') {
+    if (this.policePursuitActive || gameState.isRuinsMode || this.hasCrossedFinish) return;
+    this._crimeHeatCount = (this._crimeHeatCount || 0) + 1;
+    if (this._crimeHeatCount >= 1) {
+      this.policePursuitActive = true;
+      if (!gameState.challengeState) gameState.challengeState = {};
+      if (gameState.challengeState.shieldHp === undefined) {
+        gameState.challengeState.shieldHp = 3;
+      }
+      if (this.traffic && this.traffic.spawnPursuitCruiser && this.environment) {
+        const zSpawn = this.bike.z + 60;
+        const curveX = this.environment.getRoadCenterX(zSpawn);
+        this.traffic.spawnPursuitCruiser(zSpawn, curveX + (Math.random() < 0.5 ? -2.6 : 2.6));
+      }
+      soundManager.playNearMiss();
+      if (this.ui) {
+        this.ui.spawnFloatingCombatText('🚨 POLICE !', `${reason} — POURSUITE LANCÉE !`, '#38bdf8', 50, 26);
+      }
+    }
+  }
+
+  /**
    * Déclenche la cinématique 3D d'arrestation policière (policiers descendent, chauffeur mains sur la tête, puis PRISON)
    */
   triggerPoliceArrest() {
@@ -840,6 +970,9 @@ class GameApp {
    */
   updateChallengeHooks(simDelta, currentSpeed, isFlyingCraft) {
     const mode = gameState.challengeMode;
+    if (this.policePursuitActive && mode !== 'POLICE_PURSUIT' && !gameState.isRuinsMode) {
+      this.updatePolicePursuit(simDelta, isFlyingCraft);
+    }
     if (!mode || mode === 'STANDARD' || gameState.isRuinsMode) return;
     const cs = gameState.challengeState || {};
 
@@ -952,101 +1085,7 @@ class GameApp {
         }
       }
     } else if (mode === 'POLICE_PURSUIT' && this.traffic && !isFlyingCraft) {
-      // Maintenir 2-3 intercepteurs actifs en poursuite
-      const activeCops = (this.traffic.vehicles || []).filter(v => v.userData && v.userData.isPursuitPolice && v.userData.active && !v.userData.isCrashed);
-      this._pursuitSpawnTimer = (this._pursuitSpawnTimer || 0) - simDelta;
-      if (activeCops.length < 3 && this._pursuitSpawnTimer <= 0 && this.traffic.spawnPursuitCruiser) {
-        this._pursuitSpawnTimer = 2.8;
-        const curveX = this.environment ? this.environment.getRoadCenterX(this.bike.z + 75) : 0;
-        const laneX = (Math.random() < 0.5 ? -2.6 : 2.6);
-        this.traffic.spawnPursuitCruiser(this.bike.z + 75 + Math.random() * 25, curveX + laneX);
-      }
-
-      const bid = this.bike.currentBikeId;
-      const canSmashPolice = gameState.isNitroActive || this.bike.isInvulnerable() ||
-        ['tank', 'rouleau', 'rad_rover', 'bat_moto', 'moto_tron'].includes(bid);
-
-      // Collisions & esquives des intercepteurs
-      for (const cop of (this.traffic.vehicles || [])) {
-        if (!cop.userData || !cop.userData.isPursuitPolice || !cop.userData.active || cop.userData.isCrashed) continue;
-        const dZ = Math.abs(this.bike.z - cop.position.z);
-        const dX = Math.abs(this.bike.mesh.position.x - cop.position.x);
-
-        if (dZ < 2.6 && dX < 1.8) {
-          if (canSmashPolice) {
-            cs.policeDestroyed = (cs.policeDestroyed || 0) + 1;
-            cs.wantedLevel = Math.min(5, (cs.wantedLevel || 2) + 1);
-            if (this.traffic.blowUpVehicle) this.traffic.blowUpVehicle(cop, this.bike.mesh.position);
-            if (this.bike.triggerChassisJolt) this.bike.triggerChassisJolt(0.08, -0.05, -0.9);
-            if (this.particles.spawnDirectionalSparks) this.particles.spawnDirectionalSparks(cop.position, new THREE.Vector3(0, 0.8, -1), 14);
-            if (this.particles.spawnGlassShatter) this.particles.spawnGlassShatter(cop.position);
-            gameState.score += 750;
-            soundManager.playCrash();
-            if (this.ui) this.ui.spawnFloatingCombatText('+750', 'INTERCEPTEUR ÉCRASÉ ! 💥', '#38bdf8', 50, 38);
-            Haptic.impactHeavy();
-          } else {
-            cop.userData.isCrashed = true;
-            cop.userData.active = false;
-            cs.shieldHp = Math.max(0, (cs.shieldHp ?? 3) - 1);
-            cs.bustedProgress = Math.min(100, (cs.bustedProgress || 0) + 40);
-            gameState.speed = Math.max(3.5, gameState.speed * 0.48);
-            if (this.bike.triggerChassisJolt) {
-              const sideImp = cop.position.x >= this.bike.mesh.position.x ? -1 : 1;
-              this.bike.triggerChassisJolt(sideImp * 0.22, 0.12, -2.0);
-            }
-            if (this.particles.spawnDirectionalSparks) this.particles.spawnDirectionalSparks(this.bike.mesh.position, new THREE.Vector3(0, 0.8, -1), 12);
-            soundManager.playCrash();
-            if (this.ui) this.ui.spawnFloatingCombatText('ESQUIVE RATÉE !', `🚔 BOUCLIER ${cs.shieldHp}/3`, '#ff4757', 50, 35);
-            Haptic.impactHeavy();
-            if (cs.shieldHp <= 0 || cs.bustedProgress >= 100) {
-              this.triggerPoliceArrest();
-              return;
-            }
-          }
-        } else if (!cop.userData.dodged && dZ < 3.6 && dX >= 1.8 && dX < 3.5 && this.bike.z > cop.position.z - 0.5) {
-          cop.userData.dodged = true;
-          cs.dodgesCount = (cs.dodgesCount || 0) + 1;
-          gameState.score += 350;
-          soundManager.playNearMiss();
-          if (this.ui) this.ui.spawnFloatingCombatText('+350', 'ESQUIVE POLICE ! 💨', '#38bdf8', 50, 38);
-          Haptic.tap();
-        }
-      }
-
-      // Barrages de police en mode Poursuite
-      for (const rb of (this.traffic.roadblocks || [])) {
-        if (!rb.userData || !rb.userData.active || rb.userData.cleared) continue;
-        const dZ = Math.abs(this.bike.z - rb.position.z);
-        const relX = Math.abs(this.bike.mesh.position.x - rb.position.x);
-        // Les voitures du barrage sont à ±3.25m, le couloir central d'esquive est entre -1.5m et +1.5m
-        if (dZ < 2.2 && relX >= 1.65 && relX <= 4.75) {
-          rb.userData.cleared = true;
-          if (canSmashPolice) {
-            cs.policeDestroyed = (cs.policeDestroyed || 0) + 1;
-            if (this.traffic.blowUpVehicle) this.traffic.blowUpVehicle(rb, this.bike.mesh.position);
-            gameState.score += 650;
-            soundManager.playCrash();
-            if (this.ui) this.ui.spawnFloatingCombatText('+650', 'BARRAGE PULVÉRISÉ !', '#38bdf8', 50, 38);
-            Haptic.impactHeavy();
-          } else {
-            cs.shieldHp = Math.max(0, (cs.shieldHp ?? 3) - 1);
-            gameState.speed = Math.max(3.5, gameState.speed * 0.45);
-            if (this.bike.triggerChassisJolt) this.bike.triggerChassisJolt(0.24, 0.14, -2.2);
-            soundManager.playCrash();
-            if (this.ui) this.ui.spawnFloatingCombatText('BARRAGE HEURTÉ !', `🚔 BOUCLIER ${cs.shieldHp}/3`, '#ff4757', 50, 35);
-            if (cs.shieldHp <= 0) {
-              this.triggerPoliceArrest();
-              return;
-            }
-          }
-        } else if (this.bike.z > rb.position.z + 2.8) {
-          rb.userData.cleared = true;
-          cs.dodgesCount = (cs.dodgesCount || 0) + 1;
-          gameState.score += 450;
-          soundManager.playNearMiss();
-          if (this.ui) this.ui.spawnFloatingCombatText('+450', 'BARRAGE ESQUIVÉ ! 💨', '#38bdf8', 50, 38);
-        }
-      }
+      this.updatePolicePursuit(simDelta, isFlyingCraft);
     } else if (mode === 'STUNT_RAMPS' && this.environment && !isFlyingCraft) {
       if (this.environment.chunks) {
         for (const chunk of this.environment.chunks) {
@@ -1364,7 +1403,9 @@ class GameApp {
                 this.particles.spawnComicBurst(car.position, 280, gameState.combo);
                 if (this.ui) this.ui.spawnFloatingCombatText('+280', 'WRECKAGE !', '#ffa502', 50, 40);
                 Haptic.impactHeavy();
+                this.triggerPolicePursuitIfCrime('CARAMBOLAGE');
               } else {
+                this.triggerPolicePursuitIfCrime('ACCIDENT');
                 // Collision avec un véhicule de circulation
                 const crashed = this.bike.triggerCrash();
                 if (crashed) {
@@ -1605,6 +1646,7 @@ class GameApp {
               this.ui.triggerCrashPenaltyUI(penalty);
               this.ui.spawnFloatingCombatText(`-${penalty} PTS`, `PV DRESSÉ ! 🚨 (${streetName || 'FEU ROUGE'})`, '#ff3838', 50, 36);
             }
+            this.triggerPolicePursuitIfCrime('FEU ROUGE GRILLÉ');
           },
           (streetName) => {
             // Bonus de civisme : Arrêt parfait au feu rouge avant de repartir !
@@ -1673,6 +1715,57 @@ class GameApp {
             Haptic.impactLight();
           }
         );
+
+        // 9a-bis. Feux tricolores des carrefours touchables et destructibles selon l'engin
+        if (this.intersections && this.intersections.intersections && !isFlyingCraft && this.bike.jumpAltitude < 1.8) {
+          const bid = this.bike.currentBikeId;
+          const isHeavyOrNitro = gameState.isNitroActive || this.bike.isInvulnerable() ||
+            ['tank', 'rouleau', 'rad_rover', 'bat_moto', 'moto_tron'].includes(bid);
+
+          for (const inter of this.intersections.intersections) {
+            [inter.tlLeft, inter.tlRight].forEach(tl => {
+              if (!tl || tl.isHit) return;
+              const worldX = inter.group.position.x + tl.group.position.x;
+              const worldZ = inter.group.position.z + tl.group.position.z;
+              if (Math.abs(this.bike.z - worldZ) < 1.65 && Math.abs(this.bike.mesh.position.x - worldX) < 1.35) {
+                tl.isHit = true;
+                const fallSide = worldX > this.bike.mesh.position.x ? 1 : -1;
+                const hitPos = new THREE.Vector3(worldX, 1.2, worldZ);
+
+                tl.fallAnim = {
+                  vx: fallSide * (isHeavyOrNitro ? 5.0 : 2.2),
+                  vy: isHeavyOrNitro ? 4.5 : 2.4,
+                  vz: Math.max(7.0, gameState.speed * (isHeavyOrNitro ? 0.65 : 0.35)),
+                  rotVelX: isHeavyOrNitro ? 5.8 : 3.6,
+                  rotVelZ: -fallSide * 2.8,
+                  groundY: 0.14,
+                  bounced: false,
+                  settled: false
+                };
+
+                soundManager.playPropSmash();
+                if (this.particles.spawnDirectionalSparks) {
+                  this.particles.spawnDirectionalSparks(hitPos, new THREE.Vector3(0, 0.7, -1), 14);
+                }
+                if (this.particles.spawnGlassShatter) this.particles.spawnGlassShatter(hitPos);
+
+                if (isHeavyOrNitro) {
+                  gameState.speed = Math.max(2.0, gameState.speed * 0.96);
+                  if (this.bike.triggerChassisJolt) this.bike.triggerChassisJolt(-fallSide * 0.06, 0.04, -0.7);
+                  gameState.score += 250;
+                  if (this.ui) this.ui.spawnFloatingCombatText('+250', 'FEU PULVÉRISÉ ! 🚦', '#ffa502', 50, 38);
+                } else {
+                  gameState.speed = Math.max(2.0, gameState.speed * 0.78);
+                  if (this.bike.triggerChassisJolt) this.bike.triggerChassisJolt(-fallSide * 0.18, 0.12, -1.9);
+                  gameState.score += 150;
+                  if (this.ui) this.ui.spawnFloatingCombatText('+150', 'FEU RENVERSÉ ! 🚦', '#ff6b6b', 50, 38);
+                }
+                Haptic.impactLight();
+                this.triggerPolicePursuitIfCrime('FEU DÉTRUIT');
+              }
+            });
+          }
+        }
 
         // 9b. Franchissement des dos d'âne / ralentisseurs 3D (saut dynamique de l'engin & bonus Air Time)
         if (this.environment.speedBumps) {

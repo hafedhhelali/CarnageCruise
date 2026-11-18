@@ -866,6 +866,38 @@ export class IntersectionManager {
 
     // Gestion de chaque carrefour
     this.intersections.forEach(inter => {
+      // Animation physique de chute des feux tricolores renversés
+      [inter.tlLeft, inter.tlRight].forEach(tl => {
+        if (tl && tl.fallAnim && !tl.fallAnim.settled) {
+          const fa = tl.fallAnim;
+          const g = tl.group;
+          fa.vy -= 18.0 * delta;
+          g.position.x += fa.vx * delta;
+          g.position.y += fa.vy * delta;
+          g.position.z += fa.vz * delta;
+          g.rotation.x = Math.min(Math.PI * 0.46, g.rotation.x + fa.rotVelX * delta);
+          if (fa.rotVelZ !== 0) {
+            const targetZ = Math.sign(fa.rotVelZ) * 0.85;
+            const nextZ = g.rotation.z + fa.rotVelZ * delta;
+            g.rotation.z = fa.rotVelZ > 0 ? Math.min(targetZ, nextZ) : Math.max(targetZ, nextZ);
+          }
+          if (g.position.y <= fa.groundY) {
+            g.position.y = fa.groundY;
+            if (!fa.bounced && Math.abs(fa.vy) > 1.8) {
+              fa.vy = -fa.vy * 0.25;
+              fa.vx *= 0.45;
+              fa.vz *= 0.45;
+              fa.bounced = true;
+            } else {
+              fa.vy = 0;
+              fa.vx *= Math.exp(-8.0 * delta);
+              fa.vz *= Math.exp(-8.0 * delta);
+              if (g.rotation.x >= Math.PI * 0.44) fa.settled = true;
+            }
+          }
+        }
+      });
+
       const distToPlayer = inter.z - playerZ;
       inter.timeInState += delta;
 

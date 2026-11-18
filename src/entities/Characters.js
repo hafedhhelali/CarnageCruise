@@ -931,20 +931,28 @@ export class CharacterSystem {
             char.fleeDirectionX = char.group.position.x >= bikeX ? 1 : -1;
           }
 
-          // Sprint rapide vers le bord
+          // Sprint rapide vers le bord, puis continue de courir le long du trottoir sans jamais bloquer devant le mur
           const sprintSpeed = char.typeDef.speed * 2.4;
-          char.group.position.x += char.fleeDirectionX * sprintSpeed * delta;
-          if (char.isOnSidewalk) {
-            const side = char.sidewalkSide || 1;
-            const relX = (char.group.position.x - fleeCurveX) * side;
-            const clampedRelX = Math.max(4.75, Math.min(6.75, relX));
-            char.group.position.x = fleeCurveX + side * clampedRelX;
-          } else if (char.crosswalkZ !== undefined) {
-            char.group.position.z = char.crosswalkZ;
-          }
+          const side = char.sidewalkSide || (char.group.position.x >= fleeCurveX ? 1 : -1);
+          const curRelX = (char.group.position.x - fleeCurveX) * side;
 
-          // Orientation vers la fuite
-          char.group.rotation.y = char.fleeDirectionX > 0 ? Math.PI / 2 : -Math.PI / 2;
+          if (curRelX >= 6.55) {
+            // Arrivé près du mur : tourne et continue de courir parallèlement au mur (axe Z)
+            if (!char.fleeDirZ) char.fleeDirZ = (char.group.position.z >= bikeZ ? 1 : -1);
+            char.group.position.z += char.fleeDirZ * sprintSpeed * delta;
+            char.group.position.x = fleeCurveX + side * 6.55;
+            char.group.rotation.y = char.fleeDirZ > 0 ? 0 : Math.PI;
+          } else {
+            char.group.position.x += char.fleeDirectionX * sprintSpeed * delta;
+            if (char.isOnSidewalk) {
+              const relX = (char.group.position.x - fleeCurveX) * side;
+              const clampedRelX = Math.max(4.75, Math.min(6.65, relX));
+              char.group.position.x = fleeCurveX + side * clampedRelX;
+            } else if (char.crosswalkZ !== undefined) {
+              char.group.position.z = char.crosswalkZ;
+            }
+            char.group.rotation.y = char.fleeDirectionX > 0 ? Math.PI / 2 : -Math.PI / 2;
+          }
 
           // Animation de panique : bras en l'air qui moulinent (blend fluide), tête tournée en arrière
           char.walkPhase += delta * 18.0;
