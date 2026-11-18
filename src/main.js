@@ -449,7 +449,19 @@ class GameApp {
       return;
     }
 
-    if (attack.type === 'missile' || attack.type === 'torpedo' || attack.type === 'ice_missile') {
+    if (attack.type === 'torpedo') {
+      const bikeZ = this.bike.z;
+      const bikeX = this.bike.mesh.position.x;
+      const bikeY = this.bike.mesh.position.y;
+      const launchPosL = new THREE.Vector3(bikeX - 1.2, bikeY + 0.45, bikeZ + 2.2);
+      const launchPosR = new THREE.Vector3(bikeX + 1.2, bikeY + 0.45, bikeZ + 2.2);
+      if (this.projectiles.spawnTwinTorpedoes) {
+        this.projectiles.spawnTwinTorpedoes(launchPosL, launchPosR);
+      }
+      return;
+    }
+
+    if (attack.type === 'missile' || attack.type === 'ice_missile') {
       const bikeZ = this.bike.z;
       const bikeX = this.bike.mesh.position.x;
       const bikeY = this.bike.mesh.position.y;

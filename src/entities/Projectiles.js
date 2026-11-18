@@ -178,6 +178,34 @@ export class ProjectileManager {
     this.soundManager.playTankCannon();
   }
 
+  spawnTwinTorpedoes(posL, posR) {
+    [posL, posR].forEach((pos, idx) => {
+      const mesh = this.createMissileMesh();
+      mesh.position.set(pos.x, Math.max(0.45, pos.y), pos.z);
+      mesh.rotation.x = 0; // Trajectoire horizontale rasante pour l'Hydro-Glisseur
+      this.container.add(mesh);
+
+      this.projectiles.push({
+        type: 'torpedo',
+        mesh,
+        speedZ: 115.0,
+        velX: (idx === 0 ? -0.35 : 0.35),
+        velY: 0,
+        startX: pos.x,
+        startZ: pos.z,
+        maxDistance: 95.0,
+        damageRadius: 6.5,
+        points: 420,
+        trailTimer: 0,
+        isExplosive: true
+      });
+    });
+
+    this.engine.triggerCameraShake(0.25);
+    this.engine.triggerDynamicLight(posL, 0x00cec9, 2.0, 0.14);
+    this.soundManager.playRocketMissile();
+  }
+
   /**
    * Lance une salve de doubles missiles pour l'Aéro-Jet orientés vers le sol
    */
