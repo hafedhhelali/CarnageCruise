@@ -258,6 +258,13 @@ class GameApp {
   handleUIAction(action, payload) {
     try {
       if (action === 'START_RUN') {
+        if (storage.isInPrison()) {
+          const pState = storage.getPrisonState();
+          if (this.ui && this.ui.showPrisonOverlay) {
+            this.ui.showPrisonOverlay(pState.bailCost || 1500, gameState.selectedCity);
+          }
+          return;
+        }
         const city = (payload && payload.city) ? payload.city : (payload || gameState.selectedCity);
         const challengeMode = (payload && payload.challengeMode) || gameState.challengeMode || 'STANDARD';
         if (city && city.id) {
@@ -298,6 +305,7 @@ class GameApp {
         this.policePursuitActive = (gameState.challengeMode === 'POLICE_PURSUIT');
         this._crimeHeatCount = 0;
         this._nextPursuitRoadblockZ = null;
+        this._immobilizedTimer = 0;
 
         if (gameState.isRuinsMode) {
           soundManager.stopMusic();
@@ -817,16 +825,21 @@ class GameApp {
     const cs = gameState.challengeState;
     if (cs.shieldHp === undefined) cs.shieldHp = 3;
 
+    const bid = this.bike.currentBikeId;
+    const isHeavyOrFast = ['tank', 'rouleau', 'rad_rover', 'bat_moto', 'moto_tron', 'dragster'].includes(bid);
+    const maxCops = isHeavyOrFast ? 4 : 2;
+
     const activeCops = (this.traffic.vehicles || []).filter(v => v.userData && v.userData.isPursuitPolice && v.userData.active && !v.userData.isCrashed);
     this._pursuitSpawnTimer = (this._pursuitSpawnTimer || 0) - simDelta;
-    if (activeCops.length < 3 && this._pursuitSpawnTimer <= 0 && this.traffic.spawnPursuitCruiser) {
-      this._pursuitSpawnTimer = 2.4;
+    if (activeCops.length < maxCops && this._pursuitSpawnTimer <= 0 && this.traffic.spawnPursuitCruiser) {
+      this._pursuitSpawnTimer = isHeavyOrFast ? 1.8 : 2.5;
       const fromBehind = Math.random() < 0.5;
-      const zSpawn = fromBehind ? (this.bike.z - 14) : (this.bike.z + 32);
+      const zSpawn = fromBehind ? (this.bike.z - 14) : (this.bike.z + 30);
       const curveX = this.environment ? this.environment.getRoadCenterX(zSpawn) : 0;
       const laneX = (Math.random() < 0.5 ? -2.4 : 2.4);
       const initSpeed = fromBehind ? Math.max(gameState.speed + 10.0, 26.0) : Math.max(8.0, gameState.speed * 0.55);
-      this.traffic.spawnPursuitCruiser(zSpawn, curveX + laneX, initSpeed);
+      const useHeavySwat = isHeavyOrFast && Math.random() < 0.65;
+      this.traffic.spawnPursuitCruiser(zSpawn, curveX + laneX, initSpeed, useHeavySwat);
     }
 
     // Barrages de police périodiques pendant la poursuite active
@@ -834,13 +847,37 @@ class GameApp {
       if (!this._nextPursuitRoadblockZ) this._nextPursuitRoadblockZ = this.bike.z + 240;
       if (this.bike.z + 130 >= this._nextPursuitRoadblockZ) {
         this.traffic.spawnPoliceRoadblock(this._nextPursuitRoadblockZ);
-        this._nextPursuitRoadblockZ += 280;
+        this._nextPursuitRoadblockZ += isHeavyOrFast ? 220 : 280;
       }
     }
 
-    const bid = this.bike.currentBikeId;
     const canSmashPolice = gameState.isNitroActive || this.bike.isInvulnerable() ||
       ['tank', 'rouleau', 'rad_rover', 'bat_moto', 'moto_tron'].includes(bid);
+
+    // Blocage actif & immobilisation par encerclement policier
+    let policeNearby = false;
+    let blockingFactor = 0;
+    for (const cop of activeCops) {
+      const dzRel = cop.position.z - this.bike.z;
+      const dX = Math.abs(this.bike.mesh.position.x - cop.position.x);
+      if (Math.abs(dzRel) < 7.5 && dX < 4.5) policeNearby = true;
+      if (dzRel >= -2.5 && dzRel <= 9.5 && dX < 2.25) {
+        blockingFactor += cop.userData.isHeavySwat ? 1.6 : 1.0;
+      }
+    }
+    if (blockingFactor > 0 && !gameState.isNitroActive) {
+      const decel = blockingFactor * (isHeavyOrFast ? 4.5 : 8.0) * simDelta;
+      gameState.speed = Math.max(2.0, gameState.speed - decel);
+    }
+    if (policeNearby && gameState.speed < 6.0 && !gameState.isNitroActive) {
+      this._immobilizedTimer = (this._immobilizedTimer || 0) + simDelta;
+      if (this._immobilizedTimer >= 1.25) {
+        this.triggerPoliceArrest();
+        return;
+      }
+    } else {
+      this._immobilizedTimer = Math.max(0, (this._immobilizedTimer || 0) - simDelta * 1.5);
+    }
 
     for (const cop of (this.traffic.vehicles || [])) {
       if (!cop.userData || !cop.userData.isPursuitPolice || !cop.userData.active || cop.userData.isCrashed) continue;
@@ -945,8 +982,9 @@ class GameApp {
         const zBehind = this.bike.z - 12;
         const curveAhead = this.environment.getRoadCenterX(zAhead);
         const curveBehind = this.environment.getRoadCenterX(zBehind);
-        this.traffic.spawnPursuitCruiser(zAhead, curveAhead + 2.2, Math.max(8.0, gameState.speed * 0.55));
-        this.traffic.spawnPursuitCruiser(zBehind, curveBehind - 2.2, Math.max(gameState.speed + 10.0, 26.0));
+        const isHeavyOrFast = ['tank', 'rouleau', 'rad_rover', 'bat_moto', 'moto_tron', 'dragster'].includes(this.bike.currentBikeId);
+        this.traffic.spawnPursuitCruiser(zAhead, curveAhead + 2.2, Math.max(8.0, gameState.speed * 0.55), isHeavyOrFast);
+        this.traffic.spawnPursuitCruiser(zBehind, curveBehind - 2.2, Math.max(gameState.speed + 10.0, 26.0), false);
         if (this.traffic.spawnPoliceRoadblock) {
           this.traffic.spawnPoliceRoadblock(this.bike.z + 95);
         }

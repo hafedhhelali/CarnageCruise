@@ -117,6 +117,7 @@ export class Traffic {
     // Boss de convoi et barrages de police (modes Défi)
     this.bossTruck = null;
     this.roadblocks = [];
+    this._initPoliceAssets();
   }
 
   initPool() {
@@ -744,9 +745,28 @@ export class Traffic {
       lightGeo: new THREE.BoxGeometry(0.36, 0.14, 0.08),
       barBaseGeo: new THREE.BoxGeometry(1.28, 0.09, 0.24),
       strobeGeo: new THREE.BoxGeometry(0.54, 0.14, 0.22),
-      wheelGeo: new THREE.CylinderGeometry(0.35, 0.35, 0.26, 14),
-      rimGeo: new THREE.CylinderGeometry(0.20, 0.20, 0.28, 10),
-      beamGeo: new THREE.PlaneGeometry(2.6, 8.0)
+      wheelGeo: new THREE.CylinderGeometry(0.35, 0.35, 0.26, 12),
+      rimGeo: new THREE.CylinderGeometry(0.20, 0.20, 0.28, 8),
+      beamGeo: new THREE.PlaneGeometry(2.6, 8.0),
+      // Assets partagés pour unités SWAT lourdes et cinématique d'arrestation armée (zéro allocation à chaud)
+      swatArmor: new THREE.MeshPhysicalMaterial({ color: 0x090d16, roughness: 0.38, metalness: 0.65, clearcoat: 0.35 }),
+      gunMetal: new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.3, metalness: 0.9 }),
+      copUniform: new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.65 }),
+      copPants: new THREE.MeshStandardMaterial({ color: 0x090e1a, roughness: 0.75 }),
+      driverCoat: new THREE.MeshStandardMaterial({ color: 0xdc2626, roughness: 0.6 }),
+      driverPants: new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.75 }),
+      skin: new THREE.MeshStandardMaterial({ color: 0xf1c27d, roughness: 0.6 }),
+      swatBodyGeo: new THREE.BoxGeometry(2.25, 1.15, 4.95),
+      swatCabGeo: new THREE.BoxGeometry(2.12, 0.68, 2.85),
+      swatRamGeo: new THREE.BoxGeometry(2.15, 0.56, 0.32),
+      personLegGeo: new THREE.BoxGeometry(0.18, 0.78, 0.2),
+      personTorsoGeo: new THREE.BoxGeometry(0.48, 0.64, 0.26),
+      personHeadGeo: new THREE.SphereGeometry(0.16, 10, 10),
+      personArmGeo: new THREE.BoxGeometry(0.13, 0.34, 0.13),
+      personCapGeo: new THREE.CylinderGeometry(0.18, 0.17, 0.12, 10),
+      personBadgeGeo: new THREE.BoxGeometry(0.08, 0.08, 0.04),
+      rifleBodyGeo: new THREE.BoxGeometry(0.08, 0.12, 0.68),
+      rifleBarrelGeo: new THREE.BoxGeometry(0.04, 0.04, 0.36)
     };
     this._policeAssets.wheelGeo.rotateZ(Math.PI / 2);
     this._policeAssets.rimGeo.rotateZ(Math.PI / 2);
@@ -878,11 +898,72 @@ export class Traffic {
   }
 
   /**
-   * Fait apparaître un intercepteur de police en poursuite active (mode POLICE_PURSUIT)
+   * Construit un 4x4 Blindé / Fourgon Tactique SWAT plus grand pour bloquer les véhicules puissants
    */
-  spawnPursuitCruiser(zPos, laneX = 0, initialSpeed = 16.0) {
+  _buildHeavySwatMesh() {
     const a = this._initPoliceAssets();
-    const { car, strobes, wheelMeshes } = this._buildPoliceCruiserMesh();
+    const car = new THREE.Group();
+    const strobes = [];
+    const wheelMeshes = [];
+
+    const body = new THREE.Mesh(a.swatBodyGeo, a.swatArmor);
+    body.position.set(0, 0.85, 0);
+    const cab = new THREE.Mesh(a.swatCabGeo, a.navy);
+    cab.position.set(0, 1.68, -0.35);
+    const glass = new THREE.Mesh(a.cabinGeo, a.glass);
+    glass.position.set(0, 1.62, 0.68);
+    const stripe = new THREE.Mesh(a.stripeGeo, a.stripe);
+    stripe.scale.set(1.16, 1.4, 1.15);
+    stripe.position.set(0, 0.92, 0);
+    const ram = new THREE.Mesh(a.swatRamGeo, a.bumper);
+    ram.position.set(0, 0.64, 2.58);
+    car.add(body, cab, glass, stripe, ram);
+
+    [
+      [-1.12, 0.44, 1.55],
+      [1.12, 0.44, 1.55],
+      [-1.12, 0.44, -1.55],
+      [1.12, 0.44, -1.55]
+    ].forEach(([wx, wy, wz]) => {
+      const wg = new THREE.Group();
+      wg.position.set(wx, wy, wz);
+      const tire = new THREE.Mesh(a.wheelGeo, a.tire);
+      tire.scale.set(1.25, 1.25, 1.25);
+      const rim = new THREE.Mesh(a.rimGeo, a.rim);
+      rim.scale.set(1.25, 1.25, 1.25);
+      wg.add(tire, rim);
+      car.add(wg);
+      wheelMeshes.push(wg);
+    });
+
+    [-0.75, 0.75].forEach(lx => {
+      const hl = new THREE.Mesh(a.lightGeo, a.headlight);
+      hl.position.set(lx, 0.88, 2.49);
+      const tl = new THREE.Mesh(a.lightGeo, a.taillight);
+      tl.position.set(lx, 0.92, -2.49);
+      car.add(hl, tl);
+    });
+
+    const barBase = new THREE.Mesh(a.barBaseGeo, a.bumper);
+    barBase.position.set(0, 2.08, 0.25);
+    const sBlue = new THREE.Mesh(a.strobeGeo, a.strobeBlue);
+    sBlue.position.set(-0.34, 2.15, 0.25);
+    const sRed = new THREE.Mesh(a.strobeGeo, a.strobeRed);
+    sRed.position.set(0.34, 2.15, 0.25);
+    car.add(barBase, sBlue, sRed);
+    strobes.push(sBlue, sRed);
+
+    return { car, strobes, wheelMeshes };
+  }
+
+  /**
+   * Fait apparaître un intercepteur de police (ou un 4x4 Blindé SWAT si véhicule puissant)
+   */
+  spawnPursuitCruiser(zPos, laneX = 0, initialSpeed = 16.0, isHeavySwat = false) {
+    const a = this._initPoliceAssets();
+    const { car, strobes, wheelMeshes } = isHeavySwat
+      ? this._buildHeavySwatMesh()
+      : this._buildPoliceCruiserMesh();
     const beam = new THREE.Mesh(a.beamGeo, a.beam);
     beam.rotation.x = -Math.PI / 2;
     beam.position.set(0, 0.04, 6.0);
@@ -892,9 +973,10 @@ export class Traffic {
     car.userData = {
       active: true,
       isPursuitPolice: true,
+      isHeavySwat,
       laneOffset: laneX,
       targetLaneOffset: laneX,
-      laneTimer: 1.1 + Math.random() * 0.9,
+      laneTimer: 1.0 + Math.random() * 0.7,
       speed: initialSpeed,
       isHit: false,
       dodged: false,
@@ -909,9 +991,10 @@ export class Traffic {
   }
 
   /**
-   * Cinématique 3D d'arrestation : 2 policiers descendent et le chauffeur lève les mains sur la tête !
+   * Cinématique 3D d'arrestation : 2 policiers armés descendent et le chauffeur sort les mains sur la tête !
    */
   spawnArrestCinematic(playerPos, roadCurveX = 0) {
+    const a = this._initPoliceAssets();
     const cineGroup = new THREE.Group();
     cineGroup.position.set(playerPos.x, 0, playerPos.z);
 
@@ -921,60 +1004,74 @@ export class Traffic {
     copCar.rotation.y = -0.65;
     cineGroup.add(copCar);
 
-    // Helper silhouette humaine 3D articulée (Policier ou Chauffeur)
-    const buildPerson = (coatColor, pantsColor, hasPoliceCap = false) => {
+    // Helper silhouette humaine 3D articulée avec géométries/matériaux partagés
+    const buildPerson = (isCop) => {
       const p = new THREE.Group();
-      const coatMat = new THREE.MeshStandardMaterial({ color: coatColor, roughness: 0.65 });
-      const pantsMat = new THREE.MeshStandardMaterial({ color: pantsColor, roughness: 0.75 });
-      const skinMat = new THREE.MeshStandardMaterial({ color: 0xf1c27d, roughness: 0.6 });
-      const goldMat = new THREE.MeshStandardMaterial({ color: 0xfbbf24, metalness: 0.85, roughness: 0.25 });
+      const coatMat = isCop ? a.copUniform : a.driverCoat;
+      const pantsMat = isCop ? a.copPants : a.driverPants;
 
-      const legL = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.78, 0.2), pantsMat);
+      const legL = new THREE.Mesh(a.personLegGeo, pantsMat);
       legL.position.set(-0.12, 0.39, 0);
-      const legR = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.78, 0.2), pantsMat);
+      const legR = new THREE.Mesh(a.personLegGeo, pantsMat);
       legR.position.set(0.12, 0.39, 0);
 
-      const torso = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.64, 0.26), coatMat);
+      const torso = new THREE.Mesh(a.personTorsoGeo, coatMat);
       torso.position.set(0, 1.1, 0);
 
-      const head = new THREE.Mesh(new THREE.SphereGeometry(0.16, 10, 10), skinMat);
+      const head = new THREE.Mesh(a.personHeadGeo, a.skin);
       head.position.set(0, 1.58, 0);
 
       const armL = new THREE.Group();
-      armL.position.set(-0.31, 1.34, 0);
-      const armLMesh = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.56, 0.14), coatMat);
-      armLMesh.position.set(0, -0.24, 0);
-      armL.add(armLMesh);
+      armL.position.set(-0.31, 1.36, 0);
+      const upperL = new THREE.Mesh(a.personArmGeo, coatMat);
+      upperL.position.set(0, -0.15, 0);
+      const forearmL = new THREE.Group();
+      forearmL.position.set(0, -0.30, 0);
+      const lowerL = new THREE.Mesh(a.personArmGeo, coatMat);
+      lowerL.position.set(0, -0.15, 0);
+      forearmL.add(lowerL);
+      armL.add(upperL, forearmL);
 
       const armR = new THREE.Group();
-      armR.position.set(0.31, 1.34, 0);
-      const armRMesh = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.56, 0.14), coatMat);
-      armRMesh.position.set(0, -0.24, 0);
-      armR.add(armRMesh);
+      armR.position.set(0.31, 1.36, 0);
+      const upperR = new THREE.Mesh(a.personArmGeo, coatMat);
+      upperR.position.set(0, -0.15, 0);
+      const forearmR = new THREE.Group();
+      forearmR.position.set(0, -0.30, 0);
+      const lowerR = new THREE.Mesh(a.personArmGeo, coatMat);
+      lowerR.position.set(0, -0.15, 0);
+      forearmR.add(lowerR);
+      armR.add(upperR, forearmR);
 
       p.add(legL, legR, torso, head, armL, armR);
-      if (hasPoliceCap) {
-        const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.17, 0.12, 10), coatMat);
+      if (isCop) {
+        const cap = new THREE.Mesh(a.personCapGeo, a.copUniform);
         cap.position.set(0, 1.72, 0);
-        const badge = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 0.04), goldMat);
+        const badge = new THREE.Mesh(a.personBadgeGeo, a.gold);
         badge.position.set(0, 1.18, 0.14);
+        // Carabine tactique 3D tenue par le policier
+        const rifleBody = new THREE.Mesh(a.rifleBodyGeo, a.gunMetal);
+        rifleBody.position.set(0, -0.22, 0.28);
+        const rifleBarrel = new THREE.Mesh(a.rifleBarrelGeo, a.gunMetal);
+        rifleBarrel.position.set(0, -0.20, 0.72);
+        forearmR.add(rifleBody, rifleBarrel);
         p.add(cap, badge);
       }
-      p.userData = { armL, armR, legL, legR };
+      p.userData = { armL, armR, forearmL, forearmR, legL, legR };
       return p;
     };
 
-    // 2. Deux policiers qui descendent de la patrouille et pointent vers le chauffeur
-    const cop1 = buildPerson(0x0f172a, 0x0b132b, true);
+    // 2. Deux policiers armés qui descendent de la patrouille et mettent en joue le chauffeur
+    const cop1 = buildPerson(true);
     cop1.position.set(1.2, 0, 4.2);
     cop1.rotation.y = Math.PI;
-    const cop2 = buildPerson(0x0f172a, 0x0b132b, true);
+    const cop2 = buildPerson(true);
     cop2.position.set(-1.3, 0, 4.4);
     cop2.rotation.y = Math.PI;
     cineGroup.add(cop1, cop2);
 
-    // 3. Chauffeur qui descend du véhicule et lève les deux mains sur la tête !
-    const driver = buildPerson(0xef4444, 0x1e293b, false);
+    // 3. Chauffeur qui descend du véhicule et met les mains sur la tête !
+    const driver = buildPerson(false);
     driver.position.set(-1.1, 0, 0.2);
     driver.rotation.y = 0;
     cineGroup.add(driver);
@@ -987,25 +1084,26 @@ export class Traffic {
       update: (dt) => {
         elapsed += dt;
         const walkT = Math.min(1, elapsed / 1.4);
-        // Les policiers avancent vers le chauffeur bras tendu
-        cop1.position.z = THREE.MathUtils.lerp(4.2, 2.1, walkT);
-        cop1.position.x = THREE.MathUtils.lerp(1.2, 0.4, walkT);
-        cop2.position.z = THREE.MathUtils.lerp(4.4, 2.2, walkT);
-        cop2.position.x = THREE.MathUtils.lerp(-1.3, -1.5, walkT);
+        cop1.position.z = THREE.MathUtils.lerp(4.2, 2.2, walkT);
+        cop1.position.x = THREE.MathUtils.lerp(1.2, 0.35, walkT);
+        cop2.position.z = THREE.MathUtils.lerp(4.4, 2.3, walkT);
+        cop2.position.x = THREE.MathUtils.lerp(-1.3, -1.45, walkT);
 
         const swing = walkT < 1 ? Math.sin(elapsed * 10) * 0.45 : 0;
         [cop1, cop2].forEach(c => {
           c.userData.legL.rotation.x = swing;
           c.userData.legR.rotation.x = -swing;
-          c.userData.armR.rotation.x = -Math.PI * 0.48; // Bras tendu d'interpellation
+          c.userData.armR.rotation.x = -Math.PI * 0.42; // Met en joue avec l'arme
+          c.userData.armL.rotation.x = -Math.PI * 0.35;
         });
 
-        // Le chauffeur lève les deux mains sur la tête (rotation ~ 2.75 rad)
-        const handsUpT = Math.min(1, Math.max(0, (elapsed - 0.35) / 0.85));
-        driver.userData.armL.rotation.z = -handsUpT * 2.65;
-        driver.userData.armR.rotation.z = handsUpT * 2.65;
+        // Chauffeur lève les bras et replie les avant-bras mains sur la tête
+        const handsUpT = Math.min(1, Math.max(0, (elapsed - 0.3) / 0.8));
+        driver.userData.armL.rotation.z = -handsUpT * 2.25;
+        driver.userData.armR.rotation.z = handsUpT * 2.25;
+        driver.userData.forearmL.rotation.z = -handsUpT * 1.15;
+        driver.userData.forearmR.rotation.z = handsUpT * 1.15;
 
-        // Gyrophares
         const toggle = Math.sin(elapsed * 26.0) > 0;
         strobes.forEach((s, idx) => { s.visible = (idx % 2 === 0) ? toggle : !toggle; });
       },

@@ -49,12 +49,12 @@ export class Engine {
       }
     }
     this.isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, this.isMobile ? 1.15 : 1.75));
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, this.isMobile ? 1.0 : 1.5));
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.0; // Calibrage validé : exposition fidèle sans voile
-    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.enabled = !this.isMobile;
     // PCFSoftShadowMap a été retiré de Three.js r0.187 : PCF filtré natif
     // (le normalBias calibré anti-acné fait déjà le travail soft)
     this.renderer.shadowMap.type = THREE.PCFShadowMap;
@@ -124,7 +124,7 @@ export class Engine {
       72,
       window.innerWidth / window.innerHeight,
       0.1,
-      600
+      this.isMobile ? 420 : 600
     );
 
     // Pool de PointLights dynamiques pour flashs d'armes et d'explosions (Zéro lag mobile)
@@ -681,7 +681,7 @@ export class Engine {
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, this.isMobile ? 1.15 : 1.75));
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, this.isMobile ? 1.0 : 1.5));
     if (this.postProcessing) {
       this.postProcessing.setSize(window.innerWidth, window.innerHeight);
     }
