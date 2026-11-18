@@ -590,10 +590,80 @@ class GameApp {
       return;
     }
 
-    // Détection d'impact sur les piétons situés dans l'arc d'attaque
+    // Détection d'impact sur les piétons, véhicules et mobiliers situés dans l'arc d'attaque
     const bikeZ = this.bike.z;
     const bikeX = this.bike.mesh.position.x;
     let hitCount = 0;
+    const isMeleeOrFirearm = ['chain', 'whip', 'axe', 'chainsaw', 'shoot', 'uzi'].includes(attack.type);
+
+    if (isMeleeOrFirearm) {
+      const fxOrigin = new THREE.Vector3(bikeX, this.bike.mesh.position.y + 0.8, bikeZ + 1.8);
+      const fxColor = (attack.type === 'chain' || attack.type === 'whip') ? 0xffa502 : (attack.type === 'chainsaw' || attack.type === 'axe') ? 0xff4757 : 0xfffa65;
+      this.particles.spawnShockwave(fxOrigin, fxColor, 2.0);
+      if (this.particles.spawnDirectionalSparks) {
+        this.particles.spawnDirectionalSparks(fxOrigin, new THREE.Vector3(0, 0.5, 1), 10);
+      }
+
+      if (this.traffic && this.traffic.vehicles) {
+        this.traffic.vehicles.forEach(v => {
+          if (v.userData && v.userData.active && !v.userData.isCrashed) {
+            const vZ = v.position.z - bikeZ;
+            const vX = Math.abs(v.position.x - bikeX);
+            if (vZ > 0.5 && vZ < attack.range && vX < attack.radius) {
+              if (v.userData.isConvoyBoss) {
+                this.damageConvoyBoss(v, 22, v.position);
+              } else {
+                this.traffic.blowUpVehicle(v, this.bike.mesh.position);
+                const vPts = attack.type === 'chain' ? 950 : 850;
+                gameState.score += vPts;
+                this.particles.spawnComicBurst(v.position, vPts, gameState.combo);
+                if (this.particles.spawnDirectionalSparks) {
+                  this.particles.spawnDirectionalSparks(v.position, new THREE.Vector3(0, 0.8, -1), 12);
+                }
+                soundManager.playCrash();
+                if (this.ui) {
+                  this.ui.spawnFloatingCombatText(`+${vPts}`, attack.type === 'chain' ? 'CHAÎNE ! ⛓️' : 'FRACAS !', '#ffa502', 50, 22);
+                }
+                Haptic.impactHeavy();
+              }
+              hitCount++;
+            }
+          }
+        });
+      }
+
+      if (this.environment && this.environment.chunks) {
+        this.environment.chunks.forEach(chunk => {
+          if (chunk.userData && chunk.userData.props) {
+            chunk.userData.props.forEach(prop => {
+              if (!prop.visible || prop.userData.isHit) return;
+              const pType = prop.userData.type || '';
+              if (pType !== 'lamp' && !pType.startsWith('stall_')) return;
+              const worldZ = chunk.position.z + prop.position.z;
+              const worldX = chunk.position.x + prop.position.x;
+              const pZ = worldZ - bikeZ;
+              const pX = Math.abs(worldX - bikeX);
+              if (pZ > 0.5 && pZ < attack.range && pX < attack.radius) {
+                prop.userData.isHit = true;
+                dailyMissions.onPropSmash();
+                const propPos = new THREE.Vector3(worldX, 1.2, worldZ);
+                this.particles.spawnPropShatter(propPos, pType.startsWith('stall_') ? 'wood' : 'lamp');
+                if (this.particles.spawnDirectionalSparks) {
+                  this.particles.spawnDirectionalSparks(propPos, new THREE.Vector3(0, 0.7, -1), 10);
+                }
+                prop.position.y += 2.2;
+                prop.rotation.x = Math.PI * 0.85;
+                prop.rotation.z = (prop.position.x > 0 ? 1 : -1) * 1.2;
+                setTimeout(() => { prop.visible = false; }, 550);
+                gameState.score += 220;
+                soundManager.playPropSmash();
+                hitCount++;
+              }
+            });
+          }
+        });
+      }
+    }
 
     this.characters.characters.forEach(char => {
       if (!char.group.visible || char.isFlying) return;
@@ -730,7 +800,7 @@ class GameApp {
             this.damageConvoyBoss(boss, 25, boss.position);
             if (this.engine.triggerHitStop) this.engine.triggerHitStop(0.045, 0.08);
             const pushDir = this.bike.mesh.position.x >= boss.position.x ? 1 : -1;
-            this.bike.x = THREE.MathUtils.clamp(this.bike.x + pushDir * 1.4, -5.5, 5.5);
+            this.bike.x = THREE.MathUtils.clamp(this.bike.x + pushDir * 1.4, -6.7, 6.7);
           } else {
             const crashed = this.bike.triggerCrash();
             if (crashed) {
@@ -824,47 +894,53 @@ class GameApp {
         }
       }
     } else if (mode === 'STUNT_RAMPS' && this.environment && !isFlyingCraft) {
-      const ramps = this.environment.stuntRamps || [];
-      for (const ramp of ramps) {
-        if (ramp.hit) continue;
-        const rampZ = ramp.chunk ? (ramp.chunk.position.z + (ramp.localZ || 0)) : (ramp.z || 0);
-        const rampX = ramp.chunk ? (ramp.chunk.position.x + (ramp.localX || 0)) : (ramp.x || 0);
-        if (Math.abs(this.bike.z - rampZ) < 2.4 && Math.abs(this.bike.mesh.position.x - rampX) < 2.6) {
-          ramp.hit = true;
-          this.bike.triggerSpeedBumpJump(currentSpeed * 1.35);
-          this.bike.jumpVelocity = Math.max(this.bike.jumpVelocity || 0, 11.0) * 1.5;
-          cs.jumpsLanded = (cs.jumpsLanded || 0) + 1;
-          soundManager.playSpeedBumpBoingFwump(1.35);
-          this.engine.triggerCameraShake(0.35);
-          if (this.ui) {
-            this.ui.spawnFloatingCombatText('MÉGA SAUT !', '🛫 AIR TIME !', '#ffa502', 50, 38);
-          }
-          Haptic.impactMedium();
-        }
-      }
+      if (this.environment.chunks) {
+        for (const chunk of this.environment.chunks) {
+          if (!chunk.userData || !chunk.userData.props) continue;
+          for (const prop of chunk.userData.props) {
+            if (!prop.userData) continue;
+            const worldZ = chunk.position.z + prop.position.z;
+            const worldX = chunk.position.x + prop.position.x;
 
-      const rings = this.environment.aerialRings || [];
-      for (const ring of rings) {
-        if (ring.collected) continue;
-        const ringZ = ring.chunk ? (ring.chunk.position.z + (ring.localZ || 0)) : (ring.z || 0);
-        const ringX = ring.chunk ? (ring.chunk.position.x + (ring.localX || 0)) : (ring.x || 0);
-        if (Math.abs(this.bike.z - ringZ) < 2.6 && Math.abs(this.bike.mesh.position.x - ringX) < 2.8 && this.bike.jumpAltitude > 0.5) {
-          ring.collected = true;
-          if (ring.mesh) ring.mesh.visible = false;
-          cs.ringsCollected = (cs.ringsCollected || 0) + 1;
-          cs.stuntPoints = (cs.stuntPoints || 0) + 1500;
-          gameState.score += 1500;
-          gameState.chargeNitro(35);
-          soundManager.playCoin();
-          if (this.ui) {
-            this.ui.spawnFloatingCombatText('+1500 / +35% NITRO', 'ANNEAU AÉRIEN ! ⭕', '#ffd32a', 50, 35);
+            if (prop.userData.isStuntRamp && !prop.userData.isHit &&
+                Math.abs(this.bike.z - worldZ) < 3.5 && Math.abs(this.bike.mesh.position.x - worldX) < 2.8) {
+              prop.userData.isHit = true;
+              if (this.bike.triggerMegaRampJump) {
+                this.bike.triggerMegaRampJump(currentSpeed);
+              } else {
+                this.bike.triggerSpeedBumpJump(currentSpeed * 1.4);
+              }
+              cs.jumpsLanded = (cs.jumpsLanded || 0) + 1;
+              soundManager.playSpeedBumpBoingFwump(1.35);
+              if (this.particles.spawnDirectionalSparks) {
+                this.particles.spawnDirectionalSparks(new THREE.Vector3(worldX, 0.5, worldZ), new THREE.Vector3(0, 1, -0.5), 14);
+              }
+              this.engine.triggerCameraShake(0.35);
+              if (this.ui) {
+                this.ui.spawnFloatingCombatText('MÉGA SAUT !', '🛫 AIR TIME !', '#ffa502', 50, 22);
+              }
+              Haptic.impactMedium();
+            } else if (prop.userData.isAerialRing && !prop.userData.ringCollected &&
+                Math.abs(this.bike.z - worldZ) < 3.2 && Math.abs(this.bike.mesh.position.x - worldX) < 3.2 &&
+                this.bike.jumpAltitude > 0.45) {
+              prop.userData.ringCollected = true;
+              prop.visible = false;
+              gameState.score += 1500;
+              gameState.chargeNitro(35);
+              cs.ringsCollected = (cs.ringsCollected || 0) + 1;
+              cs.stuntPoints = (cs.stuntPoints || 0) + 1500;
+              soundManager.playCoin();
+              if (this.ui) {
+                this.ui.spawnFloatingCombatText('+1500 / +35% NITRO', 'ANNEAU AÉRIEN ! ⭕', '#ffd32a', 50, 22);
+              }
+              Haptic.impactLight();
+            }
           }
-          Haptic.impactLight();
         }
       }
     } else if (mode === 'EXTREME_STORM') {
       if (Math.abs(cs.windForce || 0) > 0.01 && !this.bike.isCrashed) {
-        this.bike.x = THREE.MathUtils.clamp(this.bike.x + cs.windForce * simDelta, -5.6, 5.6);
+        this.bike.x = THREE.MathUtils.clamp(this.bike.x + cs.windForce * simDelta, -6.7, 6.7);
       }
       if (cs.warningJustStarted) {
         cs.warningJustStarted = false;
@@ -997,7 +1073,7 @@ class GameApp {
 
       // 6. Fumée d'échappement et fumée de dérapage au freinage (uniquement engins motorisés)
       if (!isNonMotorized) {
-        if (currentSpeed > 1.0) {
+        if (currentSpeed > 1.0 && Math.random() < 0.38) {
           this.particles.spawnExhaustSmoke(this.bike.getExhaustPosition(), currentSpeed / 20.0);
         }
         if (gameState.isBraking && currentSpeed > 3.5) {

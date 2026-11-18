@@ -41,10 +41,11 @@ export class Bike {
     this.currentBikeId = 'scooter';
     this.lastWhipSnap = 0;
 
-    // Physique de saut réaliste pour ralentisseurs / dos d'âne (Air Time)
+    // Physique de saut réaliste pour ralentisseurs / dos d'âne & méga-rampes (Air Time)
     this.jumpAltitude = 0;
     this.jumpVelocity = 0;
     this.pitchAngle = 0;
+    this.isMegaJump = false;
 
     // Suspension ressort-amortisseur 2nd ordre (trottoirs, réceptions, freinage/accélération)
     this.suspOffset = 0;
@@ -84,6 +85,7 @@ export class Bike {
     this.underglowMesh.rotation.x = -Math.PI / 2;
     this.underglowMesh.position.y = 0.032;
     this.underglowMesh.scale.set(1.0, 1.45, 1.0);
+    this.underglowMesh.visible = false;
     this.mesh.add(this.underglowMesh);
 
     // Flammes Nitro (propulseurs NOS bleus éclatants)
@@ -2475,17 +2477,17 @@ export class Bike {
       this.smoothedSteer += (steerInput - this.smoothedSteer) * Math.min(1.0, delta * 9.6);
     }
 
-    // Largeur étendue : Chaussée (-4.2 à +4.2) + Trottoirs (-6.0 à +6.0)
-    // Permet de rouler confortablement sur le trottoir sans heurter les façades de bâtiments (8.5m)
+    // Largeur étendue : Chaussée (-5.4 à +5.4) + Trottoirs (-6.8 à +6.8)
+    // Permet de rouler confortablement sur le trottoir sans heurter les façades de bâtiments
     // Sensibilité latérale accrue (10.2 m/s max) pour un slalom réactif et esquives précises
-    const MAX_WIDTH = 6.0;
+    const MAX_WIDTH = 6.8;
     if (!gameState.isBraking) {
       this.x -= this.smoothedSteer * 10.2 * delta;
     }
     this.x = Math.max(-MAX_WIDTH, Math.min(MAX_WIDTH, this.x));
 
-    // Détection de montée / descente du trottoir (|x| > 4.25m) -> impulsion suspension
-    const onSidewalk = Math.abs(this.x) > 4.25;
+    // Détection de montée / descente du trottoir (|x| > 5.4m) -> impulsion suspension
+    const onSidewalk = Math.abs(this.x) > 5.4;
     if (onSidewalk && !this.wasOnSidewalk) {
       soundManager.playCurbMount();
       this.suspVel -= 1.8;
@@ -2518,12 +2520,16 @@ export class Bike {
     if (this.jumpAltitude > 0 || this.jumpVelocity > 0) {
       this.jumpVelocity -= 18.0 * delta;
       this.jumpAltitude = Math.max(0, this.jumpAltitude + this.jumpVelocity * delta);
-      if (this.jumpVelocity < 0) {
+      if (this.isMegaJump && this.jumpAltitude > 0) {
+        const targetPitch = THREE.MathUtils.clamp(-this.jumpVelocity * 0.025, -0.45, 0.25);
+        this.pitchAngle = THREE.MathUtils.lerp(this.pitchAngle, targetPitch, 1 - Math.exp(-5.0 * delta));
+      } else if (this.jumpVelocity < 0) {
         this.pitchAngle = THREE.MathUtils.lerp(this.pitchAngle, 0.15, 1 - Math.exp(-6.0 * delta)); // nez plongeant à la retombée
       }
       if (this.jumpAltitude <= 0) {
         this.jumpAltitude = 0;
         this.jumpVelocity = 0;
+        this.isMegaJump = false;
         this.pitchAngle = 0;
         this.suspVel -= 3.2;
         soundManager.playSuspensionThud();
@@ -2691,6 +2697,9 @@ export class Bike {
     }
 
     // --- GESTION VISUELLE DYNAMIQUE DU NITRO & DU HALO UNDERGLOW FUTURISTE ---
+    if (this.underglowMesh) {
+      this.underglowMesh.visible = false;
+    }
     const isOrganicEntity = ['run_ak47', 'run_chainsaw', 'cheval'].includes(this.currentBikeId);
     if (gameState && gameState.isNitroActive) {
       if (isOrganicEntity) {
@@ -2935,6 +2944,15 @@ export class Bike {
     soundManager.playSuspensionThud();
   }
 
+  triggerMegaRampJump(speed = 18.0) {
+    if (this.currentBikeId === 'aero_jet' || this.isFlyingEscape) return;
+    this.jumpVelocity = Math.max(16.5, speed * 0.72);
+    this.isMegaJump = true;
+    this.pitchAngle = -0.45;
+    this.suspVel = -1.6;
+    soundManager.playSuspensionThud();
+  }
+
   getExhaustPosition() {
     const pos = new THREE.Vector3();
     pos.set(this.mesh.position.x + 0.2, this.mesh.position.y + 0.3, this.mesh.position.z - 0.7);
@@ -2945,6 +2963,7 @@ export class Bike {
     this.jumpAltitude = 0;
     this.jumpVelocity = 0;
     this.pitchAngle = 0;
+    this.isMegaJump = false;
     this.suspOffset = 0;
     this.suspVel = 0;
     this.isCrashed = false;

@@ -30,7 +30,7 @@ export class Environment {
 
     // Géométries partagées
     this.sharedGeos = {
-      road: new THREE.PlaneGeometry(8.4, this.chunkLength),
+      road: new THREE.PlaneGeometry(10.8, this.chunkLength),
       sidewalk: new THREE.BoxGeometry(3.5, 0.25, this.chunkLength),
       curb: new THREE.BoxGeometry(0.15, 0.3, this.chunkLength),
       stripe: new THREE.PlaneGeometry(0.2, 3.5),
@@ -92,16 +92,16 @@ export class Environment {
       stuntRampGeo: (() => {
         const s = new THREE.Shape();
         s.moveTo(0, 0);
-        s.lineTo(6.4, 0);
-        s.lineTo(6.4, 1.55);
+        s.lineTo(7.2, 0);
+        s.lineTo(7.2, 1.85);
         s.closePath();
-        const g = new THREE.ExtrudeGeometry(s, { depth: 3.4, bevelEnabled: false });
+        const g = new THREE.ExtrudeGeometry(s, { depth: 4.2, bevelEnabled: false });
         g.rotateY(-Math.PI / 2);
-        g.translate(1.7, 0, -3.2);
+        g.translate(2.1, 0, -3.6);
         g.computeVertexNormals();
         return g;
       })(),
-      aerialRingGeo: new THREE.TorusGeometry(2.1, 0.18, 8, 20),
+      aerialRingGeo: new THREE.TorusGeometry(2.4, 0.22, 8, 20),
       storeSign: new THREE.BoxGeometry(2.4, 0.45, 0.12),
       // Stands de rue (primeurs, bouquinistes, marchand ambulant, fleuriste)
       stallCrate: new THREE.BoxGeometry(0.55, 0.22, 0.4),
@@ -1550,7 +1550,7 @@ export class Environment {
 
     // Ligne au sol à damier
     const groundLineMat = new THREE.MeshBasicMaterial({ map: bannerTexture });
-    const groundLine = new THREE.Mesh(new THREE.PlaneGeometry(8.4, 2.0), groundLineMat);
+    const groundLine = new THREE.Mesh(new THREE.PlaneGeometry(10.8, 2.0), groundLineMat);
     groundLine.rotation.x = -Math.PI / 2;
     groundLine.position.set(0, 0.03, 0);
     archGroup.add(groundLine);
@@ -1597,7 +1597,7 @@ export class Environment {
     const stripeMat = this.sharedMats?.stripe || new THREE.MeshStandardMaterial({ color: 0xf1f3f5, roughness: 0.85 });
 
     // Chaussée subdivisée (28 segments en Z) pour épouser parfaitement chaque virage avec 0mm de raccord entre tronçons
-    const roadGeo = new THREE.PlaneGeometry(8.4, this.chunkLength, 1, 28);
+    const roadGeo = new THREE.PlaneGeometry(10.8, this.chunkLength, 1, 28);
     roadGeo.rotateX(-Math.PI / 2);
     roadGeo.userData = { basePos: Float32Array.from(roadGeo.attributes.position.array), isRoad: true };
     const road = new THREE.Mesh(roadGeo, roadMat);
@@ -1638,10 +1638,10 @@ export class Environment {
 
     const walkTemplate = new THREE.BoxGeometry(3.5, 0.25, this.chunkLength, 1, 1, 28);
     const curbTemplate = new THREE.BoxGeometry(0.18, 0.3, this.chunkLength, 1, 1, 28);
-    createCurvedSidewalkRibbon(-5.95, 0.125, walkTemplate);
-    createCurvedSidewalkRibbon(-4.25, 0.15, curbTemplate);
-    createCurvedSidewalkRibbon(5.95, 0.125, walkTemplate);
-    createCurvedSidewalkRibbon(4.25, 0.15, curbTemplate);
+    createCurvedSidewalkRibbon(-7.15, 0.125, walkTemplate);
+    createCurvedSidewalkRibbon(-5.45, 0.15, curbTemplate);
+    createCurvedSidewalkRibbon(7.15, 0.125, walkTemplate);
+    createCurvedSidewalkRibbon(5.45, 0.15, curbTemplate);
 
     // Bâtiments : Décombres effondrés en mode Ruines, Architecture vivante (4 styles) en course classique
     if (this.isRuinsMode) {
@@ -1729,14 +1729,14 @@ export class Environment {
 
       const ringZ = rampZ + 11;
       const ring = new THREE.Mesh(this.sharedGeos.aerialRingGeo, ringMat);
-      ring.position.set(baseX, 4.2, ringZ);
+      ring.position.set(baseX, 3.8, ringZ);
       ring.userData = {
         isAerialRing: true,
         ringCollected: false,
         baseX,
         localZ: ringZ,
         baseRotY: 0,
-        initialY: 4.2,
+        initialY: 3.8,
         isHit: false
       };
       chunk.add(ring);
@@ -1807,10 +1807,10 @@ export class Environment {
   addSpeedBump(chunk, localZ) {
     const bumpGroup = new THREE.Group();
     bumpGroup.position.set(0, 0, localZ);
-    bumpGroup.userData = { baseX: 0, localZ, baseRotY: 0, skipAngle: true, hideAtIntersection: true, interClearance: 13.5 };
+    bumpGroup.userData = { baseX: 0, localZ, baseRotY: 0, skipAngle: true, hideAtIntersection: true, interClearance: 14.7 };
 
     // 1. Corps trapézoïdal du ralentisseur (dos d'âne asphalté surélevé de 18cm)
-    const bumpGeo = new THREE.BoxGeometry(8.4, 0.18, 2.6);
+    const bumpGeo = new THREE.BoxGeometry(10.8, 0.18, 2.6);
     const bumpMat = new THREE.MeshStandardMaterial({ color: 0x1e272e, roughness: 0.85 });
     const bumpMesh = new THREE.Mesh(bumpGeo, bumpMat);
     bumpMesh.position.y = 0.09;
@@ -1819,7 +1819,7 @@ export class Environment {
 
     // 2. Bandes blanches plates au sol (marquage officiel discret, éclairé comme le bitume)
     const stripeMat = new THREE.MeshStandardMaterial({ color: 0xf1f3f5, transparent: true, opacity: 0.85, roughness: 0.85 });
-    for (let x = -3.6; x <= 3.6; x += 1.2) {
+    for (let x = -4.8; x <= 4.8; x += 1.2) {
       const stripeMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.32, 1.8), stripeMat);
       stripeMesh.rotation.x = -Math.PI / 2;
       stripeMesh.position.set(x, 0.19, 0);
@@ -1829,17 +1829,17 @@ export class Environment {
     // 3. Panneau routier officiel circulaire 30 km/h sur le trottoir
     const poleMat = new THREE.MeshStandardMaterial({ color: 0xbdc3c7, metalness: 0.85, roughness: 0.2 });
     const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 2.4, 8), poleMat);
-    pole.position.set(-4.5, 1.2, 0);
+    pole.position.set(-5.7, 1.2, 0);
     bumpGroup.add(pole);
 
     const signBorder = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.34, 0.03, 16), new THREE.MeshStandardMaterial({ color: 0xe74c3c }));
     signBorder.rotation.z = Math.PI / 2;
-    signBorder.position.set(-4.5, 2.15, 0);
+    signBorder.position.set(-5.7, 2.15, 0);
     bumpGroup.add(signBorder);
 
     const signCore = new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.26, 0.04, 16), new THREE.MeshStandardMaterial({ color: 0xffffff }));
     signCore.rotation.z = Math.PI / 2;
-    signCore.position.set(-4.5, 2.15, 0);
+    signCore.position.set(-5.7, 2.15, 0);
     bumpGroup.add(signCore);
 
     chunk.add(bumpGroup);
@@ -1861,7 +1861,7 @@ export class Environment {
       return;
     }
 
-    const xBase = side * 7.85;
+    const xBase = side * 9.05;
     let currentZ = -this.chunkLength / 2;
     let parcelIndex = chunkIdx * 7 + (side > 0 ? 3 : 0);
 
@@ -1960,7 +1960,7 @@ export class Environment {
         localZ: centerZ,
         baseRotY: 0,
         hideAtIntersection: true,
-        interClearance: 10.8 + bWidth * 0.5
+        interClearance: 12.0 + bWidth * 0.5
       };
 
       const styleIdx = parcelIndex % facadeMats.length;
@@ -2140,7 +2140,7 @@ export class Environment {
       localZ: centerZ,
       baseRotY: 0,
       hideAtIntersection: true,
-      interClearance: 10.8 + bWidth * 0.5
+      interClearance: 12.0 + bWidth * 0.5
     };
 
     const lawnMat = this.sharedMats?.lawn || new THREE.MeshStandardMaterial({ color: 0x27ae60, roughness: 0.85 });
@@ -2220,7 +2220,7 @@ export class Environment {
       localZ: centerZ,
       baseRotY: 0,
       hideAtIntersection: true,
-      interClearance: 10.8 + bWidth * 0.5
+      interClearance: 12.0 + bWidth * 0.5
     };
 
     const plazaMat = this.sharedMats?.plaza || new THREE.MeshStandardMaterial({ color: 0xdcdde1, roughness: 0.8 });
@@ -2289,7 +2289,7 @@ export class Environment {
       localZ: centerZ,
       baseRotY: 0,
       hideAtIntersection: true,
-      interClearance: 10.8 + bWidth * 0.5
+      interClearance: 12.0 + bWidth * 0.5
     };
 
     const lawnMat = this.sharedMats?.lawn || new THREE.MeshStandardMaterial({ color: 0x27ae60, roughness: 0.85 });
@@ -2348,7 +2348,7 @@ export class Environment {
       localZ: centerZ,
       baseRotY: 0,
       hideAtIntersection: true,
-      interClearance: 10.8 + bWidth * 0.5
+      interClearance: 12.0 + bWidth * 0.5
     };
 
     const marbleMat = this.sharedMats?.marble || new THREE.MeshStandardMaterial({ color: 0xf5f6fa });
@@ -2416,7 +2416,7 @@ export class Environment {
       localZ: centerZ,
       baseRotY: 0,
       hideAtIntersection: true,
-      interClearance: 10.8 + bWidth * 0.5
+      interClearance: 12.0 + bWidth * 0.5
     };
 
     const sandMat = this.sharedMats?.beachSand || new THREE.MeshStandardMaterial({ color: 0xfde68a });
@@ -2477,7 +2477,7 @@ export class Environment {
       localZ: centerZ,
       baseRotY: 0,
       hideAtIntersection: true,
-      interClearance: 10.8 + bWidth * 0.5
+      interClearance: 12.0 + bWidth * 0.5
     };
 
     const sandMat = this.sharedMats?.desertSand || new THREE.MeshStandardMaterial({ color: 0xf59e0b });
@@ -2553,7 +2553,7 @@ export class Environment {
       localZ: centerZ,
       baseRotY: 0,
       hideAtIntersection: true,
-      interClearance: 10.8 + bWidth * 0.5
+      interClearance: 12.0 + bWidth * 0.5
     };
 
     const grassMat = this.sharedMats?.steppeGrass || new THREE.MeshStandardMaterial({ color: 0xa3a847 });
@@ -2611,7 +2611,7 @@ export class Environment {
       localZ: centerZ,
       baseRotY: 0,
       hideAtIntersection: true,
-      interClearance: 10.8 + bWidth * 0.5
+      interClearance: 12.0 + bWidth * 0.5
     };
 
     const rockMat = this.sharedMats?.cliffRock || new THREE.MeshStandardMaterial({ color: 0x78716c });
@@ -2661,7 +2661,7 @@ export class Environment {
       localZ: centerZ,
       baseRotY: 0,
       hideAtIntersection: true,
-      interClearance: 10.8 + bWidth * 0.5
+      interClearance: 12.0 + bWidth * 0.5
     };
 
     const redMat = this.sharedMats?.canyonRed || new THREE.MeshStandardMaterial({ color: 0xc2410c });
@@ -2711,7 +2711,7 @@ export class Environment {
   }
 
   populateRuinsBuildings(chunk, side) {
-    const xBase = side * 8.5;
+    const xBase = side * 9.7;
     let currentZ = -this.chunkLength / 2;
     const buildingPalette = this.sharedMats?.buildingPalette || [new THREE.MeshStandardMaterial({ color: 0x18181a, roughness: 0.95 })];
     const rubbleMat = this.sharedMats?.rubbleMat || new THREE.MeshStandardMaterial({ color: 0x2d2d30, roughness: 0.95 });
@@ -2775,10 +2775,10 @@ export class Environment {
       const side = (idx % 2 === 0 ? 1 : -1);
       const wreckGroup = new THREE.Group();
       const baseRotY = (Math.random() - 0.5) * 0.8;
-      wreckGroup.position.set(side * 4.5, 0.35, z);
+      wreckGroup.position.set(side * 5.7, 0.35, z);
       wreckGroup.rotation.z = side * (0.35 + Math.random() * 0.4);
       wreckGroup.rotation.y = baseRotY;
-      wreckGroup.userData = { baseX: side * 4.5, localZ: z, baseRotY };
+      wreckGroup.userData = { baseX: side * 5.7, localZ: z, baseRotY };
 
       const wreckMat = this.sharedMats?.wreckMat || new THREE.MeshStandardMaterial({ color: 0x121214, roughness: 0.92, metalness: 0.35 });
       const chassis = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.65, 3.2), wreckMat);
@@ -2805,10 +2805,10 @@ export class Environment {
     // 3. Mâts et lampadaires tordus
     [-6].forEach(z => {
       const lampGroup = new THREE.Group();
-      lampGroup.position.set(-4.5, 0, z);
+      lampGroup.position.set(-5.7, 0, z);
       lampGroup.rotation.z = -0.52;
       lampGroup.rotation.y = 0.25;
-      lampGroup.userData = { baseX: -4.5, localZ: z, baseRotY: 0.25 };
+      lampGroup.userData = { baseX: -5.7, localZ: z, baseRotY: 0.25 };
       const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.08, 3.8, 6), this.sharedMats?.mast || new THREE.MeshStandardMaterial({ color: 0x1a1a1d, roughness: 0.85 }));
       mast.position.y = 1.9;
       lampGroup.add(mast);
@@ -2819,8 +2819,8 @@ export class Environment {
   // --- CRÉATION DE STANDS DE RUE RÉALISTES & PITTORESQUES (PRIMEURS, BOUQUINISTES, STREET FOOD, FLEURISTES) ---
   createMarketStall(chunk, side, z, stallType = 'stall_primeur') {
     const stallGroup = new THREE.Group();
-    // Position sur la moitié avant du trottoir, face à la rue (largeur chaussée = 8.4m, trottoir = 3.5m)
-    const xPos = side * 4.8;
+    // Position sur la moitié avant du trottoir, face à la rue (largeur chaussée = 10.8m, trottoir = 3.5m)
+    const xPos = side * 6.0;
     const baseRotY = side > 0 ? -Math.PI / 2 + 0.12 : Math.PI / 2 - 0.12;
     stallGroup.position.set(xPos, 0, z);
     stallGroup.rotation.y = baseRotY;
@@ -2837,7 +2837,7 @@ export class Environment {
       localZ: z,
       baseRotY,
       hideAtIntersection: true,
-      interClearance: 13.5
+      interClearance: 14.7
     };
 
     if (stallType === 'stall_primeur') {
@@ -3150,12 +3150,12 @@ export class Environment {
       [-18, 6].forEach((z, idx) => {
         const side = idx % 2 === 0 ? 1 : -1;
         const buoyGroup = new THREE.Group();
-        buoyGroup.position.set(side * 4.6, 0.4, z);
+        buoyGroup.position.set(side * 5.8, 0.4, z);
         const floatMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.35, 0.6, 10), buoyMat);
         const lightMesh = new THREE.Mesh(new THREE.SphereGeometry(0.18, 8, 8), buoyLightMat);
         lightMesh.position.y = 0.55;
         buoyGroup.add(floatMesh, lightMesh);
-        buoyGroup.userData = { type: 'lamp', isHit: false, initialY: 0.4, baseX: side * 4.6, localZ: z, baseRotY: 0 };
+        buoyGroup.userData = { type: 'lamp', isHit: false, initialY: 0.4, baseX: side * 5.8, localZ: z, baseRotY: 0 };
         chunk.add(buoyGroup);
         chunk.userData.props.push(buoyGroup);
       });
@@ -3169,13 +3169,13 @@ export class Environment {
       [-16, 8].forEach((z, idx) => {
         const side = idx % 2 === 0 ? 1 : -1;
         const barrelGroup = new THREE.Group();
-        barrelGroup.position.set(side * 4.6, 0, z);
+        barrelGroup.position.set(side * 5.8, 0, z);
         const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 0.95, 10), barrelMat);
         barrel.position.y = 0.48;
         const drip = new THREE.Mesh(new THREE.SphereGeometry(0.12, 6, 6), toxicGreenMat);
         drip.position.set(0.15, 0.96, 0);
         barrelGroup.add(barrel, drip);
-        barrelGroup.userData = { type: 'tree', isHit: false, initialY: 0, baseX: side * 4.6, localZ: z, baseRotY: 0 };
+        barrelGroup.userData = { type: 'tree', isHit: false, initialY: 0, baseX: side * 5.8, localZ: z, baseRotY: 0 };
         chunk.add(barrelGroup);
         chunk.userData.props.push(barrelGroup);
       });
@@ -3187,8 +3187,8 @@ export class Environment {
       [-20, -5, 12].forEach((z, idx) => {
         const side = idx % 2 === 0 ? 1 : -1;
         const pine = new THREE.Group();
-        pine.position.set(side * 4.8, 0, z);
-        pine.userData = { type: 'tree', isHit: false, initialY: 0, baseX: side * 4.8, localZ: z, baseRotY: 0 };
+        pine.position.set(side * 6.0, 0, z);
+        pine.userData = { type: 'tree', isHit: false, initialY: 0, baseX: side * 6.0, localZ: z, baseRotY: 0 };
         this.buildSnowyPine(pine, 0, 0, 0);
         chunk.add(pine);
         chunk.userData.props.push(pine);
@@ -3214,20 +3214,20 @@ export class Environment {
 
     propPositionsZ.forEach((z, idx) => {
       const side = (idx % 2 === 0 ? 1 : -1);
-      const xSidewalk = side * 5.2;
+      const xSidewalk = side * 6.4;
 
       // 1. Réverbère haussmannien élégant et parfaitement ancré au sol
       const lamp = new THREE.Group();
-      lamp.position.set(side * 4.6, 0, z);
+      lamp.position.set(side * 5.8, 0, z);
       lamp.userData = {
         type: 'lamp',
         isHit: false,
         initialY: 0,
-        baseX: side * 4.6,
+        baseX: side * 5.8,
         localZ: z,
         baseRotY: 0,
         hideAtIntersection: true,
-        interClearance: 13.0
+        interClearance: 14.2
       };
 
       const baseMesh = new THREE.Mesh(this.sharedGeos.lampBase, lampMat);
@@ -3256,7 +3256,7 @@ export class Environment {
 
       // 2. Arbres d'alignement de boulevard (Platanes touffus ou Palmiers méditerranéens) sur le trottoir opposé !
       const treeSide = -side;
-      const treeX = treeSide * 5.15;
+      const treeX = treeSide * 6.35;
       const treeGroup = new THREE.Group();
       treeGroup.position.set(treeX, 0, z);
       treeGroup.userData = {
@@ -3267,7 +3267,7 @@ export class Environment {
         localZ: z,
         baseRotY: 0,
         hideAtIntersection: true,
-        interClearance: 13.5
+        interClearance: 14.7
       };
 
       // Grille d'arbre circulaire en fonte ciselée au ras du trottoir
@@ -3292,7 +3292,7 @@ export class Environment {
         const bx = xSidewalk + side * 0.45;
         const bz = z + 2.8;
         bench.position.set(bx, 0, bz);
-        bench.userData = { type: 'lamp', isHit: false, initialY: 0, baseX: bx, localZ: bz, baseRotY: 0, hideAtIntersection: true, interClearance: 13.0 };
+        bench.userData = { type: 'lamp', isHit: false, initialY: 0, baseX: bx, localZ: bz, baseRotY: 0, hideAtIntersection: true, interClearance: 14.2 };
         const seat = new THREE.Mesh(this.sharedGeos.benchSeat, this.sharedMats?.benchWood || woodMat);
         seat.position.y = 0.46;
         const back = new THREE.Mesh(this.sharedGeos.benchBack, this.sharedMats?.benchWood || woodMat);
@@ -3302,10 +3302,10 @@ export class Environment {
         chunk.userData.props.push(bench);
       } else if (idx === 2) {
         const hydrant = new THREE.Mesh(this.sharedGeos.hydrantBody, this.sharedMats?.hydrantRed || lampMat);
-        const hx = side * 4.55;
+        const hx = side * 5.75;
         const hz = z - 2.6;
         hydrant.position.set(hx, 0.56, hz);
-        hydrant.userData = { type: 'lamp', isHit: false, initialY: 0.56, baseX: hx, localZ: hz, baseRotY: 0, hideAtIntersection: true, interClearance: 13.0 };
+        hydrant.userData = { type: 'lamp', isHit: false, initialY: 0.56, baseX: hx, localZ: hz, baseRotY: 0, hideAtIntersection: true, interClearance: 14.2 };
         chunk.add(hydrant);
         chunk.userData.props.push(hydrant);
       } else if (idx === 3) {
@@ -3313,7 +3313,7 @@ export class Environment {
         const cx = xSidewalk + side * 0.85;
         const cz = z - 2.2;
         chair.position.set(cx, 0.46, cz);
-        chair.userData = { type: 'lamp', isHit: false, initialY: 0.46, baseX: cx, localZ: cz, baseRotY: 0, hideAtIntersection: true, interClearance: 13.0 };
+        chair.userData = { type: 'lamp', isHit: false, initialY: 0.46, baseX: cx, localZ: cz, baseRotY: 0, hideAtIntersection: true, interClearance: 14.2 };
         chunk.add(chair);
         chunk.userData.props.push(chair);
       }
@@ -3406,8 +3406,12 @@ export class Environment {
         if (chunk.userData && chunk.userData.props) {
           chunk.userData.props.forEach(prop => {
             prop.userData.isHit = false;
+            if (prop.userData.isStuntRamp) prop.userData.isHit = false;
             if (prop.userData.isSlalomGate) prop.userData.gatePassed = false;
-            if (prop.userData.isAerialRing) prop.userData.ringCollected = false;
+            if (prop.userData.isAerialRing) {
+              prop.userData.ringCollected = false;
+              prop.visible = true;
+            }
             prop.visible = true;
             prop.position.y = prop.userData.initialY !== undefined ? prop.userData.initialY : 0;
             if (prop.userData.initialRot) {

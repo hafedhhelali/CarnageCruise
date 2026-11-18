@@ -4870,7 +4870,7 @@ html, body {
   /* backdrop-filter retiré : flou GPU inutile pendant la course */
   border: 1.5px solid #ffd32a;
   border-radius: 9px;
-  padding: 2px 9px;
+  padding: 4px 10px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
   pointer-events: none;
   transform: translate(-50%, -50%);
@@ -4880,14 +4880,14 @@ html, body {
 }
 
 .fct-main-text {
-  font-size: 1.02rem;
+  font-size: 0.95rem;
   font-weight: 900;
   letter-spacing: 0.6px;
   line-height: 1.05;
 }
 
 .fct-sub-badge {
-  font-size: 0.56rem;
+  font-size: 0.65rem;
   font-weight: 850;
   letter-spacing: 0.6px;
   padding: 1px 5px;

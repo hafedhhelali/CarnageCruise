@@ -127,7 +127,7 @@ export class Traffic {
         type: type,
         active: false,
         speed: 18 + Math.random() * 6,
-        lane: (i % 2 === 0 ? 1 : -1) * 2.2, // Voie droite (+2.2m) ou voie gauche (-2.2m)
+        lane: (i % 2 === 0 ? 1 : -1) * 2.7, // Voie droite (+2.7m) ou voie gauche (-2.7m)
         isCrashed: false,
         crashVelX: 0,
         crashVelY: 0,
@@ -399,7 +399,7 @@ export class Traffic {
     group.userData = {
       active: false,
       speed: 25.0,
-      lane: -2.2,
+      lane: -2.7,
       wheelMeshes: [],
       strobeLights: [],
       strobeTimer: 0
@@ -478,7 +478,7 @@ export class Traffic {
     if (this.ambulance.userData.active) return;
     const spawnZ = playerZ + 85 + Math.random() * 35;
     const curveX = roadCurveFunc ? roadCurveFunc(spawnZ) : 0;
-    const side = Math.random() > 0.5 ? 2.2 : -2.2;
+    const side = Math.random() > 0.5 ? 2.7 : -2.7;
     this.ambulance.position.set(curveX + side, 0, spawnZ);
     this.ambulance.rotation.set(0, 0, 0);
     this.ambulance.visible = true;
@@ -795,7 +795,7 @@ export class Traffic {
           });
         }
 
-        // Suivre la trajectoire de la route en restant dans sa voie (+2.2m ou -2.2m)
+        // Suivre la trajectoire de la route en restant dans sa voie (+2.7m ou -2.7m)
         const curveX = roadCurveFunc ? roadCurveFunc(v.position.z) : 0;
         const targetX = curveX + v.userData.lane;
         v.position.x = targetX;

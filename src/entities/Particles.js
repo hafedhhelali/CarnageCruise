@@ -137,8 +137,10 @@ export class ParticleSystem {
   spawnExhaustSmoke(pos, speedRatio = 1.0) {
     if (Math.random() > 0.4) return;
 
-    const mesh = new THREE.Mesh(this.sharedGeos.smokeSphere, this.sharedMats.smoke.clone());
-    const initScale = 0.12 + Math.random() * 0.08;
+    const smokeMat = this.sharedMats.smoke.clone();
+    smokeMat.opacity = 0.22;
+    const mesh = new THREE.Mesh(this.sharedGeos.smokeSphere, smokeMat);
+    const initScale = 0.16 + Math.random() * 0.06;
     mesh.scale.setScalar(initScale);
     mesh.position.copy(pos);
     mesh.position.x += (Math.random() - 0.5) * 0.12;
@@ -152,8 +154,8 @@ export class ParticleSystem {
       velY: 0.7 + Math.random() * 0.5,
       velZ: -1.6 * speedRatio,
       growRate: 1.8,
-      life: 0.65,
-      maxLife: 0.65,
+      life: 0.35,
+      maxLife: 0.35,
       isCoin: false
     });
   }

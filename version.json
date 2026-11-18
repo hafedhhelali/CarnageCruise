@@ -1,9 +1,9 @@
 {
-  "version": "0.9.58-beta",
-  "versionCode": 68,
-  "build": 68,
+  "version": "0.9.59-beta",
+  "versionCode": 69,
+  "build": 69,
   "releaseName": "Carnage Cruise v0.9.40-beta",
   "channel": "beta",
   "updatedAt": "2026-11-12T21:40:00+01:00",
-  "date": "2026-11-15"
+  "date": "2026-11-18"
 }

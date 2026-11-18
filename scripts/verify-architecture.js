@@ -150,6 +150,22 @@ assert(
   'UI/UX Épreuves & Vignette : Sélecteur + vignette présents avec zéro transition: all et zéro MeshToonMaterial'
 );
 
+// 13. Tests v0.9.59-beta : Route 10.8m, pas d'autoReturnTimer, 'chain' trafic/boss, recharge Energy Drink, Mega Ramps chunks
+assert(envContent.includes('10.8'), 'Route élargie : Largeur de chaussée 10.8m active dans Environment.js');
+assert(!uiContent.includes('autoReturnTimer'), 'Fin de course : Aucun autoReturnTimer (retour carte uniquement sur clic utilisateur)');
+assert(
+  mainContent.includes("'chain'") && mainContent.includes('damageConvoyBoss(v, 22'),
+  "Armes & Outils : 'chain' détruit le trafic et inflige des dégâts au boss du convoi dans main.js"
+);
+assert(
+  gameStateContent.includes('delta * 7.5') && gameStateContent.includes('energyDrinkCans < 3'),
+  'Boisson Énergétique : Recharge progressive active dans GameState.js'
+);
+assert(
+  mainContent.includes('prop.userData.isStuntRamp') && mainContent.includes('prop.userData.isAerialRing'),
+  'Méga Rampes : Détection par scan des props de chunks (isStuntRamp / isAerialRing) dans main.js'
+);
+
 console.log(`\n📊 RÉSULTAT DU CONTRÔLE QUALITÉ : ${passedTests}/${totalTests} tests réussis.`);
 if (passedTests === totalTests) {
   console.log('✨ Architecture certifiée propre, modulaire et conforme SOLID.');

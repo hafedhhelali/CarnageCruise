@@ -2559,122 +2559,324 @@ export class SoundManager {
     oscB.stop(time + duration + 0.01);
   }
 
-  // --- 1. THÈME D'ACCUEIL : FRENCH TOUCH & SYNTHWAVE DISCO-FUNK (122 BPM) ---
-  playMenuSynthwaveTheme() {
-    const tempo = 122;
-    const stepDuration = (60 / tempo) / 2; // Croches
+  /**
+   * Pad harmonique chaud (triangle/sine désaccordés + filtre passe-bas doux) pour enrichir les accords sans fatigue auditive.
+   */
+  _playChordPad(freqs, time, duration, vol = 0.045) {
+    if (!this.ctx || this.isDestroyed || !Array.isArray(freqs) || freqs.length === 0) return;
+    const dest = this.getMusicOutput();
+    if (!dest) return;
 
-    const bassGroove = [
-      110.00, 0, 110.00, 164.81, 0, 110.00, 130.81, 146.83,
-      87.31, 0, 87.31, 130.81, 0, 87.31, 110.00, 130.81,
-      130.81, 0, 130.81, 196.00, 0, 130.81, 164.81, 146.83,
-      98.00, 0, 98.00, 146.83, 0, 98.00, 123.47, 146.83
+    const lp = this.ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.setValueAtTime(1150, time);
+    lp.frequency.exponentialRampToValueAtTime(520, time + duration);
+    lp.Q.value = 0.7;
+
+    const gain = this.ctx.createGain();
+    const scaledVol = vol / Math.sqrt(freqs.length);
+    const attack = Math.min(0.08, duration * 0.2);
+    gain.gain.setValueAtTime(0.0001, time);
+    gain.gain.linearRampToValueAtTime(scaledVol, time + attack);
+    gain.gain.setValueAtTime(scaledVol * 0.85, time + duration * 0.65);
+    gain.gain.exponentialRampToValueAtTime(0.0001, time + duration);
+
+    lp.connect(gain);
+    gain.connect(dest);
+
+    const oscs = [];
+    freqs.forEach((freq, idx) => {
+      if (!freq || freq <= 0) return;
+      const osc = this.ctx.createOscillator();
+      osc.type = idx === 0 ? 'sine' : 'triangle';
+      osc.frequency.setValueAtTime(freq, time);
+      osc.detune.setValueAtTime(idx % 2 === 0 ? -4 : 4, time);
+      osc.connect(lp);
+      osc.start(time);
+      osc.stop(time + duration + 0.02);
+      oscs.push(osc);
+    });
+
+    if (oscs.length > 0) {
+      oscs[0].onended = () => this.cleanupNodes(...oscs, lp, gain);
+    } else {
+      this.cleanupNodes(lp, gain);
+    }
+  }
+
+  /**
+   * Piano électrique Rhodes FM/Triangle chaleureux (attaque cristalline douce + sustain velouté).
+   */
+  _playRhodesNote(freq, time, duration, vol = 0.075) {
+    if (!this.ctx || this.isDestroyed || !freq || freq <= 0) return;
+    const dest = this.getMusicOutput();
+    if (!dest) return;
+
+    const carrier = this.ctx.createOscillator();
+    const mod = this.ctx.createOscillator();
+    const modGain = this.ctx.createGain();
+    const lp = this.ctx.createBiquadFilter();
+    const gain = this.ctx.createGain();
+
+    carrier.type = 'triangle';
+    carrier.frequency.setValueAtTime(freq, time);
+
+    mod.type = 'sine';
+    mod.frequency.setValueAtTime(freq * 2, time);
+    modGain.gain.setValueAtTime(freq * 0.35, time);
+    modGain.gain.exponentialRampToValueAtTime(0.5, time + Math.min(0.12, duration * 0.4));
+
+    lp.type = 'lowpass';
+    lp.frequency.setValueAtTime(1750, time);
+    lp.frequency.exponentialRampToValueAtTime(680, time + duration);
+    lp.Q.value = 0.8;
+
+    gain.gain.setValueAtTime(0.0001, time);
+    gain.gain.linearRampToValueAtTime(vol, time + 0.008);
+    gain.gain.exponentialRampToValueAtTime(0.0001, time + duration);
+
+    mod.connect(modGain);
+    modGain.connect(carrier.frequency);
+    carrier.connect(lp);
+    lp.connect(gain);
+    gain.connect(dest);
+
+    carrier.onended = () => this.cleanupNodes(carrier, mod, modGain, lp, gain);
+    mod.start(time);
+    carrier.start(time);
+    mod.stop(time + duration + 0.01);
+    carrier.stop(time + duration + 0.01);
+  }
+
+  // --- 1. THÈME D'ACCUEIL : NEO-SYNTHWAVE ATMOSPHÉRIQUE & RHODES LOUNGE (108 BPM) ---
+  playMenuSynthwaveTheme() {
+    const tempo = 108;
+    const stepDuration = (60 / tempo) / 4; // Double-croches (16 pas par mesure, 64 pas = 4 mesures)
+
+    // Progression Neo-Synthwave : Am9 -> Fmaj7 -> Dm9 -> E7sus4/E7
+    const chords = [
+      [220.00, 261.63, 329.63, 392.00, 493.88], // Am9
+      [174.61, 220.00, 261.63, 329.63],         // Fmaj7
+      [146.83, 220.00, 261.63, 329.63, 349.23], // Dm9
+      [164.81, 220.00, 246.94, 293.66]          // E7sus4
+    ];
+    const chordE7 = [164.81, 207.65, 246.94, 293.66];
+
+    // Basse sub-octave douce et coulante (64 pas)
+    const bassLine = [
+      // Bar 1 (Am9)
+      55.00, 0, 0, 110.00, 0, 0, 55.00, 0, 110.00, 0, 55.00, 0, 82.41, 0, 98.00, 0,
+      // Bar 2 (Fmaj7)
+      43.65, 0, 0, 87.31, 0, 0, 43.65, 0, 87.31, 0, 43.65, 0, 65.41, 0, 87.31, 0,
+      // Bar 3 (Dm9)
+      73.42, 0, 0, 146.83, 0, 0, 73.42, 0, 146.83, 0, 73.42, 0, 110.00, 0, 130.81, 0,
+      // Bar 4 (E7sus4 -> E7)
+      41.20, 0, 0, 82.41, 0, 0, 41.20, 0, 82.41, 0, 61.74, 0, 73.42, 0, 82.41, 0
     ];
 
-    const chordProgression = [
-      [220.00, 261.63, 329.63, 392.00],
-      [174.61, 220.00, 261.63, 329.63],
-      [261.63, 329.63, 392.00, 493.88],
-      [196.00, 246.94, 293.66, 349.23]
+    // Arpège/mélodie Rhodes subtile pour la couleur atmosphérique
+    const topSparkle = [
+      0, 0, 493.88, 0, 0, 392.00, 0, 0, 440.00, 0, 0, 0, 329.63, 0, 392.00, 0,
+      0, 0, 329.63, 0, 0, 261.63, 0, 0, 349.23, 0, 0, 0, 261.63, 0, 329.63, 0,
+      0, 0, 349.23, 0, 0, 329.63, 0, 0, 293.66, 0, 0, 0, 261.63, 0, 293.66, 0,
+      0, 0, 293.66, 0, 0, 246.94, 0, 0, 207.65, 0, 0, 0, 246.94, 0, 293.66, 0
     ];
 
     this._startLookaheadSequencer('MENU', stepDuration, (step, time, dur) => {
       const dest = this.getMusicOutput();
+      const s64 = step % 64;
+      const bar = Math.floor(s64 / 16);
+      const stepInBar = s64 % 16;
 
-      const bassFreq = bassGroove[step % bassGroove.length];
+      // 1. Pad harmonique chaud en début de mesure
+      if (stepInBar === 0) {
+        const padChord = chords[bar].slice(0, 4);
+        this._playChordPad(padChord, time, dur * 15.5, 0.042);
+      }
+
+      // 2. Stabs Rhodes 7e/9e syncopés
+      if (stepInBar === 0 || stepInBar === 6 || stepInBar === 12) {
+        const activeChord = (bar === 3 && stepInBar >= 8) ? chordE7 : chords[bar];
+        const stabVol = stepInBar === 0 ? 0.052 : 0.038;
+        const stabDur = stepInBar === 12 ? dur * 3.5 : dur * 4.5;
+        activeChord.forEach((f, idx) => {
+          this._playRhodesNote(f, time + idx * 0.008, stabDur, stabVol);
+        });
+      }
+
+      // 3. Sparkle mélodique Rhodes très doux
+      const sparkleFreq = topSparkle[s64];
+      if (sparkleFreq > 0) {
+        this._playRhodesNote(sparkleFreq * 2, time, dur * 2.8, 0.028);
+      }
+
+      // 4. Basse sub-octave chaude et sans bourdonnement
+      const bassFreq = bassLine[s64];
       if (bassFreq > 0) {
-        this._playAnalogNote(bassFreq, time, dur * 0.92, {
-          vol: 0.18, cutoffStart: 950, cutoffEnd: 150, q: 3.2, detuneCents: 6, dest
+        this._playAnalogNote(bassFreq, time, dur * 2.4, {
+          vol: 0.16,
+          cutoffStart: 560,
+          cutoffEnd: 130,
+          q: 1.4,
+          detuneCents: 4,
+          type: 'triangle',
+          dest
         });
       }
 
-      if (step % 8 === 0) {
-        const chord = chordProgression[Math.floor((step % 32) / 8)];
-        chord.forEach(freq => {
-          this._playAnalogNote(freq, time, dur * 7.5, {
-            vol: 0.032, cutoffStart: 1400, cutoffEnd: 700, q: 1.0, detuneCents: 9, dest
-          });
-        });
-      }
-
-      if (step % 4 === 0) this.playDiscoKick(time);
-      if (step % 4 === 2) this.playDiscoClap(time);
-      if (step % 2 === 1) this.playHiHat(time);
+      // 5. Rythmique légère et soignée
+      if (stepInBar % 4 === 0) this.playDiscoKick(time);
+      if (stepInBar === 4 || stepInBar === 12) this.playDiscoClap(time);
+      if (stepInBar % 4 === 2 || stepInBar === 7 || stepInBar === 15) this.playHiHat(time);
     });
   }
 
-  // --- 2. THÈME DE COURSE : ARCADE ADRENALINE CHASE (138 BPM) ---
+  // --- 2. THÈME DE COURSE : ACTION-SYNTH / ELECTRO-ROCK GROOVE (132 BPM, D MINEUR / PHRYGIEN) ---
   playGameplayArcadeTheme() {
-    const tempo = 138;
-    const stepDuration = (60 / tempo) / 2;
+    const tempo = 132;
+    const stepDuration = (60 / tempo) / 4; // Double-croches, phrases de 32 pas (2 mesures)
 
+    // Basse mélodique à sauts d'octave en Ré mineur (D - F - G - A - Bb - C)
     const bassLine = [
-      73.42, 73.42, 110.00, 73.42, 103.83, 73.42, 110.00, 146.83,
-      73.42, 73.42, 87.31, 73.42, 110.00, 98.00, 87.31, 103.83,
-      65.41, 65.41, 98.00, 65.41, 123.47, 65.41, 98.00, 130.81,
-      69.30, 69.30, 103.83, 69.30, 138.59, 103.83, 92.50, 73.42
+      73.42, 0, 146.83, 73.42, 0, 73.42, 87.31, 0,
+      98.00, 0, 110.00, 73.42, 0, 110.00, 130.81, 110.00,
+      58.27, 0, 116.54, 58.27, 0, 58.27, 65.41, 0,
+      130.81, 0, 98.00, 65.41, 73.42, 0, 110.00, 98.00
     ];
 
+    // Phrase lead chaude évoluant sur 32 pas (Appel / Réponse)
     const leadLine = [
-      293.66, 0, 349.23, 415.30, 0, 440.00, 293.66, 0,
-      349.23, 415.30, 0, 440.00, 587.33, 0, 415.30, 349.23,
-      261.63, 0, 329.63, 392.00, 0, 523.25, 392.00, 0,
-      277.18, 0, 349.23, 415.30, 554.37, 415.30, 349.23, 293.66
+      293.66, 0, 349.23, 0, 392.00, 0, 440.00, 0,
+      523.25, 0, 440.00, 392.00, 349.23, 0, 293.66, 0,
+      466.16, 0, 440.00, 0, 392.00, 0, 349.23, 0,
+      329.63, 0, 311.13, 0, 293.66, 0, 261.63, 0
     ];
+
+    const chords = {
+      0: [146.83, 220.00, 261.63, 349.23],  // Dm7
+      16: [116.54, 174.61, 220.00, 293.66], // Bbmaj7
+      24: [130.81, 196.00, 261.63, 329.63]  // C
+    };
 
     this._startLookaheadSequencer('GAMEPLAY', stepDuration, (step, time, dur) => {
       const dest = this.getMusicOutput();
+      const s32 = step % 32;
 
-      const bassFreq = bassLine[step % bassLine.length];
+      if (chords[s32]) {
+        const padDur = s32 === 0 ? dur * 15.5 : dur * 7.5;
+        this._playChordPad(chords[s32], time, padDur, 0.042);
+      }
+
+      const bassFreq = bassLine[s32];
       if (bassFreq > 0) {
-        this._playAnalogNote(bassFreq, time, dur * 0.9, {
-          vol: 0.19, cutoffStart: 880, cutoffEnd: 160, q: 3.5, detuneCents: 7, dest
+        this._playAnalogNote(bassFreq, time, dur * 1.45, {
+          vol: 0.18,
+          cutoffStart: 980,
+          cutoffEnd: 170,
+          q: 2.6,
+          detuneCents: 6,
+          dest
         });
       }
 
-      const leadFreq = leadLine[step % leadLine.length];
+      const leadFreq = leadLine[s32];
       if (leadFreq > 0) {
-        this._playAnalogNote(leadFreq, time, dur * 0.85, {
-          vol: 0.085, cutoffStart: Math.min(2200, leadFreq * 2.8), cutoffEnd: Math.min(2000, leadFreq * 1.2), q: 1.5, detuneCents: 6, type: 'triangle', dest
+        this._playAnalogNote(leadFreq, time, dur * 1.7, {
+          vol: 0.085,
+          cutoffStart: 1750,
+          cutoffEnd: 560,
+          q: 1.6,
+          detuneCents: 8,
+          type: 'triangle',
+          dest
         });
       }
 
-      if (step % 4 === 0) {
-        const padFreq = bassLine[step % bassLine.length] * 2;
-        if (padFreq > 0) {
-          this._playAnalogNote(padFreq, time, dur * 3.8, {
-            vol: 0.04, cutoffStart: 1100, cutoffEnd: 600, q: 0.7, detuneCents: 5, type: 'sine', dest
-          });
-        }
-      }
-
-      if (step % 4 === 0) this.playIndustrialKick(time);
-      if (step % 4 === 2) this.playMetalSnare(time);
-      if (step % 2 === 1) this.playHiHat(time);
+      if (s32 % 4 === 0 || s32 === 30) this.playIndustrialKick(time);
+      if (s32 % 8 === 4) this.playMetalSnare(time);
+      if (s32 % 2 === 1) this.playHiHat(time);
     });
   }
 
-  // --- 3. THÈME NUCLÉAIRE : DARKSYNTH APOCALYPTIQUE & ÉVASION (144 BPM) ---
+  // --- 3. THÈME CATACLYSME / NUCLÉAIRE : CYBERPUNK ACTION PULSE (136 BPM, C MINEUR) ---
   playNuclearDarksynthTheme() {
-    const tempo = 144;
-    const stepDuration = (60 / tempo) / 2;
+    const tempo = 136;
+    const stepDuration = (60 / tempo) / 4; // Double-croches, 32 pas (2 mesures)
 
+    // Basse cyberpunk nerveuse en croches (avec pickup double-croche)
     const nucBass = [
-      58.27, 58.27, 82.41, 58.27, 77.78, 58.27, 87.31, 58.27,
-      55.00, 55.00, 77.78, 55.00, 73.42, 55.00, 82.41, 55.00
+      65.41, 0, 65.41, 0, 130.81, 0, 65.41, 0,
+      77.78, 0, 65.41, 0, 98.00, 0, 65.41, 130.81,
+      51.91, 0, 51.91, 0, 103.83, 0, 51.91, 0,
+      58.27, 0, 58.27, 0, 49.00, 0, 98.00, 58.27
     ];
+
+    // Motif synthétique urgent & musical en Do mineur
+    const cyberMotif = [
+      261.63, 0, 311.13, 0, 392.00, 0, 523.25, 0,
+      466.16, 0, 392.00, 0, 349.23, 0, 311.13, 0,
+      207.65, 0, 261.63, 0, 311.13, 0, 392.00, 0,
+      349.23, 0, 311.13, 0, 293.66, 0, 246.94, 0
+    ];
+
+    const brassChords = {
+      0: [130.81, 196.00, 261.63, 311.13],  // Cm
+      16: [103.83, 155.56, 207.65, 261.63], // Ab
+      24: [116.54, 174.61, 233.08, 293.66]  // Bb
+    };
 
     this._startLookaheadSequencer('NUCLEAR', stepDuration, (step, time, dur) => {
       const dest = this.getMusicOutput();
-      const freq = nucBass[step % nucBass.length];
+      const s32 = step % 32;
 
-      this._playAnalogNote(freq, time, dur * 0.92, {
-        vol: 0.22, cutoffStart: 680, cutoffEnd: 130, q: 4.0, detuneCents: 8, dest
-      });
+      // 1. Accords cuivrés filtrés (<= 1600 Hz) + pad de soutien
+      if (brassChords[s32]) {
+        const chordDur = s32 === 0 ? dur * 14 : dur * 7;
+        this._playChordPad(brassChords[s32], time, chordDur, 0.045);
+        brassChords[s32].forEach(f => {
+          this._playAnalogNote(f, time, dur * 5.5, {
+            vol: 0.036,
+            cutoffStart: 1550,
+            cutoffEnd: 460,
+            q: 1.3,
+            detuneCents: 9,
+            type: 'sawtooth',
+            dest
+          });
+        });
+      }
 
-      if (step % 4 === 0) this.playIndustrialKick(time);
-      if (step % 4 === 2) this.playMetalSnare(time);
-      if (step % 2 === 1) this.playHiHat(time);
+      // 2. Basse cyberpunk en croches
+      const bassFreq = nucBass[s32];
+      if (bassFreq > 0) {
+        this._playAnalogNote(bassFreq, time, dur * 1.6, {
+          vol: 0.2,
+          cutoffStart: 920,
+          cutoffEnd: 150,
+          q: 3.0,
+          detuneCents: 7,
+          dest
+        });
+      }
+
+      // 3. Motif lead urgent mais musical
+      const motifFreq = cyberMotif[s32];
+      if (motifFreq > 0) {
+        this._playAnalogNote(motifFreq, time, dur * 1.4, {
+          vol: 0.075,
+          cutoffStart: 1520,
+          cutoffEnd: 480,
+          q: 1.8,
+          detuneCents: 6,
+          type: 'triangle',
+          dest
+        });
+      }
+
+      // 4. Batterie industrielle serrée
+      if (s32 % 4 === 0) this.playIndustrialKick(time);
+      if (s32 % 8 === 4) this.playMetalSnare(time);
+      if (s32 % 2 === 1) this.playHiHat(time);
     });
   }
 
@@ -2723,7 +2925,7 @@ export class SoundManager {
   }
 
   // ============================================================================
-  // COMPOSITION MUSICALE SADIQUE & DIABOLIQUE (138 BPM, PHRYGIEN & TRITON)
+  // COMPOSITION MUSICALE ACTION-SYNTH / ELECTRO-ROCK (132 BPM, RÉ MINEUR / PHRYGIEN)
   // ============================================================================
 
   makeDistortionCurve(amount = 75) {
@@ -2751,65 +2953,98 @@ export class SoundManager {
     this.currentTrack = 'SADISTIC_CARNAGE';
     this.musicIntensity = intensity;
 
-    const tempo = 138;
-    const stepDuration = (60 / tempo) / 4; // Double-croches
+    const tempo = 132;
+    const stepDuration = (60 / tempo) / 4; // Double-croches, phrases de 32 pas (2 mesures)
 
-    const acidBassline = [
-      73.42, 73.42, 0, 77.78,
-      73.42, 0, 103.83, 73.42,
-      73.42, 73.42, 110.00, 0,
-      77.78, 103.83, 73.42, 65.41
+    // Basse mélodique à sauts d'octave en Ré mineur / Phrygien (D - F - G - A - Bb - C)
+    const grooveBassline = [
+      73.42, 0, 146.83, 73.42, 0, 73.42, 87.31, 0,
+      98.00, 0, 110.00, 73.42, 0, 110.00, 130.81, 110.00,
+      58.27, 0, 116.54, 58.27, 0, 58.27, 65.41, 0,
+      130.81, 0, 98.00, 65.41, 73.42, 0, 110.00, 98.00
     ];
 
-    const sadisticArp = [
-      293.66, 311.13, 369.99, 415.30,
-      587.33, 415.30, 369.99, 311.13,
-      293.66, 415.30, 311.13, 369.99,
-      622.25, 587.33, 415.30, 311.13
+    // Phrase lead chaude évoluant sur 32 pas (2 mesures : Appel -> Réponse Phrygienne)
+    const leadPhrase = [
+      293.66, 0, 349.23, 0, 392.00, 0, 440.00, 0,
+      523.25, 0, 440.00, 392.00, 349.23, 0, 293.66, 0,
+      466.16, 0, 440.00, 0, 392.00, 0, 349.23, 0,
+      329.63, 0, 311.13, 0, 293.66, 0, 261.63, 0
     ];
+
+    const pads = {
+      0: [146.83, 220.00, 261.63, 349.23],  // Dm7
+      16: [116.54, 174.61, 220.00, 293.66], // Bbmaj7
+      24: [130.81, 196.00, 261.63, 329.63]  // C
+    };
 
     this._startLookaheadSequencer('SADISTIC_CARNAGE', stepDuration, (step, time, dur) => {
       const dest = this.getMusicOutput();
       const currentIntensity = this.musicIntensity || 'TENSION';
+      const s32 = step % 32;
 
-      // 1. Basse analogique chaude filtrée (<= 2200 Hz)
-      const bassFreq = acidBassline[step % acidBassline.length];
-      if (bassFreq > 0 && (currentIntensity !== 'CALM' || step % 2 === 0)) {
-        this._playAnalogNote(bassFreq, time, dur * 0.88, {
-          vol: currentIntensity === 'COMBO' ? 0.24 : (currentIntensity === 'CALM' ? 0.14 : 0.19),
-          cutoffStart: currentIntensity === 'COMBO' ? 1900 : 1150,
-          cutoffEnd: currentIntensity === 'CALM' ? 120 : 170,
-          q: currentIntensity === 'COMBO' ? 5.5 : 4.0,
-          detuneCents: 7,
-          dest
-        });
+      // 1. Nappe harmonique chaude (Dm7 -> Bbmaj7 -> C)
+      if (pads[s32]) {
+        const padDur = s32 === 0 ? dur * 15.5 : dur * 7.5;
+        const padVol = currentIntensity === 'COMBO' ? 0.048 : (currentIntensity === 'CALM' ? 0.032 : 0.04);
+        this._playChordPad(pads[s32], time, padDur, padVol);
       }
 
-      // 2. Arpeggiator analogique chaud
-      if (currentIntensity !== 'CALM') {
-        const arpFreq = sadisticArp[step % sadisticArp.length];
-        this._playAnalogNote(arpFreq, time, dur * 0.72, {
-          vol: currentIntensity === 'COMBO' ? 0.08 : 0.05,
-          cutoffStart: 1800,
-          cutoffEnd: 650,
-          q: 2.2,
+      // 2. Basse mélodique à sauts d'octave
+      const bassFreq = grooveBassline[s32];
+      if (bassFreq > 0 && (currentIntensity !== 'CALM' || s32 % 4 === 0)) {
+        this._playAnalogNote(bassFreq, time, dur * 1.45, {
+          vol: currentIntensity === 'COMBO' ? 0.21 : (currentIntensity === 'CALM' ? 0.14 : 0.18),
+          cutoffStart: currentIntensity === 'COMBO' ? 1450 : 980,
+          cutoffEnd: currentIntensity === 'CALM' ? 130 : 170,
+          q: currentIntensity === 'COMBO' ? 3.4 : 2.6,
           detuneCents: 6,
-          type: 'triangle',
           dest
         });
       }
 
-      // 3. Rythmique Industrielle avec sidechain
-      if (step % 4 === 0 && (currentIntensity !== 'CALM' || step % 8 === 0)) {
-        this.playHeavyIndustrialKick(time, currentIntensity === 'COMBO');
+      // 3. Phrase lead chaude désaccordée sur 32 pas
+      if (currentIntensity !== 'CALM') {
+        const leadFreq = leadPhrase[s32];
+        if (leadFreq > 0) {
+          this._playAnalogNote(leadFreq, time, dur * 1.75, {
+            vol: currentIntensity === 'COMBO' ? 0.095 : 0.075,
+            cutoffStart: currentIntensity === 'COMBO' ? 1950 : 1650,
+            cutoffEnd: 540,
+            q: 1.6,
+            detuneCents: 8,
+            type: 'triangle',
+            dest
+          });
+          if (currentIntensity === 'COMBO' && s32 % 8 === 0) {
+            this._playAnalogNote(leadFreq * 2, time, dur * 1.2, {
+              vol: 0.035,
+              cutoffStart: 1850,
+              cutoffEnd: 700,
+              q: 1.2,
+              detuneCents: 10,
+              type: 'sawtooth',
+              dest
+            });
+          }
+        }
       }
-      if (step % 8 === 4 && currentIntensity !== 'CALM') {
+
+      // 4. Batterie punchy : Kick serré + Snare claquante + Hi-hats 16e
+      if (s32 % 4 === 0 && (currentIntensity !== 'CALM' || s32 % 8 === 0)) {
+        this.playHeavyIndustrialKick(time, currentIntensity === 'COMBO');
+      } else if (currentIntensity === 'COMBO' && s32 === 30) {
+        this.playHeavyIndustrialKick(time, true);
+      }
+
+      if (s32 % 8 === 4 && currentIntensity !== 'CALM') {
         this.playRazorIndustrialSnare(time, currentIntensity === 'COMBO');
       }
-      if (step % 2 === 1 && currentIntensity !== 'CALM') {
+
+      if (s32 % 2 === 1 && currentIntensity !== 'CALM') {
         this.playHiHat(time);
       }
-      if (currentIntensity === 'COMBO' && step % 2 === 0) {
+      if (currentIntensity === 'COMBO' && s32 % 2 === 0 && s32 % 4 !== 0) {
         this.playHiHat(time);
       }
     });

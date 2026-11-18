@@ -2946,7 +2946,24 @@ export class GameState {
     const equippedBikeId = storage.getEquippedBike() || this.selectedBike?.id || 'tank';
     const isFootOrHorse = (equippedBikeId === 'cheval' || equippedBikeId === 'run_ak47' || equippedBikeId === 'run_chainsaw');
     if (isFootOrHorse) {
-      // Pour cheval ou à pied : la boisson énergétique a un stock fini et n'est pas disponible tout le temps
+      if (this.energyDrinkCans < 3) {
+        this.nitroGauge += amount;
+        while (this.nitroGauge >= 100 && this.energyDrinkCans < 3) {
+          this.energyDrinkCans++;
+          this.nitroGauge -= 100;
+          soundManager.playNearMiss();
+          this.notify('nitro_ready', { energyCans: this.energyDrinkCans });
+        }
+        if (this.energyDrinkCans >= 3) {
+          this.nitroGauge = 0;
+        }
+      }
+      this.notify('nitro_updated', {
+        gauge: Math.round(this.nitroGauge),
+        isActive: this.isNitroActive,
+        timer: this.nitroTimer,
+        energyCans: this.energyDrinkCans
+      });
       return;
     }
     const oldGauge = this.nitroGauge;
@@ -2958,7 +2975,8 @@ export class GameState {
     this.notify('nitro_updated', {
       gauge: Math.round(this.nitroGauge),
       isActive: this.isNitroActive,
-      timer: this.nitroTimer
+      timer: this.nitroTimer,
+      energyCans: this.energyDrinkCans
     });
   }
 
@@ -3149,6 +3167,7 @@ export class GameState {
         nitroGauge: Math.round(this.nitroGauge),
         isNitroActive: this.isNitroActive,
         nitroTimer: Math.max(0, this.nitroTimer),
+        energyCans: this.energyDrinkCans,
         kills: this.killsCount,
         killQuota: this.selectedCity.killQuota || 30,
         worldTotal: this.worldPopulationEliminated,
@@ -3168,12 +3187,20 @@ export class GameState {
         soundManager.playExhaustBackfire();
         this.notify('nitro_ended', {});
       }
-    } else if (this.speed > 5.0 && !this.isBraking) {
-      // Rechargement passif au fil de la vitesse
-      const oldVal = this.nitroGauge;
-      this.nitroGauge = Math.min(100, this.nitroGauge + delta * 6.0);
-      if (oldVal < 100 && this.nitroGauge >= 100) {
-        this.notify('nitro_ready', {});
+    } else {
+      const equippedBikeId = storage.getEquippedBike() || this.selectedBike?.id || 'tank';
+      const isFootOrHorse = (equippedBikeId === 'cheval' || equippedBikeId === 'run_ak47' || equippedBikeId === 'run_chainsaw');
+      if (isFootOrHorse) {
+        if (this.energyDrinkCans < 3) {
+          this.chargeNitro(delta * 7.5);
+        }
+      } else if (this.speed > 5.0 && !this.isBraking) {
+        // Rechargement passif au fil de la vitesse
+        const oldVal = this.nitroGauge;
+        this.nitroGauge = Math.min(100, this.nitroGauge + delta * 6.0);
+        if (oldVal < 100 && this.nitroGauge >= 100) {
+          this.notify('nitro_ready', {});
+        }
       }
     }
 

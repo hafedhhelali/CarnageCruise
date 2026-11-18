@@ -945,27 +945,21 @@ class TextureFactoryService {
       drawLaneWear(28, 112);
       drawLaneWear(144, 228);
 
-      // Flaques d'eau / zones polies très lisses (0.14-0.26 => 36-66) pour reflets humides/nocturnes
-      const puddles = [
-        { x: 64, y: 88, rx: 28, ry: 54, v: 38 },
-        { x: 188, y: 175, rx: 32, ry: 68, v: 42 },
-        { x: 78, y: 310, rx: 34, ry: 62, v: 36 },
-        { x: 172, y: 410, rx: 26, ry: 58, v: 45 },
-        { x: 128, y: 240, rx: 22, ry: 44, v: 52 }
+      // Traces longitudinales d'humidité / bandes de roulement lissées (0.18-0.30 => 46-76)
+      // Aucune flaque circulaire : uniquement des traînées longitudinales naturelles
+      const streaks = [
+        { x: 52, w: 28, y: 0, h: 512, v: 46 },
+        { x: 176, w: 30, y: 0, h: 512, v: 48 },
+        { x: 74, w: 18, y: 40, h: 210, v: 52 },
+        { x: 158, w: 20, y: 230, h: 240, v: 54 }
       ];
-      puddles.forEach(p => {
-        ctx.save();
-        ctx.translate(p.x, p.y);
-        ctx.scale(1, p.ry / p.rx);
-        const rad = ctx.createRadialGradient(0, 0, p.rx * 0.18, 0, 0, p.rx);
-        rad.addColorStop(0, `rgba(${p.v}, ${p.v}, ${p.v}, 0.96)`);
-        rad.addColorStop(0.55, `rgba(${p.v + 18}, ${p.v + 18}, ${p.v + 18}, 0.72)`);
-        rad.addColorStop(1, 'rgba(228, 228, 228, 0)');
-        ctx.fillStyle = rad;
-        ctx.beginPath();
-        ctx.arc(0, 0, p.rx, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
+      streaks.forEach(s => {
+        const hGrad = ctx.createLinearGradient(s.x, 0, s.x + s.w, 0);
+        hGrad.addColorStop(0, 'rgba(228, 228, 228, 0)');
+        hGrad.addColorStop(0.5, `rgba(${s.v}, ${s.v}, ${s.v}, 0.72)`);
+        hGrad.addColorStop(1, 'rgba(228, 228, 228, 0)');
+        ctx.fillStyle = hGrad;
+        ctx.fillRect(s.x, s.y, s.w, s.h);
       });
 
       // Micro-variation minérale (préserve les flaques 36..71 et asphalte 214..240)

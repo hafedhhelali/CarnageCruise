@@ -3393,17 +3393,6 @@ ${gameState.isRuinsMode ? '' : `          <div class="hud-nitro-group">
         </div>
         <div class="finish-hazard-stripe bottom"></div>
 
-        <!-- BANNIÈRE DE RETOUR AUTOMATIQUE CARTE (FORCÉ ET INSTANTANÉ) -->
-        <div class="finish-auto-return-banner">
-          <div class="auto-return-info-row">
-            <span class="auto-return-sat-icon">🛰️</span>
-            <span>RETOUR AUTOMATIQUE CARTE : <strong id="auto-return-sec" style="color: #00d2d3;">2.5s</strong></span>
-          </div>
-          <div class="auto-return-progress-track">
-            <div class="auto-return-progress-fill" id="auto-return-progress"></div>
-          </div>
-        </div>
-
         <!-- ACTIONS HAUTE ERGONOMIE (RETOUR IMMÉDIAT OU CHOIX TACTIQUE) -->
         <div class="finish-assault-actions-stack">
           ${nextCity && isNextUnlocked ? `
@@ -3435,34 +3424,7 @@ ${gameState.isRuinsMode ? '' : `          <div class="hud-nitro-group">
 
     this.root.appendChild(overlay);
 
-    let autoReturnRemainingMs = 2500;
-    const autoReturnIntervalMs = 50;
-    const autoReturnSecEl = overlay.querySelector('#auto-return-sec');
-    const autoReturnProgressEl = overlay.querySelector('#auto-return-progress');
-
-    let autoReturnTimer = setInterval(() => {
-      autoReturnRemainingMs -= autoReturnIntervalMs;
-      if (autoReturnSecEl) {
-        autoReturnSecEl.textContent = `${Math.max(0, (autoReturnRemainingMs / 1000)).toFixed(1)}s`;
-      }
-      if (autoReturnProgressEl) {
-        const pct = Math.max(0, Math.min(100, (autoReturnRemainingMs / 2500) * 100));
-        autoReturnProgressEl.style.width = `${pct}%`;
-      }
-      if (autoReturnRemainingMs <= 0) {
-        if (autoReturnTimer) {
-          clearInterval(autoReturnTimer);
-          autoReturnTimer = null;
-        }
-        onFinishAction(() => this.triggerReturnToMapCinematic(city));
-      }
-    }, autoReturnIntervalMs);
-
     const onFinishAction = (actionFn) => {
-      if (autoReturnTimer) {
-        clearInterval(autoReturnTimer);
-        autoReturnTimer = null;
-      }
       soundManager.playClick();
       overlay.remove();
       this.assaultOverlay = null;
@@ -3662,7 +3624,7 @@ ${gameState.isRuinsMode ? '' : `          <div class="hud-nitro-group">
     }, 550);
   }
 
-  spawnFloatingCombatText(text, subtext = '', color = '#ffd32a', xPct = 50, yPct = 42) {
+  spawnFloatingCombatText(text, subtext = '', color = '#ffd32a', xPct = 50, yPct = 22) {
     let container = this.root.querySelector('.hud-fct-container');
     if (!container) {
       container = document.createElement('div');
@@ -3670,10 +3632,20 @@ ${gameState.isRuinsMode ? '' : `          <div class="hud-nitro-group">
       this.root.appendChild(container);
     }
 
+    const existing = container.querySelectorAll('.fct-popup');
+    if (existing.length >= 2) {
+      for (let i = 0; i <= existing.length - 2; i++) {
+        try { existing[i].remove(); } catch (e) {}
+      }
+    }
+
+    const clampedY = Math.max(18, Math.min(26, Number(yPct) || 22));
+    const safeY = Math.max(18, Math.min(26, clampedY + (Math.random() - 0.5) * 4));
+
     const fct = document.createElement('div');
     fct.className = 'fct-popup';
     fct.style.left = `${xPct + (Math.random() - 0.5) * 12}%`;
-    fct.style.top = `${yPct + (Math.random() - 0.5) * 6}%`;
+    fct.style.top = `${safeY}%`;
     fct.style.borderColor = color;
     fct.innerHTML = `
       <div class="fct-main-text" style="color: ${color}; text-shadow: 0 0 6px ${color}88, 0 2px 4px #000;">${text}</div>
@@ -3693,7 +3665,7 @@ ${gameState.isRuinsMode ? '' : `          <div class="hud-nitro-group">
         y: -20,
         x: driftX * 0.4,
         rotation: randomRot,
-        duration: 0.22,
+        duration: 0.15,
         ease: "back.out(2.2)",
         onComplete: () => {
           gsap.to(fct, {
@@ -3702,7 +3674,7 @@ ${gameState.isRuinsMode ? '' : `          <div class="hud-nitro-group">
             y: -65,
             x: driftX,
             rotation: randomRot * 0.5,
-            duration: 0.5,
+            duration: 0.36,
             ease: "power2.in",
             onComplete: () => {
               try { fct.remove(); } catch (e) {}
@@ -3965,6 +3937,7 @@ ${gameState.isRuinsMode ? '' : `          <div class="hud-nitro-group">
 
     if (isFootOrHorse) {
       const cans = (data.energyCans !== undefined) ? data.energyCans : (gameState.energyDrinkCans || 0);
+      const rechargePct = Math.round(data.nitroGauge || 0);
       if (data.isNitroActive) {
         if (nitroBtn) {
           nitroBtn.classList.add('active');
@@ -3975,16 +3948,13 @@ ${gameState.isRuinsMode ? '' : `          <div class="hud-nitro-group">
         if (nitroFill) nitroFill.style.width = `${Math.round((data.nitroTimer / 5.0) * 100)}%`;
       } else {
         if (nitroBtn) nitroBtn.classList.remove('active');
+        if (nitroLabel) nitroLabel.textContent = 'BOISSON ÉNERGÉTIQUE';
+        if (nitroFill) nitroFill.style.width = `${cans >= 3 ? 100 : rechargePct}%`;
+        if (nitroSub) nitroSub.textContent = `${cans}/3 • ${cans >= 3 ? 100 : rechargePct}%`;
         if (cans > 0) {
           if (nitroBtn) nitroBtn.classList.add('ready');
-          if (nitroSub) nitroSub.textContent = `${cans} DISPO`;
-          if (nitroLabel) nitroLabel.textContent = 'BOISSON ÉNERGÉTIQUE';
-          if (nitroFill) nitroFill.style.width = '100%';
         } else {
           if (nitroBtn) nitroBtn.classList.remove('ready');
-          if (nitroSub) nitroSub.textContent = '0 (ÉPUISÉ)';
-          if (nitroLabel) nitroLabel.textContent = 'BOISSON ÉNERGÉTIQUE';
-          if (nitroFill) nitroFill.style.width = '0%';
         }
       }
     } else if (nitroFill && data.nitroGauge !== undefined) {
