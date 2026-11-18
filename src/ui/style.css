@@ -3931,21 +3931,23 @@ html, body {
 }
 
 .quick-vehicle-grid {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 8px;
-  padding: 14px 16px;
+  padding: 12px 14px;
+  max-height: 332px;
   overflow-y: auto;
 }
 
 .quick-veh-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 14px;
+  gap: 8px;
+  padding: 8px 10px;
+  min-height: 68px;
   background: rgba(255, 255, 255, 0.06);
   border: 1.5px solid rgba(255, 255, 255, 0.12);
-  border-radius: 16px;
+  border-radius: 14px;
   cursor: pointer;
   transition: transform 0.15s, border-color 0.15s, background 0.15s;
 }
@@ -3966,7 +3968,7 @@ html, body {
 }
 
 .quick-veh-icon {
-  font-size: 1.8rem;
+  font-size: 1.45rem;
   flex-shrink: 0;
 }
 

@@ -332,18 +332,19 @@ export class Engine {
 
     if (preset === 'NIGHT_NEON') {
       this.isNight = true;
-      this.ambientLight.intensity = 0.14;
-      this.ambientLight.color.setHex(0x8fa3c8);
-      this.hemiLight.intensity = 0.22;
-      this.hemiLight.color.setHex(0x9fb8e8);
-      this.hemiLight.groundColor.setHex(0x1a2030);
-      this.dirLight.intensity = 0.22;
-      this.dirLight.color.setHex(0xbfd0ff);
-      this.rimLight.intensity = 0.0;
-      this.scene.environmentIntensity = 0.14;
-      this.renderer.toneMappingExposure = 0.95;
+      this.ambientLight.intensity = 0.42;
+      this.ambientLight.color.setHex(0x9eb8e8);
+      this.hemiLight.intensity = 0.58;
+      this.hemiLight.color.setHex(0xb4ccff);
+      this.hemiLight.groundColor.setHex(0x2c3652);
+      this.dirLight.intensity = 0.62;
+      this.dirLight.color.setHex(0xd0e0ff);
+      this.rimLight.intensity = 0.38;
+      this.rimLight.color.setHex(0x6ea8ff);
+      this.scene.environmentIntensity = 0.38;
+      this.renderer.toneMappingExposure = 1.14;
       this.scene.fog.color.setHex(0x0a0f1e);
-      this.scene.fog.density = def.fogDensity ? Math.max(def.fogDensity, 0.0012) : 0.0012;
+      this.scene.fog.density = def.fogDensity ? Math.min(def.fogDensity, 0.0008) : 0.0008;
       this.scene.background = new THREE.Color(0x05070f);
       if (this.skyDome) {
         this.skyDome.setColors(0x0a1030, 0x151d33);

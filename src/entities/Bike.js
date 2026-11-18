@@ -159,7 +159,7 @@ export class Bike {
     const rig = new THREE.Group();
     rig.name = 'HeadlightRig';
 
-    const coneGeo = new THREE.ConeGeometry(2.35, 11.5, 20, 1, true);
+    const coneGeo = new THREE.ConeGeometry(2.8, 16.0, 20, 1, true);
     const coneMat = new THREE.ShaderMaterial({
       transparent: true,
       blending: THREE.AdditiveBlending,
@@ -167,7 +167,7 @@ export class Bike {
       side: THREE.DoubleSide,
       uniforms: {
         uColor: { value: new THREE.Color(0xfff1c4) },
-        uOpacity: { value: 0.26 }
+        uOpacity: { value: 0.30 }
       },
       vertexShader: `
         varying vec2 vUv;
@@ -197,25 +197,30 @@ export class Bike {
     });
     this.headlightCone = new THREE.Mesh(coneGeo, coneMat);
     this.headlightCone.rotation.x = -Math.PI / 2;
-    this.headlightCone.position.set(0, 0.45, 6.8);
+    this.headlightCone.position.set(0, 0.45, 9.0);
     rig.add(this.headlightCone);
 
     const poolTex = typeof textureFactory.getHeadlightPoolTexture === 'function'
       ? textureFactory.getHeadlightPoolTexture()
       : null;
-    const poolGeo = new THREE.PlaneGeometry(4.8, 12.0);
+    const poolGeo = new THREE.PlaneGeometry(5.8, 17.5);
     const poolMat = new THREE.MeshBasicMaterial({
       map: poolTex,
       color: 0xfff3cc,
       transparent: true,
-      opacity: poolTex ? 0.44 : 0.16,
+      opacity: poolTex ? 0.52 : 0.22,
       blending: THREE.AdditiveBlending,
       depthWrite: false
     });
     this.headlightPool = new THREE.Mesh(poolGeo, poolMat);
     this.headlightPool.rotation.x = -Math.PI / 2;
-    this.headlightPool.position.set(0, 0.035, 7.0);
+    this.headlightPool.position.set(0, 0.035, 9.5);
     rig.add(this.headlightPool);
+
+    // Éclairage dynamique réel de la chaussée et des piétons en mode nuit
+    this.headlightBeamLight = new THREE.PointLight(0xfff2cc, 4.2, 42, 1.3);
+    this.headlightBeamLight.position.set(0, 1.5, 9.5);
+    rig.add(this.headlightBeamLight);
 
     return rig;
   }

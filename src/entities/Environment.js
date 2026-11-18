@@ -1984,13 +1984,6 @@ export class Environment {
           dome.position.set(side * (bDepth * 0.35), bHeight + 0.75, 0);
           buildingGroup.add(dome);
         }
-        // Arches de rez-de-chaussée
-        [-bWidth * 0.28, bWidth * 0.28].forEach(az => {
-          const arch = new THREE.Mesh(this.sharedGeos.archTop, whitewashMat);
-          arch.rotation.y = side > 0 ? -Math.PI / 2 : Math.PI / 2;
-          arch.position.set(-side * 0.12, 2.55, az);
-          buildingGroup.add(arch);
-        });
       } else if (region === 'PROCHE-ORIENT') {
         // Calcaire doré, dôme turquoise/or, moucharabiehs en encorbellement
         const parapet = new THREE.Mesh(new THREE.BoxGeometry(bDepth * 0.95, 0.85, bWidth * 0.96), limestoneMat);
@@ -2096,19 +2089,19 @@ export class Environment {
         }
       });
 
-      // Store banne de bistrot ou boutique avec enseigne lumineuse
+      // Store banne de boutique aligné sur la façade (sans débordement bombé sur la rue)
       if (parcelIndex % 3 !== 0) {
-        const awningGeo = new THREE.BoxGeometry(1.7, 0.32, bWidth * 0.74);
+        const awningGeo = new THREE.BoxGeometry(0.85, 0.26, bWidth * 0.72);
         const awning = new THREE.Mesh(awningGeo, awningMat);
-        awning.rotation.z = side * 0.32;
-        awning.position.set(-side * 0.65, 3.2, 0);
+        awning.rotation.z = side * 0.22;
+        awning.position.set(-side * 0.25, 3.25, 0);
         buildingGroup.add(awning);
 
         const storeSignMat = (this.sharedMats?.storeSigns && this.sharedMats.storeSigns.length)
           ? this.sharedMats.storeSigns[parcelIndex % this.sharedMats.storeSigns.length]
           : (this.sharedMats?.storeSign || new THREE.MeshStandardMaterial({ color: 0xff4757, roughness: 0.4 }));
         const signMesh = new THREE.Mesh(this.sharedGeos.storeSign, storeSignMat);
-        signMesh.position.set(-side * 0.55, 3.82, 0);
+        signMesh.position.set(-side * 0.22, 3.82, 0);
         signMesh.rotation.y = side > 0 ? -Math.PI / 2 : Math.PI / 2;
         buildingGroup.add(signMesh);
       }
@@ -2519,12 +2512,12 @@ export class Environment {
       pyramidMini.rotation.y = Math.PI / 4;
       desertGroup.add(obelisk, pyramidMini);
     } else {
-      // Campement berbère / bédouin & Rocher mesa
+      // Campement berbère / bédouin & Rocher mesa (en retrait de la rue)
       const tent = new THREE.Mesh(new THREE.ConeGeometry(2.4, 2.2, 6), tentMat);
       tent.scale.set(1.2, 1.0, 1.5);
-      tent.position.set(-side * 1.6, 1.2, 0);
+      tent.position.set(side * 1.4, 1.2, 0);
       const mesa = new THREE.Mesh(new THREE.CylinderGeometry(2.2, 3.0, 5.5, 7), rockMat);
-      mesa.position.set(side * 2.4, 2.75, bWidth * 0.24);
+      mesa.position.set(side * 3.0, 2.75, bWidth * 0.24);
       desertGroup.add(tent, mesa);
     }
 
@@ -2572,19 +2565,10 @@ export class Environment {
     spireCap.position.set(side * 1.8, spireH + 0.9, -bWidth * 0.18);
     steppeGroup.add(spireShaft, spireCap);
 
-    if (parcelIndex % 2 === 0) {
-      // Yourte traditionnelle des steppes
-      const yurtWall = new THREE.Mesh(new THREE.CylinderGeometry(2.0, 2.0, 1.4, 12), marbleMat);
-      yurtWall.position.set(-side * 1.4, 0.9, bWidth * 0.2);
-      const yurtRoof = new THREE.Mesh(new THREE.ConeGeometry(2.15, 1.1, 12), darkRockMat);
-      yurtRoof.position.set(-side * 1.4, 2.15, bWidth * 0.2);
-      steppeGroup.add(yurtWall, yurtRoof);
-    } else {
-      // Second piton rocheux
-      const rock2 = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 1.8, 6.5, 7), rockMat);
-      rock2.position.set(-side * 1.2, 3.25, bWidth * 0.22);
-      steppeGroup.add(rock2);
-    }
+    // Second piton rocheux en retrait de la rue
+    const rock2 = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 1.8, 6.5, 7), rockMat);
+    rock2.position.set(side * 1.4, 3.25, bWidth * 0.22);
+    steppeGroup.add(rock2);
 
     chunk.add(steppeGroup);
   }
