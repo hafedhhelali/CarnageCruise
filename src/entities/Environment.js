@@ -450,9 +450,9 @@ export class Environment {
     if (finishDistance) {
       this.finishDistance = finishDistance;
     } else if (this.isCataclysmMission) {
-      this.finishDistance = 1800;
+      this.finishDistance = 2600;
     } else {
-      this.finishDistance = 2400; // Parcours complet 2400m avec grands virages et progression 100% calibrée
+      this.finishDistance = 3800; // Parcours prolongé à 3800m pour des poursuites et courses plus intenses
     }
     this.finishReached = false;
     this.animatedFlags = [];

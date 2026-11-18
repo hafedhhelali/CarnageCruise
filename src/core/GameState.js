@@ -2331,6 +2331,17 @@ export const CHALLENGE_DEFS = {
     objectiveText: 'Réussir 6 frôlements sous l\'orage',
     rewardCoins: 160,
     rewardScore: 5000
+  },
+  POLICE_PURSUIT: {
+    id: 'POLICE_PURSUIT',
+    name: 'Poursuite Policière',
+    shortName: 'Poursuite',
+    icon: '🚨',
+    color: '#2563eb',
+    description: 'Échappez aux intercepteurs de police ! Écrasez-les avec un engin lourd/nitro ou esquivez-les pour éviter la prison !',
+    objectiveText: 'Semer la police jusqu\'à l\'arrivée',
+    rewardCoins: 180,
+    rewardScore: 5500
   }
 };
 
@@ -2650,8 +2661,9 @@ export class GameState {
     if (cityId && (!this.selectedCity || this.selectedCity.id !== cityId)) {
       this.selectCity(cityId);
     }
-    const validModes = ['STANDARD', 'CONVOY_BOSS', 'SLALOM_CHRONO', 'MANHUNT', 'STUNT_RAMPS', 'EXTREME_STORM'];
+    const validModes = ['STANDARD', 'CONVOY_BOSS', 'SLALOM_CHRONO', 'MANHUNT', 'STUNT_RAMPS', 'EXTREME_STORM', 'POLICE_PURSUIT'];
     this.challengeMode = validModes.includes(challengeMode) ? challengeMode : 'STANDARD';
+    this.isArrested = false;
 
     if (this.challengeMode === 'CONVOY_BOSS') {
       this.challengeState = { bossHp: 100, bossMaxHp: 100, stagesDropped: 0, defeated: false };
@@ -2663,6 +2675,8 @@ export class GameState {
       this.challengeState = { airTimeTotal: 0, airTimeTarget: 6.5, jumpsLanded: 0, stuntPoints: 0, ringsCollected: 0 };
     } else if (this.challengeMode === 'EXTREME_STORM') {
       this.challengeState = { windForce: 0, windTimer: 4.0, windWarning: 0, nearMissCount: 0, nearMissTarget: 6 };
+    } else if (this.challengeMode === 'POLICE_PURSUIT') {
+      this.challengeState = { wantedLevel: 2, dodgesCount: 0, policeDestroyed: 0, bustedProgress: 0, shieldHp: 3 };
     } else {
       this.challengeState = {};
     }
@@ -3299,6 +3313,17 @@ export class GameState {
           challengeRewardCoins = 160;
           this.score += 3000;
         }
+      } else if (this.challengeMode === 'POLICE_PURSUIT') {
+        challengeSuccess = !this.isArrested && (cs.shieldHp > 0);
+        if (challengeSuccess) {
+          challengeRewardCoins = 180 + (cs.dodgesCount || 0) * 15 + (cs.policeDestroyed || 0) * 25;
+          this.score += 3500 + (cs.dodgesCount || 0) * 250;
+        }
+      }
+
+      if (this.isArrested) {
+        challengeSuccess = false;
+        challengeRewardCoins = 0;
       }
 
       if (challengeSuccess) {
@@ -3319,7 +3344,8 @@ export class GameState {
     // Calcul des étoiles avec les nouveaux seuils
     let stars = 0;
     const thresholds = this.selectedCity.starThresholds;
-    if (this.score >= thresholds[2]) stars = 3;
+    if (this.isArrested) stars = 0;
+    else if (this.score >= thresholds[2]) stars = 3;
     else if (this.score >= thresholds[1]) stars = 2;
     else if (this.score >= thresholds[0]) stars = 1;
 

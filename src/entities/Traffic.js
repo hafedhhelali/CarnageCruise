@@ -715,57 +715,104 @@ export class Traffic {
   }
 
   /**
-   * Fait apparaître un barrage de police (2 patrouilleurs en biais + herse centrale) pour MANHUNT
+   * Construit un Intercepteur de Police réaliste (bleu nuit / toit & portes blancs, pare-buffle, phares, gyrophares)
+   */
+  _buildPoliceCruiserMesh() {
+    const policeNavy = new THREE.MeshStandardMaterial({ color: 0x0b1736, roughness: 0.24, metalness: 0.45 });
+    const policeWhite = new THREE.MeshStandardMaterial({ color: 0xf1f5f9, roughness: 0.28, metalness: 0.2 });
+    const stripeCyan = new THREE.MeshStandardMaterial({ color: 0x38bdf8, emissive: 0x0284c7, emissiveIntensity: 0.55, roughness: 0.3 });
+    const bumperDark = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.5, metalness: 0.8 });
+    const headlightMat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xfff3cc, emissiveIntensity: 2.6, roughness: 0.1 });
+    const taillightMat = new THREE.MeshStandardMaterial({ color: 0xff2e43, emissive: 0xff2e43, emissiveIntensity: 2.0, roughness: 0.2 });
+    const strobeBlueMat = new THREE.MeshStandardMaterial({
+      color: 0x0ea5e9, emissive: 0x0ea5e9, emissiveIntensity: 3.2, roughness: 0.15
+    });
+    const strobeRedMat = new THREE.MeshStandardMaterial({
+      color: 0xff3838, emissive: 0xff3838, emissiveIntensity: 3.2, roughness: 0.15
+    });
+
+    const car = new THREE.Group();
+    const strobes = [];
+
+    // Carrosserie principale bleu nuit intercepteur
+    const body = new THREE.Mesh(this.sharedGeos.chassisSedan, policeNavy);
+    body.castShadow = true;
+    car.add(body);
+
+    // Portières et toit blancs contrastés (livrée police classique)
+    const doorWhite = new THREE.Mesh(new THREE.BoxGeometry(1.94, 0.46, 1.65), policeWhite);
+    doorWhite.position.set(0, 0.56, -0.05);
+    const roofWhite = new THREE.Mesh(new THREE.BoxGeometry(1.78, 0.08, 1.65), policeWhite);
+    roofWhite.position.set(0, 1.38, -0.18);
+    car.add(doorWhite, roofWhite);
+
+    // Bande latérale cyan/police + pare-buffle avant
+    const sideStripe = new THREE.Mesh(new THREE.BoxGeometry(1.97, 0.12, 3.6), stripeCyan);
+    sideStripe.position.set(0, 0.54, 0);
+    const pushBar = new THREE.Mesh(new THREE.BoxGeometry(1.65, 0.42, 0.24), bumperDark);
+    pushBar.position.set(0, 0.46, 2.28);
+    car.add(sideStripe, pushBar);
+
+    // Vitres teintées
+    const glass = new THREE.Mesh(new THREE.BoxGeometry(1.88, 0.36, 1.75), this.sharedMats.tintedGlass);
+    glass.position.set(0, 1.12, -0.18);
+    car.add(glass);
+
+    // Phares avant lumineux & feux arrière
+    [-0.64, 0.64].forEach(lx => {
+      const hl = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.16, 0.08), headlightMat);
+      hl.position.set(lx, 0.58, 2.18);
+      const tl = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.16, 0.08), taillightMat);
+      tl.position.set(lx, 0.62, -2.18);
+      car.add(hl, tl);
+    });
+
+    // Rampe de gyrophares rouge / bleu haute intensité
+    const barBase = new THREE.Mesh(new THREE.BoxGeometry(1.32, 0.12, 0.3), bumperDark);
+    barBase.position.set(0, 1.48, -0.2);
+    const sBlue = new THREE.Mesh(new THREE.BoxGeometry(0.56, 0.18, 0.28), strobeBlueMat);
+    sBlue.position.set(-0.32, 1.54, -0.2);
+    const sRed = new THREE.Mesh(new THREE.BoxGeometry(0.56, 0.18, 0.28), strobeRedMat);
+    sRed.position.set(0.32, 1.54, -0.2);
+    car.add(barBase, sBlue, sRed);
+    strobes.push(sBlue, sRed);
+
+    return { car, strobes };
+  }
+
+  /**
+   * Fait apparaître un barrage de police (2 patrouilleurs bleu nuit/blanc en biais + couloir d'esquive balisé)
    */
   spawnPoliceRoadblock(zPos = 140) {
     const rbGroup = new THREE.Group();
-    const policeWhite = new THREE.MeshStandardMaterial({ color: 0xf5f6fa, roughness: 0.28, metalness: 0.25 });
-    const policeDark = new THREE.MeshStandardMaterial({ color: 0x192a56, roughness: 0.35, metalness: 0.4 });
-    const strobeBlueMat = new THREE.MeshStandardMaterial({
-      color: 0x0984e3, emissive: 0x0984e3, emissiveIntensity: 2.1, roughness: 0.15
-    });
-    const strobeRedMat = new THREE.MeshStandardMaterial({
-      color: 0xff4757, emissive: 0xff4757, emissiveIntensity: 2.1, roughness: 0.15
-    });
-    const spikeMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.4, metalness: 0.6 });
+    const spikeMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, emissive: 0xd97706, emissiveIntensity: 0.45, roughness: 0.4, metalness: 0.6 });
+    const coneMat = new THREE.MeshStandardMaterial({ color: 0xff6b00, emissive: 0xff4500, emissiveIntensity: 0.75, roughness: 0.35 });
+    const coneGeo = new THREE.ConeGeometry(0.18, 0.52, 8);
 
     const strobes = [];
-    const buildCruiser = (xOff, angleY) => {
-      const car = new THREE.Group();
+    [
+      { xOff: -3.25, angleY: 0.42 },
+      { xOff: 3.25, angleY: -0.42 }
+    ].forEach(({ xOff, angleY }) => {
+      const { car, strobes: carStrobes } = this._buildPoliceCruiserMesh();
       car.position.set(xOff, 0, 0);
       car.rotation.y = angleY;
-
-      const body = new THREE.Mesh(this.sharedGeos.chassisSedan, policeWhite);
-      body.castShadow = true;
-      car.add(body);
-
-      const doorBand = new THREE.Mesh(new THREE.BoxGeometry(1.92, 0.42, 1.55), policeDark);
-      doorBand.position.set(0, 0.58, -0.05);
-      car.add(doorBand);
-
-      const glass = new THREE.Mesh(new THREE.BoxGeometry(1.88, 0.36, 1.75), this.sharedMats.tintedGlass);
-      glass.position.set(0, 1.12, -0.18);
-      car.add(glass);
-
-      const barBase = new THREE.Mesh(new THREE.BoxGeometry(1.25, 0.12, 0.28), policeDark);
-      barBase.position.set(0, 1.48, -0.2);
-      const sBlue = new THREE.Mesh(new THREE.BoxGeometry(0.54, 0.16, 0.26), strobeBlueMat);
-      sBlue.position.set(-0.3, 1.52, -0.2);
-      const sRed = new THREE.Mesh(new THREE.BoxGeometry(0.54, 0.16, 0.26), strobeRedMat);
-      sRed.position.set(0.3, 1.52, -0.2);
-      car.add(barBase, sBlue, sRed);
-      strobes.push(sBlue, sRed);
-
       rbGroup.add(car);
-    };
+      strobes.push(...carStrobes);
+    });
 
-    // Deux voitures inclinées laissant un passage central étroit / destructible
-    buildCruiser(-2.65, 0.48);
-    buildCruiser(2.65, -0.48);
+    // Cônes lumineux d'esquive délimitant le passage central (réaliste & lisible à haute vitesse)
+    [-1.45, 1.45].forEach(cx => {
+      [-1.4, 0.8].forEach(cz => {
+        const cone = new THREE.Mesh(coneGeo, coneMat);
+        cone.position.set(cx, 0.26, cz);
+        rbGroup.add(cone);
+      });
+    });
 
-    // Herse / bande d'arrêt visuelle au centre
-    const spikeStrip = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.12, 0.38), spikeMat);
-    spikeStrip.position.set(0, 0.06, 0.35);
+    // Bande de herse partielle sur un côté pour laisser un couloir d'esquive propre
+    const spikeStrip = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.10, 0.36), spikeMat);
+    spikeStrip.position.set(0, 0.05, 0.45);
     rbGroup.add(spikeStrip);
 
     rbGroup.position.set(0, 0, zPos);
@@ -780,6 +827,150 @@ export class Traffic {
     this.container.add(rbGroup);
     this.roadblocks.push(rbGroup);
     return rbGroup;
+  }
+
+  /**
+   * Fait apparaître un intercepteur de police en poursuite active (mode POLICE_PURSUIT)
+   */
+  spawnPursuitCruiser(zPos, laneX = 0) {
+    const { car, strobes } = this._buildPoliceCruiserMesh();
+    // Faisceau de phares au sol pour bien visualiser l'intercepteur et anticiper l'esquive
+    const beamMat = new THREE.MeshBasicMaterial({
+      color: 0x93c5fd,
+      transparent: true,
+      opacity: 0.24,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+    const beam = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 8.5), beamMat);
+    beam.rotation.x = -Math.PI / 2;
+    beam.position.set(0, 0.04, 6.2);
+    car.add(beam);
+
+    car.position.set(laneX, 0, zPos);
+    car.userData = {
+      active: true,
+      isPursuitPolice: true,
+      laneOffset: laneX,
+      targetLaneOffset: laneX,
+      laneTimer: 1.8 + Math.random() * 1.4,
+      speed: 22.0 + Math.random() * 5.0,
+      isHit: false,
+      dodged: false,
+      strobes,
+      strobeTimer: Math.random() * 2.0
+    };
+
+    this.container.add(car);
+    this.vehicles.push(car);
+    return car;
+  }
+
+  /**
+   * Cinématique 3D d'arrestation : 2 policiers descendent et le chauffeur lève les mains sur la tête !
+   */
+  spawnArrestCinematic(playerPos, roadCurveX = 0) {
+    const cineGroup = new THREE.Group();
+    cineGroup.position.set(playerPos.x, 0, playerPos.z);
+
+    // 1. Voiture de police garée en travers juste devant le joueur
+    const { car: copCar, strobes } = this._buildPoliceCruiserMesh();
+    copCar.position.set(Math.max(-3.0, Math.min(3.0, roadCurveX - playerPos.x)) + 1.8, 0, 5.2);
+    copCar.rotation.y = -0.65;
+    cineGroup.add(copCar);
+
+    // Helper silhouette humaine 3D articulée (Policier ou Chauffeur)
+    const buildPerson = (coatColor, pantsColor, hasPoliceCap = false) => {
+      const p = new THREE.Group();
+      const coatMat = new THREE.MeshStandardMaterial({ color: coatColor, roughness: 0.65 });
+      const pantsMat = new THREE.MeshStandardMaterial({ color: pantsColor, roughness: 0.75 });
+      const skinMat = new THREE.MeshStandardMaterial({ color: 0xf1c27d, roughness: 0.6 });
+      const goldMat = new THREE.MeshStandardMaterial({ color: 0xfbbf24, metalness: 0.85, roughness: 0.25 });
+
+      const legL = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.78, 0.2), pantsMat);
+      legL.position.set(-0.12, 0.39, 0);
+      const legR = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.78, 0.2), pantsMat);
+      legR.position.set(0.12, 0.39, 0);
+
+      const torso = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.64, 0.26), coatMat);
+      torso.position.set(0, 1.1, 0);
+
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.16, 10, 10), skinMat);
+      head.position.set(0, 1.58, 0);
+
+      const armL = new THREE.Group();
+      armL.position.set(-0.31, 1.34, 0);
+      const armLMesh = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.56, 0.14), coatMat);
+      armLMesh.position.set(0, -0.24, 0);
+      armL.add(armLMesh);
+
+      const armR = new THREE.Group();
+      armR.position.set(0.31, 1.34, 0);
+      const armRMesh = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.56, 0.14), coatMat);
+      armRMesh.position.set(0, -0.24, 0);
+      armR.add(armRMesh);
+
+      p.add(legL, legR, torso, head, armL, armR);
+      if (hasPoliceCap) {
+        const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.17, 0.12, 10), coatMat);
+        cap.position.set(0, 1.72, 0);
+        const badge = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 0.04), goldMat);
+        badge.position.set(0, 1.18, 0.14);
+        p.add(cap, badge);
+      }
+      p.userData = { armL, armR, legL, legR };
+      return p;
+    };
+
+    // 2. Deux policiers qui descendent de la patrouille et pointent vers le chauffeur
+    const cop1 = buildPerson(0x0f172a, 0x0b132b, true);
+    cop1.position.set(1.2, 0, 4.2);
+    cop1.rotation.y = Math.PI;
+    const cop2 = buildPerson(0x0f172a, 0x0b132b, true);
+    cop2.position.set(-1.3, 0, 4.4);
+    cop2.rotation.y = Math.PI;
+    cineGroup.add(cop1, cop2);
+
+    // 3. Chauffeur qui descend du véhicule et lève les deux mains sur la tête !
+    const driver = buildPerson(0xef4444, 0x1e293b, false);
+    driver.position.set(-1.1, 0, 0.2);
+    driver.rotation.y = 0;
+    cineGroup.add(driver);
+
+    this.container.add(cineGroup);
+
+    let elapsed = 0;
+    return {
+      group: cineGroup,
+      update: (dt) => {
+        elapsed += dt;
+        const walkT = Math.min(1, elapsed / 1.4);
+        // Les policiers avancent vers le chauffeur bras tendu
+        cop1.position.z = THREE.MathUtils.lerp(4.2, 2.1, walkT);
+        cop1.position.x = THREE.MathUtils.lerp(1.2, 0.4, walkT);
+        cop2.position.z = THREE.MathUtils.lerp(4.4, 2.2, walkT);
+        cop2.position.x = THREE.MathUtils.lerp(-1.3, -1.5, walkT);
+
+        const swing = walkT < 1 ? Math.sin(elapsed * 10) * 0.45 : 0;
+        [cop1, cop2].forEach(c => {
+          c.userData.legL.rotation.x = swing;
+          c.userData.legR.rotation.x = -swing;
+          c.userData.armR.rotation.x = -Math.PI * 0.48; // Bras tendu d'interpellation
+        });
+
+        // Le chauffeur lève les deux mains sur la tête (rotation ~ 2.75 rad)
+        const handsUpT = Math.min(1, Math.max(0, (elapsed - 0.35) / 0.85));
+        driver.userData.armL.rotation.z = -handsUpT * 2.65;
+        driver.userData.armR.rotation.z = handsUpT * 2.65;
+
+        // Gyrophares
+        const toggle = Math.sin(elapsed * 26.0) > 0;
+        strobes.forEach((s, idx) => { s.visible = (idx % 2 === 0) ? toggle : !toggle; });
+      },
+      dispose: () => {
+        this.container.remove(cineGroup);
+      }
+    };
   }
 
   spawnAhead(playerZ, roadCurveFunc) {
@@ -902,23 +1093,44 @@ export class Traffic {
 
         // Suivre la trajectoire de la route en restant dans sa voie (+2.7m ou -2.7m)
         const curveX = roadCurveFunc ? roadCurveFunc(v.position.z) : 0;
-        const targetX = curveX + v.userData.lane;
-        v.position.x = targetX;
+        if (v.userData.isPursuitPolice) {
+          v.userData.laneTimer = (v.userData.laneTimer || 0) - delta;
+          if (v.userData.laneTimer <= 0) {
+            v.userData.laneTimer = 1.6 + Math.random() * 1.4;
+            const relX = bikeX - curveX;
+            v.userData.targetLaneOffset = THREE.MathUtils.clamp(relX + (Math.random() - 0.5) * 3.2, -4.0, 4.0);
+          }
+          const prevLane = v.userData.laneOffset || 0;
+          v.userData.laneOffset = THREE.MathUtils.lerp(prevLane, v.userData.targetLaneOffset || 0, Math.min(1.0, delta * 2.4));
+          v.position.x = curveX + v.userData.laneOffset;
+          v.rotation.z = THREE.MathUtils.clamp((prevLane - v.userData.laneOffset) * 2.5, -0.14, 0.14);
+
+          v.userData.strobeTimer = (v.userData.strobeTimer || 0) + delta;
+          const toggle = Math.sin(v.userData.strobeTimer * 26.0) > 0;
+          if (v.userData.strobes) {
+            v.userData.strobes.forEach((s, idx) => { s.visible = (idx % 2 === 0) ? toggle : !toggle; });
+          }
+        } else {
+          const targetX = curveX + v.userData.lane;
+          v.position.x = targetX;
+        }
 
         // Orientation naturelle exactement sur la tangente de la courbure
         const aheadX = roadCurveFunc ? roadCurveFunc(v.position.z + 3.0) : 0;
         const targetRotY = Math.atan2(aheadX - curveX, 3.0);
         v.rotation.y += (targetRotY - v.rotation.y) * Math.min(1.0, delta * 12.0);
 
-        // Détection de collision physique avec le bolide du joueur
-        const dZ = Math.abs(v.position.z - playerZ);
-        const dX = Math.abs(v.position.x - bikeX);
+        // Détection de collision physique avec le bolide du joueur (sauf poursuite gérée dans main.js)
+        if (!v.userData.isPursuitPolice) {
+          const dZ = Math.abs(v.position.z - playerZ);
+          const dX = Math.abs(v.position.x - bikeX);
 
-        if (dZ < 3.0 && dX < 1.65) {
-          const hitDirX = bikeX < v.position.x ? 1 : -1;
-          this.triggerCrash(v, bikeSpeed, hitDirX);
-          if (onVehicleCollision) {
-            onVehicleCollision(v, isPlayerInvulnerable);
+          if (dZ < 3.0 && dX < 1.65) {
+            const hitDirX = bikeX < v.position.x ? 1 : -1;
+            this.triggerCrash(v, bikeSpeed, hitDirX);
+            if (onVehicleCollision) {
+              onVehicleCollision(v, isPlayerInvulnerable);
+            }
           }
         }
 

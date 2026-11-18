@@ -386,14 +386,6 @@ export class UIManager {
             <span>🪙 ${coins}</span>
           </div>
         </div>
-
-        <!-- BARRE D'ONGLETS RÉGIONAUX UI/UX (EUROPE, AFRIQUE DU NORD, PROCHE-ORIENT) -->
-        <div class="map-region-filter-bar" id="map-region-tabs">
-          <button class="region-tab-pill active" data-region="ALL">🌍 TOUT (${CITIES.length})</button>
-          <button class="region-tab-pill" data-region="EUROPE">🇪🇺 EUROPE</button>
-          <button class="region-tab-pill" data-region="AFRIQUE DU NORD">🏜️ AFRIQUE DU NORD</button>
-          <button class="region-tab-pill" data-region="PROCHE-ORIENT">🕌 PROCHE-ORIENT</button>
-        </div>
       </div>
 
       <!-- CARTE D'EUROPE, AFRIQUE DU NORD & PROCHE-ORIENT HAUTE-FIDÉLITÉ AVEC ZOOM INTERACTIF -->
@@ -923,53 +915,6 @@ export class UIManager {
       });
     });
 
-    // Filtres rapides par Région (Europe, Afrique du Nord, Proche-Orient)
-    const regionTabs = mapScreen.querySelectorAll('.region-tab-pill');
-    regionTabs.forEach(tab => {
-      tab.addEventListener('click', (e) => {
-        e.stopPropagation();
-        soundManager.playClick();
-        Haptic.tap();
-
-        const targetRegion = tab.getAttribute('data-region') || 'ALL';
-        regionTabs.forEach(t => t.classList.toggle('active', t === tab));
-
-        // Mettre en valeur les pins de la région sélectionnée
-        pins.forEach(pin => {
-          const pinRegion = pin.getAttribute('data-region');
-          const matches = (targetRegion === 'ALL' || pinRegion === targetRegion);
-          pin.classList.toggle('region-dimmed', !matches);
-        });
-
-        // Sélectionner et centrer sur une ville représentative de la région
-        if (targetRegion === 'AFRIQUE DU NORD') {
-          this.mapZoom = 1.15;
-          const currentReg = getCityRegion(this.selectedMapCity);
-          const focusCity = currentReg === 'AFRIQUE DU NORD'
-            ? this.selectedMapCity
-            : (CITIES.find(c => c.id === 'alger') || CITIES.find(c => getCityRegion(c) === 'AFRIQUE DU NORD'));
-          if (focusCity) updateSelection(focusCity.id);
-        } else if (targetRegion === 'PROCHE-ORIENT') {
-          this.mapZoom = 1.45;
-          const currentReg = getCityRegion(this.selectedMapCity);
-          const focusCity = currentReg === 'PROCHE-ORIENT'
-            ? this.selectedMapCity
-            : (CITIES.find(c => c.id === 'beyrouth') || CITIES.find(c => getCityRegion(c) === 'PROCHE-ORIENT'));
-          if (focusCity) updateSelection(focusCity.id);
-        } else if (targetRegion === 'EUROPE') {
-          this.mapZoom = 0.95;
-          const currentReg = getCityRegion(this.selectedMapCity);
-          const focusCity = currentReg === 'EUROPE'
-            ? this.selectedMapCity
-            : (CITIES.find(c => c.id === 'paris') || CITIES[0]);
-          if (focusCity) updateSelection(focusCity.id);
-        } else {
-          this.mapZoom = 0.72;
-          centerOnCity(this.selectedMapCity, true);
-        }
-      });
-    });
-
     mapScreen.querySelector('#btn-map-back').addEventListener('click', () => {
       soundManager.playClick();
       this.setScreen('SPLASH');
@@ -986,6 +931,11 @@ export class UIManager {
 
     this.root.appendChild(mapScreen);
     this.updateCityDetail(mapScreen.querySelector('#city-detail'));
+
+    if (storage.isInPrison()) {
+      const pState = storage.getPrisonState();
+      this.showPrisonOverlay(pState.bailCost || 1500, CITIES.find(c => c.id === pState.cityId) || this.selectedMapCity);
+    }
 
     // Centrage initial fluide de la vue sur la ville sélectionnée
     setTimeout(() => {
@@ -4410,9 +4360,188 @@ ${gameState.isRuinsMode ? '' : `          <div class="hud-nitro-group">
     }
   }
 
+  /**
+   * Bandeau d'interpellation pendant la cinématique 3D ("DESCENDEZ ! MAINS SUR LA TÊTE !")
+   */
+  showArrestBanner() {
+    const existing = document.getElementById('arrest-banner-overlay');
+    if (existing) existing.remove();
+    const banner = document.createElement('div');
+    banner.id = 'arrest-banner-overlay';
+    banner.className = 'arrest-banner-overlay';
+    banner.innerHTML = `
+      <div class="arrest-siren-bar">
+        <span class="arrest-badge">🚨 POLICE — INTERPELLATION</span>
+        <div class="arrest-order">DESCENDEZ DU VÉHICULE ! MAINS SUR LA TÊTE !</div>
+      </div>
+    `;
+    this.root.appendChild(banner);
+    setTimeout(() => {
+      if (banner.parentNode) banner.remove();
+    }, 3300);
+  }
+
+  /**
+   * Écran PRISON avec barreaux animés :
+   * 1) Payer la caution avec les points (solde totalScore)
+   * 2) Regarder une publicité sponsorisée (libération gratuite)
+   * 3) Tenter une évasion interactive (mini-jeu de crochetage)
+   */
+  showPrisonOverlay(bailCost = 1500, city = null) {
+    const existing = document.getElementById('prison-overlay');
+    if (existing) existing.remove();
+
+    const totalPoints = storage.getTotalPoints();
+    const canPayBail = totalPoints >= bailCost;
+    const cityName = city ? city.name : (gameState.selectedCity?.name || 'la ville');
+
+    const overlay = document.createElement('div');
+    overlay.id = 'prison-overlay';
+    overlay.className = 'prison-overlay';
+    this.activeModals.push(overlay);
+
+    overlay.innerHTML = `
+      <div class="prison-bars" aria-hidden="true">
+        <span></span><span></span><span></span><span></span><span></span><span></span>
+      </div>
+      <div class="prison-card">
+        <div class="prison-header">
+          <div class="prison-stamp">🔒 ÉTAPE PERDUE</div>
+          <h2 class="prison-title">VOUS ÊTES EN PRISON !</h2>
+          <p class="prison-sub">La police vous a arrêté à <strong>${cityName}</strong>. Choisissez comment sortir de cellule :</p>
+        </div>
+
+        <div class="prison-balance-box">
+          <span>VOTRE SOLDE DE POINTS :</span>
+          <strong id="prison-points-val">${totalPoints.toLocaleString('fr-FR')} PTS</strong>
+        </div>
+
+        <div class="prison-actions">
+          <button id="btn-prison-bail" class="btn-arcade ${canPayBail ? 'btn-play-pulse' : 'btn-disabled'}" ${canPayBail ? '' : 'disabled'}>
+            💰 PAYER LA CAUTION (${bailCost.toLocaleString('fr-FR')} PTS)
+          </button>
+          <button id="btn-prison-ad" class="btn-arcade btn-secondary">
+            📺 REGARDER UNE PUB (LIBÉRATION GRATUITE)
+          </button>
+          <button id="btn-prison-escape" class="btn-arcade btn-accent">
+            🔓 TENTER UNE ÉVASION (CROCHETAGE)
+          </button>
+        </div>
+
+        <div id="prison-ad-panel" class="prison-subpanel hidden">
+          <div class="prison-subpanel-title">📺 PUBLICITÉ SPONSORISÉE EN COURS...</div>
+          <div class="ad-progress-track"><div id="ad-progress-fill" class="ad-progress-fill"></div></div>
+          <div id="ad-timer-text" class="prison-subpanel-hint">Libération dans 5s...</div>
+        </div>
+
+        <div id="prison-escape-panel" class="prison-subpanel hidden">
+          <div class="prison-subpanel-title">🔓 FORCER LA SERRURE — VISEZ LA ZONE VERTE !</div>
+          <div class="escape-bar-track">
+            <div class="escape-bar-zone"></div>
+            <div id="escape-bar-cursor" class="escape-bar-cursor"></div>
+          </div>
+          <button id="btn-escape-lockpick" class="btn-arcade btn-play-pulse" style="width:100%;margin-top:8px;">
+            ⚡ FORCER MAINTENANT !
+          </button>
+          <div id="escape-feedback" class="prison-subpanel-hint"></div>
+        </div>
+      </div>
+    `;
+
+    this.root.appendChild(overlay);
+
+    const releaseFromPrison = (msg) => {
+      storage.setPrisonState(false, 1500, null);
+      soundManager.playVictory();
+      Haptic.carnage();
+      overlay.remove();
+      this.activeModals = this.activeModals.filter(m => m !== overlay);
+      this.showToastUnlock({ name: msg });
+      this.onAction('RETURN_MAP');
+    };
+
+    const bailBtn = overlay.querySelector('#btn-prison-bail');
+    if (bailBtn && canPayBail) {
+      bailBtn.addEventListener('click', () => {
+        if (storage.spendPoints(bailCost)) {
+          releaseFromPrison(`💰 CAUTION PAYÉE (-${bailCost} PTS) — LIBERTÉ !`);
+        }
+      });
+    }
+
+    const adBtn = overlay.querySelector('#btn-prison-ad');
+    const adPanel = overlay.querySelector('#prison-ad-panel');
+    const adFill = overlay.querySelector('#ad-progress-fill');
+    const adText = overlay.querySelector('#ad-timer-text');
+    if (adBtn) {
+      adBtn.addEventListener('click', () => {
+        soundManager.playClick();
+        adPanel.classList.remove('hidden');
+        adBtn.disabled = true;
+        let sec = 5;
+        const iv = setInterval(() => {
+          sec -= 0.1;
+          const pct = Math.min(100, ((5 - Math.max(0, sec)) / 5) * 100);
+          if (adFill) adFill.style.width = `${pct}%`;
+          if (adText) adText.textContent = `Libération dans ${Math.ceil(Math.max(0, sec))}s...`;
+          if (sec <= 0) {
+            clearInterval(iv);
+            releaseFromPrison('📺 PUB TERMINÉE — LIBÉRÉ DE PRISON !');
+          }
+        }, 100);
+      });
+    }
+
+    const escBtn = overlay.querySelector('#btn-prison-escape');
+    const escPanel = overlay.querySelector('#prison-escape-panel');
+    const cursor = overlay.querySelector('#escape-bar-cursor');
+    const lockBtn = overlay.querySelector('#btn-escape-lockpick');
+    const escFeedback = overlay.querySelector('#escape-feedback');
+    let escPos = 0;
+    let escDir = 1;
+    let escRaf = null;
+    let escCooldown = false;
+
+    const tickEscape = () => {
+      if (!document.body.contains(overlay)) return;
+      escPos += escDir * 2.4;
+      if (escPos >= 100) { escPos = 100; escDir = -1; }
+      if (escPos <= 0) { escPos = 0; escDir = 1; }
+      if (cursor) cursor.style.left = `${escPos}%`;
+      escRaf = requestAnimationFrame(tickEscape);
+    };
+
+    if (escBtn) {
+      escBtn.addEventListener('click', () => {
+        soundManager.playClick();
+        escPanel.classList.remove('hidden');
+        if (!escRaf) tickEscape();
+      });
+    }
+
+    if (lockBtn) {
+      lockBtn.addEventListener('click', () => {
+        if (escCooldown) return;
+        if (escPos >= 38 && escPos <= 62) {
+          if (escRaf) cancelAnimationFrame(escRaf);
+          releaseFromPrison('🔓 ÉVASION RÉUSSIE — VOUS ÊTES LIBRE !');
+        } else {
+          soundManager.playPenaltyBuzzer();
+          Haptic.impactLight();
+          escCooldown = true;
+          if (escFeedback) escFeedback.textContent = '🚨 ALARME ! Raté, réessayez dans 1s...';
+          setTimeout(() => {
+            escCooldown = false;
+            if (escFeedback) escFeedback.textContent = 'Visez la zone verte (38% - 62%) !';
+          }, 1000);
+        }
+      });
+    }
+  }
+
   // --- 7. MODALE DE RÉSULTATS ---
   showResultsModal(data) {
-    if (this.isReturningToMap) return;
+    if (this.isReturningToMap || gameState.isArrested) return;
 
     if (this.assaultOverlay && document.body.contains(this.assaultOverlay)) {
       // Si la carte triomphale d'assaut est active, on met à jour ses métriques au lieu d'ouvrir une modale doublon

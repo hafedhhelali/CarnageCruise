@@ -3922,6 +3922,186 @@ html, body {
   justify-content: center;
 }
 
+/* Arrestation Police & Écran Prison */
+.arrest-banner-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 950;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 72px;
+  box-shadow: inset 0 0 80px rgba(239, 68, 68, 0.55);
+  animation: arrestStrobe 0.35s infinite alternate;
+}
+@keyframes arrestStrobe {
+  0% { box-shadow: inset 0 0 90px rgba(239, 68, 68, 0.65); }
+  100% { box-shadow: inset 0 0 90px rgba(37, 99, 235, 0.65); }
+}
+.arrest-siren-bar {
+  background: rgba(15, 23, 42, 0.92);
+  border: 2px solid #ef4444;
+  border-radius: 16px;
+  padding: 12px 22px;
+  text-align: center;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.65);
+}
+.arrest-badge {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 900;
+  color: #fbbf24;
+  letter-spacing: 1px;
+}
+.arrest-order {
+  font-size: 1.05rem;
+  font-weight: 900;
+  color: #ffffff;
+  margin-top: 4px;
+}
+
+.prison-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  background: rgba(6, 10, 18, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+}
+.prison-bars {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: space-around;
+  pointer-events: none;
+  animation: barsSlam 0.45s cubic-bezier(0.2, 0.9, 0.2, 1) forwards;
+}
+.prison-bars span {
+  width: 14px;
+  height: 100%;
+  background: linear-gradient(90deg, #1e293b, #64748b 45%, #0f172a);
+  box-shadow: 4px 0 16px rgba(0, 0, 0, 0.8);
+}
+@keyframes barsSlam {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(0); }
+}
+.prison-card {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 420px;
+  background: rgba(15, 23, 42, 0.96);
+  border: 2px solid #64748b;
+  border-radius: 22px;
+  padding: 20px;
+  color: #f8fafc;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.85);
+}
+.prison-stamp {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 8px;
+  background: rgba(239, 68, 68, 0.22);
+  border: 1px solid #ef4444;
+  color: #fca5a5;
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+.prison-title {
+  margin: 8px 0 4px 0;
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: #f8fafc;
+}
+.prison-sub {
+  margin: 0 0 12px 0;
+  font-size: 0.86rem;
+  color: #cbd5e1;
+}
+.prison-balance-box {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  font-size: 0.85rem;
+}
+.prison-balance-box strong {
+  color: #fbbf24;
+  font-size: 1.05rem;
+}
+.prison-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.prison-subpanel {
+  margin-top: 12px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+.prison-subpanel.hidden { display: none; }
+.prison-subpanel-title {
+  font-size: 0.8rem;
+  font-weight: 900;
+  margin-bottom: 8px;
+  color: #38bdf8;
+}
+.prison-subpanel-hint {
+  font-size: 0.78rem;
+  color: #cbd5e1;
+  margin-top: 6px;
+  text-align: center;
+}
+.ad-progress-track {
+  width: 100%;
+  height: 12px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.ad-progress-fill {
+  width: 0%;
+  height: 100%;
+  background: linear-gradient(90deg, #38bdf8, #2ed573);
+}
+.escape-bar-track {
+  position: relative;
+  width: 100%;
+  height: 22px;
+  background: #0f172a;
+  border: 1.5px solid #475569;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.escape-bar-zone {
+  position: absolute;
+  left: 38%;
+  width: 24%;
+  top: 0;
+  bottom: 0;
+  background: rgba(46, 213, 115, 0.45);
+  border-left: 2px solid #2ed573;
+  border-right: 2px solid #2ed573;
+}
+.escape-bar-cursor {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  margin-left: -3px;
+  background: #fbbf24;
+  box-shadow: 0 0 10px #fbbf24;
+}
 /* Quick Vehicle Grid */
 .quick-veh-subtitle {
   font-size: 0.85rem;

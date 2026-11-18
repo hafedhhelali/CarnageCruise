@@ -87,7 +87,7 @@ assert(uiContent.includes('hud-top-right-dock') && uiContent.includes('EXTERMINE
 // 8. Tests d'expansion Proche-Orient & Afrique du Nord + 7 Biomes 3D
 assert(gameStateContent.includes("id: 'marrakech'") && gameStateContent.includes("id: 'constantine'") && gameStateContent.includes("id: 'petra'") && gameStateContent.includes("id: 'beyrouth'") && gameStateContent.includes("id: 'jerusalem'") && gameStateContent.includes("id: 'bagdad'"), 'Expansion Carte : Villes d\'Afrique du Nord et du Proche-Orient présentes');
 assert(envContent.includes('createParkZone') && envContent.includes('createCornicheZone') && envContent.includes('createBeachZone') && envContent.includes('createDesertZone') && envContent.includes('createSteppeZone') && envContent.includes('createCliffsZone') && envContent.includes('createCanyonZone'), 'Diversification 3D : 7 générateurs de biomes (Parcs, Corniches, Plages, Déserts, Steppes, Falaises, Canyons) actifs');
-assert(uiContent.includes('map-region-filter-bar') && uiContent.includes('city-biome-pill'), 'Design UI/UX : Filtres par région (Europe / Afrique du Nord / Proche-Orient) et badges de biome actifs');
+assert(uiContent.includes('city-biome-pill'), 'Design UI/UX : Badges de biome actifs sur la carte');
 
 // 9. Tests v0.9.53-beta : Lignes vitesse réduites, Frein=0 virage, HUD Engin/Homme, Carte sans doublon, Skyline 3D WMD
 const mainContent = fs.readFileSync(path.join(rootDir, 'src', 'main.js'), 'utf8');
@@ -183,6 +183,12 @@ assert(
   envContent.includes('modelBank') &&
   envContent.includes('isSharedModelBank'),
   'Intégration ModelBank : Traffic.js et Environment.js utilisent modelBank avec garde isSharedModelBank dans disposeObjectTree'
+);
+assert(
+  gameStateContent.includes('POLICE_PURSUIT') &&
+  trafficContent.includes('spawnArrestCinematic') &&
+  uiContent.includes('showPrisonOverlay'),
+  'Poursuite & Arrestation : Mode POLICE_PURSUIT, cinématique 3D et Prison actifs'
 );
 
 console.log(`\n📊 RÉSULTAT DU CONTRÔLE QUALITÉ : ${passedTests}/${totalTests} tests réussis.`);

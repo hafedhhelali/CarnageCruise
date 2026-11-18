@@ -76,6 +76,11 @@ const DEFAULT_SAVE = {
     maxCombo: 1,
     redLightsRun: 0,
     crashesSurvived: 0
+  },
+  prison: {
+    active: false,
+    bailCost: 1500,
+    cityId: null
   }
 };
 
@@ -105,7 +110,8 @@ export class Storage {
           settings: { ...DEFAULT_SAVE.settings, ...(parsed.settings || {}) },
           googleAccount: { ...DEFAULT_SAVE.googleAccount, ...(parsed.googleAccount || {}) },
           worldmageddon: { ...DEFAULT_SAVE.worldmageddon, ...(parsed.worldmageddon || {}) },
-          stats: { ...DEFAULT_SAVE.stats, ...(parsed.stats || {}) }
+          stats: { ...DEFAULT_SAVE.stats, ...(parsed.stats || {}) },
+          prison: { ...DEFAULT_SAVE.prison, ...(parsed.prison || {}) }
         };
       }
     } catch (e) {
@@ -258,6 +264,33 @@ export class Storage {
     this.data.coins = (this.data.coins || 0) + amount;
     this.save();
     return this.data.coins;
+  }
+
+  getTotalPoints() {
+    return (this.data.stats && this.data.stats.totalScore) || 0;
+  }
+
+  spendPoints(amount) {
+    const cur = this.getTotalPoints();
+    if (cur < amount) return false;
+    if (!this.data.stats) this.data.stats = {};
+    this.data.stats.totalScore = Math.max(0, cur - amount);
+    this.save();
+    return true;
+  }
+
+  isInPrison() {
+    return !!(this.data.prison && this.data.prison.active);
+  }
+
+  getPrisonState() {
+    return this.data.prison || { active: false, bailCost: 1500, cityId: null };
+  }
+
+  setPrisonState(active, bailCost = 1500, cityId = null) {
+    this.data.prison = { active: !!active, bailCost, cityId };
+    this.save();
+    return this.data.prison;
   }
 
   incrementTotalKills(amount = 1) {
