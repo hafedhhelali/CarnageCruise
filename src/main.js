@@ -20,6 +20,7 @@ import { Traffic } from './entities/Traffic.js';
 import { PigeonSystem } from './entities/Pigeons.js';
 import { SkidMarks } from './gfx/SkidMarks.js';
 import { WeatherSystem } from './gfx/WeatherSystem.js';
+import { modelBank } from './gfx/ModelBank.js';
 import { UIManager } from './ui/UIManager.js';
 import { Haptic } from './services/HapticFeedback.js';
 import * as TWEEN from '@tweenjs/tween.js';
@@ -37,6 +38,7 @@ class GameApp {
 
       // 1. Initialiser le moteur 3D
       this.engine = new Engine(this.canvas);
+      modelBank.preloadAll();
 
     // 2. Initialiser les entités
     this.bike = new Bike(this.engine.scene);

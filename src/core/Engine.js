@@ -4,8 +4,22 @@
  */
 
 import * as THREE from 'three';
+import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
 import { PostProcessingManager } from '../gfx/PostProcessing.js';
 import { SkyDome } from '../gfx/SkyDome.js';
+
+const PRESET_HDRI_MAP = {
+  DAY_CLEAR: 'pedestrian_overpass_1k.hdr',
+  OVERCAST_WET: 'pedestrian_overpass_1k.hdr',
+  GOLDEN_DUSK: 'venice_sunset_1k.hdr',
+  NIGHT_NEON: 'moonless_golf_1k.hdr'
+};
+
+const HDRI_FILES = [
+  'pedestrian_overpass_1k.hdr',
+  'venice_sunset_1k.hdr',
+  'moonless_golf_1k.hdr'
+];
 
 export class Engine {
   constructor(canvas) {
@@ -191,6 +205,7 @@ export class Engine {
     this.isNight = false;
     this._currentCityDef = null;
     this._currentPreset = 'DAY_CLEAR';
+    this._isRuinsAtmosphere = false;
     this.timeScale = 1.0;
     this.hitStopTimer = 0;
     this.hitStopCooldown = 0;
@@ -199,8 +214,108 @@ export class Engine {
     this._baseAmbientIntensity = 0.3;
     this._baseExposure = 1.0;
 
+    // Préchargement & cache des HDRIs 1K CC0 pour Skybox + IBL PMREM photoréaliste
+    this._hdrCache = new Map();
+    this._hdrPending = new Map();
+    try {
+      this._rgbeLoader = new RGBELoader();
+      this._pmremGenerator = new THREE.PMREMGenerator(this.renderer);
+      this._pmremGenerator.compileEquirectangularShader();
+      this._preloadAllHdris();
+      this._applyHdriForPreset(this._currentPreset);
+    } catch (err) {
+      console.warn('[Engine] Initialisation RGBELoader/HDRI indisponible :', err);
+      this._rgbeLoader = null;
+      this._pmremGenerator = null;
+    }
+
     // Gestion du redimensionnement
     window.addEventListener('resize', () => this.onResize());
+  }
+
+  _getBaseUrl() {
+    if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.BASE_URL) {
+      return import.meta.env.BASE_URL;
+    }
+    return '/';
+  }
+
+  _getBackgroundIntensity(preset) {
+    if (preset === 'NIGHT_NEON') return 0.52;
+    if (preset === 'OVERCAST_WET') return 0.62;
+    return 0.88;
+  }
+
+  _setSkyDomeVisible(visible) {
+    if (!this.skyDome) return;
+    if (this.skyDome.mesh) {
+      this.skyDome.mesh.visible = visible;
+    }
+    if (this.skyDome.group) {
+      this.skyDome.group.visible = visible;
+    }
+  }
+
+  _loadHdri(filename) {
+    if (this._hdrCache.has(filename)) {
+      return Promise.resolve(this._hdrCache.get(filename));
+    }
+    if (this._hdrPending.has(filename)) {
+      return this._hdrPending.get(filename);
+    }
+    if (!this._rgbeLoader || !this._pmremGenerator) {
+      return Promise.resolve(null);
+    }
+
+    const url = `${this._getBaseUrl()}hdr/${filename}`;
+    const promise = new Promise((resolve) => {
+      this._rgbeLoader.load(
+        url,
+        (hdrTex) => {
+          hdrTex.mapping = THREE.EquirectangularReflectionMapping;
+          const envTex = this._pmremGenerator.fromEquirectangular(hdrTex).texture;
+          const entry = { hdrTex, envTex };
+          this._hdrCache.set(filename, entry);
+          this._hdrPending.delete(filename);
+          resolve(entry);
+        },
+        undefined,
+        (err) => {
+          console.warn(`[Engine] Échec chargement HDRI ${url}:`, err);
+          this._hdrPending.delete(filename);
+          resolve(null);
+        }
+      );
+    });
+
+    this._hdrPending.set(filename, promise);
+    return promise;
+  }
+
+  _preloadAllHdris() {
+    for (const filename of HDRI_FILES) {
+      this._loadHdri(filename);
+    }
+  }
+
+  _applyHdriForPreset(preset) {
+    const filename = PRESET_HDRI_MAP[preset] || PRESET_HDRI_MAP.DAY_CLEAR;
+    const applyEntry = (entry) => {
+      if (!entry || this._isRuinsAtmosphere || this._currentPreset !== preset) return;
+      this.scene.environment = entry.envTex;
+      this.scene.background = entry.hdrTex;
+      this.scene.backgroundBlurriness = 0.06;
+      this.scene.backgroundIntensity = this._getBackgroundIntensity(preset);
+      this._setSkyDomeVisible(false);
+    };
+
+    const cached = this._hdrCache.get(filename);
+    if (cached) {
+      applyEntry(cached);
+      return;
+    }
+
+    this._loadHdri(filename).then(applyEntry);
   }
 
   /**
@@ -213,6 +328,7 @@ export class Engine {
     }
     const def = cityDef || this._currentCityDef || {};
     this._currentPreset = preset;
+    this._isRuinsAtmosphere = false;
 
     if (preset === 'NIGHT_NEON') {
       this.isNight = true;
@@ -316,6 +432,10 @@ export class Engine {
 
     this._baseAmbientIntensity = this.ambientLight.intensity;
     this._baseExposure = this.renderer.toneMappingExposure;
+
+    // Garder SkyDome visible en fallback instantané tant que l'HDRI du preset n'est pas prêt
+    this._setSkyDomeVisible(true);
+    this._applyHdriForPreset(preset);
   }
 
   applyCityAtmosphere(cityDef) {
@@ -323,6 +443,8 @@ export class Engine {
   }
 
   applyRuinsAtmosphere() {
+    this._isRuinsAtmosphere = true;
+    this._setSkyDomeVisible(true);
     const ruinsSky = 0x120302;
     const ruinsFog = 0x1a0604;
     this.scene.background = new THREE.Color(ruinsSky);

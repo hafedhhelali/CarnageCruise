@@ -166,6 +166,25 @@ assert(
   'Méga Rampes : Détection par scan des props de chunks (isStuntRamp / isAerialRing) dans main.js'
 );
 
+// 14. Tests Modèles 3D .glb (ModelBank), HDRI IBL (RGBELoader) & Protection mémoire GPU partagée
+const modelBankPath = path.join(rootDir, 'src', 'gfx', 'ModelBank.js');
+const modelBankExists = fs.existsSync(modelBankPath);
+const modelBankContent = modelBankExists ? fs.readFileSync(modelBankPath, 'utf8') : '';
+assert(
+  modelBankExists && modelBankContent.includes('GLTFLoader'),
+  'Modèles 3D : src/gfx/ModelBank.js présent et utilise GLTFLoader'
+);
+assert(
+  engineContent.includes('RGBELoader'),
+  'Éclairage HDRI : Engine.js utilise RGBELoader pour le skybox/IBL'
+);
+assert(
+  trafficContent.includes('modelBank') &&
+  envContent.includes('modelBank') &&
+  envContent.includes('isSharedModelBank'),
+  'Intégration ModelBank : Traffic.js et Environment.js utilisent modelBank avec garde isSharedModelBank dans disposeObjectTree'
+);
+
 console.log(`\n📊 RÉSULTAT DU CONTRÔLE QUALITÉ : ${passedTests}/${totalTests} tests réussis.`);
 if (passedTests === totalTests) {
   console.log('✨ Architecture certifiée propre, modulaire et conforme SOLID.');

@@ -7,6 +7,7 @@
 
 import * as THREE from 'three';
 import { soundManager } from '../audio/SoundManager.js';
+import { modelBank } from '../gfx/ModelBank.js';
 
 export class Traffic {
   constructor(scene, particles = null) {
@@ -142,12 +143,125 @@ export class Traffic {
     }
   }
 
-  createHighFidelityVehicle(type, index) {
-    const group = new THREE.Group();
+  /**
+   * Maps a traffic vehicle type/index to its .glb asset key and target footprint.
+   */
+  resolveGlbModelSpec(type, colorHex = 0) {
+    if (type === 'motorcycle') {
+      return { name: 'vehicle-motorcycle', width: 0.95, height: 1.2, length: 2.1 };
+    }
+    const typeModelMap = {
+      taxi_luxe: 'vehicle-truck-yellow',
+      supercar: 'vehicle-truck-red',
+      sedan_prestige: 'vehicle-truck-purple',
+      suv_urban: 'vehicle-truck-green'
+    };
+    const truckModels = [
+      'vehicle-truck-green',
+      'vehicle-truck-red',
+      'vehicle-truck-yellow',
+      'vehicle-truck-purple'
+    ];
+    const idx = typeof colorHex === 'number' && colorHex >= 0 ? Math.floor(colorHex) : 0;
+    const name = typeModelMap[type] || truckModels[idx % truckModels.length];
+    return { name, width: 1.95, height: 1.7, length: 4.2 };
+  }
 
-    // Palettes de peintures métallisées nacrées de prestige
+  /**
+   * Attaches HDR-blooming headlights, taillights, road light cones, and underglow.
+   */
+  attachVehicleLights(group, isMotorcycle = false) {
+    if (isMotorcycle) {
+      const headlight = new THREE.Mesh(this.sharedGeos.headlightLens, this.sharedMats.headlightLED);
+      headlight.rotation.x = Math.PI / 2;
+      headlight.position.set(0, 0.72, 1.05);
+      group.add(headlight);
+
+      const taillight = new THREE.Mesh(this.sharedGeos.taillightBar, this.sharedMats.taillightLED);
+      taillight.scale.set(0.55, 1, 1);
+      taillight.position.set(0, 0.72, -1.05);
+      group.add(taillight);
+
+      const beam = new THREE.Mesh(this.sharedGeos.lightBeam, this.sharedMats.beam);
+      beam.rotation.x = -Math.PI / 2;
+      beam.position.set(0, 0.52, 3.85);
+      group.add(beam);
+
+      const underglow = new THREE.Mesh(this.sharedGeos.underglow, this.sharedMats.underglowMat);
+      underglow.rotation.x = -Math.PI / 2;
+      underglow.scale.set(0.5, 0.5, 1);
+      underglow.position.y = 0.04;
+      group.add(underglow);
+      return;
+    }
+
+    // Phares avant LED DRL étincelants
+    for (let s of [-0.72, 0.72]) {
+      const headlight = new THREE.Mesh(this.sharedGeos.headlightLens, this.sharedMats.headlightLED);
+      headlight.rotation.x = Math.PI / 2;
+      headlight.position.set(s, 0.58, 2.34);
+      group.add(headlight);
+    }
+
+    // Feux arrière LED horizontaux éclatants
+    for (let s of [-0.68, 0.68]) {
+      const taillight = new THREE.Mesh(this.sharedGeos.taillightBar, this.sharedMats.taillightLED);
+      taillight.position.set(s, 0.62, -2.34);
+      group.add(taillight);
+    }
+
+    // Faisceaux lumineux sur la chaussée : cône étroit à la lampe qui s'élargit
+    // au loin (apex ARRIÈRE via -π/2, base large à ~8m) — fini le triangle inversé
+    for (let s of [-0.68, 0.68]) {
+      const beam = new THREE.Mesh(this.sharedGeos.lightBeam, this.sharedMats.beam);
+      beam.rotation.x = -Math.PI / 2;
+      beam.position.set(s, 0.52, 5.1);
+      group.add(beam);
+    }
+
+    // Rétroprojecteur au sol (halo néon subtil)
+    const underglow = new THREE.Mesh(this.sharedGeos.underglow, this.sharedMats.underglowMat);
+    underglow.rotation.x = -Math.PI / 2;
+    underglow.position.y = 0.04;
+    group.add(underglow);
+  }
+
+  createHighFidelityVehicle(type, colorHex = 0) {
+    const group = new THREE.Group();
+    const isMotorcycle = type === 'motorcycle';
+    const glbSpec = this.resolveGlbModelSpec(type, colorHex);
+
+    if (
+      typeof modelBank?.has === 'function' &&
+      modelBank.has(glbSpec.name) &&
+      typeof modelBank?.cloneToFootprint === 'function'
+    ) {
+      const glbMesh = modelBank.cloneToFootprint(
+        glbSpec.name,
+        glbSpec.width,
+        glbSpec.height,
+        glbSpec.length
+      );
+      if (glbMesh) {
+        glbMesh.traverse((child) => {
+          if (child.isMesh) child.castShadow = true;
+        });
+        group.add(glbMesh);
+        group.userData.isGlb = true;
+        group.userData.wheelMeshes = [];
+        this.attachVehicleLights(group, isMotorcycle);
+        return group;
+      }
+    }
+
+    group.userData.isGlb = false;
+
+    // Palettes de peintures métallisées nacrées de prestige (fallback procédural)
     const metallicColors = [0x0984e3, 0xd63031, 0x2d3436, 0x6c5ce7, 0x00b894, 0xe17055, 0x1e3799];
-    const carColor = type === 'taxi_luxe' ? 0xf1c40f : metallicColors[index % metallicColors.length];
+    const index = typeof colorHex === 'number' ? colorHex : 0;
+    const carColor = type === 'taxi_luxe'
+      ? 0xf1c40f
+      : (index > 0xff ? index : metallicColors[Math.abs(Math.floor(index)) % metallicColors.length]);
 
     const carPaint = new THREE.MeshPhysicalMaterial({
       color: carColor,
@@ -360,35 +474,7 @@ export class Traffic {
       group.userData.wheelMeshes.push(wheelGroup);
     });
 
-    // Phares avant LED DRL étincelants
-    for (let s of [-0.72, 0.72]) {
-      const headlight = new THREE.Mesh(this.sharedGeos.headlightLens, this.sharedMats.headlightLED);
-      headlight.rotation.x = Math.PI / 2;
-      headlight.position.set(s, 0.58, 2.34);
-      group.add(headlight);
-    }
-
-    // Feux arrière LED horizontaux éclatants
-    for (let s of [-0.68, 0.68]) {
-      const taillight = new THREE.Mesh(this.sharedGeos.taillightBar, this.sharedMats.taillightLED);
-      taillight.position.set(s, 0.62, -2.34);
-      group.add(taillight);
-    }
-
-    // Faisceaux lumineux sur la chaussée : cône étroit à la lampe qui s'élargit
-    // au loin (apex ARRIÈRE via -π/2, base large à ~8m) — fini le triangle inversé
-    for (let s of [-0.68, 0.68]) {
-      const beam = new THREE.Mesh(this.sharedGeos.lightBeam, this.sharedMats.beam);
-      beam.rotation.x = -Math.PI / 2;
-      beam.position.set(s, 0.52, 5.1);
-      group.add(beam);
-    }
-
-    // Rétroprojecteur au sol (halo néon subtil)
-    const underglow = new THREE.Mesh(this.sharedGeos.underglow, this.sharedMats.underglowMat);
-    underglow.rotation.x = -Math.PI / 2;
-    underglow.position.y = 0.04;
-    group.add(underglow);
+    this.attachVehicleLights(group, isMotorcycle);
 
     return group;
   }
@@ -706,12 +792,31 @@ export class Traffic {
     const maxZ = playerZ + 240;
 
     for (let i = 0; i < this.vehicles.length; i++) {
-      const v = this.vehicles[i];
+      let v = this.vehicles[i];
       if (!v.userData.active && (!v.visible || v.position.z < playerZ - 30)) {
         // Vérifier qu'aucun autre véhicule n'est trop proche de ce nouveau point
         const candidateZ = minZ + Math.random() * (maxZ - minZ);
         const tooClose = this.vehicles.some(other => other.userData.active && Math.abs(other.position.z - candidateZ) < 65);
         if (tooClose) continue;
+
+        // Upgrade lazy-loaded .glb model when modelBank finishes async loading
+        if (!v.userData.isGlb) {
+          const spec = this.resolveGlbModelSpec(v.userData.type, i);
+          if (typeof modelBank?.has === 'function' && modelBank.has(spec.name)) {
+            const upgraded = this.createHighFidelityVehicle(v.userData.type, i);
+            if (upgraded.userData.isGlb) {
+              upgraded.userData = {
+                ...v.userData,
+                wheelMeshes: upgraded.userData.wheelMeshes,
+                isGlb: true
+              };
+              this.container.remove(v);
+              this.container.add(upgraded);
+              this.vehicles[i] = upgraded;
+              v = upgraded;
+            }
+          }
+        }
 
         const curveX = roadCurveFunc ? roadCurveFunc(candidateZ) : 0;
         const laneX = v.userData.lane;
