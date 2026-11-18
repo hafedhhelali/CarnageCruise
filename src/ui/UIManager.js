@@ -1094,7 +1094,7 @@ export class UIManager {
             </div>
           </button>
           ${cityChallenge ? `
-            <button type="button" class="challenge-pill-btn ${this.selectedChallengeMode === cityChallenge.id ? 'active' : ''}" data-challenge="${cityChallenge.id}">
+            <button type="button" class="challenge-pill-btn challenge-special ${this.selectedChallengeMode === cityChallenge.id ? 'active' : ''}" data-challenge="${cityChallenge.id}">
               <span class="challenge-pill-icon">${cityChallenge.icon || '🏆'}</span>
               <div class="challenge-pill-texts">
                 <span class="challenge-pill-title">${(cityChallenge.title || cityChallenge.name || cityChallenge.id).toUpperCase()}</span>
@@ -1173,6 +1173,26 @@ export class UIManager {
     });
 
     // Sélecteur d'épreuve (Standard vs Épreuve spéciale de la ville)
+    const syncEnterBtnForMode = (mode) => {
+      const enterBtn = detailCard.querySelector('#btn-enter-city-race');
+      if (!enterBtn) return;
+      const iconEl = enterBtn.querySelector('.btn-enter-hero-icon');
+      const titleEl = enterBtn.querySelector('.btn-enter-hero-title');
+      const descEl = enterBtn.querySelector('.btn-enter-hero-desc');
+      if (mode !== 'STANDARD' && cityChallenge && mode === cityChallenge.id) {
+        enterBtn.classList.add('btn-enter-challenge-active');
+        if (iconEl) iconEl.textContent = cityChallenge.icon || '🏆';
+        if (titleEl) titleEl.textContent = `LANCER : ${(cityChallenge.title || cityChallenge.id).toUpperCase()} ▶`;
+        if (descEl) descEl.textContent = cityChallenge.shortRule || cityChallenge.description || `OBJECTIF : ${city.targetScore.toLocaleString('fr-FR')} PTS`;
+      } else {
+        enterBtn.classList.remove('btn-enter-challenge-active');
+        if (iconEl) iconEl.textContent = '⚡';
+        if (titleEl) titleEl.textContent = 'LANCER L\'ASSAUT ▶';
+        if (descEl) descEl.textContent = `OBJECTIF : ${city.targetScore.toLocaleString('fr-FR')} PTS`;
+      }
+    };
+    syncEnterBtnForMode(this.selectedChallengeMode || 'STANDARD');
+
     detailCard.querySelectorAll('.challenge-pill-btn').forEach((btn) => {
       btn.addEventListener('click', (e) => {
         e?.stopPropagation();
@@ -1183,6 +1203,7 @@ export class UIManager {
         detailCard.querySelectorAll('.challenge-pill-btn').forEach((b) => {
           b.classList.toggle('active', b.getAttribute('data-challenge') === mode);
         });
+        syncEnterBtnForMode(mode);
       });
     });
 

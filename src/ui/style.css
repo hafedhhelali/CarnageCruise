@@ -6436,7 +6436,7 @@ html, body {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 10px;
+  padding: 9px 10px;
   border-radius: 12px;
   background: var(--glass-carbon);
   border: 1.5px solid var(--titanium-border);
@@ -6445,7 +6445,8 @@ html, body {
   text-align: left;
   position: relative;
   min-width: 0;
-  transition: border-color 0.16s ease, background 0.16s ease, transform 0.12s ease;
+  opacity: 0.56;
+  transition: border-color 0.16s ease, background 0.16s ease, opacity 0.16s ease, transform 0.12s ease;
 }
 
 .challenge-pill-btn:active {
@@ -6453,9 +6454,26 @@ html, body {
 }
 
 .challenge-pill-btn.active {
-  background: linear-gradient(135deg, rgba(34, 211, 238, 0.2), rgba(19, 27, 43, 0.92));
-  border-color: var(--accent-cyan);
-  box-shadow: 0 0 14px rgba(34, 211, 238, 0.28), inset 0 0 8px rgba(34, 211, 238, 0.12);
+  opacity: 1;
+  background: linear-gradient(135deg, rgba(34, 211, 238, 0.28), rgba(15, 23, 42, 0.96));
+  border: 2px solid var(--accent-cyan);
+  box-shadow: 0 0 18px rgba(34, 211, 238, 0.38), inset 0 0 10px rgba(34, 211, 238, 0.18);
+}
+
+.challenge-pill-btn.challenge-special.active {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.3), rgba(28, 25, 23, 0.96));
+  border: 2px solid #fbbf24;
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.45), inset 0 0 10px rgba(251, 191, 36, 0.2);
+}
+
+.challenge-pill-btn.challenge-special.active .challenge-pill-title {
+  color: #fde047;
+}
+
+.btn-enter-city-hero.btn-enter-challenge-active {
+  background: linear-gradient(135deg, #f59e0b, #ea580c) !important;
+  border-color: #fef08a !important;
+  box-shadow: 0 6px 24px rgba(245, 158, 11, 0.55), inset 0 2px 0 rgba(255, 255, 255, 0.45) !important;
 }
 
 .challenge-pill-icon {
