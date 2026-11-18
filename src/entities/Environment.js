@@ -1959,7 +1959,7 @@ export class Environment {
       const bGeo = new THREE.BoxGeometry(bDepth, bHeight, bWidth);
       const bMesh = new THREE.Mesh(bGeo, randomMat);
       bMesh.position.set(side * (bDepth / 2), bHeight / 2, 0);
-      bMesh.castShadow = true;
+      bMesh.castShadow = !(typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0));
       buildingGroup.add(bMesh);
 
       // Toiture & Silhouettes régionales 3D (Europe / Afrique du Nord / Proche-Orient)

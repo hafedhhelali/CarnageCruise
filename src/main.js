@@ -297,6 +297,7 @@ class GameApp {
 
         this.policePursuitActive = (gameState.challengeMode === 'POLICE_PURSUIT');
         this._crimeHeatCount = 0;
+        this._nextPursuitRoadblockZ = null;
 
         if (gameState.isRuinsMode) {
           soundManager.stopMusic();
@@ -828,6 +829,15 @@ class GameApp {
       this.traffic.spawnPursuitCruiser(zSpawn, curveX + laneX, initSpeed);
     }
 
+    // Barrages de police périodiques pendant la poursuite active
+    if (this.policePursuitActive && this.traffic.spawnPoliceRoadblock) {
+      if (!this._nextPursuitRoadblockZ) this._nextPursuitRoadblockZ = this.bike.z + 240;
+      if (this.bike.z + 130 >= this._nextPursuitRoadblockZ) {
+        this.traffic.spawnPoliceRoadblock(this._nextPursuitRoadblockZ);
+        this._nextPursuitRoadblockZ += 280;
+      }
+    }
+
     const bid = this.bike.currentBikeId;
     const canSmashPolice = gameState.isNitroActive || this.bike.isInvulnerable() ||
       ['tank', 'rouleau', 'rad_rover', 'bat_moto', 'moto_tron'].includes(bid);
@@ -850,8 +860,13 @@ class GameApp {
           if (this.ui) this.ui.spawnFloatingCombatText('+750', 'INTERCEPTEUR ÉCRASÉ ! 💥', '#38bdf8', 50, 38);
           Haptic.impactHeavy();
         } else {
-          cop.userData.isCrashed = true;
-          cop.userData.active = false;
+          const hitDirX = cop.position.x >= this.bike.mesh.position.x ? 1 : -1;
+          if (this.traffic.triggerCrash) {
+            this.traffic.triggerCrash(cop, gameState.speed, hitDirX);
+          } else {
+            cop.userData.isCrashed = true;
+            cop.userData.active = false;
+          }
           cs.shieldHp = Math.max(0, (cs.shieldHp ?? 3) - 1);
           cs.bustedProgress = Math.min(100, (cs.bustedProgress || 0) + 40);
           gameState.speed = Math.max(3.5, gameState.speed * 0.48);
@@ -1592,6 +1607,7 @@ class GameApp {
 
                   soundManager.playPropSmash();
                   Haptic.impactLight();
+                  this.triggerPolicePursuitIfCrime('VANDALISME');
 
                   this.particles.spawnPropShatter(propPos, prop.userData.type || 'lamp');
                   if (prop.userData.type === 'lamp') {

@@ -1193,9 +1193,15 @@ export class Traffic {
         if (v.position.z < playerZ - 35) {
           v.visible = false;
           v.userData.active = false;
+          if (v.userData.isPursuitPolice) {
+            this.container.remove(v);
+          }
         }
       }
     });
+
+    // Purger les anciens intercepteurs de police désactivés pour zéro fuite mémoire
+    this.vehicles = this.vehicles.filter(v => !(v.userData && v.userData.isPursuitPolice && !v.userData.active && !v.userData.isCrashed));
 
     // 3. Animation et déplacement de l'ambulance d'urgence
     if (this.ambulance && this.ambulance.userData.active) {
@@ -1251,10 +1257,25 @@ export class Traffic {
       }
     }
 
-    // 5. Barrages de police (MANHUNT) : gyrophares + alignement courbe + recyclage
+    // 5. Barrages de police (MANHUNT / POURSUITE) : éjection physique si heurté, gyrophares + alignement courbe + recyclage
     if (this.roadblocks && this.roadblocks.length > 0) {
       for (let i = this.roadblocks.length - 1; i >= 0; i--) {
         const rb = this.roadblocks[i];
+        if (rb.userData.isCrashed) {
+          rb.userData.crashVelY -= 28.0 * delta;
+          rb.position.x += (rb.userData.crashVelX || 0) * delta;
+          rb.position.y += (rb.userData.crashVelY || 0) * delta;
+          rb.position.z += (rb.userData.crashVelZ || 0) * delta;
+          rb.rotation.x += (rb.userData.crashSpinX || 0) * delta;
+          rb.rotation.y += (rb.userData.crashSpinY || 0) * delta;
+          rb.rotation.z += (rb.userData.crashSpinZ || 0) * delta;
+          if (rb.position.y < -6) {
+            rb.visible = false;
+            this.container.remove(rb);
+            this.roadblocks.splice(i, 1);
+          }
+          continue;
+        }
         if (!rb.userData.active) continue;
 
         const curveX = roadCurveFunc ? roadCurveFunc(rb.position.z) : 0;
