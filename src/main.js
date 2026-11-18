@@ -1029,7 +1029,7 @@ class GameApp {
           if (this.particles.spawnDirectionalSparks) {
             this.particles.spawnDirectionalSparks(curbPos, new THREE.Vector3(0, 0.6, -1), 10);
           }
-          this.engine.triggerCameraShake(0.18);
+          this.engine.triggerCameraShake(0.06);
           Haptic.impactLight();
         }
       }
@@ -1044,7 +1044,7 @@ class GameApp {
         if (this.particles.spawnDirectionalSparks) {
           this.particles.spawnDirectionalSparks(landPos, new THREE.Vector3(0, 0.45, -1), landIntensity >= 1.0 ? 14 : 8);
         }
-        this.engine.triggerCameraShake(0.28 * landIntensity);
+        this.engine.triggerCameraShake(0.16 * landIntensity);
         Haptic.impactMedium();
       }
 
@@ -1058,8 +1058,8 @@ class GameApp {
             this.particles.spawnDirectionalSparks(wallPos, new THREE.Vector3(-sideSign * 0.8, 0.5, -1), 12, 0xffa502);
           }
           this.bike.x -= sideSign * 0.22;
-          this.bike.curbRollKick = -sideSign * 0.18;
-          this.engine.triggerCameraShake(0.16);
+          this.bike.curbRollKick = -sideSign * 0.14;
+          this.engine.triggerCameraShake(0.06);
           soundManager.playCurbMount();
           Haptic.impactLight();
         }
@@ -1067,7 +1067,7 @@ class GameApp {
 
       // Frôlement des façades (proche de la bordure extrême |x| > 6.45m) :
       // gerbe d'étincelles continue le long du mur + grincement régulier
-      if (bikeAbsX > 5.45 && currentSpeed > 6 && !isFlyingCraft && !this.bike.isCrashed) {
+      if (bikeAbsX > 6.45 && currentSpeed > 6 && !isFlyingCraft && !this.bike.isCrashed) {
         this._wallScrapeTimer = (this._wallScrapeTimer || 0) - delta;
         if (this._wallScrapeTimer <= 0) {
           this._wallScrapeTimer = 0.14;
@@ -1385,7 +1385,7 @@ class GameApp {
                   setTimeout(() => { prop.visible = false; }, 550);
 
                 } else {
-                  this.engine.triggerCameraShake(0.52);
+                  this.engine.triggerCameraShake(0.12);
                   soundManager.playPropSmash();
                   Haptic.impactLight();
 

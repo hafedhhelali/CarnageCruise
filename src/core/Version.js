@@ -3,11 +3,11 @@
  * Canal : BETA
  */
 
-export const APP_VERSION = "0.9.65-beta";
-export const BUILD_NUMBER = 75;
-export const VERSION_NAME = "0.9.65-beta";
+export const APP_VERSION = "0.9.66-beta";
+export const BUILD_NUMBER = 76;
+export const VERSION_NAME = "0.9.66-beta";
 export const IS_BETA = true;
 export const CHANNEL = "BETA";
-export const FULL_VERSION = "v0.9.65-beta (Build 75)";
+export const FULL_VERSION = "v0.9.66-beta (Build 76)";
 export const RELEASE_NAME = "Carnage Cruise v0.9.40-beta";
 export const COPYRIGHT_NOTICE = "© 2026 EOMedia. Tous droits réservés.";
