@@ -32,7 +32,8 @@ export class WeatherSystem {
     this.velocities = new Float32Array(this.maxParticles * 3);
     this.phases = new Float32Array(this.maxParticles);
 
-    for (let i = 0; i < this.maxParticles; i++) {
+    const activeCount = Math.floor(this.maxParticles * (this.qualityFactor || 1.0));
+    for (let i = 0; i < activeCount; i++) {
       const i3 = i * 3;
       this.positions[i3] = (Math.random() - 0.5) * this.boxWidth;
       this.positions[i3 + 1] = 0.2 + Math.random() * (this.boxHeight - 0.2);
@@ -159,7 +160,8 @@ export class WeatherSystem {
       this.material.blending = THREE.AdditiveBlending;
     }
 
-    for (let i = 0; i < this.maxParticles; i++) {
+    const activeCount = Math.floor(this.maxParticles * (this.qualityFactor || 1.0));
+    for (let i = 0; i < activeCount; i++) {
       const i3 = i * 3;
       if (mode === 'RAIN') {
         this.velocities[i3] = -1.2 * stormMult;
@@ -206,7 +208,7 @@ export class WeatherSystem {
   setQualityFactor(factor = 1.0) {
     this.qualityFactor = Math.max(0.25, Math.min(1.0, factor));
     if (this.geometry) {
-      this.geometry.setDrawRange(0, Math.floor(this.particleCount * this.qualityFactor));
+      this.geometry.setDrawRange(0, Math.floor(this.maxParticles * this.qualityFactor));
     }
   }
 
@@ -235,7 +237,8 @@ export class WeatherSystem {
     const vel = this.velocities;
     const phases = this.phases;
 
-    for (let i = 0; i < this.maxParticles; i++) {
+    const activeCount = Math.floor(this.maxParticles * (this.qualityFactor || 1.0));
+    for (let i = 0; i < activeCount; i++) {
       const i3 = i * 3;
       let x = pos[i3] + vel[i3] * dt;
       let y = pos[i3 + 1] + vel[i3 + 1] * dt;

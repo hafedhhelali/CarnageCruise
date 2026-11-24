@@ -536,11 +536,17 @@ export class Traffic {
   }
 
   reset() {
-    this.vehicles.forEach(v => {
-      v.visible = false;
-      v.userData.active = false;
-      v.userData.isCrashed = false;
-    });
+    for (let i = this.vehicles.length - 1; i >= 0; i--) {
+      const v = this.vehicles[i];
+      if (v.userData && v.userData.isPursuitPolice) {
+        this.container.remove(v);
+        this.vehicles.splice(i, 1);
+      } else {
+        v.visible = false;
+        v.userData.active = false;
+        v.userData.isCrashed = false;
+      }
+    }
     if (this.ambulance) {
       this.ambulance.visible = false;
       this.ambulance.userData.active = false;
@@ -559,7 +565,7 @@ export class Traffic {
   /**
    * Fait apparaître le camion blindé du Boss de convoi (mode CONVOY_BOSS)
    */
-  spawnConvoyBoss(zPos = 120) {
+  spawnConvoyBoss(zPos = 120, roadCurveFunc = null) {
     if (!this.bossTruck) {
       const group = new THREE.Group();
       const armorMat = new THREE.MeshStandardMaterial({ color: 0x2f3640, roughness: 0.45, metalness: 0.72 });
@@ -626,6 +632,7 @@ export class Traffic {
 
       group.userData = {
         isBossTruck: true,
+        isConvoyBoss: true,
         active: true,
         hp: 100,
         maxHp: 100,
@@ -640,7 +647,8 @@ export class Traffic {
       this.container.add(group);
     }
 
-    this.bossTruck.position.set(0, 0, zPos);
+    const bossX = roadCurveFunc ? roadCurveFunc(zPos) : 0;
+    this.bossTruck.position.set(bossX, 0, zPos);
     this.bossTruck.rotation.set(0, 0, 0);
     this.bossTruck.visible = true;
     this.bossTruck.userData.active = true;
@@ -1182,8 +1190,11 @@ export class Traffic {
   }
 
   spawnAhead(playerZ, roadCurveFunc) {
-    // Compter les véhicules déjà actifs
-    const activeCount = this.vehicles.filter(v => v.userData.active).length;
+    // Compter les véhicules déjà actifs sans allouer de tableau
+    let activeCount = 0;
+    for (let i = 0; i < this.vehicles.length; i++) {
+      if (this.vehicles[i].userData.active) activeCount++;
+    }
     if (activeCount >= this.maxActiveVehicles) return;
 
     // Plage d'apparition aérée et lointaine pour ne pas étouffer le joueur
@@ -1192,6 +1203,7 @@ export class Traffic {
 
     for (let i = 0; i < this.vehicles.length; i++) {
       let v = this.vehicles[i];
+      if (v.userData.isPursuitPolice) continue;
       if (!v.userData.active && (!v.visible || v.position.z < playerZ - 30)) {
         // Vérifier qu'aucun autre véhicule n'est trop proche de ce nouveau point
         const candidateZ = minZ + Math.random() * (maxZ - minZ);
@@ -1259,6 +1271,10 @@ export class Traffic {
           v.position.y = 0;
           v.userData.isCrashed = false;
           v.visible = false;
+          if (v.userData.isPursuitPolice) {
+            this.container.remove(v);
+            needsPurge = true;
+          }
           // Crash violent et débris au sol
           if (this.particles) {
             this.particles.spawnCrashBurst(v.position);
@@ -1307,9 +1323,12 @@ export class Traffic {
             v.userData.targetLaneOffset = THREE.MathUtils.clamp(relX + (Math.random() - 0.5) * 1.4, -4.4, 4.4);
           }
           const prevLane = v.userData.laneOffset || 0;
-          v.userData.laneOffset = THREE.MathUtils.lerp(prevLane, v.userData.targetLaneOffset || 0, Math.min(1.0, delta * 3.2));
+          const laneDamp = 1.0 - Math.exp(-3.2 * delta);
+          v.userData.laneOffset = THREE.MathUtils.lerp(prevLane, v.userData.targetLaneOffset || 0, laneDamp);
           v.position.x = curveX + v.userData.laneOffset;
-          v.rotation.z = THREE.MathUtils.clamp((prevLane - v.userData.laneOffset) * 2.5, -0.14, 0.14);
+          const latVel = (prevLane - v.userData.laneOffset) / Math.max(delta, 0.001);
+          const targetRollZ = THREE.MathUtils.clamp(latVel * 0.045, -0.14, 0.14);
+          v.rotation.z = THREE.MathUtils.lerp(v.rotation.z, targetRollZ, 1.0 - Math.exp(-10.0 * delta));
 
           v.userData.strobeTimer = (v.userData.strobeTimer || 0) + delta;
           const toggle = Math.sin(v.userData.strobeTimer * 26.0) > 0;

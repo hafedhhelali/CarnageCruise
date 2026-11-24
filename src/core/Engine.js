@@ -457,6 +457,11 @@ export class Engine {
 
   applyRuinsAtmosphere() {
     this._isRuinsAtmosphere = true;
+    this.isNight = false;
+    this.hitStopTimer = 0;
+    this.timeScale = 1.0;
+    this._lightningFlashTimer = 0;
+    this.shakeIntensity = 0;
     this._setSkyDomeVisible(true);
     const ruinsSky = 0x120302;
     const ruinsFog = 0x1a0604;
@@ -643,9 +648,10 @@ export class Engine {
     const lookTargetZ = bikePosition.z + lookAheadZ;
 
     const dampLook = 1.0 - Math.exp(-15.0 * delta);
+    const dampLookZ = 1.0 - Math.exp(-24.0 * delta);
     this.lookAtCurrent.x += (lookTargetX - this.lookAtCurrent.x) * dampLook;
     this.lookAtCurrent.y += (lookTargetY - this.lookAtCurrent.y) * dampLook;
-    this.lookAtCurrent.z = lookTargetZ;
+    this.lookAtCurrent.z += (lookTargetZ - this.lookAtCurrent.z) * dampLookZ;
 
     // Roulis de banking fluide via camera.up (jamais de rotation.z après lookAt)
     const targetRoll = THREE.MathUtils.clamp(-roadAngle * 0.14, -0.09, 0.09);
@@ -661,13 +667,13 @@ export class Engine {
     const dampFov = 1.0 - Math.exp(-6.0 * delta);
     const prevFov = this.camera.fov;
     this.camera.fov += (targetFov - this.camera.fov) * dampFov;
-    if (Math.abs(prevFov - this.camera.fov) > 0.05) {
+    if (Math.abs(prevFov - this.camera.fov) > 0.001) {
       this.camera.updateProjectionMatrix();
     }
   }
 
   updateCameraCinematic(delta, bikePosition) {
-    if (this.skyDome) {
+    if (this.skyDome && this.skyDome.group && this.skyDome.group.visible) {
       this.skyDome.update(delta, bikePosition.z);
     }
 
@@ -680,41 +686,14 @@ export class Engine {
     this.camera.position.y = bikePosition.y + height;
     this.camera.position.z = bikePosition.z + Math.cos(this.cinematicAngle) * radius;
 
-    this.camera.lookAt(bikePosition.x, bikePosition.y + 0.78, bikePosition.z);
-    this.camera.fov = 54;
-    this.camera.updateProjectionMatrix();
-
-    this.dirLight.position.set(12, 26, 12);
-  }
-
-  /**
-   * Caméra cinématique réaliste gros plan (plan bas libre d'obstacles + travelling serré sur la reddition)
-   */
-  updateCameraArrest(delta, bikePosition, elapsed = 0) {
-    if (this.skyDome) {
-      this.skyDome.update(delta, bikePosition.z);
-    }
-    const t = Math.min(1.0, elapsed / 4.6);
-    // Angle avant-gauche dégagé (-0.55 rad -> -1.35 rad) pour voir le dérapage, les policiers et le chauffeur à genoux
-    const orbitAngle = THREE.MathUtils.lerp(-0.55, -1.35, t);
-    const radius = THREE.MathUtils.lerp(5.6, 3.6, t);
-    const height = THREE.MathUtils.lerp(1.25, 1.48, t);
-
-    const targetCamX = bikePosition.x - 0.6 + Math.sin(orbitAngle) * radius;
-    const targetCamY = bikePosition.y + height;
-    const targetCamZ = bikePosition.z + 1.4 + Math.cos(orbitAngle) * radius;
-
-    const damp = 1.0 - Math.exp(-5.5 * delta);
-    this.camera.position.x = THREE.MathUtils.lerp(this.camera.position.x, targetCamX, damp);
-    this.camera.position.y = THREE.MathUtils.lerp(this.camera.position.y, targetCamY, damp);
-    this.camera.position.z = THREE.MathUtils.lerp(this.camera.position.z, targetCamZ, damp);
-
     this.camera.up.set(0, 1, 0);
-    this.camera.lookAt(bikePosition.x - 0.75, bikePosition.y + 1.05, bikePosition.z + 1.1);
-    if (Math.abs(this.camera.fov - 48) > 0.2) {
-      this.camera.fov = THREE.MathUtils.lerp(this.camera.fov, 48, damp);
+    this.camera.lookAt(bikePosition.x, bikePosition.y + 0.78, bikePosition.z);
+    if (Math.abs(this.camera.fov - 54) > 0.01) {
+      this.camera.fov = 54;
       this.camera.updateProjectionMatrix();
     }
+
+    this.dirLight.position.set(12, 26, 12);
   }
 
   /**
@@ -743,6 +722,9 @@ export class Engine {
         ? (nextTier === 0 ? 1.0 : (nextTier === 1 ? 0.85 : 0.72))
         : (nextTier === 0 ? 1.5 : 1.15);
       this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, dprCap));
+      if (this.postProcessing) {
+        this.postProcessing.setSize(window.innerWidth, window.innerHeight);
+      }
     }
     return this.perfTier;
   }

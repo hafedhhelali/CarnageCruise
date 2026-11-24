@@ -3207,38 +3207,33 @@ ${gameState.isRuinsMode ? '' : `          <div class="hud-nitro-group">
           ` : ''}
         </div>
       </div>
-
-      <div class="touch-hint auto-fade" id="hud-touch-hint">
-        ← Glisser pour braquer | FREIN pour stopper | ⚡ NITRO ${isWeapon ? `| ${actionIcon} ${actionLabel}` : ''}
-      </div>
     `;
 
-    // Disparition automatique de l'aide tactile après 3.5 secondes pour ne pas encombrer l'écran
-    const touchHint = hud.querySelector('#hud-touch-hint');
-    if (touchHint) {
-      setTimeout(() => {
-        touchHint.style.opacity = '0';
-        touchHint.style.transition = 'opacity 0.6s ease';
-        setTimeout(() => touchHint.remove(), 600);
-      }, 3500);
-    }
-
-    // Gestion du bouton de frein / arrêt (verrouille la direction gauche/droite)
+    // Gestion du bouton de frein / arrêt (capture de pointeur pour éviter les coupures au glissement)
     const brakeBtn = hud.querySelector('#btn-hud-brake');
     const startBraking = (e) => {
-      if (e) e.stopPropagation();
+      if (e) {
+        e.stopPropagation();
+        if (e.pointerId !== undefined && brakeBtn.setPointerCapture) {
+          try { brakeBtn.setPointerCapture(e.pointerId); } catch (_) {}
+        }
+      }
       gameState.setBraking(true);
       brakeBtn.classList.add('active');
     };
     const stopBraking = (e) => {
-      if (e) e.stopPropagation();
+      if (e) {
+        e.stopPropagation();
+        if (e.pointerId !== undefined && brakeBtn.releasePointerCapture) {
+          try { brakeBtn.releasePointerCapture(e.pointerId); } catch (_) {}
+        }
+      }
       gameState.setBraking(false);
       brakeBtn.classList.remove('active');
     };
 
     brakeBtn.addEventListener('pointerdown', startBraking);
     brakeBtn.addEventListener('pointerup', stopBraking);
-    brakeBtn.addEventListener('pointerleave', stopBraking);
     brakeBtn.addEventListener('pointercancel', stopBraking);
 
     // Gestion du bouton Nitro / Energy Drink 5 secondes (click intentionnel uniquement pour éviter les déclenchements accidentels au glissement)
@@ -3953,43 +3948,42 @@ ${gameState.isRuinsMode ? '' : `          <div class="hud-nitro-group">
     } else if (gameState.challengeMode && gameState.challengeMode !== 'STANDARD') {
       const chMode = gameState.challengeMode;
       let chPct = null;
+      const cs = data.challengeState || gameState.challengeState || {};
       if (chMode === 'CONVOY_BOSS') {
-        const hp = Math.max(0, data.bossHp ?? gameState.convoyBossHp ?? 100);
-        const maxHp = Math.max(1, data.bossMaxHp ?? gameState.convoyBossMaxHp ?? 100);
+        const hp = Math.max(0, cs.bossHp ?? 100);
+        const maxHp = Math.max(1, cs.bossMaxHp ?? 100);
         chPct = Math.min(100, Math.max(0, Math.round(((maxHp - hp) / maxHp) * 100)));
         if (cityName) cityName.innerHTML = `<span style="color: #fbbf24; font-weight: 900;">🚛 CONVOI BLINDÉ • PV ${hp}/${maxHp}</span>`;
         if (targetPts) targetPts.innerHTML = `<span style="color: #f43f5e; font-weight: 900;">💥 DÉTRUISEZ LE CONVOI</span>`;
       } else if (chMode === 'SLALOM_CHRONO') {
-        const timer = Math.max(0, data.slalomTimer ?? gameState.slalomTimer ?? 0);
-        const gates = data.slalomGates ?? gameState.slalomGates ?? 0;
-        const target = Math.max(1, data.slalomTarget ?? gameState.slalomTargetGates ?? 12);
+        const timer = Math.max(0, cs.timeLeft ?? 0);
+        const gates = cs.gatesPassed ?? 0;
+        const target = Math.max(1, cs.gatesTarget ?? 6);
         chPct = Math.min(100, Math.round((gates / target) * 100));
         if (cityName) cityName.innerHTML = `<span style="color: #22d3ee; font-weight: 900;">🚩 SLALOM • ${gates}/${target} PORTES</span>`;
         if (targetPts) targetPts.innerHTML = `<span style="color: ${timer < 10 ? '#f43f5e' : '#fbbf24'}; font-weight: 900;">⏱️ ${timer.toFixed(1)}s</span>`;
       } else if (chMode === 'MANHUNT') {
-        const stars = Math.max(1, Math.min(5, data.wantedStars ?? gameState.wantedStars ?? 1));
-        const maxHearts = Math.max(1, data.maxHearts ?? 3);
-        const hearts = Math.max(0, Math.min(maxHearts, data.shieldHearts ?? gameState.shieldHearts ?? maxHearts));
+        const stars = Math.max(1, Math.min(5, cs.wantedLevel ?? 1));
+        const maxHearts = 3;
+        const hearts = Math.max(0, Math.min(maxHearts, cs.shieldHp ?? maxHearts));
         const heartsHtml = '❤️'.repeat(hearts) + '🖤'.repeat(Math.max(0, maxHearts - hearts));
         if (cityName) cityName.innerHTML = `<span style="color: #f43f5e; font-weight: 900;">🚨 CHASSE • ${'★'.repeat(stars)}</span>`;
         if (targetPts) targetPts.innerHTML = `<span>${heartsHtml}</span>`;
       } else if (chMode === 'STUNT_RAMPS') {
-        const airTime = Math.max(0, data.airTime ?? gameState.totalAirTime ?? 0);
-        const stuntPts = Math.max(0, data.stuntPoints ?? gameState.stuntPoints ?? 0);
-        const stuntTarget = Math.max(1, data.stuntTarget ?? gameState.stuntTarget ?? 1500);
-        chPct = Math.min(100, Math.round((stuntPts / stuntTarget) * 100));
+        const airTime = Math.max(0, cs.airTimeTotal ?? 0);
+        const airTarget = Math.max(1, cs.airTimeTarget ?? 6.5);
+        chPct = Math.min(100, Math.round((airTime / airTarget) * 100));
         if (cityName) cityName.innerHTML = `<span style="color: #a855f7; font-weight: 900;">🛫 STUNT • ${airTime.toFixed(1)}s AIR</span>`;
-        if (targetPts) targetPts.innerHTML = `<span style="color: #fbbf24; font-weight: 900;">🔥 ${stuntPts.toLocaleString('fr-FR')} / ${stuntTarget.toLocaleString('fr-FR')}</span>`;
+        if (targetPts) targetPts.innerHTML = `<span style="color: #fbbf24; font-weight: 900;">🔥 ${airTime.toFixed(1)}s / ${airTarget.toFixed(1)}s</span>`;
       } else if (chMode === 'EXTREME_STORM') {
-        const nearMisses = Math.max(0, data.nearMisses ?? gameState.nearMissCount ?? 0);
-        const nearTarget = Math.max(1, data.nearMissTarget ?? gameState.nearMissTarget ?? 10);
-        const windGust = data.windGust ?? gameState.windDirection ?? 0;
+        const nearMisses = Math.max(0, cs.nearMissCount ?? 0);
+        const nearTarget = Math.max(1, cs.nearMissTarget ?? 6);
+        const windGust = cs.windGust ?? 0;
         const windWarn = Math.abs(windGust) > 0.35 ? (windGust > 0 ? '💨 RAFALE ➔' : '⬅ RAFALE 💨') : '⚡ ORAGE';
         chPct = Math.min(100, Math.round((nearMisses / nearTarget) * 100));
         if (cityName) cityName.innerHTML = `<span style="color: #38bdf8; font-weight: 900;">⛈️ TEMPÊTE • ${windWarn}</span>`;
         if (targetPts) targetPts.innerHTML = `<span style="color: #fbbf24; font-weight: 900;">⚡ FRÔLEMENTS ${nearMisses}/${nearTarget}</span>`;
       } else if (chMode === 'POLICE_PURSUIT') {
-        const cs = gameState.challengeState || {};
         const stars = Math.max(1, Math.min(5, cs.wantedLevel || 2));
         const shields = Math.max(0, Math.min(3, cs.shieldHp ?? 3));
         const heartsHtml = '🛡️'.repeat(shields) + '💔'.repeat(Math.max(0, 3 - shields));
@@ -4007,15 +4001,6 @@ ${gameState.isRuinsMode ? '' : `          <div class="hud-nitro-group">
       }
       if (targetPts) {
         targetPts.textContent = `🎯 ${(data.targetScore || gameState.selectedCity.targetScore || 2500).toLocaleString('fr-FR')} PTS`;
-      }
-    }
-
-    if (targetRemaining) {
-      const diff = Math.max(0, data.targetScore - data.score);
-      if (diff === 0) {
-        targetRemaining.innerHTML = '<span style="color: #2ed573; font-weight: 900;">★ OBJECTIF ATTEINT !</span>';
-      } else {
-        targetRemaining.textContent = `Reste : ${diff.toLocaleString('fr-FR')} pts`;
       }
     }
 
@@ -4863,7 +4848,7 @@ ${gameState.isRuinsMode ? '' : `          <div class="hud-nitro-group">
         </div>
 
         <div class="modal-actions">
-          <button type="button" id="btn-pause-resume" class="btn-arcade">
+          <button type="button" id="btn-pause-resume" class="btn-arcade" style="--btn-glow: rgba(16, 185, 129, 0.45); background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
             ▶️ REPRENDRE LA COURSE
           </button>
           <button type="button" id="btn-pause-garage" class="btn-arcade btn-secondary">

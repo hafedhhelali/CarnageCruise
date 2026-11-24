@@ -1111,7 +1111,7 @@ export class ParticleSystem {
       } else {
         const progress = 1 - (p.life / p.maxLife);
         p.mesh.scale.addScalar(delta * (p.growRate || 1.2));
-        if (p.mesh.material && p.mesh.material.opacity !== undefined) {
+        if (p.ownsMaterial && p.mesh.material && p.mesh.material.opacity !== undefined) {
           p.mesh.material.opacity = (1 - progress) * 0.7;
         }
       }

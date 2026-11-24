@@ -2464,6 +2464,10 @@ export class Bike {
         this.mesh.position.y = 0;
         this.invulnerableTimer = 2.0; // 2 secondes d'immunité clignotante
         if (this.riderHead) this.riderHead.rotation.set(0, 0, 0);
+        if (this.riderTorso) this.riderTorso.rotation.set(0, 0, 0);
+        this.pitchAngle = 0;
+        this.suspOffset = 0;
+        this.suspVel = 0;
       }
       return;
     }
@@ -2518,8 +2522,10 @@ export class Bike {
     this.mesh.rotation.z = 0;
 
     // Suspension ressort-amortisseur 2nd ordre + dénivelé trottoir progressif (+0.25m) / vol (4.2m)
-    this.bouncePhase += delta * (speed * 0.8 + 2.0);
-    const suspensionBounce = Math.sin(this.bouncePhase) * 0.015;
+    this.animTime = (this.animTime || 0) + delta;
+    const moveFactor = THREE.MathUtils.clamp(speed / 6.0, 0, 1);
+    this.bouncePhase += delta * (speed * 0.8 + 1.5 * moveFactor);
+    const suspensionBounce = Math.sin(this.bouncePhase) * 0.015 * moveFactor;
     const curbLift = absX >= 6.05 ? 0.25 : (absX <= 4.75 ? 0.0 : THREE.MathUtils.clamp((absX - 4.75) / 1.3, 0, 1) * 0.25);
     const baseAltitude = this.isFlyingEscape ? 38.0 : (this.currentBikeId === 'aero_jet' ? (4.2 + Math.sin(this.bouncePhase * 0.45) * 0.25) : curbLift);
 
@@ -2560,7 +2566,7 @@ export class Bike {
     this.suspOffset = THREE.MathUtils.clamp(this.suspOffset + this.suspVel * delta, -0.18, 0.18);
 
     const targetY = baseAltitude + suspensionBounce + this.jumpAltitude + this.suspOffset;
-    this.mesh.position.y = THREE.MathUtils.lerp(this.mesh.position.y, targetY, 1 - Math.exp(-12.0 * delta));
+    this.mesh.position.y = targetY;
 
     // Inclinaison du châssis (atténuée pour la décapotable 4 roues, avec rebond latéral de bordure)
     const totalRoll = this.currentLean + (this.curbRollKick || 0);
@@ -2605,16 +2611,17 @@ export class Bike {
 
     // --- ANIMATION DE L'ÉTALON PUR-SANG (galop 4-temps réaliste) & DU FOUET CINGLANT ---
     if (this.currentBikeId === 'cheval') {
+      const gallopAmp = THREE.MathUtils.clamp(speed / 4.5, 0, 1);
       const gallopCycle = this.bouncePhase * 3.2;
-      if (this.horseLegFL) this.horseLegFL.rotation.x = Math.sin(gallopCycle) * 0.62;
-      if (this.horseLegFR) this.horseLegFR.rotation.x = Math.sin(gallopCycle + 0.55) * 0.62;
-      if (this.horseLegBL) this.horseLegBL.rotation.x = Math.sin(gallopCycle + Math.PI) * 0.56;
-      if (this.horseLegBR) this.horseLegBR.rotation.x = Math.sin(gallopCycle + Math.PI + 0.55) * 0.56;
-      if (this.horseTail) this.horseTail.rotation.z = Math.sin(gallopCycle * 0.6) * 0.35;
-      if (this.horseHead) this.horseHead.rotation.x = Math.sin(gallopCycle + 0.4) * 0.14;
+      if (this.horseLegFL) this.horseLegFL.rotation.x = Math.sin(gallopCycle) * 0.62 * gallopAmp;
+      if (this.horseLegFR) this.horseLegFR.rotation.x = Math.sin(gallopCycle + 0.55) * 0.62 * gallopAmp;
+      if (this.horseLegBL) this.horseLegBL.rotation.x = Math.sin(gallopCycle + Math.PI) * 0.56 * gallopAmp;
+      if (this.horseLegBR) this.horseLegBR.rotation.x = Math.sin(gallopCycle + Math.PI + 0.55) * 0.56 * gallopAmp;
+      if (this.horseTail) this.horseTail.rotation.z = Math.sin(gallopCycle * 0.6 + this.animTime * 1.5) * 0.35;
+      if (this.horseHead) this.horseHead.rotation.x = Math.sin(gallopCycle + 0.4) * 0.14 * gallopAmp;
       if (this.horseGroup) {
-        this.horseGroup.position.y = Math.abs(Math.sin(gallopCycle)) * 0.08;
-        this.horseGroup.rotation.x = Math.cos(gallopCycle) * 0.06;
+        this.horseGroup.position.y = Math.abs(Math.sin(gallopCycle)) * 0.08 * gallopAmp;
+        this.horseGroup.rotation.x = Math.cos(gallopCycle) * 0.06 * gallopAmp;
       }
 
       // Claquement périodique réaliste du FOUET avec son
@@ -2651,14 +2658,14 @@ export class Bike {
 
     // Animation du rouleau compresseur 50 Tonnes
     if (this.currentBikeId === 'rouleau' && this.frontRoller) {
-      this.frontRoller.rotation.x -= (speed / 0.68) * delta;
+      this.frontRoller.rotation.x += (speed / 0.68) * delta;
     }
 
     // --- ANIMATION DU CHAR D'ASSAUT AMX-TITAN & CANON 120MM ---
     if (this.currentBikeId === 'tank') {
       if (this.tankWheels && this.tankWheels.length > 0) {
         this.tankWheels.forEach(w => {
-          w.rotation.x += (speed / 0.3) * delta;
+          w.rotation.x += (speed / 0.24) * delta;
         });
       }
       if (this.tankRecoil > 0) {
@@ -2683,7 +2690,7 @@ export class Bike {
       // Léger roulis aquatique dynamique
       if (this.hovercraftGroup) {
         this.hovercraftGroup.rotation.z = -this.smoothedSteer * 0.18;
-        this.hovercraftGroup.position.y = Math.sin(Date.now() * 0.006) * 0.04;
+        this.hovercraftGroup.position.y = Math.sin(this.animTime * 6.0) * 0.04;
       }
     }
 
@@ -2698,7 +2705,7 @@ export class Bike {
         this.radTurret.rotation.y = -this.smoothedSteer * 0.16;
       }
       if (this.radBeacons && this.radBeacons.length > 0) {
-        const beaconFlash = (Math.floor(Date.now() * 0.008) % 2 === 0);
+        const beaconFlash = (Math.floor(this.animTime * 8.0) % 2 === 0);
         this.radBeacons.forEach(b => {
           b.visible = beaconFlash;
         });

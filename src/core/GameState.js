@@ -2814,7 +2814,7 @@ export class GameState {
     this.killsCount++;
     this.killStreak++;
     this.worldPopulationEliminated++;
-    storage.incrementTotalKills(1);
+    this._pendingKillSaves = (this._pendingKillSaves || 0) + 1;
 
     // Rire sadique démoniaque tous les 5 kills consécutifs
     if (this.killStreak % 5 === 0) {
@@ -3272,6 +3272,9 @@ export class GameState {
       this.notify('exit_ruins', {});
       return;
     }
+    this.currentMode = 'RESULTS';
+    this.speed = 0;
+    this.targetSpeed = 0;
     this.isGameOver = true;
     soundManager.stopAllGameplaySounds(); // Coupe immédiatement tous les sons persistants de l'épreuve
 
@@ -3314,16 +3317,11 @@ export class GameState {
           this.score += 3000;
         }
       } else if (this.challengeMode === 'POLICE_PURSUIT') {
-        challengeSuccess = !this.isArrested && (cs.shieldHp > 0);
+        challengeSuccess = cs.shieldHp > 0;
         if (challengeSuccess) {
           challengeRewardCoins = 180 + (cs.dodgesCount || 0) * 15 + (cs.policeDestroyed || 0) * 25;
           this.score += 3500 + (cs.dodgesCount || 0) * 250;
         }
-      }
-
-      if (this.isArrested) {
-        challengeSuccess = false;
-        challengeRewardCoins = 0;
       }
 
       if (challengeSuccess) {
@@ -3337,15 +3335,16 @@ export class GameState {
     const carnageRatio = Math.min(1.0, Math.max(0.05, this.score / (this.selectedCity.targetScore || 2500)));
     const cityVictims = Math.round(cityPop * (this.cataclysmDetonated ? 1.0 : (carnageRatio * 0.15)));
     let runVictims = this.killsCount;
+    const pendingKills = this._pendingKillSaves || 0;
+    this._pendingKillSaves = 0;
     this.worldPopulationEliminated += cityVictims;
-    storage.incrementTotalKills(cityVictims);
+    storage.incrementTotalKills(cityVictims + pendingKills);
     runVictims += cityVictims;
 
     // Calcul des étoiles avec les nouveaux seuils
     let stars = 0;
     const thresholds = this.selectedCity.starThresholds;
-    if (this.isArrested) stars = 0;
-    else if (this.score >= thresholds[2]) stars = 3;
+    if (this.score >= thresholds[2]) stars = 3;
     else if (this.score >= thresholds[1]) stars = 2;
     else if (this.score >= thresholds[0]) stars = 1;
 

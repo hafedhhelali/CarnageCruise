@@ -971,7 +971,7 @@ export class CharacterSystem {
 
           if (curRelX >= 6.55) {
             // Arrivé près du mur : tourne et continue de courir parallèlement au mur (axe Z)
-            if (!char.fleeDirZ) char.fleeDirZ = (char.group.position.z >= bikeZ ? 1 : -1);
+            if (!char.fleeDirZ) char.fleeDirZ = (char.group.position.z >= playerZ ? 1 : -1);
             char.group.position.z += char.fleeDirZ * sprintSpeed * delta;
             char.group.position.x = fleeCurveX + side * 6.55;
             const targetRotY = char.fleeDirZ > 0 ? 0 : Math.PI;

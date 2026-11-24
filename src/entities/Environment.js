@@ -17,7 +17,11 @@ export class Environment {
     this.chunkLength = 60; // 60 mètres par tronçon
     const isMob = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
     this.totalChunks = isMob ? 4 : 6; // 4 tronçons sur mobile = -33% de draw calls (zéro stagnation)
-    this.landmark = null;
+    if (this.landmark) {
+      this.disposeObjectTree(this.landmark);
+      this.scene.remove(this.landmark);
+      this.landmark = null;
+    }
     this.finishArch = null;
     this.finishDistance = 2400; // Parcours étendu à 2400m avec vrais virages et progression 100% équilibrée
     this.finishReached = false;
@@ -483,7 +487,11 @@ export class Environment {
       this.disposeObjectTree(child);
       this.container.remove(child);
     }
-    this.landmark = null;
+    if (this.landmark) {
+      this.disposeObjectTree(this.landmark);
+      this.scene.remove(this.landmark);
+      this.landmark = null;
+    }
     this.finishArch = null;
     this.chunks = [];
     this.disposeSharedMaterials();
@@ -1659,6 +1667,7 @@ export class Environment {
         chunk.add(stripe);
         chunk.userData.ribbons.push(stripe);
       }
+      stripeTemplate.dispose();
     }
 
     // Trottoirs et bordures subdivisés (28 segments) avec abaissement dynamique aux carrefours (Z = 95 + k*160)
@@ -1679,6 +1688,8 @@ export class Environment {
     createCurvedSidewalkRibbon(-5.45, 0.15, curbTemplate);
     createCurvedSidewalkRibbon(7.15, 0.125, walkTemplate);
     createCurvedSidewalkRibbon(5.45, 0.15, curbTemplate);
+    walkTemplate.dispose();
+    curbTemplate.dispose();
 
     // Bâtiments : Décombres effondrés en mode Ruines, Architecture vivante (4 styles) en course classique
     if (this.isRuinsMode) {
