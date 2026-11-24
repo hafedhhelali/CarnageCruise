@@ -1266,6 +1266,8 @@ class GameApp {
         if (this.ui && this.ui.updateArrestBannerPhase) this.ui.updateArrestBannerPhase(2);
       } else if (t >= 2.4 && this._arrestCinematic.phase < 3) {
         this._arrestCinematic.phase = 3;
+        if (this.bike && this.bike.riderTorso) this.bike.riderTorso.visible = false;
+        if (this.bike && this.bike.riderHead) this.bike.riderHead.visible = false;
         if (this.ui && this.ui.updateArrestBannerPhase) this.ui.updateArrestBannerPhase(3);
       }
       if (this.engine.updateCameraArrest) {

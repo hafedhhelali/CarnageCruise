@@ -1024,6 +1024,19 @@ export class Traffic {
     groundHaloRed.position.set(relRoadX - 1.9, 0.04, 5.0);
     cineGroup.add(groundHaloBlue, groundHaloRed);
 
+    // Projecteur d'hélicoptère de police balayant la scène depuis le ciel
+    const heliSpotMat = new THREE.MeshBasicMaterial({
+      color: 0xe0f2fe,
+      transparent: true,
+      opacity: 0.14,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      side: THREE.DoubleSide
+    });
+    const heliSpot = new THREE.Mesh(new THREE.ConeGeometry(3.4, 15.0, 14, 1, true), heliSpotMat);
+    heliSpot.position.set(-0.9, 7.5, 1.0);
+    cineGroup.add(heliSpot);
+
     copCar1.position.set(relRoadX + 3.6, 0, 16.5);
     copCar2.position.set(relRoadX - 3.8, 0, 18.0);
     cineGroup.add(copCar1, copCar2);
@@ -1096,7 +1109,13 @@ export class Traffic {
         rifleBody.position.set(0, -0.22, 0.28);
         const rifleBarrel = new THREE.Mesh(a.rifleBarrelGeo, a.gunMetal);
         rifleBarrel.position.set(0, -0.20, 0.72);
-        rifleGroup.add(rifleBody, rifleBarrel);
+        const laserBeam = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.01, 0.01, 2.1, 6),
+          a.strobeRed
+        );
+        laserBeam.rotation.x = Math.PI / 2;
+        laserBeam.position.set(0, -0.20, 1.85);
+        rifleGroup.add(rifleBody, rifleBarrel, laserBeam);
         armR.elbow.add(rifleGroup);
         bodyPivot.add(vest, cap, badge);
       } else {
@@ -1111,17 +1130,20 @@ export class Traffic {
     };
 
     const cop1 = buildArticulatedPerson(true);
+    cop1.scale.setScalar(1.18);
     cop1.position.set(relRoadX + 1.1, 0, 4.3);
     cop1.rotation.y = Math.PI;
     cop1.visible = false;
 
     const cop2 = buildArticulatedPerson(true);
+    cop2.scale.setScalar(1.18);
     cop2.position.set(relRoadX - 1.7, 0, 4.7);
     cop2.rotation.y = Math.PI;
     cop2.visible = false;
 
     const driver = buildArticulatedPerson(false);
-    driver.position.set(-0.85, 0, 0.3);
+    driver.scale.setScalar(1.18);
+    driver.position.set(-0.9, 0, 0.3);
     driver.rotation.y = 0;
     driver.visible = false;
 
@@ -1211,11 +1233,13 @@ export class Traffic {
           }
         }
 
-        // Halos gyrophares alternés doux
+        // Halos gyrophares alternés doux + balayage projecteur hélico
         const pulse = Math.sin(elapsed * 14.0) > 0;
         allStrobes.forEach((s, idx) => { s.visible = (idx % 2 === 0) ? pulse : !pulse; });
         groundHaloBlue.visible = pulse;
         groundHaloRed.visible = !pulse;
+        heliSpot.position.x = -0.9 + Math.sin(elapsed * 2.2) * 0.75;
+        heliSpot.rotation.z = Math.sin(elapsed * 2.2) * 0.08;
       },
       dispose: () => {
         this.container.remove(cineGroup);

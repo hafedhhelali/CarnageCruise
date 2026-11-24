@@ -3931,7 +3931,9 @@ html, body {
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding-top: 64px;
+  padding-top: 52px;
+  border-top: 34px solid #05070d;
+  border-bottom: 34px solid #05070d;
 }
 .arrest-siren-bar {
   background: rgba(10, 16, 30, 0.92);

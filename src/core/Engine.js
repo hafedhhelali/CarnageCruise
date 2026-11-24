@@ -130,7 +130,7 @@ export class Engine {
       72,
       window.innerWidth / window.innerHeight,
       0.65,
-      this.isMobile ? 320 : 500
+      this.isMobile ? 220 : 500
     );
 
     // Pool de PointLights dynamiques pour flashs d'armes et d'explosions (Zéro lag mobile)
@@ -689,30 +689,31 @@ export class Engine {
   }
 
   /**
-   * Caméra cinématique réaliste pour la simulation complète d'arrestation policière (plan bas côté conducteur)
+   * Caméra cinématique réaliste gros plan (plan bas libre d'obstacles + travelling serré sur la reddition)
    */
   updateCameraArrest(delta, bikePosition, elapsed = 0) {
     if (this.skyDome) {
       this.skyDome.update(delta, bikePosition.z);
     }
-    const t = Math.min(1.0, elapsed / 4.3);
-    const orbitAngle = THREE.MathUtils.lerp(-0.85, -2.05, t);
-    const radius = THREE.MathUtils.lerp(6.8, 4.9, t);
-    const height = THREE.MathUtils.lerp(2.15, 1.55, t);
+    const t = Math.min(1.0, elapsed / 4.6);
+    // Angle avant-gauche dégagé (-0.55 rad -> -1.35 rad) pour voir le dérapage, les policiers et le chauffeur à genoux
+    const orbitAngle = THREE.MathUtils.lerp(-0.55, -1.35, t);
+    const radius = THREE.MathUtils.lerp(5.6, 3.6, t);
+    const height = THREE.MathUtils.lerp(1.25, 1.48, t);
 
-    const targetCamX = bikePosition.x + Math.sin(orbitAngle) * radius;
+    const targetCamX = bikePosition.x - 0.6 + Math.sin(orbitAngle) * radius;
     const targetCamY = bikePosition.y + height;
-    const targetCamZ = bikePosition.z + 1.6 + Math.cos(orbitAngle) * radius;
+    const targetCamZ = bikePosition.z + 1.4 + Math.cos(orbitAngle) * radius;
 
-    const damp = 1.0 - Math.exp(-5.0 * delta);
+    const damp = 1.0 - Math.exp(-5.5 * delta);
     this.camera.position.x = THREE.MathUtils.lerp(this.camera.position.x, targetCamX, damp);
     this.camera.position.y = THREE.MathUtils.lerp(this.camera.position.y, targetCamY, damp);
     this.camera.position.z = THREE.MathUtils.lerp(this.camera.position.z, targetCamZ, damp);
 
     this.camera.up.set(0, 1, 0);
-    this.camera.lookAt(bikePosition.x - 0.35, bikePosition.y + 1.05, bikePosition.z + 1.6);
-    if (Math.abs(this.camera.fov - 52) > 0.1) {
-      this.camera.fov = THREE.MathUtils.lerp(this.camera.fov, 52, damp);
+    this.camera.lookAt(bikePosition.x - 0.75, bikePosition.y + 1.05, bikePosition.z + 1.1);
+    if (Math.abs(this.camera.fov - 48) > 0.2) {
+      this.camera.fov = THREE.MathUtils.lerp(this.camera.fov, 48, damp);
       this.camera.updateProjectionMatrix();
     }
   }

@@ -133,13 +133,11 @@ export class ParticleSystem {
     }
   }
 
-  // Volutes de fumée d'échappement cartoon volumétriques (Zéro fuite GPU)
+  // Volutes de fumée d'échappement optimisées (zéro clone, zéro alloc GPU)
   spawnExhaustSmoke(pos, speedRatio = 1.0) {
-    if (Math.random() > 0.4) return;
+    if (Math.random() > 0.35 || this.particles.length >= 32) return;
 
-    const smokeMat = this.sharedMats.smoke.clone();
-    smokeMat.opacity = 0.22;
-    const mesh = new THREE.Mesh(this.sharedGeos.smokeSphere, smokeMat);
+    const mesh = new THREE.Mesh(this.sharedGeos.smokeSphere, this.sharedMats.smoke);
     const initScale = 0.16 + Math.random() * 0.06;
     mesh.scale.setScalar(initScale);
     mesh.position.copy(pos);
@@ -149,7 +147,7 @@ export class ParticleSystem {
     this.scene.add(mesh);
     this.particles.push({
       mesh,
-      ownsMaterial: true,
+      ownsMaterial: false,
       velX: (Math.random() - 0.5) * 0.35,
       velY: 0.7 + Math.random() * 0.5,
       velZ: -1.6 * speedRatio,
@@ -160,16 +158,17 @@ export class ParticleSystem {
     });
   }
 
-  // Fumée de dérapage et freinage au sol (Zéro fuite GPU)
+  // Fumée de dérapage et freinage au sol (zéro clone, zéro alloc GPU)
   spawnSkidSmoke(pos) {
-    const mesh = new THREE.Mesh(this.sharedGeos.smokeSphere, this.sharedMats.skidSmoke.clone());
+    if (this.particles.length >= 36) return;
+    const mesh = new THREE.Mesh(this.sharedGeos.smokeSphere, this.sharedMats.skidSmoke);
     mesh.scale.setScalar(0.18 + Math.random() * 0.1);
     mesh.position.set(pos.x + (Math.random() - 0.5) * 0.3, 0.1, pos.z);
 
     this.scene.add(mesh);
     this.particles.push({
       mesh,
-      ownsMaterial: true,
+      ownsMaterial: false,
       velX: (Math.random() - 0.5) * 0.8,
       velY: 0.4 + Math.random() * 0.4,
       velZ: (Math.random() - 0.5) * 0.6,

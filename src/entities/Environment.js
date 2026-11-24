@@ -15,7 +15,8 @@ export class Environment {
     this.cityTheme = null;
     this.chunks = [];
     this.chunkLength = 60; // 60 mètres par tronçon
-    this.totalChunks = 6;
+    const isMob = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+    this.totalChunks = isMob ? 4 : 6; // 4 tronçons sur mobile = -33% de draw calls (zéro stagnation)
     this.landmark = null;
     this.finishArch = null;
     this.finishDistance = 2400; // Parcours étendu à 2400m avec vrais virages et progression 100% équilibrée
