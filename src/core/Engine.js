@@ -104,10 +104,10 @@ export class Engine {
       });
       envScene.add(new THREE.Mesh(domeGeo, domeMat));
 
-      // Soleil : point compact et chaud (reflet ponctuel, pas de patch géant)
+      // Soleil : intensité calibrée (évite les reflets blancs brûlés sur les véhicules)
       const sun = new THREE.Mesh(
         new THREE.SphereGeometry(5, 12, 8),
-        new THREE.MeshBasicMaterial({ color: new THREE.Color(5.5, 5.0, 4.2) })
+        new THREE.MeshBasicMaterial({ color: new THREE.Color(1.8, 1.65, 1.4) })
       );
       sun.position.set(20, 34, 18); // Cohérent avec la direction de la dirLight
       envScene.add(sun);
@@ -118,7 +118,7 @@ export class Engine {
       sun.geometry.dispose();
       sun.material.dispose();
       pmrem.dispose();
-      this.scene.environmentIntensity = 0.65;
+      this.scene.environmentIntensity = 0.45;
     } catch (err) {
       console.warn('IBL PMREM indisponible, rendu standard conservé :', err);
       this.scene.environment = null;
@@ -142,17 +142,16 @@ export class Engine {
       this.dynamicLights.push({ light: pl, active: false, timer: 0, duration: 0, peakIntensity: 0 });
     }
 
-    // Éclairage naturel rééquilibré : l'ambiance ne lave plus le volume du modelé,
-    // la lumière clé (soleil) affirme les ombres portées et le contraste arcade
-    this.ambientLight = new THREE.AmbientLight(0xcfe8ff, 0.3);
+    // Éclairage naturel rééquilibré : contraste franc et couleurs riches
+    this.ambientLight = new THREE.AmbientLight(0xdbeafe, 0.36);
     this.scene.add(this.ambientLight);
 
     // Lumière hémisphérique pour des reflets de ciel et sol riches sur les modèles 3D
-    this.hemiLight = new THREE.HemisphereLight(0xdff9fb, 0x535c68, 0.6);
+    this.hemiLight = new THREE.HemisphereLight(0xe0f2fe, 0x3f4756, 0.68);
     this.scene.add(this.hemiLight);
 
     // Lumière solaire principale naturelle (ombres désactivées sur mobile pour 60 FPS constants)
-    this.dirLight = new THREE.DirectionalLight(0xfffdf7, 1.15);
+    this.dirLight = new THREE.DirectionalLight(0xfff6e8, 1.24);
     this.dirLight.position.set(22, 42, 22);
     this.dirLight.castShadow = !this.isMobile;
     const shadowRes = this.isMobile ? 512 : 1024;

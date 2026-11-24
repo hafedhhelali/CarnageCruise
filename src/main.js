@@ -1009,10 +1009,10 @@ class GameApp {
   }
 
   /**
-   * Déclenche la cinématique 3D d'arrestation policière (policiers descendent, chauffeur mains sur la tête, puis PRISON)
+   * Arrestation immédiate : arrêt du véhicule, son de prison et transfert direct en cellule
    */
   triggerPoliceArrest() {
-    if (this.hasCrossedFinish || this._arrestCinematic) return;
+    if (this.hasCrossedFinish) return;
     this.hasCrossedFinish = true;
     gameState.isArrested = true;
     gameState.speed = 0;
@@ -1020,23 +1020,18 @@ class GameApp {
 
     soundManager.stopAllGameplaySounds();
     soundManager.stopEngine();
-    soundManager.playArrestSimulation();
+    soundManager.playPrisonSlam();
     Haptic.impactHeavy();
 
-    const roadX = this.environment ? this.environment.getRoadCenterX(this.bike.z) : 0;
-    const cine = this.traffic && this.traffic.spawnArrestCinematic
-      ? this.traffic.spawnArrestCinematic(this.bike.mesh.position, roadX)
-      : null;
+    if (this.ui && this.ui.spawnFloatingCombatText) {
+      this.ui.spawnFloatingCombatText('⛓️ ARRÊTÉ !', 'TRANSFERT EN PRISON...', '#ef4444', 50, 34);
+    }
 
-    this._arrestCinematic = {
-      timer: 0,
-      duration: 5.0,
-      phase: 1,
-      cine
-    };
-
-    if (this.ui && this.ui.showArrestBanner) {
-      this.ui.showArrestBanner();
+    const bailCost = 1500;
+    storage.setPrisonState(true, bailCost, gameState.selectedCity?.id || null);
+    gameState.endRun();
+    if (this.ui && this.ui.showPrisonOverlay) {
+      this.ui.showPrisonOverlay(bailCost, gameState.selectedCity);
     }
   }
 
@@ -1254,37 +1249,7 @@ class GameApp {
       currentSteer = 0;
     }
 
-    if (gameState.currentMode === 'PLAYING' && this._arrestCinematic) {
-      // Pendant la simulation 3D d'arrestation, geler la circulation et jouer uniquement la cinématique
-      this._arrestCinematic.timer += delta;
-      if (this._arrestCinematic.cine) {
-        this._arrestCinematic.cine.update(delta);
-      }
-      const t = this._arrestCinematic.timer;
-      if (t >= 1.1 && this._arrestCinematic.phase < 2) {
-        this._arrestCinematic.phase = 2;
-        if (this.ui && this.ui.updateArrestBannerPhase) this.ui.updateArrestBannerPhase(2);
-      } else if (t >= 2.4 && this._arrestCinematic.phase < 3) {
-        this._arrestCinematic.phase = 3;
-        if (this.bike && this.bike.riderTorso) this.bike.riderTorso.visible = false;
-        if (this.bike && this.bike.riderHead) this.bike.riderHead.visible = false;
-        if (this.ui && this.ui.updateArrestBannerPhase) this.ui.updateArrestBannerPhase(3);
-      }
-      if (this.engine.updateCameraArrest) {
-        this.engine.updateCameraArrest(delta, this.bike.mesh.position, t);
-      }
-      if (t >= this._arrestCinematic.duration) {
-        if (this._arrestCinematic.cine) this._arrestCinematic.cine.dispose();
-        this._arrestCinematic = null;
-        soundManager.playPrisonSlam();
-        const bailCost = 1500;
-        storage.setPrisonState(true, bailCost, gameState.selectedCity?.id || null);
-        gameState.endRun();
-        if (this.ui && this.ui.showPrisonOverlay) {
-          this.ui.showPrisonOverlay(bailCost, gameState.selectedCity);
-        }
-      }
-    } else if (gameState.currentMode === 'PLAYING') {
+    if (gameState.currentMode === 'PLAYING') {
       const isFlyingCraft = this.bike.currentBikeId === 'aero_jet' || this.bike.isFlyingEscape;
 
       // 1. Calcul de la vitesse effective avec gestion de l'accident et du freinage

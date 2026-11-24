@@ -230,47 +230,21 @@ export class Traffic {
   createHighFidelityVehicle(type, colorHex = 0) {
     const group = new THREE.Group();
     const isMotorcycle = type === 'motorcycle';
-    const glbSpec = this.resolveGlbModelSpec(type, colorHex);
-
-    if (
-      typeof modelBank?.has === 'function' &&
-      modelBank.has(glbSpec.name) &&
-      typeof modelBank?.cloneToFootprint === 'function'
-    ) {
-      const glbMesh = modelBank.cloneToFootprint(
-        glbSpec.name,
-        glbSpec.width,
-        glbSpec.height,
-        glbSpec.length
-      );
-      if (glbMesh) {
-        glbMesh.traverse((child) => {
-          if (child.isMesh) child.castShadow = true;
-        });
-        group.add(glbMesh);
-        group.userData.isGlb = true;
-        group.userData.wheelMeshes = [];
-        this.attachVehicleLights(group, isMotorcycle);
-        return group;
-      }
-    }
-
+    // Flotte PBR unifiée et sculptée (plus de substitution GLB blanche/disparate)
     group.userData.isGlb = false;
 
-    // Palettes de peintures métallisées nacrées de prestige (fallback procédural)
-    const metallicColors = [0x0984e3, 0xd63031, 0x2d3436, 0x6c5ce7, 0x00b894, 0xe17055, 0x1e3799];
+    // Palettes de peintures satinées riches (jamais de blanc délavé)
+    const metallicColors = [0x1d4ed8, 0xdc2626, 0x334155, 0x6d28d9, 0x059669, 0xea580c, 0x1e3a8a];
     const index = typeof colorHex === 'number' ? colorHex : 0;
     const carColor = type === 'taxi_luxe'
-      ? 0xf1c40f
+      ? 0xeab308
       : (index > 0xff ? index : metallicColors[Math.abs(Math.floor(index)) % metallicColors.length]);
 
-    const carPaint = new THREE.MeshPhysicalMaterial({
+    const carPaint = new THREE.MeshStandardMaterial({
       color: carColor,
-      metalness: 0.65,
-      roughness: 0.28,
-      clearcoat: 0.9,
-      clearcoatRoughness: 0.08,
-      envMapIntensity: 0.85
+      metalness: 0.42,
+      roughness: 0.34,
+      envMapIntensity: 0.45
     });
 
     const roofMat = new THREE.MeshStandardMaterial({
@@ -344,114 +318,79 @@ export class Traffic {
       }
 
     } else if (type === 'taxi_luxe') {
-      // 2. TAXI PARISIEN HAUT DE GAMME (profil biseauté)
+      // 2. TAXI PARISIEN PROPORTIONNÉ
       const body = new THREE.Mesh(this.sharedGeos.chassisSedan, carPaint);
-      body.castShadow = true;
       group.add(body);
 
-      const cabinGlass = new THREE.Mesh(new THREE.BoxGeometry(1.92, 0.38, 1.85), this.sharedMats.tintedGlass);
-      cabinGlass.position.set(0, 1.12, -0.18);
+      const cabinGlass = new THREE.Mesh(new THREE.BoxGeometry(1.66, 0.36, 1.72), this.sharedMats.tintedGlass);
+      cabinGlass.position.set(0, 1.10, -0.22);
       group.add(cabinGlass);
 
-      // Vitrages latéraux et pare-brises avant/arrière
-      const windshield = new THREE.Mesh(new THREE.PlaneGeometry(1.64, 0.72), this.sharedMats.tintedGlass);
-      windshield.position.set(0, 1.12, 1.15);
-      windshield.rotation.x = -Math.PI / 4.4;
-      const rearGlass = new THREE.Mesh(new THREE.PlaneGeometry(1.64, 0.72), this.sharedMats.tintedGlass);
-      rearGlass.position.set(0, 1.12, -1.45);
-      rearGlass.rotation.x = Math.PI / 4.4;
-      group.add(windshield, rearGlass);
+      const roofCap = new THREE.Mesh(new THREE.BoxGeometry(1.62, 0.08, 1.42), roofMat);
+      roofCap.position.set(0, 1.41, -0.22);
+      group.add(roofCap);
 
-      // Calandre chromée prestige avec lamelles
-      const grille = new THREE.Mesh(new THREE.BoxGeometry(1.15, 0.38, 0.08), this.sharedMats.chromeTrim);
-      grille.position.set(0, 0.55, 2.34);
+      const grille = new THREE.Mesh(new THREE.BoxGeometry(1.10, 0.30, 0.08), darkTrimMat);
+      grille.position.set(0, 0.52, 2.31);
       group.add(grille);
 
-      // Enseigne lumineuse de toit "TAXI PARISIEN" rétroéclairée
-      const signBase = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.05, 0.2), this.sharedMats.chromeTrim);
-      signBase.position.set(0, 1.45, -0.2);
-      const signGlow = new THREE.Mesh(new THREE.BoxGeometry(0.68, 0.15, 0.16), this.sharedMats.headlightLED);
-      signGlow.position.set(0, 1.54, -0.2);
+      const signBase = new THREE.Mesh(new THREE.BoxGeometry(0.70, 0.05, 0.20), darkTrimMat);
+      signBase.position.set(0, 1.47, -0.2);
+      const signGlow = new THREE.Mesh(new THREE.BoxGeometry(0.64, 0.14, 0.16), this.sharedMats.headlightLED);
+      signGlow.position.set(0, 1.56, -0.2);
       group.add(signBase, signGlow);
 
-      // Rétroviseurs chromés
-      for (let s of [-0.98, 0.98]) {
-        const mirror = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.1, 0.12), this.sharedMats.chromeTrim);
-        mirror.position.set(s, 0.92, 0.75);
+      for (let s of [-0.94, 0.94]) {
+        const mirror = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.09, 0.11), darkTrimMat);
+        mirror.position.set(s, 0.90, 0.68);
         group.add(mirror);
       }
 
     } else if (type === 'suv_urban') {
-      // 3. SUV CITADIN ROBUSTE & SPORTIF (profil biseauté)
+      // 3. SUV CITADIN ROBUSTE & PROPORTIONNÉ
       const lowerBody = new THREE.Mesh(this.sharedGeos.chassisSUV, carPaint);
-      lowerBody.castShadow = true;
       group.add(lowerBody);
 
-      // Sabot de protection noir et passages de roues robustes
-      const skidPlate = new THREE.Mesh(new THREE.BoxGeometry(2.05, 0.18, 4.5), darkTrimMat);
+      const skidPlate = new THREE.Mesh(new THREE.BoxGeometry(1.94, 0.16, 4.38), darkTrimMat);
       skidPlate.position.y = 0.32;
       group.add(skidPlate);
 
-      const cabinGlass = new THREE.Mesh(new THREE.BoxGeometry(1.98, 0.44, 2.25), this.sharedMats.tintedGlass);
-      cabinGlass.position.set(0, 1.32, -0.18);
+      const cabinGlass = new THREE.Mesh(new THREE.BoxGeometry(1.74, 0.42, 2.08), this.sharedMats.tintedGlass);
+      cabinGlass.position.set(0, 1.30, -0.18);
       group.add(cabinGlass);
 
-      // Barres de toit aérodynamiques chromées
-      for (let s of [-0.78, 0.78]) {
-        const rail = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, 2.4), this.sharedMats.chromeTrim);
-        rail.position.set(s, 1.74, -0.15);
+      for (let s of [-0.72, 0.72]) {
+        const rail = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, 2.2), darkTrimMat);
+        rail.position.set(s, 1.66, -0.15);
         group.add(rail);
       }
 
-      // Vitrages
-      const windshield = new THREE.Mesh(new THREE.PlaneGeometry(1.75, 0.82), this.sharedMats.tintedGlass);
-      windshield.position.set(0, 1.34, 1.25);
-      windshield.rotation.x = -Math.PI / 4.6;
-      group.add(windshield);
-
-      // Double sortie d'échappement sportive
-      for (let s of [-0.65, 0.65]) {
-        const exhaust = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.1, 0.15), this.sharedMats.chromeTrim);
-        exhaust.position.set(s, 0.35, -2.32);
-        group.add(exhaust);
-      }
-
     } else {
-      // 4. BERLINE ALLEMANDE DE PRESTIGE (profil biseauté)
+      // 4. BERLINE SPORTIVE PROPORTIONNÉE
       const body = new THREE.Mesh(this.sharedGeos.chassisSedan, carPaint);
-      body.castShadow = true;
       group.add(body);
 
-      const cabinGlass = new THREE.Mesh(new THREE.BoxGeometry(1.90, 0.38, 1.85), this.sharedMats.tintedGlass);
-      cabinGlass.position.set(0, 1.12, -0.18);
+      const cabinGlass = new THREE.Mesh(new THREE.BoxGeometry(1.66, 0.36, 1.72), this.sharedMats.tintedGlass);
+      cabinGlass.position.set(0, 1.10, -0.22);
       group.add(cabinGlass);
 
-      const windshield = new THREE.Mesh(new THREE.PlaneGeometry(1.68, 0.72), this.sharedMats.tintedGlass);
-      windshield.position.set(0, 1.12, 1.14);
-      windshield.rotation.x = -Math.PI / 4.2;
-      group.add(windshield);
+      const grille = new THREE.Mesh(new THREE.BoxGeometry(1.12, 0.28, 0.08), darkTrimMat);
+      grille.position.set(0, 0.52, 2.31);
+      group.add(grille);
 
-      // Calandre double sport chromée
-      for (let s of [-0.32, 0.32]) {
-        const kidney = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.32, 0.08), this.sharedMats.chromeTrim);
-        kidney.position.set(s, 0.56, 2.36);
-        group.add(kidney);
-      }
-
-      // Rétroviseurs sport
-      for (let s of [-1.0, 1.0]) {
-        const mirror = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.1, 0.12), carPaint);
-        mirror.position.set(s, 0.88, 0.7);
+      for (let s of [-0.94, 0.94]) {
+        const mirror = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.09, 0.11), carPaint);
+        mirror.position.set(s, 0.88, 0.68);
         group.add(mirror);
       }
     }
 
-    // 4 Roues sportives avec jantes alliage 3D & étriers de frein
+    // 4 Roues alignées sans dépassement ni étriers superflus
     const wheelPositions = [
-      [-1.0, 0.36, 1.35],
-      [1.0, 0.36, 1.35],
-      [-1.0, 0.36, -1.35],
-      [1.0, 0.36, -1.35]
+      [-0.90, 0.36, 1.35],
+      [0.90, 0.36, 1.35],
+      [-0.90, 0.36, -1.35],
+      [0.90, 0.36, -1.35]
     ];
     group.userData.wheelMeshes = [];
 
@@ -461,16 +400,11 @@ export class Traffic {
 
       const tire = new THREE.Mesh(this.sharedGeos.wheelTire, this.sharedMats.rubber);
       tire.rotation.z = Math.PI / 2;
-      tire.castShadow = true;
 
       const rim = new THREE.Mesh(this.sharedGeos.wheelRim, this.sharedMats.rim);
       rim.rotation.z = Math.PI / 2;
 
-      // Étriers de frein sport rouge vif visibles
-      const caliper = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.18, 0.08), this.sharedMats.brakeCaliper);
-      caliper.position.set(wx > 0 ? -0.06 : 0.06, 0.12, 0.08);
-
-      wheelGroup.add(tire, rim, caliper);
+      wheelGroup.add(tire, rim);
       group.add(wheelGroup);
       group.userData.wheelMeshes.push(wheelGroup);
     });
@@ -1265,23 +1199,7 @@ export class Traffic {
         if (tooClose) continue;
 
         // Upgrade lazy-loaded .glb model when modelBank finishes async loading
-        if (!v.userData.isGlb) {
-          const spec = this.resolveGlbModelSpec(v.userData.type, i);
-          if (typeof modelBank?.has === 'function' && modelBank.has(spec.name)) {
-            const upgraded = this.createHighFidelityVehicle(v.userData.type, i);
-            if (upgraded.userData.isGlb) {
-              upgraded.userData = {
-                ...v.userData,
-                wheelMeshes: upgraded.userData.wheelMeshes,
-                isGlb: true
-              };
-              this.container.remove(v);
-              this.container.add(upgraded);
-              this.vehicles[i] = upgraded;
-              v = upgraded;
-            }
-          }
-        }
+        // Garder notre flotte PBR unifiée (pas de substitution GLB blanche/brute en cours de route)
 
         const curveX = roadCurveFunc ? roadCurveFunc(candidateZ) : 0;
         const laneX = v.userData.lane;
