@@ -267,13 +267,6 @@ class GameApp {
   handleUIAction(action, payload) {
     try {
       if (action === 'START_RUN') {
-        if (storage.isInPrison()) {
-          const pState = storage.getPrisonState();
-          if (this.ui && this.ui.showPrisonOverlay) {
-            this.ui.showPrisonOverlay(pState.bailCost || 1500, gameState.selectedCity);
-          }
-          return;
-        }
         const city = (payload && payload.city) ? payload.city : (payload || gameState.selectedCity);
         const challengeMode = (payload && payload.challengeMode) || gameState.challengeMode || 'STANDARD';
         if (city && city.id) {
@@ -836,57 +829,32 @@ class GameApp {
 
     const bid = this.bike.currentBikeId;
     const isHeavyOrFast = ['tank', 'rouleau', 'rad_rover', 'bat_moto', 'moto_tron', 'dragster'].includes(bid);
-    const maxCops = isHeavyOrFast ? 4 : 2;
+    const maxCops = isHeavyOrFast ? 2 : 1; // Nombre réduit d'intercepteurs en poursuite
 
     const activeCops = (this.traffic.vehicles || []).filter(v => v.userData && v.userData.isPursuitPolice && v.userData.active && !v.userData.isCrashed);
     this._pursuitSpawnTimer = (this._pursuitSpawnTimer || 0) - simDelta;
     if (activeCops.length < maxCops && this._pursuitSpawnTimer <= 0 && this.traffic.spawnPursuitCruiser) {
-      this._pursuitSpawnTimer = isHeavyOrFast ? 1.8 : 2.5;
+      this._pursuitSpawnTimer = 4.5;
       const fromBehind = Math.random() < 0.5;
-      const zSpawn = fromBehind ? (this.bike.z - 14) : (this.bike.z + 30);
+      const zSpawn = fromBehind ? (this.bike.z - 14) : (this.bike.z + 32);
       const curveX = this.environment ? this.environment.getRoadCenterX(zSpawn) : 0;
       const laneX = (Math.random() < 0.5 ? -2.4 : 2.4);
       const initSpeed = fromBehind ? Math.max(gameState.speed + 10.0, 26.0) : Math.max(8.0, gameState.speed * 0.55);
-      const useHeavySwat = isHeavyOrFast && Math.random() < 0.65;
+      const useHeavySwat = isHeavyOrFast && Math.random() < 0.5;
       this.traffic.spawnPursuitCruiser(zSpawn, curveX + laneX, initSpeed, useHeavySwat);
     }
 
-    // Barrages de police périodiques pendant la poursuite active
+    // Barrages de police espacés pendant la poursuite
     if (this.policePursuitActive && this.traffic.spawnPoliceRoadblock) {
-      if (!this._nextPursuitRoadblockZ) this._nextPursuitRoadblockZ = this.bike.z + 240;
+      if (!this._nextPursuitRoadblockZ) this._nextPursuitRoadblockZ = this.bike.z + 360;
       if (this.bike.z + 130 >= this._nextPursuitRoadblockZ) {
         this.traffic.spawnPoliceRoadblock(this._nextPursuitRoadblockZ);
-        this._nextPursuitRoadblockZ += isHeavyOrFast ? 220 : 280;
+        this._nextPursuitRoadblockZ += 420;
       }
     }
 
     const canSmashPolice = gameState.isNitroActive || this.bike.isInvulnerable() ||
       ['tank', 'rouleau', 'rad_rover', 'bat_moto', 'moto_tron'].includes(bid);
-
-    // Blocage actif & immobilisation par encerclement policier
-    let policeNearby = false;
-    let blockingFactor = 0;
-    for (const cop of activeCops) {
-      const dzRel = cop.position.z - this.bike.z;
-      const dX = Math.abs(this.bike.mesh.position.x - cop.position.x);
-      if (Math.abs(dzRel) < 7.5 && dX < 4.5) policeNearby = true;
-      if (dzRel >= -2.5 && dzRel <= 9.5 && dX < 2.25) {
-        blockingFactor += cop.userData.isHeavySwat ? 1.6 : 1.0;
-      }
-    }
-    if (blockingFactor > 0 && !gameState.isNitroActive) {
-      const decel = blockingFactor * (isHeavyOrFast ? 2.2 : 4.2) * simDelta;
-      gameState.speed = Math.max(2.0, gameState.speed - decel);
-    }
-    if (policeNearby && gameState.speed < 4.2 && !gameState.isNitroActive) {
-      this._immobilizedTimer = (this._immobilizedTimer || 0) + simDelta;
-      if (this._immobilizedTimer >= 2.4) {
-        this.triggerPoliceArrest();
-        return;
-      }
-    } else {
-      this._immobilizedTimer = Math.max(0, (this._immobilizedTimer || 0) - simDelta * 1.8);
-    }
 
     this._policeHitCooldown = Math.max(0, (this._policeHitCooldown || 0) - simDelta);
 
@@ -917,7 +885,6 @@ class GameApp {
             cop.userData.active = false;
           }
           cs.shieldHp = Math.max(0, (cs.shieldHp ?? 3) - 1);
-          cs.bustedProgress = Math.min(100, (cs.bustedProgress || 0) + 40);
           gameState.speed = Math.max(3.5, gameState.speed * 0.48);
           if (this.bike.triggerChassisJolt) {
             const sideImp = cop.position.x >= this.bike.mesh.position.x ? -1 : 1;
@@ -925,11 +892,14 @@ class GameApp {
           }
           if (this.particles.spawnDirectionalSparks) this.particles.spawnDirectionalSparks(this.bike.mesh.position, new THREE.Vector3(0, 0.8, -1), 12);
           soundManager.playCrash();
-          if (this.ui) this.ui.spawnFloatingCombatText('ESQUIVE RATÉE !', `🚔 BOUCLIER ${cs.shieldHp}/3`, '#ff4757', 50, 35);
           Haptic.impactHeavy();
-          if (cs.shieldHp <= 0 || cs.bustedProgress >= 100) {
-            this.triggerPoliceArrest();
-            return;
+          if (cs.shieldHp <= 0) {
+            cs.shieldHp = 3;
+            gameState.score = Math.max(0, gameState.score - 400);
+            if (this.ui) this.ui.spawnFloatingCombatText('-400 PTS', '💥 BOUCLIER BRISÉ !', '#ff4757', 50, 35);
+            this.bike.triggerCrash();
+          } else {
+            if (this.ui) this.ui.spawnFloatingCombatText('ESQUIVE RATÉE !', `🚔 BOUCLIER ${cs.shieldHp}/3`, '#ff4757', 50, 35);
           }
         }
       } else if (!cop.userData.dodged && dZ < 3.6 && dX >= 1.8 && dX < 3.5 && this.bike.z > cop.position.z - 0.5) {
@@ -962,9 +932,10 @@ class GameApp {
           soundManager.playCrash();
           if (this.ui) this.ui.spawnFloatingCombatText('BARRAGE HEURTÉ !', `🚔 BOUCLIER ${cs.shieldHp}/3`, '#ff4757', 50, 35);
           if (cs.shieldHp <= 0) {
-            this.triggerPolicePursuitIfCrime('BARRAGE');
-            this.triggerPoliceArrest();
-            return;
+            cs.shieldHp = 3;
+            gameState.score = Math.max(0, gameState.score - 400);
+            this.bike.triggerCrash();
+            if (this.ui) this.ui.spawnFloatingCombatText('-400 PTS', 'BARRAGE HEURTÉ !', '#ff4757', 50, 34);
           }
         }
       } else if (this.bike.z > rb.position.z + 2.8) {
@@ -991,15 +962,9 @@ class GameApp {
       }
       if (this.traffic && this.traffic.spawnPursuitCruiser && this.environment) {
         const zAhead = this.bike.z + 28;
-        const zBehind = this.bike.z - 12;
         const curveAhead = this.environment.getRoadCenterX(zAhead);
-        const curveBehind = this.environment.getRoadCenterX(zBehind);
         const isHeavyOrFast = ['tank', 'rouleau', 'rad_rover', 'bat_moto', 'moto_tron', 'dragster'].includes(this.bike.currentBikeId);
         this.traffic.spawnPursuitCruiser(zAhead, curveAhead + 2.2, Math.max(8.0, gameState.speed * 0.55), isHeavyOrFast);
-        this.traffic.spawnPursuitCruiser(zBehind, curveBehind - 2.2, Math.max(gameState.speed + 10.0, 26.0), false);
-        if (this.traffic.spawnPoliceRoadblock) {
-          this.traffic.spawnPoliceRoadblock(this.bike.z + 95);
-        }
       }
       soundManager.switchMusicTrack('PURSUIT');
       if (this.ui) {
@@ -1012,27 +977,15 @@ class GameApp {
    * Arrestation immédiate : arrêt du véhicule, son de prison et transfert direct en cellule
    */
   triggerPoliceArrest() {
-    if (this.hasCrossedFinish) return;
-    this.hasCrossedFinish = true;
-    gameState.isArrested = true;
-    gameState.speed = 0;
-    if (this.bike) this.bike.speed = 0;
-
-    soundManager.stopAllGameplaySounds();
-    soundManager.stopEngine();
-    soundManager.playPrisonSlam();
-    Haptic.impactHeavy();
-
-    if (this.ui && this.ui.spawnFloatingCombatText) {
-      this.ui.spawnFloatingCombatText('⛓️ ARRÊTÉ !', 'TRANSFERT EN PRISON...', '#ef4444', 50, 34);
+    // Mode Poursuite Only : l'arrestation et la prison sont désactivées.
+    gameState.isArrested = false;
+    if (gameState.challengeState) {
+      gameState.challengeState.shieldHp = 3;
+      gameState.challengeState.bustedProgress = 0;
     }
-
-    const bailCost = 1500;
-    storage.setPrisonState(true, bailCost, gameState.selectedCity?.id || null);
-    gameState.endRun();
-    if (this.ui && this.ui.showPrisonOverlay) {
-      this.ui.showPrisonOverlay(bailCost, gameState.selectedCity);
-    }
+    gameState.score = Math.max(0, gameState.score - 400);
+    if (this.ui) this.ui.spawnFloatingCombatText('-400 PTS', '💥 BOUCLIER BRISÉ !', '#ff4757', 50, 35);
+    if (this.bike) this.bike.triggerCrash();
   }
 
   /**
@@ -1138,8 +1091,9 @@ class GameApp {
             }
             Haptic.impactHeavy();
             if (cs.shieldHp <= 0) {
-              this.triggerPoliceArrest();
-              return;
+              cs.shieldHp = 3;
+              gameState.score = Math.max(0, gameState.score - 400);
+              if (this.ui) this.ui.spawnFloatingCombatText('-400 PTS', 'CHOC BARRAGE !', '#ff4757', 50, 34);
             }
           }
         } else if (this.bike.z > rb.position.z + 2.8) {
@@ -1959,13 +1913,7 @@ class GameApp {
         if (t >= this._arrestCinematic.duration) {
           if (this._arrestCinematic.cine) this._arrestCinematic.cine.dispose();
           this._arrestCinematic = null;
-          soundManager.playPrisonSlam();
-          const bailCost = 1500;
-          storage.setPrisonState(true, bailCost, gameState.selectedCity?.id || null);
-          gameState.endRun();
-          if (this.ui && this.ui.showPrisonOverlay) {
-            this.ui.showPrisonOverlay(bailCost, gameState.selectedCity);
-          }
+          gameState.isArrested = false;
         }
       }
 

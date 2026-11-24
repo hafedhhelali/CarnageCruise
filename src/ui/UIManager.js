@@ -932,11 +932,6 @@ export class UIManager {
     this.root.appendChild(mapScreen);
     this.updateCityDetail(mapScreen.querySelector('#city-detail'));
 
-    if (storage.isInPrison()) {
-      const pState = storage.getPrisonState();
-      this.showPrisonOverlay(pState.bailCost || 1500, CITIES.find(c => c.id === pState.cityId) || this.selectedMapCity);
-    }
-
     // Centrage initial fluide de la vue sur la ville sélectionnée
     setTimeout(() => {
       if (this.selectedMapCity) {
@@ -4591,7 +4586,7 @@ ${gameState.isRuinsMode ? '' : `          <div class="hud-nitro-group">
 
   // --- 7. MODALE DE RÉSULTATS ---
   showResultsModal(data) {
-    if (this.isReturningToMap || gameState.isArrested) return;
+    if (this.isReturningToMap) return;
 
     if (this.assaultOverlay && document.body.contains(this.assaultOverlay)) {
       // Si la carte triomphale d'assaut est active, on met à jour ses métriques au lieu d'ouvrir une modale doublon

@@ -1797,7 +1797,9 @@ export class Environment {
         }
         pos.needsUpdate = true;
         mesh.frustumCulled = false;
-        mesh.geometry.computeBoundingSphere();
+        if (mesh.geometry.userData.isCenterStripe) {
+          mesh.geometry.computeBoundingSphere();
+        }
       });
     }
 

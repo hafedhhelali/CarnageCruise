@@ -974,7 +974,11 @@ export class CharacterSystem {
             if (!char.fleeDirZ) char.fleeDirZ = (char.group.position.z >= bikeZ ? 1 : -1);
             char.group.position.z += char.fleeDirZ * sprintSpeed * delta;
             char.group.position.x = fleeCurveX + side * 6.55;
-            char.group.rotation.y = char.fleeDirZ > 0 ? 0 : Math.PI;
+            const targetRotY = char.fleeDirZ > 0 ? 0 : Math.PI;
+            let diff = targetRotY - char.group.rotation.y;
+            while (diff > Math.PI) diff -= Math.PI * 2;
+            while (diff < -Math.PI) diff += Math.PI * 2;
+            char.group.rotation.y += diff * (1.0 - Math.exp(-14.0 * delta));
           } else {
             char.group.position.x += char.fleeDirectionX * sprintSpeed * delta;
             if (char.isOnSidewalk) {
@@ -984,7 +988,11 @@ export class CharacterSystem {
             } else if (char.crosswalkZ !== undefined) {
               char.group.position.z = char.crosswalkZ;
             }
-            char.group.rotation.y = char.fleeDirectionX > 0 ? Math.PI / 2 : -Math.PI / 2;
+            const targetRotY = char.fleeDirectionX > 0 ? Math.PI / 2 : -Math.PI / 2;
+            let diff = targetRotY - char.group.rotation.y;
+            while (diff > Math.PI) diff -= Math.PI * 2;
+            while (diff < -Math.PI) diff += Math.PI * 2;
+            char.group.rotation.y += diff * (1.0 - Math.exp(-14.0 * delta));
           }
 
           // Animation de panique : bras en l'air qui moulinent (blend fluide), tête tournée en arrière
@@ -1061,7 +1069,7 @@ export class CharacterSystem {
               : (legAngle * 0.65);
             char.armR.rotation.x += (targetArmR - char.armR.rotation.x) * armBlend;
             if (char.torso) {
-              char.torso.rotation.z = 0;
+              char.torso.rotation.z = Math.sin(char.walkPhase) * 0.05;
               char.torso.rotation.y = Math.sin(char.walkPhase) * 0.11;
             }
             char.headGroup.rotation.z = 0;
@@ -1081,7 +1089,11 @@ export class CharacterSystem {
               char.group.position.x = curveX + Math.sign(char.group.position.x - curveX) * 5.3;
             }
             // Strictement orienté dans la direction du pas (+X = PI/2, -X = -PI/2) : ZÉRO marche arrière
-            char.group.rotation.y = char.crossDirection > 0 ? Math.PI / 2 : -Math.PI / 2;
+            const targetRotY = char.crossDirection > 0 ? Math.PI / 2 : -Math.PI / 2;
+            let diff = targetRotY - char.group.rotation.y;
+            while (diff > Math.PI) diff -= Math.PI * 2;
+            while (diff < -Math.PI) diff += Math.PI * 2;
+            char.group.rotation.y += diff * (1.0 - Math.exp(-10.0 * delta));
           } else {
             // Marche strictement le long de son trottoir à altitude 0.25m (ne traverse jamais la route)
             char.group.position.z += char.walkDirection * char.typeDef.speed * delta * 0.85;
@@ -1091,7 +1103,11 @@ export class CharacterSystem {
             char.sidewalkSide = side;
             char.group.position.x = curveX + side * 5.2;
             // Strictement orienté dans le sens de marche le long du trottoir (+Z = 0, -Z = PI)
-            char.group.rotation.y = char.walkDirection > 0 ? 0 : Math.PI;
+            const targetRotY = char.walkDirection > 0 ? 0 : Math.PI;
+            let diff = targetRotY - char.group.rotation.y;
+            while (diff > Math.PI) diff -= Math.PI * 2;
+            while (diff < -Math.PI) diff += Math.PI * 2;
+            char.group.rotation.y += diff * (1.0 - Math.exp(-10.0 * delta));
           }
         }
 

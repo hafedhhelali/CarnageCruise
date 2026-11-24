@@ -111,7 +111,7 @@ export class Storage {
           googleAccount: { ...DEFAULT_SAVE.googleAccount, ...(parsed.googleAccount || {}) },
           worldmageddon: { ...DEFAULT_SAVE.worldmageddon, ...(parsed.worldmageddon || {}) },
           stats: { ...DEFAULT_SAVE.stats, ...(parsed.stats || {}) },
-          prison: { ...DEFAULT_SAVE.prison, ...(parsed.prison || {}) }
+          prison: { active: false, bailCost: 0, cityId: null }
         };
       }
     } catch (e) {
