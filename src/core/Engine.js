@@ -151,10 +151,10 @@ export class Engine {
     this.hemiLight = new THREE.HemisphereLight(0xdff9fb, 0x535c68, 0.6);
     this.scene.add(this.hemiLight);
 
-    // Lumière solaire principale naturelle avec ombres douces
+    // Lumière solaire principale naturelle (ombres désactivées sur mobile pour 60 FPS constants)
     this.dirLight = new THREE.DirectionalLight(0xfffdf7, 1.15);
     this.dirLight.position.set(22, 42, 22);
-    this.dirLight.castShadow = true;
+    this.dirLight.castShadow = !this.isMobile;
     const shadowRes = this.isMobile ? 512 : 1024;
     this.dirLight.shadow.mapSize.width = shadowRes;
     this.dirLight.shadow.mapSize.height = shadowRes;
@@ -300,18 +300,24 @@ export class Engine {
   }
 
   _preloadAllHdris() {
+    if (this.isMobile) return; // Sur mobile, l'IBL procédural + SkyDome évitent le lag et les passes HDR 1K
     for (const filename of HDRI_FILES) {
       this._loadHdri(filename);
     }
   }
 
   _applyHdriForPreset(preset) {
+    if (this.isMobile) {
+      this._setSkyDomeVisible(true);
+      this.scene.backgroundBlurriness = 0;
+      return;
+    }
     const filename = PRESET_HDRI_MAP[preset] || PRESET_HDRI_MAP.DAY_CLEAR;
     const applyEntry = (entry) => {
       if (!entry || this._isRuinsAtmosphere || this._currentPreset !== preset) return;
       this.scene.environment = entry.envTex;
       this.scene.background = entry.hdrTex;
-      this.scene.backgroundBlurriness = 0.06;
+      this.scene.backgroundBlurriness = 0;
       this.scene.backgroundIntensity = this._getBackgroundIntensity(preset);
       this._setSkyDomeVisible(false);
     };
@@ -656,7 +662,7 @@ export class Engine {
     const dampFov = 1.0 - Math.exp(-6.0 * delta);
     const prevFov = this.camera.fov;
     this.camera.fov += (targetFov - this.camera.fov) * dampFov;
-    if (Math.abs(prevFov - this.camera.fov) > 0.005) {
+    if (Math.abs(prevFov - this.camera.fov) > 0.05) {
       this.camera.updateProjectionMatrix();
     }
   }

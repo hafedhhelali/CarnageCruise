@@ -104,11 +104,14 @@ class GameApp {
     // 6. Connecter les entrées tactiles et clavier
     this.bindInputEvents();
 
-    // 7. Horloge d'animation Three.js
+    // 7. Horloge d'animation Three.js & vecteurs réutilisables (zéro allocation par frame)
     this.clock = new THREE.Clock();
+    this._tmpPos = new THREE.Vector3();
+    this._tmpDir = new THREE.Vector3(0, 0.65, -1);
+    this._boundLoop = this.loop.bind(this);
 
     // Démarrer la boucle principale à 60 FPS
-    requestAnimationFrame((t) => this.loop(t));
+    requestAnimationFrame(this._boundLoop);
 
     // Poignée de débogage (dev) : inspection du pipeline de rendu dans la console
     window.__mm = { app: this, engine: this.engine, sound: soundManager };
@@ -1227,7 +1230,7 @@ class GameApp {
   }
 
   loop() {
-    requestAnimationFrame(() => this.loop());
+    requestAnimationFrame(this._boundLoop);
 
     try {
       const rawDelta = Math.min(this.clock.getDelta(), 0.05); // Sécurité contre les sauts de frame / freezes

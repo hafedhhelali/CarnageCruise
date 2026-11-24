@@ -104,13 +104,12 @@ export class Environment {
       })(),
       aerialRingGeo: new THREE.TorusGeometry(2.4, 0.22, 8, 20),
       storeSign: new THREE.BoxGeometry(2.4, 0.45, 0.12),
-      // Flaques d'eau réalistes sur la chaussée (visibles sous la pluie)
-      puddleGeo: new THREE.CircleGeometry(1.15, 14),
-      puddleMat: new THREE.MeshPhysicalMaterial({
+      // Flaques d'eau réalistes sur la chaussée (MeshStandardMaterial rapide sur mobile)
+      puddleGeo: new THREE.CircleGeometry(1.15, 12),
+      puddleMat: new THREE.MeshStandardMaterial({
         color: 0x1e293b,
-        roughness: 0.04,
+        roughness: 0.08,
         metalness: 0.35,
-        clearcoat: 1.0,
         transparent: true,
         opacity: 0.72,
         depthWrite: false,

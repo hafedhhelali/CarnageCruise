@@ -205,7 +205,8 @@ export const CHARACTER_TYPES = [
 export class CharacterSystem {
   constructor(scene) {
     this.scene = scene;
-    this.poolSize = 50; // Foule dense pour l'épreuve d'extermination de la population mondiale
+    const isMob = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+    this.poolSize = isMob ? 22 : 50; // Foule optimisée mobile (22) / desktop (50)
     this.characters = [];
     this.materialsCache = {};
 

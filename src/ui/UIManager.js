@@ -3838,36 +3838,62 @@ ${gameState.isRuinsMode ? '' : `          <div class="hud-nitro-group">
   }
 
   updateHUDStats(data) {
-    const speedVal = this.root.querySelector('#hud-speed-val');
-    const speedGauge = this.root.querySelector('#hud-speed-gauge');
-    const progressFill = this.root.querySelector('#hud-progress-fill');
-    const progressPct = this.root.querySelector('#hud-progress-pct');
-    const scoreVal = this.root.querySelector('#hud-score-val');
-    const targetRemaining = this.root.querySelector('#hud-target-remaining');
+    const nowMs = performance.now();
+    if (!this._hudCache || !document.body.contains(this._hudCache.speedVal)) {
+      this._hudCache = {
+        speedVal: this.root.querySelector('#hud-speed-val'),
+        speedGauge: this.root.querySelector('#hud-speed-gauge'),
+        progressFill: this.root.querySelector('#hud-progress-fill'),
+        progressPct: this.root.querySelector('#hud-progress-pct'),
+        scoreVal: this.root.querySelector('#hud-score-val'),
+        speedVignette: this.root.querySelector('#hud-speed-vignette'),
+        returnMapBtn: this.root.querySelector('#btn-hud-return-map-100'),
+        objCard: this.root.querySelector('#hud-objective-card'),
+        cityName: this.root.querySelector('#hud-city-name'),
+        targetPts: this.root.querySelector('#hud-target-pts'),
+        lastSpeed: -1,
+        lastPct: -1,
+        lastScore: -1,
+        lastMetaTs: 0
+      };
+    }
+    const c = this._hudCache;
+    const speedVal = c.speedVal;
+    const speedGauge = c.speedGauge;
+    const progressFill = c.progressFill;
+    const progressPct = c.progressPct;
+    const scoreVal = c.scoreVal;
 
-    if (speedVal) speedVal.textContent = data.speed;
-    if (speedGauge) {
-      const pct = Math.min(100, Math.floor((data.speed / 220) * 100));
-      speedGauge.style.width = `${pct}%`;
+    const intSpeed = Math.round(Number(data.speed) || 0);
+    if (speedVal && intSpeed !== c.lastSpeed) {
+      c.lastSpeed = intSpeed;
+      speedVal.textContent = intSpeed;
+      if (speedGauge) {
+        const gPct = Math.min(100, Math.floor((intSpeed / 220) * 100));
+        speedGauge.style.width = `${gPct}%`;
+      }
     }
 
-    const speedVignette = this.root.querySelector('#hud-speed-vignette');
-    if (speedVignette) {
+    const speedVignette = c.speedVignette;
+    if (speedVignette && nowMs - c.lastMetaTs > 75) {
       const maxRefSpeed = 160;
-      const speedNorm = Math.max(0, Math.min(1, (Number(data.speed) || 0) / maxRefSpeed));
+      const speedNorm = Math.max(0, Math.min(1, intSpeed / maxRefSpeed));
       const alpha = data.isNitroActive
         ? Math.max(0.55, speedNorm * 0.85)
         : Math.max(0, (speedNorm - 0.25) / 0.75) * 0.65;
-      speedVignette.style.setProperty('--speed-alpha', alpha.toFixed(3));
+      speedVignette.style.setProperty('--speed-alpha', alpha.toFixed(2));
       speedVignette.classList.toggle('nitro-active', Boolean(data.isNitroActive));
     }
     if (progressFill) {
       const pct = Math.min(100, Math.floor(data.progressRatio * 100));
-      progressFill.style.width = `${pct}%`;
-      if (progressPct) progressPct.textContent = `${pct}%`;
+      if (pct !== c.lastPct) {
+        c.lastPct = pct;
+        progressFill.style.width = `${pct}%`;
+        if (progressPct) progressPct.textContent = `${pct}%`;
+      }
 
       // Dès que 100% est atteint : afficher le bouton d'extraction immédiate vers la carte
-      const returnMapBtn = this.root.querySelector('#btn-hud-return-map-100');
+      const returnMapBtn = c.returnMapBtn;
       if (pct >= 100 || data.progressRatio >= 1.0) {
         progressFill.style.background = 'linear-gradient(90deg, #2ed573, #10ac84, #fffa65)';
         progressFill.style.boxShadow = '0 0 12px rgba(46, 213, 115, 0.7)';
@@ -3885,7 +3911,7 @@ ${gameState.isRuinsMode ? '' : `          <div class="hud-nitro-group">
           soundManager.playVictory();
           Haptic.success();
         }
-        const objCard = this.root.querySelector('#hud-objective-card');
+        const objCard = c.objCard;
         if (objCard) {
           objCard.classList.add('objective-100-complete');
           objCard.title = 'Objectif 100% atteint ! Cliquez pour retourner à la carte';
@@ -3893,13 +3919,17 @@ ${gameState.isRuinsMode ? '' : `          <div class="hud-nitro-group">
       }
     }
     // Score dynamique au volant
-    if (scoreVal) {
+    if (scoreVal && data.score !== c.lastScore) {
+      c.lastScore = data.score;
       scoreVal.textContent = data.score.toLocaleString('fr-FR');
     }
 
+    if (nowMs - c.lastMetaTs < 85) return;
+    c.lastMetaTs = nowMs;
+
     // Gestion dynamique des objectifs Worldmageddon (Approche Cataclysme -> Explosion -> Fuite)
-    const cityName = this.root.querySelector('#hud-city-name');
-    const targetPts = this.root.querySelector('#hud-target-pts');
+    const cityName = c.cityName;
+    const targetPts = c.targetPts;
     const cPhase = data.cataclysmPhase || data.nuclearPhase;
     const cTimer = (data.cataclysmEscapeTimer !== undefined) ? data.cataclysmEscapeTimer : data.nuclearEscapeTimer;
     const dType = data.disasterType || (data.nuclearPhase ? 'NUCLEAR' : 'STREET');

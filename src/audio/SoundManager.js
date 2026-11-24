@@ -830,24 +830,17 @@ export class SoundManager {
     osc.start(now);
     osc.stop(now + 0.38);
 
-    // 3. Bris de carrosserie et bruit blanc métallique cartoon
-    const bufferSize = Math.floor(this.ctx.sampleRate * 0.38);
-    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) {
-      data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (this.ctx.sampleRate * 0.09));
-    }
-
+    // 3. Bris de carrosserie et bruit blanc métallique (buffer partagé zéro allocation)
     const noise = this.ctx.createBufferSource();
-    noise.buffer = buffer;
+    noise.buffer = this._getNoiseBuffer ? this._getNoiseBuffer('white', 0.38) : this.ctx.createBuffer(1, Math.floor(this.ctx.sampleRate * 0.38), this.ctx.sampleRate);
 
     const noiseFilter = this.ctx.createBiquadFilter();
     noiseFilter.type = 'bandpass';
-    noiseFilter.frequency.setValueAtTime(2400, now);
-    noiseFilter.Q.setValueAtTime(2.8, now);
+    noiseFilter.frequency.setValueAtTime(2150, now);
+    noiseFilter.Q.setValueAtTime(2.2, now);
 
     const noiseGain = this.ctx.createGain();
-    noiseGain.gain.setValueAtTime(0.55, now);
+    noiseGain.gain.setValueAtTime(0.6, now);
     noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
 
     noise.connect(noiseFilter);
@@ -856,6 +849,7 @@ export class SoundManager {
 
     noise.onended = () => this.cleanupNodes(noise, noiseFilter, noiseGain);
     noise.start(now);
+    noise.stop(now + 0.38);
   }
 
   playPenaltyBuzzer() {
@@ -2182,10 +2176,11 @@ export class SoundManager {
     this.engineSubOsc.type = p.subType;
     this.engineSubOsc.frequency.setValueAtTime(p.baseFreq * p.subRatio, now);
 
-    // 3. Saturation asymétrique (harmoniques de combustion réalistes)
+    // 3. Saturation asymétrique (oversample 'none' sur mobile pour zéro lag DSP)
     this.engineShaper = this.ctx.createWaveShaper();
     this.engineShaper.curve = this._makeAsymmetricCurve(p.drive, 0.72);
-    this.engineShaper.oversample = '2x';
+    const isMobAudio = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+    this.engineShaper.oversample = isMobAudio ? 'none' : '2x';
 
     // 4. Formant d'échappement (résonance de pot)
     this.engineExhaustFilter = this.ctx.createBiquadFilter();
@@ -2230,8 +2225,9 @@ export class SoundManager {
 
   updateEngine(speedRatio) {
     if (!this.engineOsc || !this.ctx || this.isDestroyed || this.isGameplayPaused) return;
-    const now = this.ctx.currentTime;
     const clamped = Math.max(0, Math.min(2.0, speedRatio));
+    if (this._prevSpeedRatio !== undefined && Math.abs(clamped - this._prevSpeedRatio) < 0.018) return;
+    const now = this.ctx.currentTime;
     const p = ENGINE_PROFILES[this.lastEngineProfile] || ENGINE_PROFILES.v8;
 
     // Boîte virtuelle 5 vitesses (paliers de régime)

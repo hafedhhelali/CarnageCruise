@@ -720,9 +720,13 @@ export class Traffic {
    */
   _initPoliceAssets() {
     if (this._policeAssets) return this._policeAssets;
+    const isMobile = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+    const makePaint = (hex, rough, metal, cc = 0.9) => isMobile
+      ? new THREE.MeshStandardMaterial({ color: hex, roughness: rough, metalness: metal })
+      : new THREE.MeshPhysicalMaterial({ color: hex, roughness: rough, metalness: metal, clearcoat: cc, clearcoatRoughness: 0.12 });
     this._policeAssets = {
-      navy: new THREE.MeshPhysicalMaterial({ color: 0x0a142e, roughness: 0.22, metalness: 0.55, clearcoat: 0.9, clearcoatRoughness: 0.12 }),
-      white: new THREE.MeshPhysicalMaterial({ color: 0xf8fafc, roughness: 0.24, metalness: 0.15, clearcoat: 0.85, clearcoatRoughness: 0.14 }),
+      navy: makePaint(0x0a142e, 0.22, 0.55, 0.9),
+      white: makePaint(0xf8fafc, 0.24, 0.15, 0.85),
       stripe: new THREE.MeshStandardMaterial({ color: 0x38bdf8, emissive: 0x0284c7, emissiveIntensity: 0.5, roughness: 0.3 }),
       gold: new THREE.MeshStandardMaterial({ color: 0xfbbf24, metalness: 0.85, roughness: 0.25 }),
       bumper: new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.45, metalness: 0.85 }),
@@ -745,11 +749,11 @@ export class Traffic {
       lightGeo: new THREE.BoxGeometry(0.36, 0.14, 0.08),
       barBaseGeo: new THREE.BoxGeometry(1.28, 0.09, 0.24),
       strobeGeo: new THREE.BoxGeometry(0.54, 0.14, 0.22),
-      wheelGeo: new THREE.CylinderGeometry(0.35, 0.35, 0.26, 12),
-      rimGeo: new THREE.CylinderGeometry(0.20, 0.20, 0.28, 8),
+      wheelGeo: new THREE.CylinderGeometry(0.35, 0.35, 0.26, 10),
+      rimGeo: new THREE.CylinderGeometry(0.20, 0.20, 0.28, 6),
       beamGeo: new THREE.PlaneGeometry(2.6, 8.0),
       // Assets partagés pour unités SWAT lourdes et cinématique d'arrestation armée (zéro allocation à chaud)
-      swatArmor: new THREE.MeshPhysicalMaterial({ color: 0x090d16, roughness: 0.38, metalness: 0.65, clearcoat: 0.35 }),
+      swatArmor: makePaint(0x090d16, 0.38, 0.65, 0.35),
       gunMetal: new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.3, metalness: 0.9 }),
       copUniform: new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.65 }),
       copPants: new THREE.MeshStandardMaterial({ color: 0x090e1a, roughness: 0.75 }),
