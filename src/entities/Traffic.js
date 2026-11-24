@@ -1287,6 +1287,7 @@ export class Traffic {
   update(delta, playerZ, bikeX, bikeSpeed, roadCurveFunc, onVehicleCollision, isPlayerInvulnerable = false) {
     this.spawnAhead(playerZ, roadCurveFunc);
 
+    let needsPurge = false;
     this.vehicles.forEach(v => {
       if (!v.visible) return;
 
@@ -1399,13 +1400,16 @@ export class Traffic {
           v.userData.active = false;
           if (v.userData.isPursuitPolice) {
             this.container.remove(v);
+            needsPurge = true;
           }
         }
       }
     });
 
-    // Purger les anciens intercepteurs de police désactivés pour zéro fuite mémoire
-    this.vehicles = this.vehicles.filter(v => !(v.userData && v.userData.isPursuitPolice && !v.userData.active && !v.userData.isCrashed));
+    // Purger les anciens intercepteurs de police désactivés uniquement si nécessaire (zéro allocation par frame)
+    if (needsPurge) {
+      this.vehicles = this.vehicles.filter(v => !(v.userData && v.userData.isPursuitPolice && !v.userData.active && !v.userData.isCrashed));
+    }
 
     // 3. Animation et déplacement de l'ambulance d'urgence
     if (this.ambulance && this.ambulance.userData.active) {

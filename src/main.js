@@ -1251,7 +1251,35 @@ class GameApp {
       currentSteer = 0;
     }
 
-    if (gameState.currentMode === 'PLAYING') {
+    if (gameState.currentMode === 'PLAYING' && this._arrestCinematic) {
+      // Pendant la simulation 3D d'arrestation, geler la circulation et jouer uniquement la cinématique
+      this._arrestCinematic.timer += delta;
+      if (this._arrestCinematic.cine) {
+        this._arrestCinematic.cine.update(delta);
+      }
+      const t = this._arrestCinematic.timer;
+      if (t >= 1.1 && this._arrestCinematic.phase < 2) {
+        this._arrestCinematic.phase = 2;
+        if (this.ui && this.ui.updateArrestBannerPhase) this.ui.updateArrestBannerPhase(2);
+      } else if (t >= 2.4 && this._arrestCinematic.phase < 3) {
+        this._arrestCinematic.phase = 3;
+        if (this.ui && this.ui.updateArrestBannerPhase) this.ui.updateArrestBannerPhase(3);
+      }
+      if (this.engine.updateCameraArrest) {
+        this.engine.updateCameraArrest(delta, this.bike.mesh.position, t);
+      }
+      if (t >= this._arrestCinematic.duration) {
+        if (this._arrestCinematic.cine) this._arrestCinematic.cine.dispose();
+        this._arrestCinematic = null;
+        soundManager.playPrisonSlam();
+        const bailCost = 1500;
+        storage.setPrisonState(true, bailCost, gameState.selectedCity?.id || null);
+        gameState.endRun();
+        if (this.ui && this.ui.showPrisonOverlay) {
+          this.ui.showPrisonOverlay(bailCost, gameState.selectedCity);
+        }
+      }
+    } else if (gameState.currentMode === 'PLAYING') {
       const isFlyingCraft = this.bike.currentBikeId === 'aero_jet' || this.bike.isFlyingEscape;
 
       // 1. Calcul de la vitesse effective avec gestion de l'accident et du freinage

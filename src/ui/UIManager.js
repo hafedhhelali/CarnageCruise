@@ -3963,6 +3963,13 @@ ${gameState.isRuinsMode ? '' : `          <div class="hud-nitro-group">
         chPct = Math.min(100, Math.round((nearMisses / nearTarget) * 100));
         if (cityName) cityName.innerHTML = `<span style="color: #38bdf8; font-weight: 900;">⛈️ TEMPÊTE • ${windWarn}</span>`;
         if (targetPts) targetPts.innerHTML = `<span style="color: #fbbf24; font-weight: 900;">⚡ FRÔLEMENTS ${nearMisses}/${nearTarget}</span>`;
+      } else if (chMode === 'POLICE_PURSUIT') {
+        const cs = gameState.challengeState || {};
+        const stars = Math.max(1, Math.min(5, cs.wantedLevel || 2));
+        const shields = Math.max(0, Math.min(3, cs.shieldHp ?? 3));
+        const heartsHtml = '🛡️'.repeat(shields) + '💔'.repeat(Math.max(0, 3 - shields));
+        if (cityName) cityName.innerHTML = `<span style="color: #38bdf8; font-weight: 900;">🚨 POURSUITE • ${'★'.repeat(stars)}</span>`;
+        if (targetPts) targetPts.innerHTML = `<span>${heartsHtml}</span>`;
       }
       if (chPct !== null && progressFill) {
         progressFill.style.width = `${chPct}%`;
