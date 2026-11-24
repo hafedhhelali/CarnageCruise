@@ -104,6 +104,19 @@ export class Environment {
       })(),
       aerialRingGeo: new THREE.TorusGeometry(2.4, 0.22, 8, 20),
       storeSign: new THREE.BoxGeometry(2.4, 0.45, 0.12),
+      // Flaques d'eau réalistes sur la chaussée (visibles sous la pluie)
+      puddleGeo: new THREE.CircleGeometry(1.15, 14),
+      puddleMat: new THREE.MeshPhysicalMaterial({
+        color: 0x1e293b,
+        roughness: 0.04,
+        metalness: 0.35,
+        clearcoat: 1.0,
+        transparent: true,
+        opacity: 0.72,
+        depthWrite: false,
+        polygonOffset: true,
+        polygonOffsetFactor: -2
+      }),
       // Stands de rue (primeurs, bouquinistes, marchand ambulant, fleuriste)
       stallCrate: new THREE.BoxGeometry(0.55, 0.22, 0.4),
       stallCounter: new THREE.BoxGeometry(1.0, 0.76, 1.8),
@@ -417,14 +430,21 @@ export class Environment {
     this.weatherWetness = w;
     if (!this.sharedMats) return;
     if (this.sharedMats.road) {
-      this.sharedMats.road.roughness = 1.0 - w * 0.66;        // 1.0 -> 0.34
-      this.sharedMats.road.metalness = 0.05 + w * 0.17;       // 0.05 -> 0.22
-      this.sharedMats.road.envMapIntensity = 1.0 + w * 0.85;  // 1.0 -> 1.85
+      this.sharedMats.road.roughness = 1.0 - w * 0.72;        // 1.0 -> 0.28 (chaussée brillante mouillée)
+      this.sharedMats.road.metalness = 0.05 + w * 0.22;       // 0.05 -> 0.27
+      this.sharedMats.road.envMapIntensity = 1.0 + w * 1.15;  // 1.0 -> 2.15
     }
     if (this.sharedMats.sidewalk) {
       this.sharedMats.sidewalk.roughness = 1.0 - w * 0.55;
       this.sharedMats.sidewalk.metalness = 0.05 + w * 0.12;
       this.sharedMats.sidewalk.envMapIntensity = 1.0 + w * 0.65;
+    }
+    if (this.chunks) {
+      this.chunks.forEach(chunk => {
+        if (chunk.userData && chunk.userData.puddles) {
+          chunk.userData.puddles.forEach(p => { p.visible = w > 0.3; });
+        }
+      });
     }
   }
 
@@ -1589,9 +1609,24 @@ export class Environment {
 
   createStreetChunk(zPos, index = 0) {
     const chunk = new THREE.Group();
-    chunk.userData = { props: [], ribbons: [] };
+    chunk.userData = { props: [], ribbons: [], puddles: [] };
     chunk.position.set(0, 0, zPos);
     chunk.rotation.y = 0;
+
+    // 3 flaques d'eau sur la chaussée par tronçon (visibles uniquement par temps de pluie)
+    if (this.sharedGeos?.puddleGeo && this.sharedGeos?.puddleMat) {
+      [-18, 2, 22].forEach((pz, pIdx) => {
+        const puddle = new THREE.Mesh(this.sharedGeos.puddleGeo, this.sharedGeos.puddleMat);
+        const px = ((pIdx + index) % 2 === 0 ? -1 : 1) * (1.2 + (pIdx % 3) * 0.9);
+        puddle.rotation.x = -Math.PI / 2;
+        puddle.scale.set(0.95 + (pIdx % 2) * 0.35, 1.3 + (pIdx % 3) * 0.25, 1);
+        puddle.position.set(px, 0.028, pz);
+        puddle.userData = { baseX: px, localZ: pz };
+        puddle.visible = this.weatherWetness > 0.3;
+        chunk.add(puddle);
+        chunk.userData.puddles.push(puddle);
+      });
+    }
 
     const roadMat = this.sharedMats?.road || new THREE.MeshStandardMaterial({ roughness: 0.85, metalness: 0.05 });
     const sidewalkMat = this.sharedMats?.sidewalk || new THREE.MeshStandardMaterial({ roughness: 0.7, metalness: 0.05 });
@@ -1789,6 +1824,14 @@ export class Environment {
         child.visible = !inIntersection;
       }
     });
+
+    if (chunk.userData && chunk.userData.puddles) {
+      chunk.userData.puddles.forEach(p => {
+        const pWorldZ = zPos + (p.userData.localZ || 0);
+        p.position.x = this.getRoadCenterX(pWorldZ) + (p.userData.baseX || 0);
+        p.visible = this.weatherWetness > 0.3;
+      });
+    }
   }
 
   addSpeedBump(chunk, localZ) {

@@ -29,6 +29,9 @@ export class Engine {
     this.scene = new THREE.Scene();
 
     this.isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    this.perfTier = 0; // 0 = Qualité max, 1 = Équilibré, 2 = Ultra-fluide (zéro stagnation)
+    this._perfAccum = 0;
+    this._perfFrames = 0;
 
     // Rendu WebGL haute performance mobile & colorimétrie dynamique
     try {
@@ -708,11 +711,44 @@ export class Engine {
     }
   }
 
+  /**
+   * Gouverneur adaptatif de performances : ajuste dynamiquement la résolution et les effets
+   * selon la puissance réelle du téléphone pour garantir 0 stagnation.
+   */
+  updatePerformanceGovernor(rawDelta) {
+    this._perfAccum = (this._perfAccum || 0) + rawDelta;
+    this._perfFrames = (this._perfFrames || 0) + 1;
+    if (this._perfFrames < 30) return this.perfTier;
+
+    const avgMs = (this._perfAccum / this._perfFrames) * 1000;
+    this._perfAccum = 0;
+    this._perfFrames = 0;
+
+    let nextTier = this.perfTier;
+    if (avgMs > 24.5 && this.perfTier < 2) {
+      nextTier = this.perfTier + 1;
+    } else if (avgMs < 15.5 && this.perfTier > 0) {
+      nextTier = this.perfTier - 1;
+    }
+
+    if (nextTier !== this.perfTier) {
+      this.perfTier = nextTier;
+      const dprCap = this.isMobile
+        ? (nextTier === 0 ? 1.0 : (nextTier === 1 ? 0.85 : 0.72))
+        : (nextTier === 0 ? 1.5 : 1.15);
+      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, dprCap));
+    }
+    return this.perfTier;
+  }
+
   onResize() {
     this.camera.aspect = window.innerWidth / window.innerHeight;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    this.perfTier = 0; // 0 = Qualité max, 1 = Équilibré, 2 = Ultra-fluide (zéro stagnation)
+    this._perfAccum = 0;
+    this._perfFrames = 0;
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, this.isMobile ? 1.0 : 1.5));
     if (this.postProcessing) {
       this.postProcessing.setSize(window.innerWidth, window.innerHeight);

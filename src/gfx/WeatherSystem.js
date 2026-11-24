@@ -18,6 +18,7 @@ export class WeatherSystem {
 
     this.mode = 'NONE';
     this.wetness = 0.0;
+    this.qualityFactor = 1.0;
     this.time = 0;
 
     this.boxWidth = 34;
@@ -113,6 +114,9 @@ export class WeatherSystem {
         nextMode = 'SANDSTORM';
       } else if (isNight && (cityDef?.fogDensity || 0) >= 0.002) {
         nextMode = 'RAIN';
+      } else if (Math.random() < 0.38) {
+        // Mode pluie aléatoire dynamique sur les villes tempérées / côtières
+        nextMode = 'RAIN';
       } else {
         nextMode = 'NONE';
       }
@@ -197,6 +201,13 @@ export class WeatherSystem {
       }
     }
     this.geometry.attributes.color.needsUpdate = true;
+  }
+
+  setQualityFactor(factor = 1.0) {
+    this.qualityFactor = Math.max(0.25, Math.min(1.0, factor));
+    if (this.geometry) {
+      this.geometry.setDrawRange(0, Math.floor(this.particleCount * this.qualityFactor));
+    }
   }
 
   /**

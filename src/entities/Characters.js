@@ -675,6 +675,28 @@ export class CharacterSystem {
         propMesh = caddyGroup;
       }
 
+      // Parapluie 3D léger pré-construit (affiché automatiquement par temps de pluie)
+      let umbrellaGroup = null;
+      if (i % 4 !== 0) {
+        umbrellaGroup = new THREE.Group();
+        const uHandle = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.015, 0.015, 0.72, 6),
+          this.getMaterial(0x1e293b)
+        );
+        uHandle.position.set(0, 0.36, 0);
+        const uColors = [0xe11d48, 0x2563eb, 0xf59e0b, 0x10b981, 0x8b5cf6];
+        const uCanopy = new THREE.Mesh(
+          new THREE.ConeGeometry(0.46, 0.22, 8),
+          this.getMaterial(uColors[i % uColors.length])
+        );
+        uCanopy.position.set(0, 0.72, 0);
+        umbrellaGroup.add(uHandle, uCanopy);
+        umbrellaGroup.position.set(0, -0.34, 0.06);
+        umbrellaGroup.rotation.x = 1.25;
+        umbrellaGroup.visible = false;
+        armRGroup.add(umbrellaGroup);
+      }
+
       charGroup.visible = false;
       this.scene.add(charGroup);
 
@@ -693,6 +715,7 @@ export class CharacterSystem {
         armL: armLGroup,
         armR: armRGroup,
         propMesh,
+        umbrellaGroup,
         caneGroup,
         strollerGroup,
         strollerWheels,
@@ -716,6 +739,15 @@ export class CharacterSystem {
         settleTimer: 0
       });
     }
+  }
+
+  setRainMode(isRaining) {
+    this.isRaining = !!isRaining;
+    this.characters.forEach(c => {
+      if (c.umbrellaGroup) {
+        c.umbrellaGroup.visible = this.isRaining;
+      }
+    });
   }
 
   reset() {
@@ -1021,9 +1053,12 @@ export class CharacterSystem {
             char.armR.rotation.x += ((-0.38 + Math.max(0, hobble) * 0.42) - char.armR.rotation.x) * armBlend;
             char.armL.rotation.x += ((-hobble * 0.35) - char.armL.rotation.x) * armBlend;
           } else {
-            // Balancement classique des bras + torsion du torse
+            // Balancement classique des bras + torsion du torse (ou maintien du parapluie sous la pluie)
             char.armL.rotation.x += ((-legAngle * 0.65) - char.armL.rotation.x) * armBlend;
-            char.armR.rotation.x += ((legAngle * 0.65) - char.armR.rotation.x) * armBlend;
+            const targetArmR = (this.isRaining && char.umbrellaGroup && char.umbrellaGroup.visible)
+              ? -1.25
+              : (legAngle * 0.65);
+            char.armR.rotation.x += (targetArmR - char.armR.rotation.x) * armBlend;
             if (char.torso) {
               char.torso.rotation.z = 0;
               char.torso.rotation.y = Math.sin(char.walkPhase) * 0.11;

@@ -759,14 +759,22 @@ export class Traffic {
       swatBodyGeo: new THREE.BoxGeometry(2.25, 1.15, 4.95),
       swatCabGeo: new THREE.BoxGeometry(2.12, 0.68, 2.85),
       swatRamGeo: new THREE.BoxGeometry(2.15, 0.56, 0.32),
-      personLegGeo: new THREE.BoxGeometry(0.18, 0.78, 0.2),
-      personTorsoGeo: new THREE.BoxGeometry(0.48, 0.64, 0.26),
-      personHeadGeo: new THREE.SphereGeometry(0.16, 10, 10),
-      personArmGeo: new THREE.BoxGeometry(0.13, 0.34, 0.13),
-      personCapGeo: new THREE.CylinderGeometry(0.18, 0.17, 0.12, 10),
+      personLegGeo: new THREE.CapsuleGeometry(0.09, 0.34, 4, 8),
+      personShinGeo: new THREE.CapsuleGeometry(0.075, 0.34, 4, 8),
+      personBootGeo: new THREE.BoxGeometry(0.14, 0.10, 0.24),
+      personTorsoGeo: new THREE.CapsuleGeometry(0.19, 0.38, 4, 10),
+      personVestGeo: new THREE.BoxGeometry(0.44, 0.42, 0.30),
+      personHeadGeo: new THREE.SphereGeometry(0.15, 12, 10),
+      personArmGeo: new THREE.CapsuleGeometry(0.065, 0.24, 4, 8),
+      personCapGeo: new THREE.CylinderGeometry(0.17, 0.16, 0.11, 10),
       personBadgeGeo: new THREE.BoxGeometry(0.08, 0.08, 0.04),
       rifleBodyGeo: new THREE.BoxGeometry(0.08, 0.12, 0.68),
-      rifleBarrelGeo: new THREE.BoxGeometry(0.04, 0.04, 0.36)
+      rifleBarrelGeo: new THREE.BoxGeometry(0.04, 0.04, 0.36),
+      cuffGeo: new THREE.TorusGeometry(0.07, 0.018, 6, 12),
+      doorPanelGeo: new THREE.BoxGeometry(0.08, 0.68, 1.05),
+      groundStrobeGeo: new THREE.CircleGeometry(2.6, 14),
+      groundStrobeBlueMat: new THREE.MeshBasicMaterial({ color: 0x0ea5e9, transparent: true, opacity: 0.26, depthWrite: false, blending: THREE.AdditiveBlending }),
+      groundStrobeRedMat: new THREE.MeshBasicMaterial({ color: 0xff3838, transparent: true, opacity: 0.26, depthWrite: false, blending: THREE.AdditiveBlending })
     };
     this._policeAssets.wheelGeo.rotateZ(Math.PI / 2);
     this._policeAssets.rimGeo.rotateZ(Math.PI / 2);
@@ -973,91 +981,143 @@ export class Traffic {
   }
 
   /**
-   * Simulation complète 3D d'arrestation en 4 phases (Encerclement & freinage -> Descente policiers armés -> Reddition mains sur la tête & menottage)
+   * Simulation complète 3D d'arrestation réaliste en 4 étapes :
+   * 1) Dérapage & coupure de route en V avec halos gyrophares au sol
+   * 2) Ouverture des portières & déploiement des policiers armés (gilets, carabines, démarche articulée)
+   * 3) Sortie du chauffeur, mains derrière la tête, mise à genoux & menottage métallique
+   * 4) Verrouillage & transfert en cellule
    */
   spawnArrestCinematic(playerPos, roadCurveX = 0) {
     const a = this._initPoliceAssets();
     const cineGroup = new THREE.Group();
     cineGroup.position.set(playerPos.x, 0, playerPos.z);
 
-    // Phase 1 : 2 voitures de police (Intercepteur + SWAT) qui arrivent et freinent en V devant le joueur
+    // 1. Voitures de police (Intercepteur + 4x4 SWAT) avec portières ouvrantes + halos au sol
     const { car: copCar1, strobes: strobes1, wheelMeshes: wheels1 } = this._buildPoliceCruiserMesh();
     const { car: copCar2, strobes: strobes2, wheelMeshes: wheels2 } = this._buildHeavySwatMesh();
     const allStrobes = [...strobes1, ...strobes2];
-    const relRoadX = Math.max(-2.5, Math.min(2.5, roadCurveX - playerPos.x));
+    const relRoadX = Math.max(-2.4, Math.min(2.4, roadCurveX - playerPos.x));
 
-    copCar1.position.set(relRoadX + 3.2, 0, 14.0);
-    copCar1.rotation.y = -0.68;
-    copCar2.position.set(relRoadX - 3.6, 0, 15.5);
-    copCar2.rotation.y = 0.55;
+    const doorPivot1 = new THREE.Group();
+    doorPivot1.position.set(-0.92, 0.72, 0.45);
+    const doorMesh1 = new THREE.Mesh(a.doorPanelGeo, a.white);
+    doorMesh1.position.set(0, 0, -0.52);
+    doorPivot1.add(doorMesh1);
+    copCar1.add(doorPivot1);
+
+    const doorPivot2 = new THREE.Group();
+    doorPivot2.position.set(1.06, 0.92, 0.55);
+    const doorMesh2 = new THREE.Mesh(a.doorPanelGeo, a.swatArmor);
+    doorMesh2.position.set(0, 0, -0.52);
+    doorPivot2.add(doorMesh2);
+    copCar2.add(doorPivot2);
+
+    const groundHaloBlue = new THREE.Mesh(a.groundStrobeGeo, a.groundStrobeBlueMat);
+    groundHaloBlue.rotation.x = -Math.PI / 2;
+    groundHaloBlue.position.set(relRoadX + 1.4, 0.04, 4.6);
+    const groundHaloRed = new THREE.Mesh(a.groundStrobeGeo, a.groundStrobeRedMat);
+    groundHaloRed.rotation.x = -Math.PI / 2;
+    groundHaloRed.position.set(relRoadX - 1.9, 0.04, 5.0);
+    cineGroup.add(groundHaloBlue, groundHaloRed);
+
+    copCar1.position.set(relRoadX + 3.6, 0, 16.5);
+    copCar2.position.set(relRoadX - 3.8, 0, 18.0);
     cineGroup.add(copCar1, copCar2);
 
-    // Helper silhouette humaine 3D articulée
-    const buildPerson = (isCop) => {
+    // Helper silhouette humaine 3D articulée (hanches, genoux, bottes, épaules, coudes, gilet, arme, menottes)
+    const buildArticulatedPerson = (isCop) => {
       const p = new THREE.Group();
       const coatMat = isCop ? a.copUniform : a.driverCoat;
       const pantsMat = isCop ? a.copPants : a.driverPants;
 
-      const legL = new THREE.Mesh(a.personLegGeo, pantsMat);
-      legL.position.set(-0.12, 0.39, 0);
-      const legR = new THREE.Mesh(a.personLegGeo, pantsMat);
-      legR.position.set(0.12, 0.39, 0);
+      const bodyPivot = new THREE.Group();
+      p.add(bodyPivot);
+
+      // Jambes 2 segments (cuisse -> genou -> tibia -> botte) pour vraie marche & mise à genoux
+      const makeLeg = (xOff) => {
+        const hip = new THREE.Group();
+        hip.position.set(xOff, 0.86, 0);
+        const thigh = new THREE.Mesh(a.personLegGeo, pantsMat);
+        thigh.position.set(0, -0.21, 0);
+        const knee = new THREE.Group();
+        knee.position.set(0, -0.43, 0);
+        const shin = new THREE.Mesh(a.personShinGeo, pantsMat);
+        shin.position.set(0, -0.20, 0);
+        const boot = new THREE.Mesh(a.personBootGeo, a.gunMetal);
+        boot.position.set(0, -0.39, 0.05);
+        knee.add(shin, boot);
+        hip.add(thigh, knee);
+        bodyPivot.add(hip);
+        return { hip, knee };
+      };
+      const legL = makeLeg(-0.13);
+      const legR = makeLeg(0.13);
+
       const torso = new THREE.Mesh(a.personTorsoGeo, coatMat);
-      torso.position.set(0, 1.1, 0);
+      torso.position.set(0, 1.18, 0);
+      bodyPivot.add(torso);
+
       const head = new THREE.Mesh(a.personHeadGeo, a.skin);
-      head.position.set(0, 1.58, 0);
+      head.position.set(0, 1.62, 0);
+      bodyPivot.add(head);
 
-      const armL = new THREE.Group();
-      armL.position.set(-0.31, 1.36, 0);
-      const upperL = new THREE.Mesh(a.personArmGeo, coatMat);
-      upperL.position.set(0, -0.15, 0);
-      const forearmL = new THREE.Group();
-      forearmL.position.set(0, -0.30, 0);
-      const lowerL = new THREE.Mesh(a.personArmGeo, coatMat);
-      lowerL.position.set(0, -0.15, 0);
-      forearmL.add(lowerL);
-      armL.add(upperL, forearmL);
+      const makeArm = (xOff) => {
+        const shoulder = new THREE.Group();
+        shoulder.position.set(xOff, 1.40, 0);
+        const upper = new THREE.Mesh(a.personArmGeo, coatMat);
+        upper.position.set(0, -0.15, 0);
+        const elbow = new THREE.Group();
+        elbow.position.set(0, -0.31, 0);
+        const lower = new THREE.Mesh(a.personArmGeo, coatMat);
+        lower.position.set(0, -0.15, 0);
+        elbow.add(lower);
+        shoulder.add(upper, elbow);
+        bodyPivot.add(shoulder);
+        return { shoulder, elbow };
+      };
+      const armL = makeArm(-0.27);
+      const armR = makeArm(0.27);
 
-      const armR = new THREE.Group();
-      armR.position.set(0.31, 1.36, 0);
-      const upperR = new THREE.Mesh(a.personArmGeo, coatMat);
-      upperR.position.set(0, -0.15, 0);
-      const forearmR = new THREE.Group();
-      forearmR.position.set(0, -0.30, 0);
-      const lowerR = new THREE.Mesh(a.personArmGeo, coatMat);
-      lowerR.position.set(0, -0.15, 0);
-      forearmR.add(lowerR);
-      armR.add(upperR, forearmR);
-
-      p.add(legL, legR, torso, head, armL, armR);
+      let cuffs = null;
+      let rifleGroup = null;
       if (isCop) {
+        const vest = new THREE.Mesh(a.personVestGeo, a.bumper);
+        vest.position.set(0, 1.18, 0);
         const cap = new THREE.Mesh(a.personCapGeo, a.copUniform);
-        cap.position.set(0, 1.72, 0);
+        cap.position.set(0, 1.75, 0);
         const badge = new THREE.Mesh(a.personBadgeGeo, a.gold);
-        badge.position.set(0, 1.18, 0.14);
+        badge.position.set(0, 1.25, 0.16);
+        rifleGroup = new THREE.Group();
         const rifleBody = new THREE.Mesh(a.rifleBodyGeo, a.gunMetal);
         rifleBody.position.set(0, -0.22, 0.28);
         const rifleBarrel = new THREE.Mesh(a.rifleBarrelGeo, a.gunMetal);
         rifleBarrel.position.set(0, -0.20, 0.72);
-        forearmR.add(rifleBody, rifleBarrel);
-        p.add(cap, badge);
+        rifleGroup.add(rifleBody, rifleBarrel);
+        armR.elbow.add(rifleGroup);
+        bodyPivot.add(vest, cap, badge);
+      } else {
+        cuffs = new THREE.Mesh(a.cuffGeo, a.rim);
+        cuffs.position.set(0, 1.38, -0.16);
+        cuffs.visible = false;
+        bodyPivot.add(cuffs);
       }
-      p.userData = { armL, armR, forearmL, forearmR, legL, legR };
+
+      p.userData = { bodyPivot, armL, armR, legL, legR, head, cuffs, rifleGroup };
       return p;
     };
 
-    const cop1 = buildPerson(true);
-    cop1.position.set(relRoadX + 1.2, 0, 4.3);
+    const cop1 = buildArticulatedPerson(true);
+    cop1.position.set(relRoadX + 1.1, 0, 4.3);
     cop1.rotation.y = Math.PI;
     cop1.visible = false;
 
-    const cop2 = buildPerson(true);
-    cop2.position.set(relRoadX - 1.8, 0, 4.6);
+    const cop2 = buildArticulatedPerson(true);
+    cop2.position.set(relRoadX - 1.7, 0, 4.7);
     cop2.rotation.y = Math.PI;
     cop2.visible = false;
 
-    const driver = buildPerson(false);
-    driver.position.set(-0.9, 0, 0.3);
+    const driver = buildArticulatedPerson(false);
+    driver.position.set(-0.85, 0, 0.3);
     driver.rotation.y = 0;
     driver.visible = false;
 
@@ -1070,56 +1130,88 @@ export class Traffic {
       update: (dt) => {
         elapsed += dt;
 
-        // Phase 1 (0.0 -> 1.1s) : Les voitures arrivent et freinent en V
-        const carT = Math.min(1, elapsed / 1.1);
+        // Étape 1 (0.0 -> 1.0s) : Dérapage contrôlé & coupure de route en V
+        const carT = Math.min(1, elapsed / 1.0);
         const easeOut = 1 - Math.pow(1 - carT, 3);
-        copCar1.position.z = THREE.MathUtils.lerp(14.0, 4.8, easeOut);
-        copCar1.position.x = THREE.MathUtils.lerp(relRoadX + 3.2, relRoadX + 1.55, easeOut);
-        copCar2.position.z = THREE.MathUtils.lerp(15.5, 5.2, easeOut);
-        copCar2.position.x = THREE.MathUtils.lerp(relRoadX - 3.6, relRoadX - 2.1, easeOut);
+        copCar1.position.z = THREE.MathUtils.lerp(16.5, 4.7, easeOut);
+        copCar1.position.x = THREE.MathUtils.lerp(relRoadX + 3.6, relRoadX + 1.55, easeOut);
+        copCar1.rotation.y = THREE.MathUtils.lerp(-0.15, -0.72, easeOut);
+        copCar1.rotation.z = Math.sin(carT * Math.PI) * 0.08;
+
+        copCar2.position.z = THREE.MathUtils.lerp(18.0, 5.2, easeOut);
+        copCar2.position.x = THREE.MathUtils.lerp(relRoadX - 3.8, relRoadX - 2.05, easeOut);
+        copCar2.rotation.y = THREE.MathUtils.lerp(0.15, 0.58, easeOut);
+        copCar2.rotation.z = -Math.sin(carT * Math.PI) * 0.07;
+
         if (carT < 1) {
-          [...wheels1, ...wheels2].forEach(w => w.children.forEach(pt => { pt.rotation.x += dt * 18 * (1 - carT); }));
+          [...wheels1, ...wheels2].forEach(w => w.children.forEach(pt => { pt.rotation.x += dt * 22 * (1 - carT); }));
         }
 
-        // Phase 2 (1.1 -> 2.5s) : Policiers armés descendent et avancent en joue
-        if (elapsed >= 1.1) {
+        // Étape 2 (1.0 -> 2.4s) : Portières s'ouvrent, policiers armés descendent et avancent en joue
+        const doorT = Math.min(1, Math.max(0, (elapsed - 0.9) / 0.45));
+        doorPivot1.rotation.y = -doorT * 1.05;
+        doorPivot2.rotation.y = doorT * 1.05;
+
+        if (elapsed >= 1.15) {
           cop1.visible = true;
           cop2.visible = true;
-          const walkT = Math.min(1, (elapsed - 1.1) / 1.3);
-          cop1.position.z = THREE.MathUtils.lerp(4.3, 2.0, walkT);
-          cop1.position.x = THREE.MathUtils.lerp(relRoadX + 1.2, -0.35, walkT);
-          cop2.position.z = THREE.MathUtils.lerp(4.6, 2.1, walkT);
-          cop2.position.x = THREE.MathUtils.lerp(relRoadX - 1.8, -1.95, walkT);
+          const walkT = Math.min(1, (elapsed - 1.15) / 1.2);
+          cop1.position.z = THREE.MathUtils.lerp(4.3, 2.05, walkT);
+          cop1.position.x = THREE.MathUtils.lerp(relRoadX + 1.1, -0.35, walkT);
+          cop2.position.z = THREE.MathUtils.lerp(4.7, 2.15, walkT);
+          cop2.position.x = THREE.MathUtils.lerp(relRoadX - 1.7, -2.05, walkT);
 
-          const swing = walkT < 1 ? Math.sin(elapsed * 10) * 0.45 : 0;
+          const gait = walkT < 1 ? Math.sin(elapsed * 11) : 0;
           [cop1, cop2].forEach(c => {
-            c.userData.legL.rotation.x = swing;
-            c.userData.legR.rotation.x = -swing;
-            c.userData.armR.rotation.x = -Math.PI * 0.44;
-            c.userData.armL.rotation.x = -Math.PI * 0.36;
+            c.userData.legL.hip.rotation.x = gait * 0.55;
+            c.userData.legL.knee.rotation.x = Math.max(0, -gait) * 0.55;
+            c.userData.legR.hip.rotation.x = -gait * 0.55;
+            c.userData.legR.knee.rotation.x = Math.max(0, gait) * 0.55;
+            c.userData.armR.shoulder.rotation.x = -1.35;
+            c.userData.armR.elbow.rotation.x = -0.35;
+            c.userData.armL.shoulder.rotation.x = -1.15;
+            c.userData.armL.elbow.rotation.x = -0.55;
           });
         }
 
-        // Phase 3 (2.4 -> 4.4s) : Chauffeur sort, lève les mains sur la tête, s'agenouille pour menottage
+        // Étape 3 (2.4 -> 4.3s) : Chauffeur sort, mains derrière la tête, se met à genoux, menottage
         if (elapsed >= 2.4) {
           driver.visible = true;
           const exitT = Math.min(1, (elapsed - 2.4) / 0.65);
           driver.position.x = THREE.MathUtils.lerp(-0.85, -1.35, exitT);
-          const handsUpT = Math.min(1, Math.max(0, (elapsed - 2.6) / 0.75));
-          driver.userData.armL.rotation.z = -handsUpT * 2.25;
-          driver.userData.armR.rotation.z = handsUpT * 2.25;
-          driver.userData.forearmL.rotation.z = -handsUpT * 1.15;
-          driver.userData.forearmR.rotation.z = handsUpT * 1.15;
+          driver.rotation.y = THREE.MathUtils.lerp(0.4, 0.0, exitT);
 
-          const cuffT = Math.min(1, Math.max(0, (elapsed - 3.4) / 0.8));
-          driver.position.y = -cuffT * 0.28;
-          cop1.position.z = THREE.MathUtils.lerp(2.0, 0.9, cuffT);
-          cop1.position.x = THREE.MathUtils.lerp(-0.35, -0.85, cuffT);
+          const handsT = Math.min(1, Math.max(0, (elapsed - 2.6) / 0.7));
+          driver.userData.armL.shoulder.rotation.z = -handsT * 2.15;
+          driver.userData.armR.shoulder.rotation.z = handsT * 2.15;
+          driver.userData.armL.elbow.rotation.z = -handsT * 1.35;
+          driver.userData.armR.elbow.rotation.z = handsT * 1.35;
+
+          // Mise à genoux réaliste avec flexion hanches + genoux
+          const kneelT = Math.min(1, Math.max(0, (elapsed - 3.2) / 0.65));
+          driver.userData.bodyPivot.position.y = -kneelT * 0.42;
+          driver.userData.legL.hip.rotation.x = -kneelT * 1.25;
+          driver.userData.legL.knee.rotation.x = kneelT * 1.45;
+          driver.userData.legR.hip.rotation.x = -kneelT * 1.25;
+          driver.userData.legR.knee.rotation.x = kneelT * 1.45;
+
+          // Policier 1 s'approche derrière le chauffeur et pose les menottes
+          const cuffT = Math.min(1, Math.max(0, (elapsed - 3.55) / 0.75));
+          if (cuffT > 0) {
+            cop1.position.z = THREE.MathUtils.lerp(2.05, 0.82, cuffT);
+            cop1.position.x = THREE.MathUtils.lerp(-0.35, -1.15, cuffT);
+            cop1.userData.bodyPivot.position.y = -cuffT * 0.18;
+            if (cuffT > 0.7 && driver.userData.cuffs) {
+              driver.userData.cuffs.visible = true;
+            }
+          }
         }
 
-        // Gyrophares alternés doux (8 Hz)
-        const toggle = Math.sin(elapsed * 16.0) > 0;
-        allStrobes.forEach((s, idx) => { s.visible = (idx % 2 === 0) ? toggle : !toggle; });
+        // Halos gyrophares alternés doux
+        const pulse = Math.sin(elapsed * 14.0) > 0;
+        allStrobes.forEach((s, idx) => { s.visible = (idx % 2 === 0) ? pulse : !pulse; });
+        groundHaloBlue.visible = pulse;
+        groundHaloRed.visible = !pulse;
       },
       dispose: () => {
         this.container.remove(cineGroup);

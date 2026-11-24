@@ -130,6 +130,9 @@ class GameApp {
         if (this.environment.setWeatherWetness && weatherInfo) {
           this.environment.setWeatherWetness(weatherInfo.wetness);
         }
+        if (this.characters && this.characters.setRainMode) {
+          this.characters.setRainMode(false);
+        }
       }
       this.environment.setCity(cityDef, null, true);
       this.characters.reset();
@@ -166,6 +169,9 @@ class GameApp {
       );
       if (this.environment.setWeatherWetness && weatherInfo) {
         this.environment.setWeatherWetness(weatherInfo.wetness);
+      }
+      if (this.characters && this.characters.setRainMode) {
+        this.characters.setRainMode(weatherInfo?.type === 'RAIN');
       }
     }
     if (this.environment.setChallengeMode) {
@@ -866,18 +872,20 @@ class GameApp {
       }
     }
     if (blockingFactor > 0 && !gameState.isNitroActive) {
-      const decel = blockingFactor * (isHeavyOrFast ? 4.5 : 8.0) * simDelta;
+      const decel = blockingFactor * (isHeavyOrFast ? 2.2 : 4.2) * simDelta;
       gameState.speed = Math.max(2.0, gameState.speed - decel);
     }
-    if (policeNearby && gameState.speed < 6.0 && !gameState.isNitroActive) {
+    if (policeNearby && gameState.speed < 4.2 && !gameState.isNitroActive) {
       this._immobilizedTimer = (this._immobilizedTimer || 0) + simDelta;
-      if (this._immobilizedTimer >= 1.25) {
+      if (this._immobilizedTimer >= 2.4) {
         this.triggerPoliceArrest();
         return;
       }
     } else {
-      this._immobilizedTimer = Math.max(0, (this._immobilizedTimer || 0) - simDelta * 1.5);
+      this._immobilizedTimer = Math.max(0, (this._immobilizedTimer || 0) - simDelta * 1.8);
     }
+
+    this._policeHitCooldown = Math.max(0, (this._policeHitCooldown || 0) - simDelta);
 
     for (const cop of (this.traffic.vehicles || [])) {
       if (!cop.userData || !cop.userData.isPursuitPolice || !cop.userData.active || cop.userData.isCrashed) continue;
@@ -896,7 +904,8 @@ class GameApp {
           soundManager.playCrash();
           if (this.ui) this.ui.spawnFloatingCombatText('+750', 'INTERCEPTEUR ÉCRASÉ ! 💥', '#38bdf8', 50, 38);
           Haptic.impactHeavy();
-        } else {
+        } else if (this._policeHitCooldown <= 0) {
+          this._policeHitCooldown = 1.4;
           const hitDirX = cop.position.x >= this.bike.mesh.position.x ? 1 : -1;
           if (this.traffic.triggerCrash) {
             this.traffic.triggerCrash(cop, gameState.speed, hitDirX);
@@ -1018,7 +1027,7 @@ class GameApp {
 
     this._arrestCinematic = {
       timer: 0,
-      duration: 4.6,
+      duration: 5.0,
       phase: 1,
       cine
     };
@@ -1222,6 +1231,12 @@ class GameApp {
 
     try {
       const rawDelta = Math.min(this.clock.getDelta(), 0.05); // Sécurité contre les sauts de frame / freezes
+      if (this.engine.updatePerformanceGovernor) {
+        const perfTier = this.engine.updatePerformanceGovernor(rawDelta);
+        if (this.weatherSystem && this.weatherSystem.setQualityFactor) {
+          this.weatherSystem.setQualityFactor(perfTier === 0 ? 1.0 : (perfTier === 1 ? 0.55 : 0.3));
+        }
+      }
       if (this.engine.updateTimeScale) this.engine.updateTimeScale(rawDelta);
     const timeScale = this.engine.getTimeScale ? this.engine.getTimeScale() : 1.0;
     const delta = rawDelta * timeScale;
@@ -1375,6 +1390,12 @@ class GameApp {
       }
       if (this.weatherSystem && this.weatherSystem.update) {
         this.weatherSystem.update(delta, this.bike.z, currentSpeed);
+        if (this.weatherSystem.mode === 'RAIN' && currentSpeed > 8 && !isFlyingCraft && Math.random() < 0.22) {
+          if (this.particles && this.particles.spawnDirectionalSparks) {
+            const splashPos = new THREE.Vector3(this.bike.mesh.position.x, 0.12, this.bike.z - 0.8);
+            this.particles.spawnDirectionalSparks(splashPos, new THREE.Vector3(0, 0.65, -1), 3, 0xbae6fd);
+          }
+        }
       }
 
       // 7. Génération et recyclage du monde 3D
