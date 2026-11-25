@@ -1789,6 +1789,8 @@ export class Environment {
       ramp.position.set(baseX, 0, rampZ);
       ramp.userData = {
         isStuntRamp: true,
+        hideAtIntersection: true,
+        interClearance: 14.0,
         baseX,
         localZ: rampZ,
         baseRotY: 0,
@@ -1797,6 +1799,24 @@ export class Environment {
       };
       chunk.add(ramp);
       chunk.userData.props.push(ramp);
+
+      // Cerceau aérien lumineux placé dans la parabole du tremplin
+      const ringZ = rampZ + 8.0;
+      const ringY = 3.1;
+      const ring = new THREE.Mesh(this.sharedGeos.aerialRingGeo, ringMat);
+      ring.position.set(baseX, ringY, ringZ);
+      ring.userData = {
+        isAerialRing: true,
+        hideAtIntersection: true,
+        interClearance: 14.0,
+        baseX,
+        localZ: ringZ,
+        baseRotY: 0,
+        initialY: ringY,
+        ringCollected: false
+      };
+      chunk.add(ring);
+      chunk.userData.props.push(ring);
     }
   }
 

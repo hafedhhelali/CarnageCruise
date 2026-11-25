@@ -543,6 +543,7 @@ export class Engine {
   }
 
   triggerCameraShake(intensity = 0.15) {
+    if (this.cameraShakeEnabled === false) return;
     this.shakeIntensity = Math.max(this.shakeIntensity, Math.min(intensity, 0.22));
   }
 
@@ -708,7 +709,30 @@ export class Engine {
    * Gouverneur adaptatif de performances : ajuste dynamiquement la résolution et les effets
    * selon la puissance réelle du téléphone pour garantir 0 stagnation.
    */
+  applyQualitySettings(mode = 'AUTO', cameraShakeEnabled = true) {
+    this.qualityMode = mode || 'AUTO';
+    this.cameraShakeEnabled = cameraShakeEnabled !== false;
+    if (this.qualityMode === 'ECO') {
+      this.perfTier = 2;
+    } else if (this.qualityMode === 'HIGH') {
+      this.perfTier = 0;
+    }
+    const dprCap = this.qualityMode === 'ECO'
+      ? 0.72
+      : (this.qualityMode === 'HIGH' ? (this.isMobile ? 1.15 : 1.5) : (this.isMobile ? 1.0 : 1.5));
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, dprCap));
+    if (this.dirLight) {
+      this.dirLight.castShadow = this.qualityMode === 'ECO' ? false : (this.qualityMode === 'HIGH' ? true : this.perfTier === 0);
+    }
+    if (this.postProcessing) {
+      this.postProcessing.setSize(window.innerWidth, window.innerHeight);
+    }
+  }
+
   updatePerformanceGovernor(rawDelta) {
+    if (this.qualityMode && this.qualityMode !== 'AUTO') {
+      return this.qualityMode === 'ECO' ? 2 : 0;
+    }
     this._perfAccum = (this._perfAccum || 0) + rawDelta;
     this._perfFrames = (this._perfFrames || 0) + 1;
     if (this._perfFrames < 30) return this.perfTier;
@@ -745,13 +769,9 @@ export class Engine {
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-    this.perfTier = 0; // 0 = Qualité max, 1 = Équilibré, 2 = Ultra-fluide (zéro stagnation)
     this._perfAccum = 0;
     this._perfFrames = 0;
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, this.isMobile ? 1.0 : 1.5));
-    if (this.postProcessing) {
-      this.postProcessing.setSize(window.innerWidth, window.innerHeight);
-    }
+    this.applyQualitySettings(this.qualityMode || 'AUTO', this.cameraShakeEnabled !== false);
   }
 
   render() {

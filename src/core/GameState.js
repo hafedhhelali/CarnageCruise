@@ -2338,7 +2338,7 @@ export const CHALLENGE_DEFS = {
     shortName: 'Poursuite',
     icon: '🚨',
     color: '#2563eb',
-    description: 'Échappez aux intercepteurs de police ! Écrasez-les avec un engin lourd/nitro ou esquivez-les pour éviter la prison !',
+    description: 'Échappez aux intercepteurs de police ou écrasez-les avec un engin lourd / nitro !',
     objectiveText: 'Semer la police jusqu\'à l\'arrivée',
     rewardCoins: 180,
     rewardScore: 5500
@@ -2376,7 +2376,8 @@ export function getCityChallenge(city) {
   }
   if (tag.includes('avenue') || tag.includes('boulevard') || tag.includes('grand-place')) {
     const seed = (city.id || city.name || '').split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
-    return (seed % 2 === 0) ? CHALLENGE_DEFS.MANHUNT : CHALLENGE_DEFS.SLALOM_CHRONO;
+    if (seed % 3 === 0) return CHALLENGE_DEFS.POLICE_PURSUIT;
+    return (seed % 3 === 1) ? CHALLENGE_DEFS.MANHUNT : CHALLENGE_DEFS.SLALOM_CHRONO;
   }
   return CHALLENGE_DEFS.MANHUNT;
 }

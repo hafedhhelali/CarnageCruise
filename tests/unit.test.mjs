@@ -81,3 +81,27 @@ test('GameState endRun transitions currentMode to RESULTS and zeroes speed', asy
   assert.equal(gameState.speed, 0);
   assert.equal(gameState.targetSpeed, 0);
 });
+
+test('Storage mobile settings, Haptic toggle, and resetWorldmageddonProgression', async () => {
+  const { storage } = await import('../src/core/Storage.js');
+  const { Haptic } = await import('../src/services/HapticFeedback.js');
+  assert.equal(storage.data.settings.graphicsQuality, 'AUTO');
+  assert.equal(storage.data.settings.controlMode, 'swipe');
+  assert.equal(storage.data.settings.cameraShake, true);
+
+  Haptic.enabled = false;
+  assert.equal(storage.data.settings.vibration, false);
+  Haptic.enabled = true;
+  assert.equal(storage.data.settings.vibration, true);
+
+  storage.addCityDestruction('paris', 100);
+  storage.resetWorldmageddonProgression();
+  assert.equal(storage.getCityDestruction('paris'), 0);
+  assert.equal(storage.isCityExterminated('paris'), false);
+});
+
+test('GameState getCityChallenge includes POLICE_PURSUIT on metro cities', async () => {
+  const { CITIES, getCityChallenge } = await import('../src/core/GameState.js');
+  const pursuitCities = CITIES.filter(c => getCityChallenge(c).id === 'POLICE_PURSUIT');
+  assert.ok(pursuitCities.length > 0, 'Expected at least 1 city to offer POLICE_PURSUIT');
+});

@@ -2732,7 +2732,8 @@ export class Bike {
 
     // --- GESTION VISUELLE DYNAMIQUE DU NITRO & DU HALO UNDERGLOW FUTURISTE ---
     if (this.underglowMesh) {
-      this.underglowMesh.visible = false;
+      const isOverdrive = gameState && (gameState.isNitroActive || (gameState.combo || 1) >= 8);
+      this.underglowMesh.visible = !['run_ak47', 'run_chainsaw', 'cheval'].includes(this.currentBikeId) && isOverdrive;
     }
     const isOrganicEntity = ['run_ak47', 'run_chainsaw', 'cheval'].includes(this.currentBikeId);
     if (gameState && gameState.isNitroActive) {

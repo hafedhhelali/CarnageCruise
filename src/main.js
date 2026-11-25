@@ -103,6 +103,7 @@ class GameApp {
 
     // 6. Connecter les entrées tactiles et clavier
     this.bindInputEvents();
+    this._applyStoredSettings();
 
     // 7. Horloge d'animation Three.js & vecteurs réutilisables (zéro allocation par frame)
     this.clock = new THREE.Clock();
@@ -117,6 +118,17 @@ class GameApp {
     window.__mm = { app: this, engine: this.engine, sound: soundManager };
     } catch (e) {
       console.error('[CarnageCruise] Constructor error:', e);
+    }
+  }
+
+  _applyStoredSettings() {
+    const s = storage.data.settings || {};
+    if (this.engine && this.engine.applyQualitySettings) {
+      this.engine.applyQualitySettings(s.graphicsQuality || 'AUTO', s.cameraShake !== false);
+    }
+    if (this.weatherSystem && this.weatherSystem.setQualityFactor) {
+      const q = s.graphicsQuality === 'ECO' ? 0.3 : (s.graphicsQuality === 'HIGH' ? 1.0 : 1.0);
+      this.weatherSystem.setQualityFactor(q);
     }
   }
 
@@ -199,13 +211,16 @@ class GameApp {
 
       // Ignorer la conduite si clic sur une interface interactive ou bouton
       if (e.target.closest('.interactive') || e.target.closest('button')) return;
+      if ((storage.data.settings?.controlMode || 'swipe') === 'buttons') return;
 
       this.isPointerDown = true;
+      this._steerPointerId = e.pointerId;
       this.touchStartX = e.clientX;
     });
 
     window.addEventListener('pointermove', (e) => {
       if (!this.isPointerDown || gameState.currentMode !== 'PLAYING') return;
+      if (this._steerPointerId !== null && e.pointerId !== this._steerPointerId) return;
       if (gameState.isBraking) {
         this.steerInput = 0;
         return;
@@ -224,8 +239,10 @@ class GameApp {
       this.steerInput = Math.max(-1.0, Math.min(1.0, deltaX * sensitivity));
     });
 
-    const endPointer = () => {
+    const endPointer = (e) => {
+      if (this._steerPointerId !== null && e && e.pointerId !== this._steerPointerId) return;
       this.isPointerDown = false;
+      this._steerPointerId = null;
       this.touchStartX = null;
       this.steerInput = 0;
     };
@@ -417,6 +434,12 @@ class GameApp {
         this.bike.buildRider();
       } else if (action === 'ATTACK') {
         this.executePlayerAttack();
+      } else if (action === 'STEER_BUTTON') {
+        if (!this.buttonSteer) this.buttonSteer = { left: false, right: false };
+        if (payload && payload.dir === 'left') this.buttonSteer.left = !!payload.active;
+        if (payload && payload.dir === 'right') this.buttonSteer.right = !!payload.active;
+      } else if (action === 'SETTINGS_CHANGED') {
+        this._applyStoredSettings();
       }
     } catch (err) {
       console.error('[GameApp] Erreur critique lors de handleUIAction:', action, err);
@@ -677,7 +700,7 @@ class GameApp {
         this.environment.chunks.forEach(chunk => {
           if (chunk.userData && chunk.userData.props) {
             chunk.userData.props.forEach(prop => {
-              if (!prop.visible || prop.userData.isHit) return;
+              if (!prop.visible || prop.userData.isHit || prop.userData.isStuntRamp || prop.userData.isAerialRing || prop.userData.isSlalomGate) return;
               const pType = prop.userData.type || '';
               if (pType !== 'lamp' && !pType.startsWith('stall_')) return;
               const worldZ = chunk.position.z + prop.position.z;
@@ -959,7 +982,7 @@ class GameApp {
     if (this.policePursuitActive || gameState.isRuinsMode || this.hasCrossedFinish) return;
     if (this.bike && (this.bike.currentBikeId === 'aero_jet' || this.bike.isFlyingEscape)) return;
     this._crimeHeatCount = (this._crimeHeatCount || 0) + 1;
-    if (this._crimeHeatCount >= 1) {
+    if (this._crimeHeatCount >= 4) {
       this.policePursuitActive = true;
       if (!gameState.challengeState) gameState.challengeState = {};
       if (gameState.challengeState.shieldHp === undefined) {
@@ -1126,8 +1149,9 @@ class GameApp {
             const worldZ = chunk.position.z + prop.position.z;
             const worldX = chunk.position.x + prop.position.x;
 
+            const zTol = Math.max(3.5, currentSpeed * simDelta * 0.65);
             if (prop.userData.isStuntRamp && !prop.userData.isHit &&
-                Math.abs(this.bike.z - worldZ) < 3.5 && Math.abs(this.bike.mesh.position.x - worldX) < 2.8) {
+                Math.abs(this.bike.z - worldZ) < zTol && Math.abs(this.bike.mesh.position.x - worldX) < 2.8) {
               prop.userData.isHit = true;
               if (this.bike.triggerMegaRampJump) {
                 this.bike.triggerMegaRampJump(currentSpeed);
@@ -1137,21 +1161,24 @@ class GameApp {
               cs.jumpsLanded = (cs.jumpsLanded || 0) + 1;
               soundManager.playSpeedBumpBoingFwump(1.35);
               if (this.particles.spawnDirectionalSparks) {
-                this.particles.spawnDirectionalSparks(new THREE.Vector3(worldX, 0.5, worldZ), new THREE.Vector3(0, 1, -0.5), 14);
+                this._tmpDir.set(0, 1, -0.5);
+                this.particles.spawnDirectionalSparks(this._tmpPos.set(worldX, 0.5, worldZ), this._tmpDir, 14);
               }
               this.engine.triggerCameraShake(0.35);
               if (this.ui) {
                 this.ui.spawnFloatingCombatText('MÉGA SAUT !', '🛫 AIR TIME !', '#ffa502', 50, 22);
               }
-              Haptic.impactMedium();
+              Haptic.impactHeavy();
             } else if (prop.userData.isAerialRing && !prop.userData.ringCollected &&
-                Math.abs(this.bike.z - worldZ) < 3.2 && Math.abs(this.bike.mesh.position.x - worldX) < 3.2 &&
+                Math.abs(this.bike.z - worldZ) < zTol && Math.abs(this.bike.mesh.position.x - worldX) < 3.4 &&
                 this.bike.jumpAltitude > 0.45) {
               prop.userData.ringCollected = true;
               prop.visible = false;
               gameState.score += 1500;
               gameState.chargeNitro(35);
               cs.ringsCollected = (cs.ringsCollected || 0) + 1;
+              if (this.engine.triggerHitStop) this.engine.triggerHitStop(0.11, 0.45);
+              if (this.particles.spawnShockwave) this.particles.spawnShockwave(this._tmpPos.set(worldX, 3.0, worldZ), 0x38bdf8, 4.2);
               cs.stuntPoints = (cs.stuntPoints || 0) + 1500;
               soundManager.playCoin();
               if (this.ui) {
@@ -1204,12 +1231,13 @@ class GameApp {
     const delta = rawDelta * timeScale;
     TWEEN.update();
 
-    // Calcul du braquage final (tactile ou clavier) — verrouillé à 0 pendant le freinage / arrêt
+    // Calcul du braquage final (tactile, boutons ou clavier) — verrouillé à 0 pendant le freinage / arrêt
     let currentSteer = this.steerInput;
-    if (this.keys.left) currentSteer = -1.0;
-    else if (this.keys.right) currentSteer = 1.0;
+    if (this.keys.left || this.buttonSteer?.left) currentSteer = -1.0;
+    else if (this.keys.right || this.buttonSteer?.right) currentSteer = 1.0;
     if (gameState.isBraking) {
       this.steerInput = 0;
+      if (this.buttonSteer) { this.buttonSteer.left = false; this.buttonSteer.right = false; }
       currentSteer = 0;
     }
 
@@ -1539,7 +1567,7 @@ class GameApp {
         this.environment.chunks.forEach(chunk => {
           if (chunk.userData && chunk.userData.props) {
             chunk.userData.props.forEach(prop => {
-              if (!prop.visible || prop.userData.isHit) return;
+              if (!prop.visible || prop.userData.isHit || prop.userData.isStuntRamp || prop.userData.isAerialRing || prop.userData.isSlalomGate) return;
               const worldZ = chunk.position.z + prop.position.z;
               const worldX = chunk.position.x + prop.position.x;
               const dZ = Math.abs(worldZ - this.bike.z);

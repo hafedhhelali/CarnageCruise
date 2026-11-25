@@ -9,11 +9,8 @@ import { gameState, CITIES, BIKES, getCityBiomeInfo, getCityRegion, getCityChall
 import { storage } from '../core/Storage.js';
 import { dailyMissions, loginStreak } from '../core/DailyMissions.js';
 import { soundManager } from '../audio/SoundManager.js';
-import { App } from '@capacitor/app';
 import { FULL_VERSION, APP_VERSION, COPYRIGHT_NOTICE, RELEASE_NAME, IS_BETA } from '../core/Version.js';
 import { REAL_COUNTRY_PATHS } from './EuropeMapData.js';
-import { adManager } from '../services/AdManager.js';
-import { cookieConsentManager } from '../services/CookieConsentManager.js';
 import { Haptic } from '../services/HapticFeedback.js';
 import gsap from 'gsap';
 import { WmdPixiRenderer } from './WmdPixiRenderer.js';
@@ -39,11 +36,6 @@ export class UIManager {
 
   init() {
     this.render();
-    if (!cookieConsentManager.hasAnswered()) {
-      setTimeout(() => {
-        cookieConsentManager.showConsentModal();
-      }, 700);
-    }
   }
 
   bindGameState() {
@@ -391,6 +383,23 @@ export class UIManager {
           <div class="currency-pill" title="Pièces d'or">
             <span>🪙 ${coins}</span>
           </div>
+        </div>
+
+        <div class="map-region-filter-bar" id="map-region-filter-bar" style="touch-action: pan-x;">
+          ${(() => {
+            const activeReg = this.selectedMapRegion || 'ALL';
+            const nextTarget = CITIES.find(c => storage.isCityUnlocked(c.id) && !storage.isCityExterminated(c.id) && (storage.getCityData(c.id)?.stars || 0) === 0)
+              || CITIES.find(c => storage.isCityUnlocked(c.id) && !storage.isCityExterminated(c.id))
+              || CITIES[0];
+            const tabs = [
+              { id: 'ALL', label: `🌍 TOUTES (${CITIES.length})` },
+              { id: 'EUROPE', label: '🇪🇺 EUROPE' },
+              { id: 'AFRIQUE DU NORD', label: '🏜️ MAGHREB' },
+              { id: 'PROCHE-ORIENT', label: '🕌 LEVANT' }
+            ];
+            return tabs.map(t => `<button type="button" class="region-tab-pill ${activeReg === t.id ? 'active' : ''}" data-region-filter="${t.id}">${t.label}</button>`).join('')
+              + `<button type="button" id="btn-map-next-target" class="region-tab-pill" style="background: rgba(16,185,129,0.22); border-color: rgba(16,185,129,0.6); color: #6ee7b7;" data-next-city="${nextTarget.id}" title="Aller à la prochaine étape">🎯 ${nextTarget.name.toUpperCase()}</button>`;
+          })()}
         </div>
       </div>
 
@@ -842,15 +851,18 @@ export class UIManager {
     };
     this.selectCityById = updateSelection;
 
-    // Navigation séquentielle fluide entre les villes (◀ / ▶) avec GSAP
+    // Navigation séquentielle fluide entre les villes (◀ / ▶) filtrée par région active
     const navigateCity = (direction) => {
       soundManager.playClick();
       Haptic.tap();
-      const currentId = this.selectedMapCity ? this.selectedMapCity.id : CITIES[0].id;
-      let idx = CITIES.findIndex(c => c.id === currentId);
+      const activeReg = this.selectedMapRegion || 'ALL';
+      const pool = activeReg === 'ALL' ? CITIES : CITIES.filter(c => getCityRegion(c) === activeReg);
+      const list = pool.length > 0 ? pool : CITIES;
+      const currentId = this.selectedMapCity ? this.selectedMapCity.id : list[0].id;
+      let idx = list.findIndex(c => c.id === currentId);
       if (idx === -1) idx = 0;
-      const nextIdx = (idx + direction + CITIES.length) % CITIES.length;
-      updateSelection(CITIES[nextIdx].id);
+      const nextIdx = (idx + direction + list.length) % list.length;
+      updateSelection(list[nextIdx].id);
 
       const detailCard = mapScreen.querySelector('#city-detail');
       if (detailCard) {
@@ -861,6 +873,46 @@ export class UIManager {
       }
     };
     this.navigateMapCity = navigateCity;
+
+    // Filtres de région & saut rapide vers la prochaine ville
+    const applyRegionFilter = (regId, autoSelect = true) => {
+      this.selectedMapRegion = regId || 'ALL';
+      mapScreen.querySelectorAll('.region-tab-pill[data-region-filter]').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-region-filter') === this.selectedMapRegion);
+      });
+      pins.forEach(p => {
+        const pReg = p.getAttribute('data-region');
+        const dimmed = this.selectedMapRegion !== 'ALL' && pReg !== this.selectedMapRegion;
+        p.classList.toggle('region-dimmed', dimmed);
+      });
+      if (autoSelect && this.selectedMapRegion !== 'ALL') {
+        const curReg = this.selectedMapCity ? getCityRegion(this.selectedMapCity) : '';
+        if (curReg !== this.selectedMapRegion) {
+          const match = CITIES.find(c => getCityRegion(c) === this.selectedMapRegion && storage.isCityUnlocked(c.id))
+            || CITIES.find(c => getCityRegion(c) === this.selectedMapRegion);
+          if (match) updateSelection(match.id);
+        }
+      }
+    };
+    applyRegionFilter(this.selectedMapRegion || 'ALL', false);
+
+    mapScreen.querySelectorAll('.region-tab-pill[data-region-filter]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        soundManager.playClick();
+        applyRegionFilter(btn.getAttribute('data-region-filter'), true);
+      });
+    });
+
+    mapScreen.querySelector('#btn-map-next-target')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      soundManager.playClick();
+      const targetId = e.currentTarget.getAttribute('data-next-city');
+      if (targetId) {
+        applyRegionFilter('ALL', false);
+        updateSelection(targetId);
+      }
+    });
 
     const handleCityAction = (cityId) => {
       const city = CITIES.find(c => c.id === cityId);
@@ -3185,6 +3237,13 @@ export class UIManager {
         `}
       </div>
 
+      ${(storage.data.settings?.controlMode || 'swipe') === 'buttons' ? `
+      <div class="hud-steer-buttons-row" id="hud-steer-buttons" style="position: absolute; left: 10px; right: 10px; bottom: 96px; display: flex; justify-content: space-between; pointer-events: none; z-index: 25;">
+        <button type="button" id="btn-hud-steer-left" class="btn-hud-steer interactive" aria-label="Gauche" style="width: 64px; height: 56px; border-radius: 16px; background: rgba(15,23,42,0.72); border: 1.5px solid rgba(34,211,238,0.55); color: #f8fafc; font-size: 1.5rem; font-weight: 900; pointer-events: auto; touch-action: none;">◀</button>
+        <button type="button" id="btn-hud-steer-right" class="btn-hud-steer interactive" aria-label="Droite" style="width: 64px; height: 56px; border-radius: 16px; background: rgba(15,23,42,0.72); border: 1.5px solid rgba(34,211,238,0.55); color: #f8fafc; font-size: 1.5rem; font-weight: 900; pointer-events: auto; touch-action: none;">▶</button>
+      </div>
+      ` : ''}
+
       <div class="hud-bottom-controls">
         <!-- Pédale de Frein (Engin) / Bouton d'Arrêt (Homme) ergonomique à gauche (pouce gauche) -->
         <button class="btn-pedal-brake ${isFootOrHorse ? 'mode-homme' : 'mode-engin'}" id="btn-hud-brake" title="${brakeTitle}">
@@ -3202,11 +3261,9 @@ export class UIManager {
           <div class="speed-track-gauge">
             <div class="speed-fill-gauge" id="hud-speed-gauge"></div>
           </div>
-${gameState.isRuinsMode ? '' : `          <div class="hud-carnage-badge" id="hud-carnage-badge" title="Victimes exterminées / Objectif de carnage">
+${gameState.isRuinsMode ? '' : `          <div class="hud-carnage-badge" id="hud-carnage-badge" title="Victimes exterminées">
             <span class="carnage-icon">💀</span>
             <span class="carnage-count" id="hud-kills-val">${gameState.killsCount || 0}</span>
-            <span class="carnage-sep">/</span>
-            <span class="carnage-quota" id="hud-quota-val">${gameState.selectedCity.killQuota || 30}</span>
           </div>`}
         </div>
 
@@ -3260,6 +3317,29 @@ ${gameState.isRuinsMode ? '' : `          <div class="hud-nitro-group">
     brakeBtn.addEventListener('pointerdown', startBraking);
     brakeBtn.addEventListener('pointerup', stopBraking);
     brakeBtn.addEventListener('pointercancel', stopBraking);
+
+    // Boutons directionnels Gauche/Droite (si mode 'buttons')
+    const bindSteerBtn = (el, dir) => {
+      if (!el) return;
+      const setSteer = (active, e) => {
+        if (e) {
+          e.stopPropagation();
+          if (active && e.pointerId !== undefined && el.setPointerCapture) {
+            try { el.setPointerCapture(e.pointerId); } catch (_) {}
+          } else if (!active && e.pointerId !== undefined && el.releasePointerCapture) {
+            try { el.releasePointerCapture(e.pointerId); } catch (_) {}
+          }
+        }
+        el.style.borderColor = active ? '#22d3ee' : 'rgba(34,211,238,0.55)';
+        el.style.background = active ? 'rgba(34,211,238,0.3)' : 'rgba(15,23,42,0.72)';
+        if (this.onAction) this.onAction('STEER_BUTTON', { dir, active });
+      };
+      el.addEventListener('pointerdown', (e) => setSteer(true, e));
+      el.addEventListener('pointerup', (e) => setSteer(false, e));
+      el.addEventListener('pointercancel', (e) => setSteer(false, e));
+    };
+    bindSteerBtn(hud.querySelector('#btn-hud-steer-left'), 'left');
+    bindSteerBtn(hud.querySelector('#btn-hud-steer-right'), 'right');
 
     // Gestion du bouton Nitro / Energy Drink 5 secondes (click intentionnel uniquement pour éviter les déclenchements accidentels au glissement)
     const nitroBtn = hud.querySelector('#btn-hud-nitro');
@@ -4003,7 +4083,7 @@ ${gameState.isRuinsMode ? '' : `          <div class="hud-nitro-group">
       } else if (chMode === 'EXTREME_STORM') {
         const nearMisses = Math.max(0, cs.nearMissCount ?? 0);
         const nearTarget = Math.max(1, cs.nearMissTarget ?? 6);
-        const windGust = cs.windGust ?? 0;
+        const windGust = cs.windForce ?? cs.windGust ?? 0;
         const windWarn = Math.abs(windGust) > 0.35 ? (windGust > 0 ? '💨 RAFALE ➔' : '⬅ RAFALE 💨') : '⚡ ORAGE';
         chPct = Math.min(100, Math.round((nearMisses / nearTarget) * 100));
         if (cityName) cityName.innerHTML = `<span style="color: #38bdf8; font-weight: 900;">⛈️ TEMPÊTE • ${windWarn}</span>`;
@@ -4206,6 +4286,15 @@ ${gameState.isRuinsMode ? '' : `          <div class="hud-nitro-group">
             <button id="btn-toggle-steer" class="btn-arcade" style="padding: 10px 8px; font-size: 0.76rem; background: linear-gradient(135deg, #e67e22, #f39c12);">
               🎯 DIRECTION : ${currentSteerLabel}
             </button>
+            <button id="btn-toggle-control-mode" class="btn-arcade" style="padding: 10px 8px; font-size: 0.76rem; background: linear-gradient(135deg, #0ea5e9, #2563eb);">
+              🕹️ CONTRÔLES : ${(storage.data.settings.controlMode || 'swipe') === 'buttons' ? 'BOUTONS ◀▶' : 'GLISSER 👆'}
+            </button>
+            <button id="btn-toggle-quality" class="btn-arcade" style="padding: 10px 8px; font-size: 0.76rem; background: linear-gradient(135deg, #8b5cf6, #6d28d9);">
+              🖥️ QUALITÉ : ${storage.data.settings.graphicsQuality || 'AUTO'}
+            </button>
+            <button id="btn-toggle-camshake" class="btn-arcade" style="grid-column: span 2; padding: 10px 8px; font-size: 0.76rem; background: ${storage.data.settings.cameraShake !== false ? 'linear-gradient(135deg, #10b981, #059669)' : 'rgba(80,80,80,0.4)'};">
+              🎥 SECOUSSES CAMÉRA : ${storage.data.settings.cameraShake !== false ? 'ON ✅' : 'OFF ❌'}
+            </button>
           </div>
         </div>
 
@@ -4308,6 +4397,43 @@ ${gameState.isRuinsMode ? '' : `          <div class="hud-nitro-group">
       const btn = overlay.querySelector('#btn-toggle-steer');
       if (btn) {
         btn.textContent = `🎯 DIRECTION : ${next.label}`;
+      }
+    });
+
+    overlay.querySelector('#btn-toggle-control-mode')?.addEventListener('click', () => {
+      soundManager.playClick('default');
+      const cur = storage.data.settings.controlMode || 'swipe';
+      const next = cur === 'buttons' ? 'swipe' : 'buttons';
+      storage.updateSettings({ controlMode: next });
+      const btn = overlay.querySelector('#btn-toggle-control-mode');
+      if (btn) {
+        btn.textContent = `🕹️ CONTRÔLES : ${next === 'buttons' ? 'BOUTONS ◀▶' : 'GLISSER 👆'}`;
+      }
+      if (this.onAction) this.onAction('SETTINGS_CHANGED', storage.data.settings);
+    });
+
+    overlay.querySelector('#btn-toggle-quality')?.addEventListener('click', () => {
+      soundManager.playClick('default');
+      const modes = ['AUTO', 'HIGH', 'ECO'];
+      const labels = { AUTO: 'AUTO', HIGH: 'ÉLEVÉ', ECO: 'ÉCO' };
+      const cur = storage.data.settings.graphicsQuality || 'AUTO';
+      const next = modes[(modes.indexOf(cur) + 1) % modes.length];
+      storage.updateSettings({ graphicsQuality: next });
+      const btn = overlay.querySelector('#btn-toggle-quality');
+      if (btn) {
+        btn.textContent = `🖥️ QUALITÉ : ${labels[next]}`;
+      }
+      if (this.onAction) this.onAction('SETTINGS_CHANGED', storage.data.settings);
+    });
+
+    overlay.querySelector('#btn-toggle-camshake')?.addEventListener('click', () => {
+      soundManager.playClick('default');
+      const next = storage.data.settings.cameraShake === false;
+      storage.updateSettings({ cameraShake: next });
+      const btn = overlay.querySelector('#btn-toggle-camshake');
+      if (btn) {
+        btn.textContent = `🎥 SECOUSSES CAMÉRA : ${next ? 'ON ✅' : 'OFF ❌'}`;
+        btn.style.background = next ? 'linear-gradient(135deg, #10b981, #059669)' : 'rgba(80,80,80,0.4)';
       }
     });
 
@@ -4873,6 +4999,15 @@ ${gameState.isRuinsMode ? '' : `          <div class="hud-nitro-group">
           </div>
         </div>
 
+        <div class="pause-audio-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;">
+          <button type="button" id="btn-pause-music" class="btn-arcade" style="padding: 8px; min-height: 44px; font-size: 0.74rem; background: ${soundManager.isMutedMusic ? 'rgba(80,80,80,0.4)' : 'linear-gradient(135deg, #0984e3, #6c5ce7)'};">
+            🎵 MUSIQUE : ${soundManager.isMutedMusic ? 'OFF 🔇' : 'ON 🔊'}
+          </button>
+          <button type="button" id="btn-pause-sfx" class="btn-arcade" style="padding: 8px; min-height: 44px; font-size: 0.74rem; background: ${soundManager.isMutedSfx ? 'rgba(80,80,80,0.4)' : 'linear-gradient(135deg, #00cec9, #0984e3)'};">
+            🔊 EFFETS : ${soundManager.isMutedSfx ? 'OFF 🔇' : 'ON 🔊'}
+          </button>
+        </div>
+
         <div class="modal-actions">
           <button type="button" id="btn-pause-resume" class="btn-arcade" style="--btn-glow: rgba(16, 185, 129, 0.45); background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
             ▶️ REPRENDRE LA COURSE
@@ -4912,6 +5047,27 @@ ${gameState.isRuinsMode ? '' : `          <div class="hud-nitro-group">
         closeAndResume();
       });
     }
+
+    overlay.querySelector('#btn-pause-music')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      soundManager.toggleMusic();
+      const btn = overlay.querySelector('#btn-pause-music');
+      if (btn) {
+        btn.textContent = `🎵 MUSIQUE : ${soundManager.isMutedMusic ? 'OFF 🔇' : 'ON 🔊'}`;
+        btn.style.background = soundManager.isMutedMusic ? 'rgba(80,80,80,0.4)' : 'linear-gradient(135deg, #0984e3, #6c5ce7)';
+      }
+    });
+
+    overlay.querySelector('#btn-pause-sfx')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      soundManager.toggleSfx();
+      if (!soundManager.isMutedSfx) soundManager.playClick('default');
+      const btn = overlay.querySelector('#btn-pause-sfx');
+      if (btn) {
+        btn.textContent = `🔊 EFFETS : ${soundManager.isMutedSfx ? 'OFF 🔇' : 'ON 🔊'}`;
+        btn.style.background = soundManager.isMutedSfx ? 'rgba(80,80,80,0.4)' : 'linear-gradient(135deg, #00cec9, #0984e3)';
+      }
+    });
 
     // Changement d'engin instantané en pleine course
     overlay.querySelectorAll('.pause-bike-item').forEach(btn => {

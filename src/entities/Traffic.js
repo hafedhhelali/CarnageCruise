@@ -1407,16 +1407,21 @@ export class Traffic {
       }
     }
 
-    // 4. Animation et déplacement du Boss de convoi (CONVOY_BOSS)
+    // 4. Animation et déplacement du Boss de convoi (CONVOY_BOSS) avec rubber-banding
     if (this.bossTruck && this.bossTruck.userData.active) {
       const boss = this.bossTruck;
+      const dz = boss.position.z - playerZ;
+      let targetSpeed = Math.max(12, bikeSpeed * 0.96);
+      if (dz > 48) targetSpeed = Math.max(8, bikeSpeed * 0.72);
+      else if (dz < 14) targetSpeed = Math.min(62, bikeSpeed * 1.12);
+      boss.userData.speed = THREE.MathUtils.lerp(boss.userData.speed || 23.5, targetSpeed, 1 - Math.exp(-3.5 * delta));
       boss.position.z += boss.userData.speed * delta;
+      boss.userData.strobeTimer = (boss.userData.strobeTimer || 0) + delta;
+      boss.userData.lane = Math.sin(boss.userData.strobeTimer * 0.85) * 2.3;
       const curveX = roadCurveFunc ? roadCurveFunc(boss.position.z) : 0;
       const aheadX = roadCurveFunc ? roadCurveFunc(boss.position.z + 3.0) : 0;
       boss.position.x = curveX + (boss.userData.lane || 0);
       boss.rotation.y = Math.atan2(aheadX - curveX, 3.0);
-
-      boss.userData.strobeTimer = (boss.userData.strobeTimer || 0) + delta;
       if (boss.userData.bossStrobe) {
         boss.userData.bossStrobe.visible = Math.sin(boss.userData.strobeTimer * 18.0) > 0;
       }

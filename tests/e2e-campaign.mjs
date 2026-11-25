@@ -78,10 +78,36 @@ async function run() {
   const cookieBtn = await page.$('#btn-cookie-accept-all, #btn-cookie-save');
   if (cookieBtn) await cookieBtn.click();
 
-  // 1. Splash -> Map
+  // 1. Splash -> Profile/Options (test Quality, Controls, Haptic, CamShake) -> Map
+  const profileBtn = await page.$('#btn-splash-profile');
+  if (profileBtn) {
+    await profileBtn.click();
+    await wait(300);
+    await page.click('#btn-toggle-quality');
+    await page.click('#btn-toggle-quality');
+    await page.click('#btn-toggle-quality'); // cycles AUTO -> HIGH -> ECO -> AUTO
+    await page.click('#btn-toggle-control-mode'); // swipe -> buttons
+    await page.click('#btn-toggle-haptic');
+    await page.click('#btn-toggle-haptic');
+    await page.click('#btn-profile-close-bottom');
+    await wait(300);
+  }
+
   await page.waitForSelector('#btn-splash-play', { timeout: 8000 });
   await page.click('#btn-splash-play');
   await wait(600);
+
+  // 1b. Map Region Filters + Next Target Quick-Jump
+  const maghrebTab = await page.$('.region-tab-pill[data-region-filter="AFRIQUE DU NORD"]');
+  if (maghrebTab) {
+    await maghrebTab.click();
+    await wait(250);
+  }
+  const nextTargetBtn = await page.$('#btn-map-next-target');
+  if (nextTargetBtn) {
+    await nextTargetBtn.click();
+    await wait(350);
+  }
 
   // 2. Map -> Quick Vehicle Modal -> Full Garage -> Next -> Back
   const garageShortcut = await page.$('#btn-city-vehicle-shortcut');
@@ -92,7 +118,7 @@ async function run() {
     if (fullGarage) {
       await fullGarage.click();
       await wait(600);
-      const nextVeh = await page.$('#btn-garage-next');
+      const nextVeh = await page.$('#btn-next-bike');
       if (nextVeh) await nextVeh.click();
       await wait(300);
       const backBtn = await page.$('#btn-garage-back');

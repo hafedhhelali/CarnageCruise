@@ -11,12 +11,10 @@ const DEFAULT_SAVE = {
   playerName: 'Pilote Express',
   coins: 250, // Barème équilibré de départ (250 pièces)
   unlockedCities: [
-    'paris', 'bruxelles', 'londres', 'saint-malo', 'bordeaux', 'barcelone',
-    'madrid', 'lisbonne',
-    'millau', 'marseille', 'nice', 'milan', 'geneve', 'chamonix',
-    'annecy', 'lyon', 'strasbourg', 'rome', 'napoli', 'tunis', 'annaba', 'alger',
-    'berlin', 'amsterdam', 'seville', 'casablanca', 'venise', 'flamanville-nuc', 'doel-nuc', 'asco-nuc', 'tchernobyl',
-'reykjavik', 'rio', 'route66'
+    'paris', 'bruxelles', 'londres', 'saint_malo', 'bordeaux', 'barcelone',
+    'madrid', 'lisbonne', 'marseille', 'nice', 'milan', 'geneve',
+    'lyon', 'strasbourg', 'rome', 'napoli', 'tunis', 'annaba', 'alger',
+    'berlin', 'amsterdam', 'seville', 'casablanca', 'venise', 'reykjavik'
   ],
   cityScores: {
     paris: { bestScore: 0, stars: 0, completed: false },
@@ -41,24 +39,14 @@ const DEFAULT_SAVE = {
     hovercraft: '#0984e3',
     rad_rover: '#6c5ce7'
   },
-  equippedAccessories: {
-    helmet: 'beret',
-    glasses: 'shades'
-  },
   settings: {
     sfx: true,
     music: true,
     vibration: true,
     controlMode: 'swipe',
-    steerSensitivity: 'DYNAMIC'
-  },
-  googleAccount: {
-    isConnected: false,
-    email: null,
-    displayName: 'Pilote Anonyme',
-    avatarUrl: null,
-    lastCloudSync: null,
-    cloudSaveId: null
+    steerSensitivity: 'DYNAMIC',
+    graphicsQuality: 'AUTO',
+    cameraShake: true
   },
   worldmageddon: {
     streetVictims: 0,
@@ -376,57 +364,6 @@ export class Storage {
     this.save();
   }
 
-  // --- GESTION DU COMPTE GOOGLE / GOOGLE PLAY GAMES & CLOUD SAVE ---
-
-  connectGoogleAccount(email = 'pilote.worldmageddon@gmail.com', displayName = 'Commander Worldmageddon') {
-    this.data.googleAccount = {
-      isConnected: true,
-      email,
-      displayName,
-      avatarUrl: 'https://lh3.googleusercontent.com/a/default-user=s96-c',
-      lastCloudSync: new Date().toISOString(),
-      cloudSaveId: 'GPLAY-' + Math.random().toString(36).substring(2, 9).toUpperCase()
-    };
-    this.data.playerName = displayName;
-    this.save();
-    return this.data.googleAccount;
-  }
-
-  disconnectGoogleAccount() {
-    this.data.googleAccount = {
-      isConnected: false,
-      email: null,
-      displayName: 'Pilote Anonyme',
-      avatarUrl: null,
-      lastCloudSync: null,
-      cloudSaveId: null
-    };
-    this.save();
-    return this.data.googleAccount;
-  }
-
-  syncCloudSave() {
-    if (!this.data.googleAccount || !this.data.googleAccount.isConnected) {
-      return { success: false, reason: 'Aucun compte Google connecté !' };
-    }
-    this.data.googleAccount.lastCloudSync = new Date().toISOString();
-    this.save();
-    return {
-      success: true,
-      syncTime: this.data.googleAccount.lastCloudSync,
-      cloudId: this.data.googleAccount.cloudSaveId
-    };
-  }
-
-  exportSaveString() {
-    try {
-      const json = JSON.stringify(this.data);
-      return btoa(unescape(encodeURIComponent(json)));
-    } catch (e) {
-      return JSON.stringify(this.data);
-    }
-  }
-
   importSaveString(saveStr) {
     if (!saveStr) return { success: false, reason: 'Code de sauvegarde vide !' };
     try {
@@ -441,6 +378,11 @@ export class Storage {
         this.data = {
           ...DEFAULT_SAVE,
           ...parsed,
+          settings: { ...DEFAULT_SAVE.settings, ...(parsed.settings || {}) },
+          cityScores: { ...DEFAULT_SAVE.cityScores, ...(parsed.cityScores || {}) },
+          cityDestruction: { ...(parsed.cityDestruction || {}) },
+          challengeCompletions: { ...(parsed.challengeCompletions || {}) },
+          worldmageddon: { ...DEFAULT_SAVE.worldmageddon, ...(parsed.worldmageddon || {}) },
           stats: { ...DEFAULT_SAVE.stats, ...(parsed.stats || {}) }
         };
         this.save();
@@ -519,19 +461,10 @@ export class Storage {
     };
   }
 
-  resetScores() {
-    this.data.cityScores = {};
-    if (this.data.stats) {
-      this.data.stats.totalScore = 0;
-      this.data.stats.totalRuns = 0;
-      this.data.stats.maxCombo = 1;
-    }
-    this.save();
-    return true;
-  }
-
   resetWorldmageddonProgression() {
     this.data.exterminatedCities = [];
+    this.data.cityDestruction = {};
+    this.data.challengeCompletions = {};
     this.data.cityScores = {};
     this.data.worldmageddon = {
       streetVictims: 0,
