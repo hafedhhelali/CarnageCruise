@@ -974,11 +974,18 @@ export class IntersectionManager {
         }
       }
 
-      // Nettoyage des carrefours dépassés
+      // Nettoyage des carrefours dépassés (avec libération mémoire GPU + suppression du tableau)
       if (inter.z < playerZ - 90) {
+        this._disposeObjectTree(inter.group);
         this.container.remove(inter.group);
+        inter._remove = true;
       }
     });
+    for (let i = this.intersections.length - 1; i >= 0; i--) {
+      if (this.intersections[i]._remove) {
+        this.intersections.splice(i, 1);
+      }
+    }
 
     // 4. Déplacement, voltige physique et collisions des véhicules transversaux
     for (let i = this.crossingCars.length - 1; i >= 0; i--) {
@@ -996,6 +1003,7 @@ export class IntersectionManager {
         car.wreckTimer = (car.wreckTimer || 0) + delta;
 
         if (car.mesh.position.y < -3 || car.wreckTimer > 2.2) {
+          this._disposeObjectTree(car.mesh);
           this.container.remove(car.mesh);
           this.crossingCars.splice(i, 1);
         }
@@ -1004,11 +1012,14 @@ export class IntersectionManager {
 
       car.mesh.position.x += car.velX * delta;
 
-      // Faire tourner les roues des voitures transversales
+      // Faire tourner les roues des voitures transversales (pneu + jante ensemble, étrier fixe)
       if (car.mesh.userData && car.mesh.userData.wheels) {
-        car.mesh.userData.wheels.forEach(w => {
-          w.children[0].rotation.y += delta * 18;
-        });
+        const spin = delta * 18;
+        for (let wi = 0; wi < car.mesh.userData.wheels.length; wi++) {
+          const w = car.mesh.userData.wheels[wi];
+          if (w.children[0]) w.children[0].rotation.y += spin;
+          if (w.children[1]) w.children[1].rotation.y += spin;
+        }
       }
 
       // Détection d'interaction avec le joueur (Carambolage T-Bone ou Frôlage)
@@ -1030,15 +1041,34 @@ export class IntersectionManager {
 
       // Supprimer quand la voiture sort du champ
       if (Math.abs(car.mesh.position.x) > 48) {
+        this._disposeObjectTree(car.mesh);
         this.container.remove(car.mesh);
         this.crossingCars.splice(i, 1);
       }
     }
   }
 
+  _disposeObjectTree(obj) {
+    if (!obj) return;
+    obj.traverse((child) => {
+      if (child.geometry && typeof child.geometry.dispose === 'function') {
+        child.geometry.dispose();
+      }
+      if (child.material) {
+        if (Array.isArray(child.material)) {
+          child.material.forEach(m => m && m.dispose && m.dispose());
+        } else if (child.material.dispose) {
+          child.material.dispose();
+        }
+      }
+    });
+  }
+
   reset() {
     while (this.container.children.length > 0) {
-      this.container.remove(this.container.children[0]);
+      const child = this.container.children[0];
+      this._disposeObjectTree(child);
+      this.container.remove(child);
     }
     this.intersections = [];
     this.crossingCars = [];

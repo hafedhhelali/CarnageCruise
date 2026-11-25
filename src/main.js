@@ -1065,7 +1065,7 @@ class GameApp {
         if (!rb.userData || !rb.userData.active || rb.userData.cleared) continue;
         const dZ = Math.abs(this.bike.z - rb.position.z);
         const dX = Math.abs(this.bike.mesh.position.x - rb.position.x);
-        if (dZ < 2.2 && dX < 1.9) {
+        if (dZ < 2.2 && dX >= 1.65 && dX <= 4.75) {
           rb.userData.cleared = true;
           const canSmash = gameState.isNitroActive || this.bike.isInvulnerable() || this.bike.currentBikeId === 'tank' || this.bike.currentBikeId === 'rouleau';
           if (canSmash) {
@@ -1502,6 +1502,14 @@ class GameApp {
 
           // Impact des balles sur les véhicules de circulation & Boss Convoi
           if (this.traffic) {
+            if (this.traffic.bossTruck && this.traffic.bossTruck.visible && this.traffic.bossTruck.userData?.active) {
+              const boss = this.traffic.bossTruck;
+              if (Math.abs(boss.position.z - b.position.z) < 4.5 && Math.abs(boss.position.x - b.position.x) < 2.4) {
+                b.userData.active = false;
+                b.visible = false;
+                this.damageConvoyBoss(boss, 10, b.position);
+              }
+            }
             this.traffic.vehicles.forEach(v => {
               if (!v.visible || v.userData.isCrashed) return;
               const isBoss = !!(v.userData && v.userData.isConvoyBoss);
@@ -1677,7 +1685,7 @@ class GameApp {
       }
 
       // 9. Gestion des carrefours réalistes, feux et verbalisations (désactivés en plein vol et en mode ballade ruines)
-      if (!isFlyingCraft && !gameState.isRuinsMode) {
+      if (!isFlyingCraft && !gameState.isRuinsMode && !(this.environment && this.environment.isCataclysmMission)) {
         this.intersections.update(
           delta,
           this.bike.z,
@@ -1687,7 +1695,8 @@ class GameApp {
             // Verbalisation immédiate pour feu rouge grillé : Réduction du score !
             const penalty = 450;
             gameState.score = Math.max(0, gameState.score - penalty);
-            storage.recordRedLightRun();
+            if (storage.recordRedLightRun) storage.recordRedLightRun();
+            else if (storage.recordCrashRecovery) storage.recordCrashRecovery(true);
             soundManager.playRedLightViolation();
             this.engine.triggerCameraShake(0.4);
             Haptic.impactHeavy();
@@ -1819,6 +1828,7 @@ class GameApp {
         // 9b. Franchissement des dos d'âne / ralentisseurs 3D (saut dynamique de l'engin & bonus Air Time)
         if (this.environment.speedBumps) {
           for (let bump of this.environment.speedBumps) {
+            if (bump.mesh && !bump.mesh.visible) continue;
             const worldZ = bump.chunk ? (bump.chunk.position.z + bump.localZ) : (bump.z || 0);
             if (!bump.hit && Math.abs(this.bike.z - worldZ) < 1.8) {
               bump.hit = true;

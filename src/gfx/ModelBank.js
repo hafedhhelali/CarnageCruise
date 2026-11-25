@@ -79,7 +79,16 @@ export class ModelBank {
           mat.userData = mat.userData || {};
           mat.userData.isSharedModelBank = true;
           if (mat.isMeshStandardMaterial || mat.isMeshPhysicalMaterial) {
-            mat.envMapIntensity = 1.2;
+            const lowerName = (node.name || '').toLowerCase();
+            if (lowerName.includes('wheel') || lowerName.includes('tire') || lowerName.includes('underside')) {
+              mat.roughness = 0.88;
+              mat.metalness = 0.05;
+              mat.envMapIntensity = 0.65;
+            } else {
+              mat.roughness = Math.min(mat.roughness ?? 0.35, 0.32);
+              mat.metalness = Math.max(mat.metalness ?? 0.2, 0.35);
+              mat.envMapIntensity = 1.35;
+            }
           }
         }
       }

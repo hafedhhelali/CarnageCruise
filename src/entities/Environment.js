@@ -182,6 +182,7 @@ export class Environment {
     const sidewalkRough = textureFactory.getSidewalkRoughnessMap();
     sidewalkRough.repeat.set(1.5, this.chunkLength / 4);
 
+    this._roadWetnessUniform = this._roadWetnessUniform || { value: this.weatherWetness || 0 };
     roadMat = new THREE.MeshStandardMaterial({
       map: roadTex,
       bumpMap: roadBump,
@@ -190,6 +191,27 @@ export class Environment {
       roughness: 1.0,
       metalness: 0.05
     });
+    roadMat.customProgramCacheKey = () => 'cc_wet_road_v1';
+    roadMat.onBeforeCompile = (shader) => {
+      shader.uniforms.uWetness = this._roadWetnessUniform;
+      shader.vertexShader = shader.vertexShader
+        .replace('#include <common>', '#include <common>\nvarying vec3 vRoadWorldPos;')
+        .replace('#include <begin_vertex>', '#include <begin_vertex>\nvRoadWorldPos = (modelMatrix * vec4(transformed, 1.0)).xyz;');
+      shader.fragmentShader = shader.fragmentShader
+        .replace('#include <common>', '#include <common>\nuniform float uWetness;\nvarying vec3 vRoadWorldPos;')
+        .replace(
+          '#include <color_fragment>',
+          `#include <color_fragment>
+          float _pNoise = sin(vRoadWorldPos.x * 0.55 + vRoadWorldPos.z * 0.14) * cos(vRoadWorldPos.z * 0.11 - vRoadWorldPos.x * 0.42);
+          float _puddleMask = smoothstep(0.18, 0.52, _pNoise) * smoothstep(0.15, 0.70, uWetness);
+          diffuseColor.rgb *= mix(1.0, 0.48, uWetness * 0.75 + _puddleMask * 0.35);`
+        )
+        .replace(
+          '#include <roughnessmap_fragment>',
+          `#include <roughnessmap_fragment>
+          roughnessFactor = mix(roughnessFactor, 0.05, _puddleMask);`
+        );
+    };
     sidewalkMat = new THREE.MeshStandardMaterial({
       map: sidewalkTex,
       bumpMap: sidewalkBump,
@@ -251,8 +273,6 @@ export class Environment {
         metalness: 0.05
       }),
       facades: facadeMats,
-      chevronMatL: new THREE.MeshBasicMaterial({ map: textureFactory.getCurveChevronTexture(-1) }),
-      chevronMatR: new THREE.MeshBasicMaterial({ map: textureFactory.getCurveChevronTexture(1) }),
       treeGrate: new THREE.MeshStandardMaterial({ color: 0x1e272e, roughness: 0.45, metalness: 0.75 }),
       awningRed: new THREE.MeshStandardMaterial({
         map: awningTexRed,
@@ -432,6 +452,9 @@ export class Environment {
   setWeatherWetness(wetness) {
     const w = Math.max(0, Math.min(1, Number(wetness) || 0));
     this.weatherWetness = w;
+    if (this._roadWetnessUniform) {
+      this._roadWetnessUniform.value = w;
+    }
     if (!this.sharedMats) return;
     if (this.sharedMats.road) {
       this.sharedMats.road.roughness = 1.0 - w * 0.72;        // 1.0 -> 0.28 (chaussée brillante mouillée)

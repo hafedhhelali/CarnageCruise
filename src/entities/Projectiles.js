@@ -90,9 +90,12 @@ export class ProjectileManager {
     tip.position.z = 0.55;
     group.add(tip);
 
-    // Flamme de culot de propulsion arrière
-    const flameMat = new THREE.MeshBasicMaterial({ color: 0xff793f, transparent: true, opacity: 0.9 });
-    const flame = new THREE.Mesh(new THREE.ConeGeometry(0.09, 0.45, 6), flameMat);
+    // Flamme de culot de propulsion arrière (matériau & géométrie partagés)
+    if (!this.sharedMats.shellFlame) {
+      this.sharedMats.shellFlame = new THREE.MeshBasicMaterial({ color: 0xff793f, transparent: true, opacity: 0.9 });
+      this.sharedGeos.shellFlame = new THREE.ConeGeometry(0.09, 0.45, 6);
+    }
+    const flame = new THREE.Mesh(this.sharedGeos.shellFlame, this.sharedMats.shellFlame);
     flame.rotation.x = -Math.PI / 2;
     flame.position.z = -0.55;
     group.add(flame);
@@ -127,8 +130,11 @@ export class ProjectileManager {
       group.add(fin);
     }
 
-    const flameMat = new THREE.MeshBasicMaterial({ color: 0xfffa65, transparent: true, opacity: 0.9 });
-    const flame = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.4, 6), flameMat);
+    if (!this.sharedMats.missileFlame) {
+      this.sharedMats.missileFlame = new THREE.MeshBasicMaterial({ color: 0xfffa65, transparent: true, opacity: 0.9 });
+      this.sharedGeos.missileFlame = new THREE.ConeGeometry(0.07, 0.4, 6);
+    }
+    const flame = new THREE.Mesh(this.sharedGeos.missileFlame, this.sharedMats.missileFlame);
     flame.rotation.x = -Math.PI / 2;
     flame.position.z = -0.65;
     group.add(flame);
@@ -409,13 +415,31 @@ export class ProjectileManager {
           hitOccurred = true;
         }
 
-        // 3. Test de collision directe avec un véhicule
-        if (!hitOccurred && traffic && traffic.vehicles) {
-          for (let v of traffic.vehicles) {
-            if (!v.userData || !v.userData.active || v.userData.isCrashed) continue;
-            if (Math.abs(v.position.z - pPos.z) < 2.8 && Math.abs(v.position.x - pPos.x) < 2.2) {
+        // 3. Test de collision directe avec un véhicule ou Boss Convoi
+        if (!hitOccurred && traffic) {
+          if (traffic.bossTruck && traffic.bossTruck.visible && traffic.bossTruck.userData?.active) {
+            const bt = traffic.bossTruck;
+            if (Math.abs(bt.position.z - pPos.z) < 4.5 && Math.abs(bt.position.x - pPos.x) < 2.4) {
               hitOccurred = true;
-              break;
+              if (gameState && gameState.challengeState && !gameState.challengeState.defeated) {
+                const dmg = p.type === '120mm_shell' ? 28 : 22;
+                gameState.challengeState.bossHp = Math.max(0, (gameState.challengeState.bossHp ?? 100) - dmg);
+                bt.userData.hp = gameState.challengeState.bossHp;
+                if (gameState.challengeState.bossHp <= 0) {
+                  gameState.challengeState.defeated = true;
+                  bt.userData.active = false;
+                  traffic.blowUpVehicle(bt, pPos);
+                }
+              }
+            }
+          }
+          if (!hitOccurred && traffic.vehicles) {
+            for (let v of traffic.vehicles) {
+              if (!v.userData || !v.userData.active || v.userData.isCrashed) continue;
+              if (Math.abs(v.position.z - pPos.z) < 2.8 && Math.abs(v.position.x - pPos.x) < 2.2) {
+                hitOccurred = true;
+                break;
+              }
             }
           }
         }

@@ -95,6 +95,9 @@ export class UIManager {
       const topModal = this.activeModals.pop();
       const wasPauseModal = topModal && topModal.dataset && topModal.dataset.isPauseModal === 'true';
       if (topModal && topModal.parentNode) {
+        if (typeof topModal._onModalClose === 'function') {
+          try { topModal._onModalClose(); } catch (_) {}
+        }
         topModal.remove();
       }
       if (wasPauseModal && this.onAction) {
@@ -142,6 +145,9 @@ export class UIManager {
       while (this.activeModals.length > 0) {
         const modal = this.activeModals.pop();
         if (modal && modal.parentNode) {
+          if (typeof modal._onModalClose === 'function') {
+            try { modal._onModalClose(); } catch (_) {}
+          }
           try { modal.remove(); } catch (e) {}
         }
       }
@@ -745,7 +751,10 @@ export class UIManager {
         mouseStartY = e.clientY;
       });
 
-      window.addEventListener('mousemove', (e) => {
+      if (this._mapMouseMove) window.removeEventListener('mousemove', this._mapMouseMove);
+      if (this._mapMouseUp) window.removeEventListener('mouseup', this._mapMouseUp);
+
+      this._mapMouseMove = (e) => {
         if (!isMouseDown) return;
         const dx = e.clientX - mouseStartX;
         const dy = e.clientY - mouseStartY;
@@ -756,11 +765,14 @@ export class UIManager {
         panX = clamped.x;
         panY = clamped.y;
         applyTransform(false);
-      });
+      };
 
-      window.addEventListener('mouseup', () => {
+      this._mapMouseUp = () => {
         isMouseDown = false;
-      });
+      };
+
+      window.addEventListener('mousemove', this._mapMouseMove);
+      window.addEventListener('mouseup', this._mapMouseUp);
     }
 
     // Gestion du déplacement et de la sélection de ville
@@ -2715,9 +2727,20 @@ export class UIManager {
 
     animFrameId = requestAnimationFrame(renderFrame);
 
+    overlay._onModalClose = () => {
+      if (animFrameId) {
+        cancelAnimationFrame(animFrameId);
+        animFrameId = null;
+      }
+      pixiRenderer.destroy();
+    };
+
     // Handler de validation de la frappe
     const handleClose = () => {
-      if (animFrameId) cancelAnimationFrame(animFrameId);
+      if (animFrameId) {
+        cancelAnimationFrame(animFrameId);
+        animFrameId = null;
+      }
       pixiRenderer.destroy();
       const res = storage.addCityDestruction(city.id, strikeDamage, strikeVictims);
       soundManager.playClick();
@@ -3892,7 +3915,7 @@ ${gameState.isRuinsMode ? '' : `          <div class="hud-nitro-group">
           progressPct.style.color = '#fffa65';
           progressPct.style.fontWeight = '950';
         }
-        if (returnMapBtn && returnMapBtn.style.display === 'none') {
+        if (returnMapBtn && getComputedStyle(returnMapBtn).display === 'none') {
           returnMapBtn.style.display = 'inline-flex';
           gsap.fromTo(returnMapBtn,
             { scale: 0.2, opacity: 0, x: 20 },
@@ -4095,7 +4118,8 @@ ${gameState.isRuinsMode ? '' : `          <div class="hud-nitro-group">
   }
 
   showTrafficLightWarning(streetName) {
-    soundManager.playCrashPenalty();
+    if (soundManager.playCrashPenalty) soundManager.playCrashPenalty();
+    else if (soundManager.playError) soundManager.playError();
     let toast = this.root.querySelector('.hud-traffic-warning-toast');
     if (!toast) {
       toast = document.createElement('div');
@@ -4595,7 +4619,7 @@ ${gameState.isRuinsMode ? '' : `          <div class="hud-nitro-group">
     const isNextUnlocked = nextCity && (storage.isCityUnlocked(nextCity.id) || (data.newlyUnlockedCity && data.newlyUnlockedCity.id === nextCity.id));
     const hasChallengeResult = Boolean(data.challengeMode && data.challengeMode !== 'STANDARD');
     const challengeSuccess = Boolean(data.challengeCompleted ?? data.challengeSuccess ?? (data.stars >= 1));
-    const challengeBonusCoins = Number(data.challengeBonusCoins || 0);
+    const challengeBonusCoins = Number(data.challengeRewardCoins ?? data.challengeBonusCoins ?? 0);
     const challengeDef = (hasChallengeResult && typeof CHALLENGE_DEFS === 'object' && CHALLENGE_DEFS)
       ? CHALLENGE_DEFS[data.challengeMode]
       : null;

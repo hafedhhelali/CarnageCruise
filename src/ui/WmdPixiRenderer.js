@@ -24,6 +24,7 @@ export class WmdPixiRenderer {
   }
 
   async init(parentContainer, width, height) {
+    this._destroyed = false;
     try {
       this.app = new Application();
       await this.app.init({
@@ -34,6 +35,14 @@ export class WmdPixiRenderer {
         backgroundAlpha: 0, // Transparent pour laisser transparaître le canvas 2D haute fidélité
         preference: 'webgl'
       });
+
+      if (this._destroyed) {
+        if (this.app && this.app.renderer) {
+          this.app.destroy(true, { children: true, texture: true, context: true });
+        }
+        this.app = null;
+        return false;
+      }
 
       if (this.app.canvas && parentContainer) {
         this.app.canvas.style.position = 'absolute';
@@ -193,13 +202,16 @@ export class WmdPixiRenderer {
   }
 
   destroy() {
+    this._destroyed = true;
     this.isReady = false;
     if (this.app) {
       try {
         if (this.app.canvas && this.app.canvas.parentNode) {
           this.app.canvas.parentNode.removeChild(this.app.canvas);
         }
-        this.app.destroy(true, { children: true, texture: true, context: true });
+        if (this.app.renderer) {
+          this.app.destroy(true, { children: true, texture: true, context: true });
+        }
       } catch (err) {
         console.warn('WmdPixiRenderer destroy error:', err);
       }

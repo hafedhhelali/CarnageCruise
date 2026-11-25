@@ -2473,17 +2473,18 @@ export class SoundManager {
       this.masterGain.gain.setValueAtTime(0.92, this.ctx.currentTime);
     }
 
-    if (this.musicPlaying && this.currentTrack === track) return;
+    const resolvedTrack = track === 'SPLASH' ? 'MENU' : track;
+    if (this.musicPlaying && this.currentTrack === resolvedTrack) return;
     this.stopMusic(false);
 
     this.musicPlaying = true;
-    this.currentTrack = track;
+    this.currentTrack = resolvedTrack;
 
-    if (track === 'MENU' || track === 'SPLASH') {
+    if (resolvedTrack === 'MENU') {
       this.playMenuSynthwaveTheme();
-    } else if (track === 'NUCLEAR') {
+    } else if (resolvedTrack === 'NUCLEAR') {
       this.playNuclearDarksynthTheme();
-    } else if (track === 'PURSUIT') {
+    } else if (resolvedTrack === 'PURSUIT') {
       this.playPursuitChaseTheme();
     } else {
       this.playSadisticCarnageTheme(this.musicIntensity || 'TENSION');
@@ -2508,6 +2509,7 @@ export class SoundManager {
       bGain.gain.exponentialRampToValueAtTime(0.001, time + 0.09);
       bOsc.connect(bGain);
       bGain.connect(dest);
+      bOsc.onended = () => this.cleanupNodes(bOsc, bGain);
       bOsc.start(time);
       bOsc.stop(time + 0.095);
 
@@ -2522,6 +2524,7 @@ export class SoundManager {
         kGain.gain.exponentialRampToValueAtTime(0.001, time + 0.1);
         kOsc.connect(kGain);
         kGain.connect(dest);
+        kOsc.onended = () => this.cleanupNodes(kOsc, kGain);
         kOsc.start(time);
         kOsc.stop(time + 0.11);
       }
@@ -2536,6 +2539,7 @@ export class SoundManager {
         sGain.gain.exponentialRampToValueAtTime(0.001, time + 0.28);
         sOsc.connect(sGain);
         sGain.connect(dest);
+        sOsc.onended = () => this.cleanupNodes(sOsc, sGain);
         sOsc.start(time);
         sOsc.stop(time + 0.3);
       }

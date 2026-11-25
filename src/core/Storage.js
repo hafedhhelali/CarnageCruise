@@ -260,6 +260,11 @@ export class Storage {
     this.save();
   }
 
+  recordRedLightRun() {
+    this.data.stats.redLightsRun = (this.data.stats.redLightsRun || 0) + 1;
+    this.save();
+  }
+
   addCoins(amount = 20) {
     this.data.coins = (this.data.coins || 0) + amount;
     this.save();

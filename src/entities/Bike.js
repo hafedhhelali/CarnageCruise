@@ -8,6 +8,7 @@ import { storage } from '../core/Storage.js';
 import { gameState } from '../core/GameState.js';
 import { soundManager } from '../audio/SoundManager.js';
 import { textureFactory } from '../gfx/TextureFactory.js';
+import { SpringChain } from '../anim/SpringChain.js';
 
 export class Bike {
   constructor(scene) {
@@ -344,14 +345,17 @@ export class Bike {
 
   createWheel(radius, width, rubberMat, chromeMat) {
     const wheelGroup = new THREE.Group();
+    const spinGroup = new THREE.Group();
+    wheelGroup.add(spinGroup);
     wheelGroup.userData.radius = radius;
+    wheelGroup.userData.spinGroup = spinGroup;
 
     // 1. Pneu sculpté avec profil arrondi et flanc épais
     const tireGeo = new THREE.CylinderGeometry(radius, radius, width, 24);
     const tire = new THREE.Mesh(tireGeo, rubberMat);
     tire.rotation.z = Math.PI / 2;
     tire.castShadow = true;
-    wheelGroup.add(tire);
+    spinGroup.add(tire);
 
     // Épaulement arrondi du pneu
     const treadGeo = new THREE.TorusGeometry(radius * 0.94, width * 0.38, 8, 24);
@@ -360,13 +364,13 @@ export class Bike {
     treadL.position.x = -width * 0.22;
     const treadR = treadL.clone();
     treadR.position.x = width * 0.22;
-    wheelGroup.add(treadL, treadR);
+    spinGroup.add(treadL, treadR);
 
     // 2. Jante aluminium / chrome à gorge profonde
     const rimGeo = new THREE.CylinderGeometry(radius * 0.68, radius * 0.68, width * 1.02, 18);
     const rim = new THREE.Mesh(rimGeo, chromeMat);
     rim.rotation.z = Math.PI / 2;
-    wheelGroup.add(rim);
+    spinGroup.add(rim);
 
     // Rebord de jante usiné
     const lipGeo = new THREE.TorusGeometry(radius * 0.68, width * 0.08, 6, 20);
@@ -375,7 +379,7 @@ export class Bike {
     lipL.position.x = -width * 0.51;
     const lipR = lipL.clone();
     lipR.position.x = width * 0.51;
-    wheelGroup.add(lipL, lipR);
+    spinGroup.add(lipL, lipR);
 
     // 3. Disque de frein en acier perforé
     const discMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.9, roughness: 0.2 });
@@ -383,9 +387,9 @@ export class Bike {
     const disc = new THREE.Mesh(discGeo, discMat);
     disc.rotation.z = Math.PI / 2;
     disc.position.x = width * 0.32;
-    wheelGroup.add(disc);
+    spinGroup.add(disc);
 
-    // Étrier de frein rouge Brembo haute performance
+    // Étrier de frein rouge Brembo haute performance (fixe sur wheelGroup, ne tourne pas avec la roue)
     const caliperMat = new THREE.MeshStandardMaterial({ color: 0xe74c3c, roughness: 0.35, metalness: 0.3 });
     const caliper = new THREE.Mesh(new THREE.BoxGeometry(width * 0.38, radius * 0.26, radius * 0.2), caliperMat);
     caliper.position.set(width * 0.32, radius * 0.35, 0);
@@ -397,13 +401,13 @@ export class Bike {
       const spoke = new THREE.Mesh(new THREE.BoxGeometry(width * 0.95, radius * 0.64, 0.035), chromeMat);
       spoke.position.set(0, Math.cos(ang) * (radius * 0.32), Math.sin(ang) * (radius * 0.32));
       spoke.rotation.x = -ang;
-      wheelGroup.add(spoke);
+      spinGroup.add(spoke);
     }
 
     // 5. Moyeu central chromé
     const hubNut = new THREE.Mesh(new THREE.CylinderGeometry(radius * 0.14, radius * 0.14, width * 1.15, 8), chromeMat);
     hubNut.rotation.z = Math.PI / 2;
-    wheelGroup.add(hubNut);
+    spinGroup.add(hubNut);
 
     return wheelGroup;
   }
@@ -2599,8 +2603,10 @@ export class Bike {
       this.riderHead.rotation.z = -this.currentLean * 0.4;
     }
     if (this.scarfTail) {
-      this.scarfTail.rotation.x = -0.35 + Math.sin(this.bouncePhase * 3.5) * 0.22;
-      this.scarfTail.rotation.y = Math.cos(this.bouncePhase * 2.8) * 0.18;
+      if (!this.scarfChain || this.scarfChain.bones[0] !== this.scarfTail) {
+        this.scarfChain = new SpringChain([this.scarfTail], { stiffness: 78, damping: 9.5, windStrength: 0.04 });
+      }
+      this.scarfChain.update(delta, speed, this.smoothedSteer);
     }
 
     // Rotation des roues selon leur rayon réel et la vitesse
@@ -3000,6 +3006,9 @@ export class Bike {
     this.isFlyingEscape = false;
     this.isAttacking = false;
     this.attackTimer = 0;
+    if (this.mesh) {
+      this.mesh.visible = true;
+    }
 
     if (this.nitroFlames) {
       this.nitroFlames.visible = false;

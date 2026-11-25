@@ -65,6 +65,16 @@ export class Engine {
     // (le normalBias calibré anti-acné fait déjà le travail soft)
     this.renderer.shadowMap.type = THREE.PCFShadowMap;
 
+    this._contextLost = false;
+    this.renderer.domElement.addEventListener('webglcontextlost', (e) => {
+      e.preventDefault();
+      this._contextLost = true;
+    }, false);
+    this.renderer.domElement.addEventListener('webglcontextrestored', () => {
+      this._contextLost = false;
+      this.onResize();
+    }, false);
+
     // Éclairage d'image (IBL) : environnement procédural « ciel dégradé » PMREM.
     // Fini le RoomEnvironment blanc cassé : ses gros rectangles lumineux se
     // reflétaient en taches bizarres sur les carrosseries. Un dôme bleu ciel /

@@ -16,8 +16,11 @@ export class PostProcessingManager {
     this.scene = scene;
     this.camera = camera;
     this.enabled = true;
-    const isMobile = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+    const hasTouch = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+    const minViewport = typeof window !== 'undefined' ? Math.min(window.innerWidth, window.innerHeight) : 1080;
+    const isMobile = hasTouch && minViewport < 900;
     this.isMobile = isMobile;
+    this._flashToken = 0;
     this.baseStrength = isMobile ? 0.22 : 0.26; // Force de bloom calibrée PBR/HDR (mobile vs desktop)
 
     // Sur mobile, le rendu direct hardware (sans HalfFloat MSAA + UnrealBloomPass multi-passes)
@@ -87,12 +90,14 @@ export class PostProcessingManager {
 
   triggerBloomFlash(peakStrength = 1.25, duration = 0.4) {
     if (!this.bloomPass || !this.enabled) return;
+    const token = ++this._flashToken;
     this.bloomPass.strength = peakStrength;
     const baseStrength = this.baseStrength;
     const start = performance.now();
     const durMs = duration * 1000;
 
     const animateBloom = (now) => {
+      if (token !== this._flashToken || !this.bloomPass) return;
       const progress = Math.min(1.0, (now - start) / durMs);
       const ease = 1.0 - Math.pow(progress, 2);
       this.bloomPass.strength = baseStrength + (peakStrength - baseStrength) * ease;

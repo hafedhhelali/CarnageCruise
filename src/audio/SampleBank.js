@@ -169,6 +169,7 @@ export class SampleBank {
     const rotation = (this.playToggles.get(key) || 0) + 1;
     this.playToggles.set(key, rotation);
 
+    let playedAny = false;
     for (const layer of entry.layers) {
       if (layer.chance !== undefined && Math.random() > layer.chance) continue;
       const file = layer.files[(Math.random() * layer.files.length) | 0];
@@ -195,7 +196,8 @@ export class SampleBank {
         try { src.disconnect(); gain.disconnect(); } catch { /* nœud déjà libéré */ }
       };
       src.start(now);
+      playedAny = true;
     }
-    return true;
+    return playedAny;
   }
 }

@@ -789,7 +789,7 @@ export class Traffic {
   /**
    * Fait apparaître un barrage de police (2 patrouilleurs bleu nuit/blanc en biais + couloir d'esquive balisé)
    */
-  spawnPoliceRoadblock(zPos = 140) {
+  spawnPoliceRoadblock(zPos = 140, roadCurveFunc = null) {
     const rbGroup = new THREE.Group();
     const spikeMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, emissive: 0xd97706, emissiveIntensity: 0.45, roughness: 0.4, metalness: 0.6 });
     const coneMat = new THREE.MeshStandardMaterial({ color: 0xff6b00, emissive: 0xff4500, emissiveIntensity: 0.75, roughness: 0.35 });
@@ -821,7 +821,8 @@ export class Traffic {
     spikeStrip.position.set(0, 0.05, 0.45);
     rbGroup.add(spikeStrip);
 
-    rbGroup.position.set(0, 0, zPos);
+    const curveX = roadCurveFunc ? roadCurveFunc(zPos) : 0;
+    rbGroup.position.set(curveX, 0, zPos);
     rbGroup.userData = {
       isRoadblock: true,
       active: true,

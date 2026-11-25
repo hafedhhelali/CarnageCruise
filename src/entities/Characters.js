@@ -271,7 +271,12 @@ export class CharacterSystem {
       neck.position.y = 0.28;
       torsoGroup.add(neck);
 
-      // Posture voûtée et dos courbé pour les personnes âgées
+      // Posture voûtée pour les personnes âgées, ou quadrupède pour les animaux (dog, cat, monkey)
+      if (typeDef.isPet) {
+        torsoGroup.position.y = 0.52;
+        torsoGroup.rotation.x = Math.PI / 2;
+        torsoMesh.scale.set(0.85, 1.35, 0.85);
+      }
       const isElderly = typeDef.category === 'elderly' || typeDef.hasCane;
       if (isElderly) {
         torsoGroup.rotation.x = 0.22;
