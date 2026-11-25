@@ -2950,6 +2950,7 @@ export class UIManager {
         </div>
       </div>
 
+      ${bike.id === 'cheval' ? '' : `
       <div class="garage-color-row">
         <span class="garage-color-label">PEINTURE PERSONNALISÉE :</span>
         <div class="color-picker-row">
@@ -2961,6 +2962,7 @@ export class UIManager {
           `).join('')}
         </div>
       </div>
+      `}
 
       <div class="garage-cta-wrap">
         ${isEquipped ? `
