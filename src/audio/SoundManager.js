@@ -10,29 +10,29 @@ import { SampleBank } from './SampleBank.js';
 
 const ENGINE_PROFILES = {
   v8: {
-    baseFreq: 48, maxFreq: 165, subRatio: 0.5, oscType: 'sawtooth', subType: 'triangle',
-    exhaustFreq: 210, exhaustQ: 2.8, intakeMin: 320, intakeMax: 1600, drive: 38,
+    baseFreq: 44, maxFreq: 148, subRatio: 0.5, oscType: 'sawtooth', subType: 'triangle',
+    exhaustFreq: 170, exhaustQ: 0.95, intakeMin: 260, intakeMax: 1350, drive: 12,
     hasTurbo: false, gain: 0.14
   },
   chopper: {
-    baseFreq: 36, maxFreq: 118, subRatio: 0.5, oscType: 'sawtooth', subType: 'sine',
-    exhaustFreq: 155, exhaustQ: 3.4, intakeMin: 240, intakeMax: 1050, drive: 48,
+    baseFreq: 34, maxFreq: 112, subRatio: 0.5, oscType: 'sawtooth', subType: 'sine',
+    exhaustFreq: 135, exhaustQ: 1.0, intakeMin: 220, intakeMax: 950, drive: 14,
     hasTurbo: false, gain: 0.15
   },
   scooter: {
-    baseFreq: 88, maxFreq: 235, subRatio: 0.5, oscType: 'sawtooth', subType: 'triangle',
-    exhaustFreq: 440, exhaustQ: 3.0, intakeMin: 480, intakeMax: 2100, drive: 22,
+    baseFreq: 82, maxFreq: 215, subRatio: 0.5, oscType: 'triangle', subType: 'sine',
+    exhaustFreq: 380, exhaustQ: 0.85, intakeMin: 420, intakeMax: 1750, drive: 8,
     hasTurbo: false, gain: 0.11
   },
   tank: {
-    baseFreq: 30, maxFreq: 86, subRatio: 0.5, oscType: 'sawtooth', subType: 'sine',
-    exhaustFreq: 120, exhaustQ: 4.0, intakeMin: 180, intakeMax: 780, drive: 55,
+    baseFreq: 28, maxFreq: 78, subRatio: 0.5, oscType: 'sawtooth', subType: 'sine',
+    exhaustFreq: 105, exhaustQ: 1.1, intakeMin: 160, intakeMax: 680, drive: 15,
     hasTurbo: false, gain: 0.16
   },
   jet: {
-    baseFreq: 110, maxFreq: 290, subRatio: 0.5, oscType: 'triangle', subType: 'sine',
-    exhaustFreq: 680, exhaustQ: 2.2, intakeMin: 600, intakeMax: 3200, drive: 18,
-    hasTurbo: true, turboMin: 950, turboMax: 3400, gain: 0.12
+    baseFreq: 98, maxFreq: 260, subRatio: 0.5, oscType: 'triangle', subType: 'sine',
+    exhaustFreq: 540, exhaustQ: 0.85, intakeMin: 520, intakeMax: 2600, drive: 7,
+    hasTurbo: true, turboMin: 850, turboMax: 2800, gain: 0.12
   }
 };
 
@@ -109,10 +109,16 @@ export class SoundManager {
       this.masterCompressor.attack.setValueAtTime(0.003, this.ctx.currentTime);
       this.masterCompressor.release.setValueAtTime(0.12, this.ctx.currentTime);
 
+      this.masterWarmFilter = this.ctx.createBiquadFilter();
+      this.masterWarmFilter.type = 'lowpass';
+      this.masterWarmFilter.frequency.setValueAtTime(11000, this.ctx.currentTime);
+      this.masterWarmFilter.Q.value = 0.5;
+
       this.masterGain = this.ctx.createGain();
       this.masterGain.gain.setValueAtTime(0.92, this.ctx.currentTime);
 
-      this.masterCompressor.connect(this.masterGain);
+      this.masterCompressor.connect(this.masterWarmFilter);
+      this.masterWarmFilter.connect(this.masterGain);
       this.masterGain.connect(this.ctx.destination);
 
       // Bus musical d�di� avec r�verb/delay pour un son spatial et professionnel
@@ -2182,26 +2188,44 @@ export class SoundManager {
     const isMobAudio = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
     this.engineShaper.oversample = isMobAudio ? 'none' : '2x';
 
-    // 4. Formant d'échappement (résonance de pot)
+    // 4. Formant d'échappement chaud (peaking au lieu de bandpass nasal)
     this.engineExhaustFilter = this.ctx.createBiquadFilter();
-    this.engineExhaustFilter.type = 'bandpass';
-    this.engineExhaustFilter.frequency.setValueAtTime(p.exhaustFreq, now);
+    this.engineExhaustFilter.type = 'peaking';
+    this.engineExhaustFilter.frequency.setValueAtTime(p.exhaustFreq * 0.85, now);
     this.engineExhaustFilter.Q.value = p.exhaustQ;
+    this.engineExhaustFilter.gain.value = 4.5;
 
-    // 5. Filtre d'admission (intake lowpass)
+    // 5. Filtre d'admission analogique doux (Q = 0.75, zéro bourdonnement strident)
     this.engineFilter = this.ctx.createBiquadFilter();
     this.engineFilter.type = 'lowpass';
     this.engineFilter.frequency.setValueAtTime(p.intakeMin, now);
-    this.engineFilter.Q.value = 2.2;
+    this.engineFilter.Q.value = 0.75;
 
     this.engineGain = this.ctx.createGain();
-    this.engineGain.gain.setValueAtTime(p.gain, now);
+    this.engineGain.gain.setValueAtTime(p.gain * 0.42, now);
 
     this.engineOsc.connect(this.engineShaper);
     this.engineSubOsc.connect(this.engineShaper);
     this.engineShaper.connect(this.engineExhaustFilter);
     this.engineExhaustFilter.connect(this.engineFilter);
     this.engineFilter.connect(this.engineGain);
+
+    // 5b. Couche de grondement mécanique (bruit brun filtré pour le souffle d'échappement)
+    const brownBuf = this._getNoiseBuffer('brown', 2.0);
+    if (brownBuf) {
+      this.engineNoiseSrc = this.ctx.createBufferSource();
+      this.engineNoiseSrc.buffer = brownBuf;
+      this.engineNoiseSrc.loop = true;
+      this.engineNoiseFilter = this.ctx.createBiquadFilter();
+      this.engineNoiseFilter.type = 'lowpass';
+      this.engineNoiseFilter.frequency.setValueAtTime(220, now);
+      this.engineNoiseGain = this.ctx.createGain();
+      this.engineNoiseGain.gain.setValueAtTime(0.08, now);
+      this.engineNoiseSrc.connect(this.engineNoiseFilter);
+      this.engineNoiseFilter.connect(this.engineNoiseGain);
+      this.engineNoiseGain.connect(this.engineGain);
+      this.engineNoiseSrc.start(now);
+    }
 
     // 6. Sifflement turbo UNIQUEMENT sur les profils hasTurbo (jet)
     if (p.hasTurbo) {
@@ -2242,16 +2266,20 @@ export class SoundManager {
     // Chaque rapport monte en régime de 0.32 -> 1.0 (plus grave en montant de rapport)
     const rpmNorm = Math.min(1.15, 0.22 + gearProgress * 0.72 + (gear - 1) * 0.06);
 
+    const throttleGain = p.gain * (0.42 + Math.min(1, clamped) * 0.58);
     // Changement de rapport vers le haut : brève coupure d'allumage / chute de régime
     if (gear > this._currentGear && this.engineGain) {
       this.engineGain.gain.cancelScheduledValues(now);
-      this.engineGain.gain.setValueAtTime(p.gain * 0.55, now);
-      this.engineGain.gain.linearRampToValueAtTime(p.gain, now + 0.085);
+      this.engineGain.gain.setValueAtTime(throttleGain * 0.55, now);
+      this.engineGain.gain.linearRampToValueAtTime(throttleGain, now + 0.085);
     } else if (clamped < this._prevSpeedRatio - 0.06 && this.engineGain) {
       // Relâchement d'accélérateur (throttle-lift ducking)
-      this.engineGain.gain.setTargetAtTime(p.gain * 0.72, now, 0.05);
+      this.engineGain.gain.setTargetAtTime(throttleGain * 0.72, now, 0.05);
     } else if (this.engineGain) {
-      this.engineGain.gain.setTargetAtTime(p.gain, now, 0.06);
+      this.engineGain.gain.setTargetAtTime(throttleGain, now, 0.06);
+    }
+    if (this.engineNoiseFilter) {
+      this.engineNoiseFilter.frequency.setTargetAtTime(180 + rpmNorm * 280, now, 0.05);
     }
 
     this._currentGear = gear;
@@ -2287,23 +2315,29 @@ export class SoundManager {
     const osc = this.engineOsc;
     const subOsc = this.engineSubOsc;
     const highOsc = this.engineHighOsc;
+    const noiseSrc = this.engineNoiseSrc;
+    const noiseFilter = this.engineNoiseFilter;
+    const noiseGain = this.engineNoiseGain;
     const turboGain = this.engineTurboGain;
     const shaper = this.engineShaper;
     const exhaustFilter = this.engineExhaustFilter;
     const filter = this.engineFilter;
     const gain = this.engineGain;
 
-    [osc, subOsc, highOsc].forEach(node => {
+    [osc, subOsc, highOsc, noiseSrc].forEach(node => {
       if (node) {
         try { node.stop(); } catch (e) {}
       }
     });
 
-    this.cleanupNodes(osc, subOsc, highOsc, turboGain, shaper, exhaustFilter, filter, gain);
+    this.cleanupNodes(osc, subOsc, highOsc, noiseSrc, noiseFilter, noiseGain, turboGain, shaper, exhaustFilter, filter, gain);
 
     this.engineOsc = null;
     this.engineSubOsc = null;
     this.engineHighOsc = null;
+    this.engineNoiseSrc = null;
+    this.engineNoiseFilter = null;
+    this.engineNoiseGain = null;
     this.engineTurboGain = null;
     this.engineShaper = null;
     this.engineExhaustFilter = null;

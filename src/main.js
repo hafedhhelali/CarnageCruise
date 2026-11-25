@@ -310,7 +310,7 @@ class GameApp {
         if (this.intersections) this.intersections.reset();
         if (this.particles) this.particles.reset();
 
-        this.policePursuitActive = (gameState.challengeMode === 'POLICE_PURSUIT');
+        this.policePursuitActive = (gameState.challengeMode === 'POLICE_PURSUIT') && !(gameState.selectedBike && gameState.selectedBike.isFlyingCraft);
         this._crimeHeatCount = 0;
         this._nextPursuitRoadblockZ = 420;
 
@@ -957,6 +957,7 @@ class GameApp {
    */
   triggerPolicePursuitIfCrime(reason = 'ACCIDENT') {
     if (this.policePursuitActive || gameState.isRuinsMode || this.hasCrossedFinish) return;
+    if (this.bike && (this.bike.currentBikeId === 'aero_jet' || this.bike.isFlyingEscape)) return;
     this._crimeHeatCount = (this._crimeHeatCount || 0) + 1;
     if (this._crimeHeatCount >= 1) {
       this.policePursuitActive = true;

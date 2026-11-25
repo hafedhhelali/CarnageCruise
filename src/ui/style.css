@@ -977,9 +977,9 @@ html, body {
 
 .pause-bike-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 7px;
-  max-height: 185px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  max-height: 230px;
   overflow-y: auto;
   padding-right: 2px;
 }
@@ -4113,7 +4113,7 @@ html, body {
   grid-template-columns: repeat(2, 1fr);
   gap: 8px;
   padding: 12px 14px;
-  max-height: 332px;
+  max-height: min(360px, 56vh);
   overflow-y: auto;
 }
 
