@@ -34,6 +34,7 @@ export class Engine {
     this._perfFrames = 0;
 
     // Rendu WebGL haute performance mobile & colorimétrie dynamique
+    // (antialias actif si GPU le permet en rendu direct; msaa/bloom géré par pmndrs/postprocessing)
     try {
       this.renderer = new THREE.WebGLRenderer({
         canvas: this.canvas,
@@ -55,11 +56,11 @@ export class Engine {
         throw new Error('WebGL context creation failed: ' + e2.message);
       }
     }
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, this.isMobile ? 1.0 : 1.5));
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, this.isMobile ? 1.15 : 1.5));
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.04;
+    this.renderer.toneMappingExposure = 1.06;
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFShadowMap;
 
@@ -307,14 +308,17 @@ export class Engine {
   }
 
   _preloadAllHdris() {
-    if (this.isMobile) return; // Sur mobile, l'IBL procédural + SkyDome évitent le lag et les passes HDR 1K
-    for (const filename of HDRI_FILES) {
+    // Précharger au moins venice_sunset & overpass en arrière-plan (mobile HIGH et desktop)
+    const files = this.isMobile ? ['pedestrian_overpass_1k.hdr', 'venice_sunset_1k.hdr'] : HDRI_FILES;
+    for (const filename of files) {
       this._loadHdri(filename);
     }
   }
 
   _applyHdriForPreset(preset) {
-    if (this.isMobile) {
+    // Sur mobile en mode ECO, conserver SkyDome léger + IBL procédural;
+    // en AUTO/HIGH mobile ou Desktop, utiliser l'environnement IBL HDRI pour reflets réalistes
+    if (this.isMobile && this.qualityMode === 'ECO') {
       this._setSkyDomeVisible(true);
       this.scene.backgroundBlurriness = 0;
       return;
@@ -323,10 +327,15 @@ export class Engine {
     const applyEntry = (entry) => {
       if (!entry || this._isRuinsAtmosphere || this._currentPreset !== preset) return;
       this.scene.environment = entry.envTex;
-      this.scene.background = entry.hdrTex;
-      this.scene.backgroundBlurriness = 0;
-      this.scene.backgroundIntensity = this._getBackgroundIntensity(preset);
-      this._setSkyDomeVisible(false);
+      if (!this.isMobile || this.qualityMode === 'HIGH') {
+        this.scene.background = entry.hdrTex;
+        this.scene.backgroundBlurriness = 0;
+        this.scene.backgroundIntensity = this._getBackgroundIntensity(preset);
+        this._setSkyDomeVisible(false);
+      } else {
+        // Mobile AUTO : garde SkyDome fluide en arrière-plan tout en injectant l'IBL HDR sur les carrosseries PBR
+        this._setSkyDomeVisible(true);
+      }
     };
 
     const cached = this._hdrCache.get(filename);
@@ -595,6 +604,9 @@ export class Engine {
 
   setNitroFovBoost(active) {
     this.nitroFovBoost = active ? 5.0 : 0.0;
+    if (this.postProcessing && typeof this.postProcessing.setChromaticPulse === 'function') {
+      this.postProcessing.setChromaticPulse(active ? 0.0016 : 0.0);
+    }
   }
 
   updateCameraGameplay(delta, bikePosition, bikeSpeed, lookAheadRoadX = null, roadAngle = 0, isNitroActive = false) {
@@ -719,13 +731,19 @@ export class Engine {
     }
     const dprCap = this.qualityMode === 'ECO'
       ? 0.72
-      : (this.qualityMode === 'HIGH' ? (this.isMobile ? 1.15 : 1.5) : (this.isMobile ? 1.0 : 1.5));
+      : (this.qualityMode === 'HIGH' ? (this.isMobile ? 1.25 : 1.5) : (this.isMobile ? 1.05 : 1.5));
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, dprCap));
     if (this.dirLight) {
       this.dirLight.castShadow = this.qualityMode === 'ECO' ? false : (this.qualityMode === 'HIGH' ? true : this.perfTier === 0);
     }
     if (this.postProcessing) {
+      if (typeof this.postProcessing.setQualityTier === 'function') {
+        this.postProcessing.setQualityTier(this.perfTier);
+      }
       this.postProcessing.setSize(window.innerWidth, window.innerHeight);
+    }
+    if (!this._isRuinsAtmosphere) {
+      this._applyHdriForPreset(this._currentPreset || 'DAY_CLEAR');
     }
   }
 
@@ -751,13 +769,16 @@ export class Engine {
     if (nextTier !== this.perfTier) {
       this.perfTier = nextTier;
       const dprCap = this.isMobile
-        ? (nextTier === 0 ? 1.0 : (nextTier === 1 ? 0.85 : 0.72))
+        ? (nextTier === 0 ? 1.15 : (nextTier === 1 ? 0.92 : 0.72))
         : (nextTier === 0 ? 1.5 : 1.15);
       this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, dprCap));
       if (this.dirLight && this.isMobile) {
         this.dirLight.castShadow = (nextTier === 0);
       }
       if (this.postProcessing) {
+        if (typeof this.postProcessing.setQualityTier === 'function') {
+          this.postProcessing.setQualityTier(nextTier);
+        }
         this.postProcessing.setSize(window.innerWidth, window.innerHeight);
       }
     }

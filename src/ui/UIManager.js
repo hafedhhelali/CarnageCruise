@@ -14,6 +14,7 @@ import { REAL_COUNTRY_PATHS } from './EuropeMapData.js';
 import { Haptic } from '../services/HapticFeedback.js';
 import gsap from 'gsap';
 import { WmdPixiRenderer } from './WmdPixiRenderer.js';
+import { iconSvg } from './IconKit.js';
 
 export class UIManager {
   constructor(rootElement, onActionCallback) {
@@ -3194,12 +3195,12 @@ export class UIManager {
           <!-- Badge Score Lumineux Arcade (Ergonomie Haut Gauche) -->
           <div class="score-box-arcade">
             <div class="score-badge-header">
-              <span class="score-badge-icon">⚡</span>
+              <span class="score-badge-icon">${iconSvg('zap', 14)}</span>
               <span class="score-badge-label">SCORE</span>
             </div>
             <span class="score-value" id="hud-score-val">${gameState.score.toLocaleString('fr-FR')}</span>
             <div class="combo-badge" id="hud-combo-badge">
-              <span class="combo-flame">🔥</span>
+              <span class="combo-flame">${iconSvg('flame', 13)}</span>
               <span id="hud-combo-text">COMBO x1</span>
             </div>
           </div>
@@ -3207,8 +3208,8 @@ export class UIManager {
           <!-- Carte d'Objectif et de Progression (Ergonomie Haut Centre, textes clairs et lisibles) -->
           <div class="progress-objective-compact" id="hud-objective-card">
             <div class="objective-header-row">
-              <span class="city-target-title" id="hud-city-name">${gameState.selectedCity.isNuclearMission ? '☢️ ' + gameState.selectedCity.name.toUpperCase() : (gameState.selectedCity.emblem || '📍') + ' ' + gameState.selectedCity.name.toUpperCase()}</span>
-              <span class="objective-target-pts" id="hud-target-pts">🎯 ${gameState.selectedCity.targetScore.toLocaleString('fr-FR')}</span>
+              <span class="city-target-title" id="hud-city-name">${gameState.selectedCity.isNuclearMission ? iconSvg('zap', 13) + ' ' + gameState.selectedCity.name.toUpperCase() : iconSvg('mapPin', 13) + ' ' + gameState.selectedCity.name.toUpperCase()}</span>
+              <span class="objective-target-pts" id="hud-target-pts">${iconSvg('crosshair', 13)} ${gameState.selectedCity.targetScore.toLocaleString('fr-FR')}</span>
             </div>
             <div class="progress-bar-bg">
               <div class="progress-bar-fill" id="hud-progress-fill"></div>
@@ -4255,13 +4256,13 @@ ${gameState.isRuinsMode ? '' : `          <div class="hud-nitro-group">
         <!-- EN-TÊTE PROFIL & OPTIONS UNIFIÉ -->
         <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #ffd700; padding-bottom: 10px; margin-bottom: 12px;">
           <div style="display: flex; align-items: center; gap: 12px;">
-            <div style="width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #eb4d4b, #f0932b); display: flex; align-items: center; justify-content: center; font-size: 1.7rem; border: 2px solid #ffd700; box-shadow: 0 0 14px rgba(255, 215, 0, 0.4);">
-              👤
+            <div style="width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #eb4d4b, #f0932b); display: flex; align-items: center; justify-content: center; color: #fff; border: 2px solid #ffd700; box-shadow: 0 0 14px rgba(255, 215, 0, 0.4);">
+              ${iconSvg('user', 24)}
             </div>
             <div>
               <h2 style="margin: 0; font-size: 1.2rem; font-weight: 950; color: #ffffff; letter-spacing: 0.5px;">PROFIL & OPTIONS</h2>
-              <div style="background: rgba(255, 215, 0, 0.15); border: 1px solid #ffd700; color: #ffd700; font-size: 0.72rem; font-weight: 900; padding: 2px 8px; border-radius: 8px; display: inline-block; margin-top: 3px;">
-                ${wmProgress.rankIcon} ${title} • ${wmProgress.rank}
+              <div style="background: rgba(255, 215, 0, 0.15); border: 1px solid #ffd700; color: #ffd700; font-size: 0.72rem; font-weight: 900; padding: 2px 8px; border-radius: 8px; display: inline-flex; align-items: center; gap: 5px; margin-top: 3px;">
+                ${iconSvg('trophy', 12)} ${title} • ${wmProgress.rank}
               </div>
             </div>
           </div>
@@ -4270,30 +4271,30 @@ ${gameState.isRuinsMode ? '' : `          <div class="hud-nitro-group">
 
         <!-- SECTION 1 : PARAMÈTRES AUDIO, VIBRATIONS & DIRECTION -->
         <div style="background: rgba(15, 23, 42, 0.85); border: 1.5px solid rgba(255, 255, 255, 0.15); border-radius: 12px; padding: 12px; margin-bottom: 12px;">
-          <div style="font-size: 0.75rem; color: #ced6e0; font-weight: 900; letter-spacing: 0.8px; margin-bottom: 8px;">
-            ⚙️ PARAMÈTRES AUDIO & COMMANDES
+          <div style="font-size: 0.75rem; color: #ced6e0; font-weight: 900; letter-spacing: 0.8px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+            ${iconSvg('settings', 14)} PARAMÈTRES AUDIO & COMMANDES
           </div>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-            <button id="btn-toggle-music" class="btn-arcade" style="padding: 10px 8px; font-size: 0.76rem; background: ${soundManager.isMutedMusic ? 'rgba(80,80,80,0.4)' : 'linear-gradient(135deg, #0984e3, #6c5ce7)'};">
-              🎵 MUSIQUE : ${soundManager.isMutedMusic ? 'OFF 🔇' : 'ON 🔊'}
+            <button id="btn-toggle-music" class="btn-arcade btn-icon-row" style="padding: 10px 8px; font-size: 0.74rem; background: ${soundManager.isMutedMusic ? 'rgba(80,80,80,0.4)' : 'linear-gradient(135deg, #0984e3, #6c5ce7)'};">
+              ${iconSvg('music', 15)} MUSIQUE : ${soundManager.isMutedMusic ? 'OFF' : 'ON'}
             </button>
-            <button id="btn-toggle-sfx" class="btn-arcade" style="padding: 10px 8px; font-size: 0.76rem; background: ${soundManager.isMutedSfx ? 'rgba(80,80,80,0.4)' : 'linear-gradient(135deg, #00cec9, #0984e3)'};">
-              🔊 EFFETS : ${soundManager.isMutedSfx ? 'OFF 🔇' : 'ON 🔊'}
+            <button id="btn-toggle-sfx" class="btn-arcade btn-icon-row" style="padding: 10px 8px; font-size: 0.74rem; background: ${soundManager.isMutedSfx ? 'rgba(80,80,80,0.4)' : 'linear-gradient(135deg, #00cec9, #0984e3)'};">
+              ${iconSvg(soundManager.isMutedSfx ? 'volumeOff' : 'volumeOn', 15)} EFFETS : ${soundManager.isMutedSfx ? 'OFF' : 'ON'}
             </button>
-            <button id="btn-toggle-haptic" class="btn-arcade" style="padding: 10px 8px; font-size: 0.76rem; background: ${Haptic.enabled ? 'linear-gradient(135deg, #2ed573, #26de81)' : 'rgba(80,80,80,0.4)'};">
-              📳 VIBRATIONS : ${Haptic.enabled ? 'ON ✅' : 'OFF ❌'}
+            <button id="btn-toggle-haptic" class="btn-arcade btn-icon-row" style="padding: 10px 8px; font-size: 0.74rem; background: ${Haptic.enabled ? 'linear-gradient(135deg, #2ed573, #26de81)' : 'rgba(80,80,80,0.4)'};">
+              ${iconSvg('vibrate', 15)} VIBRATIONS : ${Haptic.enabled ? 'ON' : 'OFF'}
             </button>
-            <button id="btn-toggle-steer" class="btn-arcade" style="padding: 10px 8px; font-size: 0.76rem; background: linear-gradient(135deg, #e67e22, #f39c12);">
-              🎯 DIRECTION : ${currentSteerLabel}
+            <button id="btn-toggle-steer" class="btn-arcade btn-icon-row" style="padding: 10px 8px; font-size: 0.74rem; background: linear-gradient(135deg, #e67e22, #f39c12);">
+              ${iconSvg('crosshair', 15)} DIRECTION : ${currentSteerLabel}
             </button>
-            <button id="btn-toggle-control-mode" class="btn-arcade" style="padding: 10px 8px; font-size: 0.76rem; background: linear-gradient(135deg, #0ea5e9, #2563eb);">
-              🕹️ CONTRÔLES : ${(storage.data.settings.controlMode || 'swipe') === 'buttons' ? 'BOUTONS ◀▶' : 'GLISSER 👆'}
+            <button id="btn-toggle-control-mode" class="btn-arcade btn-icon-row" style="padding: 10px 8px; font-size: 0.74rem; background: linear-gradient(135deg, #0ea5e9, #2563eb);">
+              ${iconSvg('gamepad', 15)} CONTRÔLES : ${(storage.data.settings.controlMode || 'swipe') === 'buttons' ? 'BOUTONS ◀▶' : 'GLISSER'}
             </button>
-            <button id="btn-toggle-quality" class="btn-arcade" style="padding: 10px 8px; font-size: 0.76rem; background: linear-gradient(135deg, #8b5cf6, #6d28d9);">
-              🖥️ QUALITÉ : ${storage.data.settings.graphicsQuality || 'AUTO'}
+            <button id="btn-toggle-quality" class="btn-arcade btn-icon-row" style="padding: 10px 8px; font-size: 0.74rem; background: linear-gradient(135deg, #8b5cf6, #6d28d9);">
+              ${iconSvg('monitor', 15)} QUALITÉ : ${storage.data.settings.graphicsQuality === 'HIGH' ? 'ÉLEVÉ' : (storage.data.settings.graphicsQuality === 'ECO' ? 'ÉCO' : 'AUTO')}
             </button>
-            <button id="btn-toggle-camshake" class="btn-arcade" style="grid-column: span 2; padding: 10px 8px; font-size: 0.76rem; background: ${storage.data.settings.cameraShake !== false ? 'linear-gradient(135deg, #10b981, #059669)' : 'rgba(80,80,80,0.4)'};">
-              🎥 SECOUSSES CAMÉRA : ${storage.data.settings.cameraShake !== false ? 'ON ✅' : 'OFF ❌'}
+            <button id="btn-toggle-camshake" class="btn-arcade btn-icon-row" style="grid-column: span 2; padding: 10px 8px; font-size: 0.74rem; background: ${storage.data.settings.cameraShake !== false ? 'linear-gradient(135deg, #10b981, #059669)' : 'rgba(80,80,80,0.4)'};">
+              ${iconSvg('camera', 15)} SECOUSSES CAMÉRA : ${storage.data.settings.cameraShake !== false ? 'ON' : 'OFF'}
             </button>
           </div>
         </div>
@@ -4361,7 +4362,7 @@ ${gameState.isRuinsMode ? '' : `          <div class="hud-nitro-group">
       soundManager.toggleMusic();
       const btn = overlay.querySelector('#btn-toggle-music');
       if (btn) {
-        btn.textContent = `🎵 MUSIQUE : ${soundManager.isMutedMusic ? 'OFF 🔇' : 'ON 🔊'}`;
+        btn.innerHTML = `${iconSvg('music', 15)} MUSIQUE : ${soundManager.isMutedMusic ? 'OFF' : 'ON'}`;
         btn.style.background = soundManager.isMutedMusic ? 'rgba(80,80,80,0.4)' : 'linear-gradient(135deg, #0984e3, #6c5ce7)';
       }
       syncSplashAudioIcon();
@@ -4372,7 +4373,7 @@ ${gameState.isRuinsMode ? '' : `          <div class="hud-nitro-group">
       if (!soundManager.isMutedSfx) soundManager.playClick('default');
       const btn = overlay.querySelector('#btn-toggle-sfx');
       if (btn) {
-        btn.textContent = `🔊 EFFETS : ${soundManager.isMutedSfx ? 'OFF 🔇' : 'ON 🔊'}`;
+        btn.innerHTML = `${iconSvg(soundManager.isMutedSfx ? 'volumeOff' : 'volumeOn', 15)} EFFETS : ${soundManager.isMutedSfx ? 'OFF' : 'ON'}`;
         btn.style.background = soundManager.isMutedSfx ? 'rgba(80,80,80,0.4)' : 'linear-gradient(135deg, #00cec9, #0984e3)';
       }
       syncSplashAudioIcon();
@@ -4383,7 +4384,7 @@ ${gameState.isRuinsMode ? '' : `          <div class="hud-nitro-group">
       if (Haptic.enabled) Haptic.tap();
       const btn = overlay.querySelector('#btn-toggle-haptic');
       if (btn) {
-        btn.textContent = `📳 VIBRATIONS : ${Haptic.enabled ? 'ON ✅' : 'OFF ❌'}`;
+        btn.innerHTML = `${iconSvg('vibrate', 15)} VIBRATIONS : ${Haptic.enabled ? 'ON' : 'OFF'}`;
         btn.style.background = Haptic.enabled ? 'linear-gradient(135deg, #2ed573, #26de81)' : 'rgba(80,80,80,0.4)';
       }
     });
@@ -4396,7 +4397,7 @@ ${gameState.isRuinsMode ? '' : `          <div class="hud-nitro-group">
       storage.updateSettings({ steerSensitivity: next.id });
       const btn = overlay.querySelector('#btn-toggle-steer');
       if (btn) {
-        btn.textContent = `🎯 DIRECTION : ${next.label}`;
+        btn.innerHTML = `${iconSvg('crosshair', 15)} DIRECTION : ${next.label}`;
       }
     });
 
@@ -4407,7 +4408,7 @@ ${gameState.isRuinsMode ? '' : `          <div class="hud-nitro-group">
       storage.updateSettings({ controlMode: next });
       const btn = overlay.querySelector('#btn-toggle-control-mode');
       if (btn) {
-        btn.textContent = `🕹️ CONTRÔLES : ${next === 'buttons' ? 'BOUTONS ◀▶' : 'GLISSER 👆'}`;
+        btn.innerHTML = `${iconSvg('gamepad', 15)} CONTRÔLES : ${next === 'buttons' ? 'BOUTONS ◀▶' : 'GLISSER'}`;
       }
       if (this.onAction) this.onAction('SETTINGS_CHANGED', storage.data.settings);
     });
@@ -4421,7 +4422,7 @@ ${gameState.isRuinsMode ? '' : `          <div class="hud-nitro-group">
       storage.updateSettings({ graphicsQuality: next });
       const btn = overlay.querySelector('#btn-toggle-quality');
       if (btn) {
-        btn.textContent = `🖥️ QUALITÉ : ${labels[next]}`;
+        btn.innerHTML = `${iconSvg('monitor', 15)} QUALITÉ : ${labels[next]}`;
       }
       if (this.onAction) this.onAction('SETTINGS_CHANGED', storage.data.settings);
     });
@@ -4432,7 +4433,7 @@ ${gameState.isRuinsMode ? '' : `          <div class="hud-nitro-group">
       storage.updateSettings({ cameraShake: next });
       const btn = overlay.querySelector('#btn-toggle-camshake');
       if (btn) {
-        btn.textContent = `🎥 SECOUSSES CAMÉRA : ${next ? 'ON ✅' : 'OFF ❌'}`;
+        btn.innerHTML = `${iconSvg('camera', 15)} SECOUSSES CAMÉRA : ${next ? 'ON' : 'OFF'}`;
         btn.style.background = next ? 'linear-gradient(135deg, #10b981, #059669)' : 'rgba(80,80,80,0.4)';
       }
     });
@@ -5000,26 +5001,26 @@ ${gameState.isRuinsMode ? '' : `          <div class="hud-nitro-group">
         </div>
 
         <div class="pause-audio-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;">
-          <button type="button" id="btn-pause-music" class="btn-arcade" style="padding: 8px; min-height: 44px; font-size: 0.74rem; background: ${soundManager.isMutedMusic ? 'rgba(80,80,80,0.4)' : 'linear-gradient(135deg, #0984e3, #6c5ce7)'};">
-            🎵 MUSIQUE : ${soundManager.isMutedMusic ? 'OFF 🔇' : 'ON 🔊'}
+          <button type="button" id="btn-pause-music" class="btn-arcade btn-icon-row" style="padding: 8px; min-height: 44px; font-size: 0.74rem; background: ${soundManager.isMutedMusic ? 'rgba(80,80,80,0.4)' : 'linear-gradient(135deg, #0984e3, #6c5ce7)'};">
+            ${iconSvg('music', 15)} MUSIQUE : ${soundManager.isMutedMusic ? 'OFF' : 'ON'}
           </button>
-          <button type="button" id="btn-pause-sfx" class="btn-arcade" style="padding: 8px; min-height: 44px; font-size: 0.74rem; background: ${soundManager.isMutedSfx ? 'rgba(80,80,80,0.4)' : 'linear-gradient(135deg, #00cec9, #0984e3)'};">
-            🔊 EFFETS : ${soundManager.isMutedSfx ? 'OFF 🔇' : 'ON 🔊'}
+          <button type="button" id="btn-pause-sfx" class="btn-arcade btn-icon-row" style="padding: 8px; min-height: 44px; font-size: 0.74rem; background: ${soundManager.isMutedSfx ? 'rgba(80,80,80,0.4)' : 'linear-gradient(135deg, #00cec9, #0984e3)'};">
+            ${iconSvg(soundManager.isMutedSfx ? 'volumeOff' : 'volumeOn', 15)} EFFETS : ${soundManager.isMutedSfx ? 'OFF' : 'ON'}
           </button>
         </div>
 
         <div class="modal-actions">
-          <button type="button" id="btn-pause-resume" class="btn-arcade" style="--btn-glow: rgba(16, 185, 129, 0.45); background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
-            ▶️ REPRENDRE LA COURSE
+          <button type="button" id="btn-pause-resume" class="btn-arcade btn-icon-row" style="--btn-glow: rgba(16, 185, 129, 0.45); background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+            ${iconSvg('play', 16)} REPRENDRE LA COURSE
           </button>
-          <button type="button" id="btn-pause-garage" class="btn-arcade btn-secondary">
-            🪖 GARAGE & ARSENAL COMPLET
+          <button type="button" id="btn-pause-garage" class="btn-arcade btn-secondary btn-icon-row">
+            ${iconSvg('wrench', 16)} GARAGE & ARSENAL COMPLET
           </button>
-          <button type="button" id="btn-pause-restart" class="btn-arcade btn-accent">
-            🔄 RECOMMENCER L'ÉTAPE
+          <button type="button" id="btn-pause-restart" class="btn-arcade btn-accent btn-icon-row">
+            ${iconSvg('reset', 16)} RECOMMENCER L'ÉTAPE
           </button>
-          <button type="button" id="btn-pause-map" class="btn-arcade btn-ghost">
-            🛰️ RETOUR SATELLITE À LA CARTE
+          <button type="button" id="btn-pause-map" class="btn-arcade btn-ghost btn-icon-row">
+            ${iconSvg('mapPin', 16)} RETOUR SATELLITE À LA CARTE
           </button>
         </div>
       </div>
@@ -5053,7 +5054,7 @@ ${gameState.isRuinsMode ? '' : `          <div class="hud-nitro-group">
       soundManager.toggleMusic();
       const btn = overlay.querySelector('#btn-pause-music');
       if (btn) {
-        btn.textContent = `🎵 MUSIQUE : ${soundManager.isMutedMusic ? 'OFF 🔇' : 'ON 🔊'}`;
+        btn.innerHTML = `${iconSvg('music', 15)} MUSIQUE : ${soundManager.isMutedMusic ? 'OFF' : 'ON'}`;
         btn.style.background = soundManager.isMutedMusic ? 'rgba(80,80,80,0.4)' : 'linear-gradient(135deg, #0984e3, #6c5ce7)';
       }
     });
@@ -5064,7 +5065,7 @@ ${gameState.isRuinsMode ? '' : `          <div class="hud-nitro-group">
       if (!soundManager.isMutedSfx) soundManager.playClick('default');
       const btn = overlay.querySelector('#btn-pause-sfx');
       if (btn) {
-        btn.textContent = `🔊 EFFETS : ${soundManager.isMutedSfx ? 'OFF 🔇' : 'ON 🔊'}`;
+        btn.innerHTML = `${iconSvg(soundManager.isMutedSfx ? 'volumeOff' : 'volumeOn', 15)} EFFETS : ${soundManager.isMutedSfx ? 'OFF' : 'ON'}`;
         btn.style.background = soundManager.isMutedSfx ? 'rgba(80,80,80,0.4)' : 'linear-gradient(135deg, #00cec9, #0984e3)';
       }
     });

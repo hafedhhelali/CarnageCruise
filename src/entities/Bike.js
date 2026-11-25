@@ -8,6 +8,7 @@ import { storage } from '../core/Storage.js';
 import { gameState } from '../core/GameState.js';
 import { soundManager } from '../audio/SoundManager.js';
 import { textureFactory } from '../gfx/TextureFactory.js';
+import { modelBank } from '../gfx/ModelBank.js';
 import { SpringChain } from '../anim/SpringChain.js';
 
 export class Bike {
@@ -238,11 +239,12 @@ export class Bike {
       const obj = group.children[0];
       group.remove(obj);
       obj.traverse(child => {
-        if (child.geometry) child.geometry.dispose();
+        if (child.userData?.isSharedModelBank) return;
+        if (child.geometry && !child.geometry.userData?.isSharedModelBank) child.geometry.dispose();
         if (child.material) {
           if (Array.isArray(child.material)) {
-            child.material.forEach(m => m && m.dispose());
-          } else {
+            child.material.forEach(m => m && !m.userData?.isSharedModelBank && m.dispose());
+          } else if (!child.material.userData?.isSharedModelBank) {
             child.material.dispose();
           }
         }
@@ -250,8 +252,24 @@ export class Bike {
     }
   }
 
+  _scheduleGlbRebuild(key, targetBikeId) {
+    if (!modelBank.has(key)) {
+      modelBank.load(key).then((entry) => {
+        if (entry && this.currentBikeId === targetBikeId) {
+          this.buildCurrentBike(targetBikeId);
+        }
+      });
+    }
+  }
+
   buildCurrentBike(previewBikeId = null) {
     // Nettoyer l'ancien modèle et libérer géométries/matériaux
+    if (this.vehicleMixer) {
+      this.vehicleMixer.stopAllAction();
+      this.vehicleMixer = null;
+    }
+    this.vehicleAction = null;
+    this.vehicleGlb = null;
     this.disposeGroupChildren(this.bikeModelGroup);
     this.wheels = [];
     this.frontFork = null;
@@ -1009,6 +1027,36 @@ export class Bike {
     this.horseGroup = new THREE.Group();
     this.horseLegs = [];
 
+    // Modèle 3D CC0 animé haute définition (Horse.glb) avec AnimationMixer de galop
+    const horseGlb = modelBank.cloneNormalized('Horse', 1.68);
+    if (horseGlb) {
+      this.vehicleGlb = horseGlb;
+      this.horseGroup.add(horseGlb);
+
+      const clips = modelBank.getAnimations('Horse');
+      if (clips.length > 0) {
+        this.vehicleMixer = new THREE.AnimationMixer(horseGlb);
+        this.vehicleAction = this.vehicleMixer.clipAction(clips[0]);
+        this.vehicleAction.play();
+      }
+
+      // Selle en cuir & Étriers dorés alignés sur le dos de l'étalon 3D
+      const saddle = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.12, 0.50), leatherMat);
+      saddle.position.set(0, 1.24, -0.02);
+      this.horseGroup.add(saddle);
+
+      const stirrupMat = new THREE.MeshBasicMaterial({ color: 0xffd700 });
+      const stirrupL = new THREE.Mesh(new THREE.TorusGeometry(0.06, 0.015, 6, 10), stirrupMat);
+      stirrupL.position.set(-0.28, 0.80, -0.02);
+      const stirrupR = stirrupL.clone();
+      stirrupR.position.set(0.28, 0.80, -0.02);
+      this.horseGroup.add(stirrupL, stirrupR);
+
+      this.bikeModelGroup.add(this.horseGroup);
+      return;
+    }
+    this._scheduleGlbRebuild('Horse', 'cheval');
+
     // Matériau de robe du cheval (auburn / alezan / bai ou couleur custom)
     const coatMat = bodyMat;
     const darkHorseMat = new THREE.MeshStandardMaterial({ color: 0x2d1810, roughness: 0.72, metalness: 0.02 }); // Crinière, queue et sabots
@@ -1392,6 +1440,38 @@ export class Bike {
   buildTank(bodyMat, chromeMat, rubberMat, leatherMat, lampMat) {
     this.tankWheels = [];
 
+    // Modèle 3D CC0 riggé Quaternius (q_tank.glb) avec animations de chenilles
+    const tankGlb = modelBank.cloneNormalized('q_tank', 1.72);
+    if (tankGlb) {
+      const tankRoot = new THREE.Group();
+      tankGlb.rotation.y = -Math.PI / 2; // Orienté face +Z (canon vers l'avant, chenilles gauche/droite)
+      this.vehicleGlb = tankGlb;
+      tankRoot.add(tankGlb);
+
+      const clips = modelBank.getAnimations('q_tank');
+      const forwardClip = clips.find(c => c.name.includes('Forward')) || clips[0];
+      if (forwardClip) {
+        this.vehicleMixer = new THREE.AnimationMixer(tankGlb);
+        this.vehicleAction = this.vehicleMixer.clipAction(forwardClip);
+        this.vehicleAction.play();
+      }
+
+      this.tankTurret = null;
+      this.tankBarrel = null;
+      this.tankRecoilGroup = tankGlb;
+
+      // Phares tactiques HDR avant pour bloom & conduite nocturne
+      const lightL = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.14, 0.14), lampMat);
+      lightL.position.set(-0.62, 0.58, 1.38);
+      const lightR = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.14, 0.14), lampMat);
+      lightR.position.set(0.62, 0.58, 1.38);
+      tankRoot.add(lightL, lightR);
+
+      this.bikeModelGroup.add(tankRoot);
+      return;
+    }
+    this._scheduleGlbRebuild('q_tank', 'tank');
+
     const camoMat = new THREE.MeshStandardMaterial({
       color: 0x3d4f36,
       roughness: 0.75,
@@ -1540,6 +1620,30 @@ export class Bike {
   // --- ENGIN VOLANT D'ÉVASION : AÉRO-JET NUCLÉAIRE SUB-ORBITAL ---
   buildAeroJet(bodyMat, chromeMat, rubberMat, leatherMat, lampMat) {
     const jetGroup = new THREE.Group();
+
+    const jetGlb = modelBank.cloneToFootprint('q_jet', 2.9, 1.05, 3.2);
+    if (jetGlb) {
+      jetGlb.position.y = 0.28;
+      jetGroup.add(jetGlb);
+
+      const thrusterFlameMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff, transparent: true, opacity: 0.9 });
+      thrusterFlameMat.color.setRGB(0.2, 2.6, 2.6);
+      const thrusterCoreMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+      for (const s of [-0.28, 0.28]) {
+        const plume = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.9, 8), thrusterFlameMat);
+        plume.rotation.x = -Math.PI / 2;
+        plume.position.set(s, 0.62, -1.85);
+        const plumeCore = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.52, 6), thrusterCoreMat);
+        plumeCore.rotation.x = -Math.PI / 2;
+        plumeCore.position.set(s, 0.62, -1.68);
+        jetGroup.add(plume, plumeCore);
+      }
+
+      this.bikeModelGroup.add(jetGroup);
+      this.jetGroup = jetGroup;
+      return;
+    }
+    this._scheduleGlbRebuild('q_jet', 'aero_jet');
 
     // 1. Fuselage profilé aérodynamique en titane
     const fuselageGeo = new THREE.CylinderGeometry(0.28, 0.52, 2.8, 12);
@@ -2615,6 +2719,14 @@ export class Bike {
       w.rotation.x += (speed / r) * delta;
     });
 
+    // --- ANIMATION SQUELETTIQUE / MORPH GLB (Horse.glb / q_tank.glb) ---
+    if (this.vehicleMixer) {
+      const mixerRate = this.currentBikeId === 'cheval'
+        ? (speed > 0.5 ? (0.45 + speed * 0.13) : 0.18)
+        : (speed > 0.5 ? (0.35 + speed * 0.12) : 0.08);
+      this.vehicleMixer.update(delta * mixerRate);
+    }
+
     // --- ANIMATION DE L'ÉTALON PUR-SANG (galop 4-temps réaliste) & DU FOUET CINGLANT ---
     if (this.currentBikeId === 'cheval') {
       const gallopAmp = THREE.MathUtils.clamp(speed / 4.5, 0, 1);
@@ -2677,8 +2789,13 @@ export class Bike {
       if (this.tankRecoil > 0) {
         this.tankRecoil = Math.max(0, this.tankRecoil - delta * 3.5);
         if (this.tankBarrel) {
-          this.tankBarrel.position.z = 0.75 - this.tankRecoil * 0.42;
+          this.tankBarrel.position.z = (this.tankBarrelBaseZ ?? 0.75) - this.tankRecoil * 0.42;
         }
+        if (this.tankRecoilGroup) {
+          this.tankRecoilGroup.position.z = -this.tankRecoil * 0.18;
+        }
+      } else if (this.tankRecoilGroup && this.tankRecoilGroup.position.z !== 0) {
+        this.tankRecoilGroup.position.z = 0;
       }
       if (this.tankTurret) {
         this.tankTurret.rotation.y = -this.smoothedSteer * 0.12;

@@ -6,6 +6,7 @@
 
 import * as THREE from 'three';
 import { soundManager } from '../audio/SoundManager.js';
+import { modelBank } from '../gfx/ModelBank.js';
 
 export class PigeonSystem {
   constructor(scene) {
@@ -43,6 +44,30 @@ export class PigeonSystem {
     };
 
     this.initPool();
+    this._glbBirdsReady = false;
+    modelBank.load('Parrot').then(() => this._upgradeFlyingBirds());
+  }
+
+  _upgradeFlyingBirds() {
+    if (this._glbBirdsReady || !modelBank.has('Parrot')) return;
+    this._glbBirdsReady = true;
+    const clips = modelBank.getAnimations('Parrot');
+    const flapClip = clips[0] || null;
+    this.pigeons.forEach((p, idx) => {
+      if (idx % 2 !== 0 || p.userData.glbBird) return;
+      const birdGlb = modelBank.cloneNormalized('Parrot', 0.36);
+      if (!birdGlb) return;
+      // Garder silhouette grise/ardoise de pigeon urbain tout en conservant le battement d'ailes animé
+      birdGlb.visible = false;
+      p.add(birdGlb);
+      p.userData.glbBird = birdGlb;
+      if (flapClip) {
+        const mixer = new THREE.AnimationMixer(birdGlb);
+        const action = mixer.clipAction(flapClip);
+        action.play();
+        p.userData.birdMixer = mixer;
+      }
+    });
   }
 
   initPool() {
@@ -214,11 +239,19 @@ export class PigeonSystem {
         // Ralentissement ascendant doux
         p.userData.velY = Math.max(1.2, p.userData.velY - 1.5 * delta);
 
-        // Battements d'ailes ultra rapides (30Hz)
-        p.userData.wingPhase += delta * 32.0;
-        const flapAngle = Math.sin(p.userData.wingPhase) * 0.95;
-        if (p.userData.wingL) p.userData.wingL.rotation.z = flapAngle;
-        if (p.userData.wingR) p.userData.wingR.rotation.z = -flapAngle;
+        // Battements d'ailes ultra rapides (30Hz) ou AnimationMixer GLB
+        if (p.userData.glbBird && p.userData.birdMixer) {
+          if (!p.userData.glbBird.visible) {
+            p.children.forEach((c) => { if (c !== p.userData.glbBird) c.visible = false; });
+            p.userData.glbBird.visible = true;
+          }
+          p.userData.birdMixer.update(delta * 2.2);
+        } else {
+          p.userData.wingPhase += delta * 32.0;
+          const flapAngle = Math.sin(p.userData.wingPhase) * 0.95;
+          if (p.userData.wingL) p.userData.wingL.rotation.z = flapAngle;
+          if (p.userData.wingR) p.userData.wingR.rotation.z = -flapAngle;
+        }
 
         // Orientation vers la trajectoire de vol
         p.rotation.y = Math.atan2(p.userData.velX, -p.userData.velZ);

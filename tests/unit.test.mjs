@@ -105,3 +105,11 @@ test('GameState getCityChallenge includes POLICE_PURSUIT on metro cities', async
   const pursuitCities = CITIES.filter(c => getCityChallenge(c).id === 'POLICE_PURSUIT');
   assert.ok(pursuitCities.length > 0, 'Expected at least 1 city to offer POLICE_PURSUIT');
 });
+
+test('IconKit renders valid Lucide SVG strings and ModelBank lists animated GLBs', async () => {
+  const { iconSvg } = await import('../src/ui/IconKit.js');
+  const { MODEL_KEYS } = await import('../src/gfx/ModelBank.js');
+  const svg = iconSvg('monitor', 16);
+  assert.ok(svg.startsWith('<svg') && svg.includes('viewBox="0 0 24 24"'));
+  assert.ok(MODEL_KEYS.includes('Horse') && MODEL_KEYS.includes('q_tank') && MODEL_KEYS.includes('q_cyber_char'));
+});

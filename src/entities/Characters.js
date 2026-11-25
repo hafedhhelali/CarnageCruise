@@ -7,6 +7,7 @@
 
 import * as THREE from 'three';
 import { textureFactory } from '../gfx/TextureFactory.js';
+import { modelBank } from '../gfx/ModelBank.js';
 
 export const CHARACTER_TYPES = [
   {
@@ -211,6 +212,56 @@ export class CharacterSystem {
     this.materialsCache = {};
 
     this.initPool();
+    this._glbUpgraded = false;
+    modelBank.preloadAll().then(() => this._upgradeCharactersToGlb());
+  }
+
+  _upgradeCharactersToGlb() {
+    if (this._glbUpgraded) return;
+    if (!modelBank.has('q_casual_man') || !modelBank.has('q_casual_woman') || !modelBank.has('q_cyber_char')) return;
+    this._glbUpgraded = true;
+
+    const clips = modelBank.getAnimations('q_cyber_char');
+    const walkClip = clips.find(c => c.name.endsWith('|Walk')) || clips.find(c => /walk/i.test(c.name));
+    const runClip = clips.find(c => c.name.endsWith('|Run')) || clips.find(c => /run/i.test(c.name));
+
+    this.characters.forEach((char, idx) => {
+      if (char.typeDef.isPet || char.glbRoot) return;
+      const key = (char.typeDef.category === 'woman' || char.typeDef.type === 'poussette_twins' || char.typeDef.type === 'grandma_cane')
+        ? 'q_casual_woman'
+        : (idx % 6 === 5 && modelBank.has('q_swat') ? 'q_swat' : (idx % 7 === 0 ? 'q_cyber_char' : 'q_casual_man'));
+
+      const glbRoot = modelBank.cloneNormalized(key, char.typeDef.type === 'child_scooter' ? 1.24 : 1.68);
+      if (!glbRoot) return;
+
+      // Masquer les capsules primitives et rattacher le squelette GLB + dizzyGroup
+      if (char.torso) char.torso.visible = false;
+      if (char.legL) char.legL.visible = false;
+      if (char.legR) char.legR.visible = false;
+      if (char.armL) char.armL.visible = false;
+      if (char.armR) char.armR.visible = false;
+      if (char.headGroup) {
+        if (char.dizzyGroup) {
+          char.dizzyGroup.position.set(0, 1.85, 0);
+          char.group.add(char.dizzyGroup);
+        }
+        char.headGroup.visible = false;
+      }
+
+      char.glbRoot = glbRoot;
+      char.group.add(glbRoot);
+
+      if (walkClip || runClip) {
+        const mixer = new THREE.AnimationMixer(glbRoot);
+        char.mixer = mixer;
+        char.walkAction = walkClip ? mixer.clipAction(walkClip) : null;
+        char.runAction = runClip ? mixer.clipAction(runClip) : null;
+        if (char.walkAction) {
+          char.walkAction.play();
+          char.activeAction = char.walkAction;
+        }
+      }
+    });
   }
 
   getMaterial(color, roughness = 0.35) {
@@ -1020,9 +1071,18 @@ export class CharacterSystem {
           }
 
           // Foulées de sprint + rebond vertical subtil
-          const legAngle = Math.sin(char.walkPhase) * 1.05;
-          char.legL.rotation.x = legAngle;
-          char.legR.rotation.x = -legAngle;
+          if (char.mixer && distZ > -10 && distZ < 75) {
+            if (char.runAction && char.activeAction !== char.runAction) {
+              if (char.activeAction) char.activeAction.fadeOut(0.12);
+              char.runAction.reset().fadeIn(0.12).play();
+              char.activeAction = char.runAction;
+            }
+            char.mixer.update(delta * 1.45);
+          } else {
+            const legAngle = Math.sin(char.walkPhase) * 1.05;
+            char.legL.rotation.x = legAngle;
+            char.legR.rotation.x = -legAngle;
+          }
           const baseY = char.isOnSidewalk ? 0.25 : 0.02;
           char.group.position.y = baseY + Math.abs(Math.sin(char.walkPhase)) * 0.05;
         } else {
@@ -1038,8 +1098,17 @@ export class CharacterSystem {
           const legAngle = Math.sin(char.walkPhase) * 0.55;
           const strideBob = Math.abs(Math.sin(char.walkPhase)) * 0.04;
           const armBlend = 1.0 - Math.exp(-10.0 * delta);
-          char.legL.rotation.x = legAngle;
-          char.legR.rotation.x = -legAngle;
+          if (char.mixer && distZ > -10 && distZ < 75) {
+            if (char.walkAction && char.activeAction !== char.walkAction) {
+              if (char.activeAction) char.activeAction.fadeOut(0.15);
+              char.walkAction.reset().fadeIn(0.15).play();
+              char.activeAction = char.walkAction;
+            }
+            char.mixer.update(delta * (char.typeDef.speed || 1.0));
+          } else {
+            char.legL.rotation.x = legAngle;
+            char.legR.rotation.x = -legAngle;
+          }
           char.headGroup.rotation.y = 0;
 
           if (char.typeDef.hasStroller) {

@@ -6820,3 +6820,15 @@ html, body {
     rgba(245, 158, 11, 0.28) 100%
   );
 }
+
+.btn-icon-row {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+
+.cc-ui-icon {
+  display: inline-block;
+  pointer-events: none;
+}

@@ -7,10 +7,12 @@
 
 import * as THREE from 'three';
 import { textureFactory } from '../gfx/TextureFactory.js';
+import { VfxQuarksSystem } from '../gfx/VfxQuarksSystem.js';
 
 export class ParticleSystem {
   constructor(scene) {
     this.scene = scene;
+    this.quarks = new VfxQuarksSystem(scene);
     this.particles = [];
     this.stars = [];
     this.bloodDrops = [];
@@ -393,6 +395,7 @@ export class ParticleSystem {
 
   // Explosion 3D multi-étapes (flash HDR, ondes de choc, boule de feu en grappe, fumée montante, braises rebondissantes)
   spawnMissileExplosion(pos, radius = 7.0, themeColorHex = 0xff793f) {
+    if (this.quarks) this.quarks.emitExplosion(pos, Math.min(2.2, radius * 0.14));
     const explosionCenter = pos.clone();
     explosionCenter.y = Math.max(0.4, explosionCenter.y);
 
@@ -495,6 +498,7 @@ export class ParticleSystem {
 
   // Déflagration d'obus 120mm de char d'assaut (multi-étapes compacte)
   spawnCannonBlast(pos) {
+    if (this.quarks) this.quarks.emitExplosion(pos, 1.05);
     this.spawnShockwave(pos, 0xff793f);
 
     // Boule de feu compacte + flash HDR
@@ -1004,6 +1008,7 @@ export class ParticleSystem {
 
   // Éclat d'accident violent (rouge sang & débris)
   spawnCrashBurst(pos) {
+    if (this.quarks) this.quarks.emitImpactSparks(pos, false);
     this.spawnShockwave(pos, 0xff4757);
 
     for (let i = 0; i < 16; i++) {
@@ -1028,6 +1033,7 @@ export class ParticleSystem {
 
   // Étincelles et fragments traçants à haute vélocité
   spawnSparks(pos, count = 4, colorHex = 0xffa502) {
+    if (this.quarks) this.quarks.emitImpactSparks(pos, colorHex === 0x00cec9 || colorHex === 0x00d2d3);
     const mat = (colorHex === 0xff6b00) ? this.sharedMats.starOrange : (colorHex === 0xff3838 ? this.sharedMats.starRed : this.sharedMats.sparkAmber);
     for (let i = 0; i < count; i++) {
       const spark = new THREE.Mesh(this.sharedGeos.sparkBox || this.sharedGeos.starCone, mat);
@@ -1081,7 +1087,15 @@ export class ParticleSystem {
     }
   }
 
+  setQualityTier(tier = 0) {
+    if (this.quarks) this.quarks.setQualityTier(tier);
+  }
+
   update(delta, playerZ, speed, bikeX = 0, isNitro = false) {
+    if (this.quarks) {
+      this.quarks.updateNitroTrail(isNitro && speed > 5, { x: bikeX, y: 0, z: playerZ }, delta);
+      this.quarks.update(delta);
+    }
     // 1. Mettre à jour la fumée, étincelles et confettis
     for (let i = this.particles.length - 1; i >= 0; i--) {
       const p = this.particles[i];
@@ -1371,6 +1385,10 @@ export class ParticleSystem {
 
   dispose() {
     this.reset();
+    if (this.quarks) {
+      this.quarks.dispose();
+      this.quarks = null;
+    }
 
     if (this.speedLines) {
       this.speedLines.forEach(sl => {

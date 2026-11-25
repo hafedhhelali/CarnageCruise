@@ -126,6 +126,9 @@ class GameApp {
     if (this.engine && this.engine.applyQualitySettings) {
       this.engine.applyQualitySettings(s.graphicsQuality || 'AUTO', s.cameraShake !== false);
     }
+    if (this.particles && this.particles.setQualityTier && this.engine) {
+      this.particles.setQualityTier(this.engine.perfTier || 0);
+    }
     if (this.weatherSystem && this.weatherSystem.setQualityFactor) {
       const q = s.graphicsQuality === 'ECO' ? 0.3 : (s.graphicsQuality === 'HIGH' ? 1.0 : 1.0);
       this.weatherSystem.setQualityFactor(q);

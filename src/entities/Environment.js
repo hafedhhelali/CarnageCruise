@@ -2055,6 +2055,24 @@ export class Environment {
       const chosenFacadeMat = facadeMats[styleIdx];
       const randomMat = buildingMatPalette[parcelIndex % buildingMatPalette.length];
 
+      // Parcels Europe 1/3 : Immeuble 3D détaillé Quaternius (LOD proche) + façade simple lointaine
+      const glbBldgKeys = ['q_bldg_balcony', 'q_bldg_wide', 'q_bldg_tall', 'q_house1'];
+      const glbBldgKey = glbBldgKeys[parcelIndex % glbBldgKeys.length];
+      if (getCityRegion(this.cityTheme) === 'EUROPE' && parcelIndex % 3 === 0 && modelBank.has(glbBldgKey)) {
+        const glbBldg = modelBank.cloneToFootprint(glbBldgKey, bDepth, bHeight * 0.85, bWidth * 0.94);
+        if (glbBldg) {
+          glbBldg.position.set(side * (bDepth * 0.5), 0, 0);
+          glbBldg.rotation.y = side > 0 ? -Math.PI / 2 : Math.PI / 2;
+          const lowProxy = new THREE.Mesh(new THREE.BoxGeometry(bDepth, bHeight * 0.85, bWidth * 0.94), randomMat);
+          lowProxy.position.set(side * (bDepth * 0.5), bHeight * 0.425, 0);
+          const bldgLod = modelBank.createLodObject(glbBldg, lowProxy, 68);
+          buildingGroup.add(bldgLod);
+          chunk.add(buildingGroup);
+          currentZ += bWidth;
+          continue;
+        }
+      }
+
       const bGeo = new THREE.BoxGeometry(bDepth, bHeight, bWidth);
       const bMesh = new THREE.Mesh(bGeo, randomMat);
       bMesh.position.set(side * (bDepth / 2), bHeight / 2, 0);
@@ -3348,11 +3366,30 @@ export class Environment {
       treeGroup.add(grate);
 
       if (isMed && idx % 2 === 0) {
-        // Palmier méditerranéen courbé à 2 étages de palmes et noix de coco
-        this.buildPalmTree(treeGroup, 0, 0.25, 0, treeSide);
+        // Palmier méditerranéen 3D (LOD haut détail Quaternius proche + fallback procédural loin)
+        const glbPalm = modelBank.has('q_palm') ? modelBank.cloneNormalized('q_palm', 4.8) : null;
+        if (glbPalm) {
+          const fallbackGroup = new THREE.Group();
+          this.buildPalmTree(fallbackGroup, 0, 0.25, 0, treeSide);
+          const treeLod = modelBank.createLodObject(glbPalm, fallbackGroup, 50);
+          treeLod.position.y = 0.25;
+          treeGroup.add(treeLod);
+        } else {
+          this.buildPalmTree(treeGroup, 0, 0.25, 0, treeSide);
+        }
       } else {
-        // Platane de boulevard branchu à triple houppier (foliage1/2/3)
-        this.buildBranchingTree(treeGroup, 0, 0.25, 0);
+        // Platane / Sapin 3D CC0 (LOD proche + fallback procédural loin)
+        const glbKey = modelBank.has('q_pinetree') && (idx % 2 === 1) ? 'q_pinetree' : (modelBank.has('q_tree') ? 'q_tree' : null);
+        const glbTree = glbKey ? modelBank.cloneNormalized(glbKey, 4.4) : null;
+        if (glbTree) {
+          const fallbackGroup = new THREE.Group();
+          this.buildBranchingTree(fallbackGroup, 0, 0.25, 0);
+          const treeLod = modelBank.createLodObject(glbTree, fallbackGroup, 50);
+          treeLod.position.y = 0.25;
+          treeGroup.add(treeLod);
+        } else {
+          this.buildBranchingTree(treeGroup, 0, 0.25, 0);
+        }
       }
 
       chunk.add(treeGroup);
