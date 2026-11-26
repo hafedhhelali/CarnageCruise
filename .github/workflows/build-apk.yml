@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   build-android:
-    name: 🚀 Build Carnage Cruise Android APK
+    name: 🚀 Build Carnage Cruise Godot Android APK
     runs-on: ubuntu-latest
 
     steps:
@@ -27,8 +27,8 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: 🐘 Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+      - name: 🤖 Setup Android SDK
+        uses: android-actions/setup-android@v3
 
       - name: 📦 Setup Node.js
         uses: actions/setup-node@v4
@@ -41,45 +41,48 @@ jobs:
           APP_VER=$(node -p "require('./version.json').version")
           VER_CODE=$(node -p "require('./version.json').versionCode")
           CHANNEL=$(node -p "require('./version.json').channel || 'beta'")
-          RELEASE_TITLE=$(node -p "require('./version.json').releaseName || 'Carnage Cruise Arcade'")
+          RELEASE_TITLE=$(node -p "require('./version.json').releaseName || 'Carnage Cruise Godot'")
           echo "APP_VERSION=$APP_VER" >> $GITHUB_ENV
           echo "VERSION_CODE=$VER_CODE" >> $GITHUB_ENV
           echo "CHANNEL=$CHANNEL" >> $GITHUB_ENV
           echo "RELEASE_TITLE=$RELEASE_TITLE" >> $GITHUB_ENV
-          echo "app_version=$APP_VER" >> $GITHUB_OUTPUT
-          echo "version_code=$VER_CODE" >> $GITHUB_OUTPUT
-          echo "channel=$CHANNEL" >> $GITHUB_OUTPUT
           echo "==============================================="
           echo "📦 Carnage Cruise Version: v$APP_VER (Build $VER_CODE)"
           echo "🏷️ Canal: $CHANNEL"
-          echo "🎯 Titre: $RELEASE_TITLE"
           echo "==============================================="
 
-      - name: 📥 Install dependencies
+      - name: 🎮 Install Godot 4.7.2-stable & Android Export Templates
         run: |
-          npm install
-          chmod -R +x node_modules/.bin || true
+          mkdir -p ~/.local/share/godot/export_templates/4.7.2.stable ~/.config/godot
+          curl -fsSL -o /tmp/godot.zip https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          unzip -q /tmp/godot.zip -d /tmp/godot_bin
+          chmod +x /tmp/godot_bin/Godot_v4.7.2-stable_linux.x86_64
+          sudo mv /tmp/godot_bin/Godot_v4.7.2-stable_linux.x86_64 /usr/local/bin/godot
+          curl -fsSL -o /tmp/templates.tpz https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_export_templates.tpz
+          unzip -q /tmp/templates.tpz -d /tmp/tpl
+          mv /tmp/tpl/templates/* ~/.local/share/godot/export_templates/4.7.2.stable/
+          cat <<EOF > ~/.config/godot/editor_settings-4.7.tres
+          [gd_resource type="EditorSettings" format=3]
+          [resource]
+          export/android/java_sdk_path = "$JAVA_HOME"
+          export/android/android_sdk_path = "$ANDROID_HOME"
+          EOF
 
-      - name: 🏗️ Build WebGL 3D Bundle
-        run: npx --yes vite build
+      - name: 🔄 Import Godot Project Assets
+        run: godot --headless --path godot --import
 
-      - name: 🔄 Sync Capacitor Android
-        run: npx cap sync android
-
-      - name: 🔨 Grant execute permissions for gradlew
-        run: chmod +x android/gradlew
-
-      - name: 📦 Build Release APK (Signed with permanent keystore)
+      - name: 📦 Export Signed Godot Release APK
         run: |
-          cd android
-          ./gradlew assembleRelease --no-daemon --stacktrace
+          mkdir -p android/out
+          godot --headless --path godot --export-release "Android" "$GITHUB_WORKSPACE/android/out/CarnageCruise-Godot-v${{ env.APP_VERSION }}-b${{ env.VERSION_CODE }}-release.apk"
+          ls -lh android/out/
 
       - name: 📤 Upload Versioned Release APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: CarnageCruise-v${{ env.APP_VERSION }}-b${{ env.VERSION_CODE }}-Release-APK
+          name: CarnageCruise-Godot-v${{ env.APP_VERSION }}-b${{ env.VERSION_CODE }}-Release-APK
           path: |
-            android/app/build/outputs/apk/release/CarnageCruise-*-release.apk
+            android/out/CarnageCruise-Godot-*-release.apk
           retention-days: 14
 
       - name: 🏷️ Publish GitHub Beta Release
@@ -88,27 +91,13 @@ jobs:
         with:
           tag_name: "v${{ env.APP_VERSION }}"
           files: |
-            android/app/build/outputs/apk/release/CarnageCruise-*-release.apk
-          name: "Carnage Cruise v${{ env.APP_VERSION }} [BETA]"
+            android/out/CarnageCruise-Godot-*-release.apk
+          name: "Carnage Cruise Godot v${{ env.APP_VERSION }} [BETA]"
           body: |
-            # 🏁 Carnage Cruise v${{ env.APP_VERSION }} (Canal BETA)
-            
+            # 🏁 Carnage Cruise v${{ env.APP_VERSION }} (Godot 4.7.2 Natif)
+
             **Version :** `v${{ env.APP_VERSION }}` (Build `${{ env.VERSION_CODE }}`)  
-            **Canal :** `BETA - Version de Test Publique`  
-            **Édition :** `${{ env.RELEASE_TITLE }}`  
-            
-            ---
-            
-            ### ✨ Nouveautés majeures v0.9.4-beta :
-            - 🚗 **Circulation Routière 3D Vivante** : Berlines, Taxis parisiens lumineux, Camionnettes de livraison, Bus municipaux et Coupés sport avec phares, feux stop et carambolages burlesques (+500 pts).
-            - 🚶 **Piétons sur Trottoirs & Passages Piétons** : 70% marchent sur trottoirs surélevés (y=0.25m), 30% traversent les passages zébrés avec feux tricolores 3D.
-            - 🛹 **Montée sur Trottoir & Carnage Bonus** : Franchissement des bordures avec bruit de suspension, fauchage de piétons sur trottoir (+200 pts) et passages piétons (+250 pts).
-            - 💥 **Attaque Viscérale & Balles Traçantes 3D** : AK-47 avec tirs traçants supersoniques (180 m/s), recul violent et étuis de cuivre ; Hache avec arc de frappe dévastateur et traînée lumineuse ; Fouet supersonique.
-            - 💥 **Objets Urbains Destructibles** : Réverbères pliés avec gerbes d'étincelles, geysers d'eau sous pression, terrasses de café explosives (+300 pts).
-            - 🗺️ **Carte SIG 100% Fidèle** : 23 étapes parfaitement positionnées dans leurs frontières nationales réelles, vue optimisée sans coupure et tracé Grand Tour néon or.
-            - 🎁 **Design Épuré Boutons & Pubs** : Bouton cadeau sponsor luxueux (+20 pièces), bouton d'attaque HUD pulsant et ergonomique.
-            
-            ---
-            ⚠️ *Note : Cette version est officiellement en phase BETA. Vos retours et signalements de bugs sont précieux.*
+            **Moteur :** Godot 4.7.2-stable (Vulkan / Mobile Renderer)  
+            **Édition :** `${{ env.RELEASE_TITLE }}`
           draft: false
           prerelease: true
