@@ -8,9 +8,11 @@ var x_offset: float = 0.0
 var z_pos: float = 0.0
 var jump_y: float = 0.0
 var jump_vy: float = 0.0
+var _roll_impulse: float = 0.0
 
 var _model_holder: Node3D
 var _anim_player: AnimationPlayer = null
+var _wheel_nodes: Array[Node3D] = []
 var _nitro_particles: GPUParticles3D
 var _glb_cache: Dictionary = {}
 
@@ -69,6 +71,7 @@ func _get_glb_key_for_bike(bike_id: String) -> String:
 func build_vehicle(bike_id: String) -> void:
 	current_bike_id = bike_id
 	_anim_player = null
+	_wheel_nodes.clear()
 	for c in _model_holder.get_children():
 		c.queue_free()
 
@@ -110,6 +113,8 @@ func build_vehicle(bike_id: String) -> void:
 		_tint_meshes(inst, Color(0.42, 0.24, 0.12))
 		_attach_rider(pivot, aabb, pivot.scale.x)
 
+	_wheel_nodes.clear()
+	_collect_wheels(inst, _wheel_nodes)
 	_anim_player = _find_animation_player(inst)
 	if _anim_player:
 		var anims := _anim_player.get_animation_list()
@@ -147,11 +152,35 @@ func _attach_rider(pivot: Node3D, horse_aabb: AABB, horse_scale: float) -> void:
 	var rider := ps.instantiate() as Node3D
 	if rider == null:
 		return
-	# Counter-scale so rider is ~1.55m tall in world space regardless of Horse.glb cm scale
-	var inv_s := 0.85 / maxf(horse_scale, 0.0001)
+	var inv_s := 0.78 / maxf(horse_scale, 0.0001)
 	rider.scale = Vector3.ONE * inv_s
-	rider.position = Vector3(horse_aabb.get_center().x, horse_aabb.position.y + horse_aabb.size.y * 0.58, horse_aabb.get_center().z)
+	rider.position = Vector3(horse_aabb.get_center().x, horse_aabb.position.y + horse_aabb.size.y * 0.30, horse_aabb.get_center().z + horse_aabb.size.z * 0.04)
+	rider.rotation_degrees.x = 14.0
 	pivot.add_child(rider)
+	_pose_rider_skeleton(rider)
+
+
+func _pose_rider_skeleton(node: Node) -> void:
+	if node is Skeleton3D:
+		var skel: Skeleton3D = node
+		var poses := {
+			"LeftUpperArm": Vector3(0.45, 0.0, 1.05),
+			"RightUpperArm": Vector3(0.45, 0.0, -1.05),
+			"LeftLowerArm": Vector3(0.55, 0.0, 0.0),
+			"RightLowerArm": Vector3(0.55, 0.0, 0.0),
+			"LeftUpperLeg": Vector3(-0.85, 0.0, -0.28),
+			"RightUpperLeg": Vector3(-0.85, 0.0, 0.28),
+			"LeftLowerLeg": Vector3(1.15, 0.0, 0.0),
+			"RightLowerLeg": Vector3(1.15, 0.0, 0.0)
+		}
+		for bone_name in poses.keys():
+			var idx := skel.find_bone(bone_name)
+			if idx != -1:
+				var e: Vector3 = poses[bone_name]
+				var q := Quaternion.from_euler(e)
+				skel.set_bone_pose_rotation(idx, skel.get_bone_rest(idx).basis.get_rotation_quaternion() * q)
+	for c in node.get_children():
+		_pose_rider_skeleton(c)
 
 
 func _compute_aabb(node: Node3D) -> AABB:
@@ -176,6 +205,14 @@ func _compute_aabb(node: Node3D) -> AABB:
 	return result
 
 
+func _collect_wheels(node: Node, out: Array[Node3D]) -> void:
+	var n_low := node.name.to_lower()
+	if node is Node3D and ("wheel" in n_low or "tire" in n_low or "roue" in n_low):
+		out.append(node)
+	for c in node.get_children():
+		_collect_wheels(c, out)
+
+
 func _find_animation_player(node: Node) -> AnimationPlayer:
 	if node is AnimationPlayer:
 		return node
@@ -198,6 +235,13 @@ func reset_run() -> void:
 func trigger_jump(speed: float) -> void:
 	if jump_y <= 0.15:
 		jump_vy = clampf(5.5 + speed * 0.22, 6.5, 14.5)
+
+
+func trigger_edge_ramp(side: float, speed: float) -> void:
+	if jump_y <= 0.15:
+		jump_vy = clampf(3.2 + speed * 0.12, 3.8, 8.2)
+		_roll_impulse = side * 0.58
+		x_offset = clampf(x_offset + side * 0.45, -MAX_OFFSET, MAX_OFFSET)
 
 
 func is_heavy_rammer() -> bool:
@@ -239,7 +283,12 @@ func update_vehicle(delta: float, speed: float, road_straight: bool) -> void:
 
 	position = Vector3(road_x + x_offset, hover_y + jump_y, z_pos)
 	rotation.y = road_ang
-	_model_holder.rotation.z = lerpf(_model_holder.rotation.z, -smoothed_steer * 0.25, clampf(delta * 8.0, 0.0, 1.0))
+	_roll_impulse = lerpf(_roll_impulse, 0.0, clampf(delta * 4.5, 0.0, 1.0))
+	_model_holder.rotation.z = lerpf(_model_holder.rotation.z, -smoothed_steer * 0.25 + _roll_impulse, clampf(delta * 8.0, 0.0, 1.0))
+
+	for w in _wheel_nodes:
+		if is_instance_valid(w):
+			w.rotate_x(speed * delta * 2.8)
 
 	if _anim_player:
 		if current_bike_id == "cheval" and (GameData.is_braking or speed < 1.2):

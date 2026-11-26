@@ -261,12 +261,18 @@ func _process(delta: float) -> void:
 		var dz := absf(n.global_position.z - player.position.z)
 		var dx := absf(n.global_position.x - player.position.x)
 		if p["type"] == "ramp":
-			if dz < 2.3 and dx < 1.85:
+			if dz < 2.3 and dx < 1.95:
 				p["hit"] = true
 				if not GameData.is_braking and GameData.speed >= 8.0:
-					player.trigger_jump(GameData.speed)
-					var r_pts := GameData.add_score(350, false)
-					ui.show_floating_pts(r_pts)
+					if dx >= 0.95:
+						var ramp_side := 1.0 if player.position.x >= n.global_position.x else -1.0
+						player.trigger_edge_ramp(ramp_side, GameData.speed)
+						var r_pts := GameData.add_score(220, false)
+						ui.show_floating_pts(r_pts)
+					else:
+						player.trigger_jump(GameData.speed)
+						var r_pts := GameData.add_score(350, false)
+						ui.show_floating_pts(r_pts)
 		elif dz < 2.2 and dx < 1.8 and player.jump_y < 1.5:
 			if player.current_bike_id == "cheval" and p["type"] in ["tree", "lamp"]:
 				# Horse cannot smash steel lampposts or trees: bounce sideways & slow down
