@@ -218,17 +218,17 @@ func _compute_aabb(node: Node3D) -> AABB:
 	return result
 
 
-func _build_ribbon_mesh(z_start: float, width: float, x_offset: float, y_base: float, height: float, mat: Material) -> MeshInstance3D:
+func _build_ribbon_mesh(z_start: float, width: float, x_offset: float, y_base: float, height: float, mat: Material, add_inner_curb: bool = false) -> MeshInstance3D:
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var segs := 24
 	var step := CHUNK_LENGTH / float(segs)
+	var hw := width * 0.5
 	for i in range(segs):
 		var z0 := float(i) * step
 		var z1 := float(i + 1) * step
 		var cx0 := RoadCurve.get_road_center_x(z_start + z0, road_straight) + x_offset
 		var cx1 := RoadCurve.get_road_center_x(z_start + z1, road_straight) + x_offset
-		var hw := width * 0.5
 		var v00 := Vector3(cx0 - hw, y_base + height, z0)
 		var v10 := Vector3(cx0 + hw, y_base + height, z0)
 		var v01 := Vector3(cx1 - hw, y_base + height, z1)
@@ -240,6 +240,21 @@ func _build_ribbon_mesh(z_start: float, width: float, x_offset: float, y_base: f
 		st.add_vertex(v10)
 		st.add_vertex(v11)
 		st.add_vertex(v01)
+		if add_inner_curb and height > 0.01:
+			var curb_x0 := cx0 + (hw if x_offset < 0.0 else -hw)
+			var curb_x1 := cx1 + (hw if x_offset < 0.0 else -hw)
+			var c_norm := Vector3.RIGHT if x_offset < 0.0 else Vector3.LEFT
+			var b0 := Vector3(curb_x0, y_base, z0)
+			var t0 := Vector3(curb_x0, y_base + height, z0)
+			var b1 := Vector3(curb_x1, y_base, z1)
+			var t1 := Vector3(curb_x1, y_base + height, z1)
+			st.set_normal(c_norm)
+			if x_offset < 0.0:
+				st.add_vertex(t0); st.add_vertex(b0); st.add_vertex(t1)
+				st.add_vertex(b0); st.add_vertex(b1); st.add_vertex(t1)
+			else:
+				st.add_vertex(t0); st.add_vertex(t1); st.add_vertex(b0)
+				st.add_vertex(b0); st.add_vertex(t1); st.add_vertex(b1)
 	var mi := MeshInstance3D.new()
 	mi.mesh = st.commit()
 	mi.material_override = mat
@@ -251,10 +266,25 @@ func _build_chunk(z_start: float, chunk_idx: int) -> Node3D:
 	chunk.position = Vector3(0.0, 0.0, z_start)
 	chunk.set_meta("chunk_idx", chunk_idx)
 
-	# Road + Sidewalks
-	chunk.add_child(_build_ribbon_mesh(z_start, 10.8, 0.0, 0.0, 0.0, _road_mat))
-	chunk.add_child(_build_ribbon_mesh(z_start, 3.6, -7.2, 0.0, 0.25, _sidewalk_mat))
-	chunk.add_child(_build_ribbon_mesh(z_start, 3.6, 7.2, 0.0, 0.25, _sidewalk_mat))
+	# Road + Sidewalks with 3D vertical curbs
+	chunk.add_child(_build_ribbon_mesh(z_start, 10.8, 0.0, 0.0, 0.0, _road_mat, false))
+	chunk.add_child(_build_ribbon_mesh(z_start, 3.6, -7.2, 0.0, 0.25, _sidewalk_mat, true))
+	chunk.add_child(_build_ribbon_mesh(z_start, 3.6, 7.2, 0.0, 0.25, _sidewalk_mat, true))
+
+	# Crosswalk zebra stripes every 2 chunks
+	if (chunk_idx % 2) == 0:
+		var cw_z := 54.0
+		var cw_rx := RoadCurve.get_road_center_x(z_start + cw_z, road_straight)
+		var cw_ang := RoadCurve.get_road_angle(z_start + cw_z, road_straight)
+		for z_i in range(-3, 4):
+			var zbar := MeshInstance3D.new()
+			var zb := BoxMesh.new()
+			zb.size = Vector3(0.55, 0.014, 2.4)
+			zbar.mesh = zb
+			zbar.material_override = _stripe_mat
+			zbar.position = Vector3(cw_rx + float(z_i) * 1.25, 0.012, cw_z)
+			zbar.rotation.y = cw_ang
+			chunk.add_child(zbar)
 
 	# Center dashed lines
 	for s in range(6):
@@ -353,17 +383,23 @@ func _build_chunk(z_start: float, chunk_idx: int) -> Node3D:
 
 func _tint_building(node: Node, col: Color) -> void:
 	if node is MeshInstance3D and node.mesh != null:
+		# Keep dark/saturated facade contrast so white buildings never wash out
+		var rich_col := col.darkened(0.18)
 		for s in range(node.mesh.get_surface_count()):
 			var mat: Material = node.get_active_material(s)
 			var m2: StandardMaterial3D
 			if mat is StandardMaterial3D:
 				m2 = mat.duplicate() as StandardMaterial3D
-				m2.albedo_color = m2.albedo_color.lerp(col, 0.65)
+				if m2.albedo_texture == null:
+					m2.albedo_color = m2.albedo_color.lerp(rich_col, 0.7)
+				else:
+					m2.albedo_color = rich_col.lerp(Color.WHITE, 0.45)
 			else:
 				m2 = StandardMaterial3D.new()
-				m2.albedo_color = col
-			m2.roughness = maxf(m2.roughness, 0.78)
-			m2.metallic_specular = 0.12
+				m2.albedo_color = rich_col
+			m2.roughness = maxf(m2.roughness, 0.82)
+			m2.metallic = 0.0
+			m2.metallic_specular = 0.1
 			node.set_surface_override_material(s, m2)
 	for c in node.get_children():
 		_tint_building(c, col)

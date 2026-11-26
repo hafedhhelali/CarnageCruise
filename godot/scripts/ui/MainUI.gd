@@ -87,7 +87,7 @@ func show_splash() -> void:
 
 	var top_bar := HBoxContainer.new()
 	var ver := Label.new()
-	ver.text = "CARNAGE CRUISE  •  GODOT VULKAN v1.0.1"
+	ver.text = "CARNAGE CRUISE  •  GODOT VULKAN v1.0.2"
 	ver.add_theme_font_size_override("font_size", 14)
 	ver.modulate = Color(0.55, 0.9, 1.0)
 	var coins := Label.new()
@@ -513,8 +513,12 @@ func show_floating_pts(pts: int) -> void:
 		return
 	_hud_float_lbl.text = "+%d" % pts
 	_hud_float_lbl.modulate.a = 1.0
-	var tw := create_tween()
+	_hud_float_lbl.scale = Vector2(1.25, 1.25)
+	_hud_float_lbl.offset_top = -30.0
+	var tw := create_tween().set_parallel(true)
 	tw.tween_property(_hud_float_lbl, "modulate:a", 0.0, 0.65)
+	tw.tween_property(_hud_float_lbl, "scale", Vector2.ONE, 0.25)
+	tw.tween_property(_hud_float_lbl, "offset_top", -85.0, 0.65)
 
 
 func _make_modal_overlay() -> Control:

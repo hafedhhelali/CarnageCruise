@@ -1,7 +1,7 @@
 {
-  "version": "1.0.1-beta",
-  "versionCode": 110,
-  "build": 110,
+  "version": "1.0.2-beta",
+  "versionCode": 111,
+  "build": 111,
   "releaseName": "Carnage Cruise Godot 4.7.2 Native",
   "channel": "beta",
   "updatedAt": "2026-11-26T20:24:00+01:00",

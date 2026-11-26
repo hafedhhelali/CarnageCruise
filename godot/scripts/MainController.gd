@@ -59,7 +59,6 @@ func _init_explosion_vfx() -> void:
 	sphere.material = mat
 	_explosion_vfx.process_material = pm
 	_explosion_vfx.draw_pass_1 = sphere
-	_explosion_vfx.material_override = mat
 	add_child(_explosion_vfx)
 
 
