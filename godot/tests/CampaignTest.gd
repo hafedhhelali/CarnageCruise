@@ -103,14 +103,16 @@ func _run_suite() -> void:
 	await _click_button_center(close_btn)
 	_assert(_find_button_containing(ui, "FERMER") == null, "Options modal closed on FERMER click")
 
-	# 2. Map screen & region filters
+	# 2. Interactive Map screen, zoom & region filters (no city button list!)
 	var map_btn := _find_button_containing(ui, "CARTE")
 	_assert(map_btn != null, "Splash CARTE button exists")
 	await _click_button_center(map_btn)
 	_assert(GameData.current_mode == "MAP", "Switched to MAP mode")
-	var all_map_btns: Array[Button] = []
-	_collect_buttons(ui, all_map_btns)
-	_assert(all_map_btns.size() >= 85, "Map lists all 85 cities (%d buttons)" % all_map_btns.size())
+	var play_stage_btn := _find_button_containing(ui, "JOUER CETTE ÉTAPE")
+	_assert(play_stage_btn != null, "Map shows selected stage card with JOUER CETTE ÉTAPE")
+	var zin_btn := _find_button_containing(ui, "+")
+	_assert(zin_btn != null, "Map zoom-in + button exists")
+	await _click_button_center(zin_btn)
 	var maghreb_btn := _find_button_containing(ui, "MAGHREB")
 	_assert(maghreb_btn != null, "MAGHREB filter button exists")
 	await _click_button_center(maghreb_btn)

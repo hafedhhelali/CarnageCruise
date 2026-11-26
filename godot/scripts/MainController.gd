@@ -74,18 +74,51 @@ func _init_projectile_res() -> void:
 
 
 func _spawn_projectile() -> void:
-	var m := MeshInstance3D.new()
-	m.mesh = _proj_mesh
-	m.rotation_degrees.x = 90.0
-	var start_pos := player.position + Vector3(0.0, 1.05, 2.2)
-	m.position = start_pos
-	add_child(m)
+	player.trigger_weapon_recoil()
+	var rocket := Node3D.new()
+	var body := MeshInstance3D.new()
+	var bmesh := CylinderMesh.new()
+	bmesh.top_radius = 0.09
+	bmesh.bottom_radius = 0.11
+	bmesh.height = 0.95
+	var bmat := StandardMaterial3D.new()
+	bmat.albedo_color = Color(0.24, 0.26, 0.3)
+	bmat.metallic = 0.6
+	bmesh.material = bmat
+	body.mesh = bmesh
+	body.rotation_degrees.x = 90.0
+	rocket.add_child(body)
+
+	var tip := MeshInstance3D.new()
+	var tmesh := CylinderMesh.new()
+	tmesh.top_radius = 0.01
+	tmesh.bottom_radius = 0.11
+	tmesh.height = 0.32
+	tmesh.material = _proj_mat
+	tip.mesh = tmesh
+	tip.rotation_degrees.x = 90.0
+	tip.position = Vector3(0.0, 0.0, 0.62)
+	rocket.add_child(tip)
+
+	var flame := MeshInstance3D.new()
+	var fmesh := SphereMesh.new()
+	fmesh.radius = 0.14
+	fmesh.height = 0.28
+	fmesh.material = _proj_mat
+	flame.mesh = fmesh
+	flame.position = Vector3(0.0, 0.0, -0.55)
+	rocket.add_child(flame)
+
+	var start_pos := player.position + Vector3(0.0, 1.25, 2.0)
+	rocket.position = start_pos
+	add_child(rocket)
 	_projectiles.append({
-		"node": m,
+		"node": rocket,
 		"x_offset": player.x_offset,
-		"z": player.z_pos + 2.2,
-		"y": player.position.y + 1.05,
-		"life": 1.1
+		"z": player.z_pos + 2.0,
+		"y": player.position.y + 1.25,
+		"vy": 2.8,
+		"life": 0.62
 	})
 
 
@@ -155,7 +188,8 @@ func _on_ui_action(action: String, payload = null) -> void:
 			if GameData.nitro_charge >= 25.0 and not GameData.is_nitro_active:
 				GameData.is_nitro_active = true
 				GameData.nitro_timer = 3.2
-				AudioMgr.play_sfx("thruster", 0.95, 1.1, 2.0)
+				if player.current_bike_id != "cheval":
+					AudioMgr.play_sfx("confirm", 1.15, 1.3, -6.0)
 		"WEAPON":
 			if player.current_bike_id == "cheval":
 				player.trigger_jump(GameData.speed)
@@ -342,13 +376,17 @@ func _process(delta: float) -> void:
 func _update_projectiles(dt: float) -> void:
 	for i in range(_projectiles.size() - 1, -1, -1):
 		var pr := _projectiles[i]
-		var n: MeshInstance3D = pr["node"]
+		var n: Node3D = pr["node"]
 		pr["life"] = float(pr["life"]) - dt
-		pr["z"] = float(pr["z"]) + (115.0 + GameData.speed) * dt
+		pr["z"] = float(pr["z"]) + (75.0 + GameData.speed) * dt
+		pr["vy"] = float(pr["vy"]) - 14.5 * dt
+		pr["y"] = float(pr["y"]) + float(pr["vy"]) * dt
 		var pz: float = pr["z"]
+		var py: float = pr["y"]
 		var px := RoadCurve.get_road_center_x(pz, world.road_straight) + float(pr["x_offset"])
-		n.position = Vector3(px, float(pr["y"]), pz)
+		n.position = Vector3(px, py, pz)
 		n.rotation.y = RoadCurve.get_road_angle(pz, world.road_straight)
+		n.rotation.x = clampf(-float(pr["vy"]) * 0.04, -0.35, 0.35)
 
 		var hit := false
 		for v in traffic.vehicles:
@@ -366,6 +404,9 @@ func _update_projectiles(dt: float) -> void:
 					ui.show_floating_pts(pts)
 					hit = true
 					break
-		if hit or float(pr["life"]) <= 0.0:
+		if hit or py <= 0.25 or float(pr["life"]) <= 0.0:
+			if not hit:
+				AudioMgr.play_sfx("explosion", 1.0, 1.25, -4.0)
+				_spawn_burst(Vector3(px, 0.25, pz))
 			n.queue_free()
 			_projectiles.remove_at(i)

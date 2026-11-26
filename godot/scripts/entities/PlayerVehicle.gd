@@ -12,8 +12,11 @@ var _roll_impulse: float = 0.0
 
 var _model_holder: Node3D
 var _anim_player: AnimationPlayer = null
+var _weapon_mount: Node3D = null
+var _weapon_recoil: float = 0.0
 var _wheel_nodes: Array[Node3D] = []
 var _nitro_particles: GPUParticles3D
+var _smoke_particles: GPUParticles3D
 var _glb_cache: Dictionary = {}
 
 const MAX_OFFSET := 6.55
@@ -54,6 +57,31 @@ func _init_nitro_vfx() -> void:
 	_nitro_particles.position = Vector3(0.0, 0.55, -1.6)
 	add_child(_nitro_particles)
 
+	_smoke_particles = GPUParticles3D.new()
+	_smoke_particles.amount = 18
+	_smoke_particles.lifetime = 0.65
+	_smoke_particles.emitting = false
+	var spm := ParticleProcessMaterial.new()
+	spm.direction = Vector3(0.0, 0.35, -1.0)
+	spm.spread = 22.0
+	spm.initial_velocity_min = 2.0
+	spm.initial_velocity_max = 5.0
+	spm.scale_min = 0.18
+	spm.scale_max = 0.48
+	spm.color = Color(0.75, 0.78, 0.82, 0.45)
+	_smoke_particles.process_material = spm
+	var sm := SphereMesh.new()
+	sm.radius = 0.16
+	sm.height = 0.32
+	var smat := StandardMaterial3D.new()
+	smat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	smat.albedo_color = Color(0.72, 0.75, 0.78, 0.38)
+	smat.roughness = 1.0
+	sm.material = smat
+	_smoke_particles.draw_pass_1 = sm
+	_smoke_particles.position = Vector3(0.0, 0.35, -1.7)
+	add_child(_smoke_particles)
+
 
 func _get_glb_key_for_bike(bike_id: String) -> String:
 	match bike_id:
@@ -71,6 +99,8 @@ func _get_glb_key_for_bike(bike_id: String) -> String:
 func build_vehicle(bike_id: String) -> void:
 	current_bike_id = bike_id
 	_anim_player = null
+	_weapon_mount = null
+	_weapon_recoil = 0.0
 	_wheel_nodes.clear()
 	for c in _model_holder.get_children():
 		c.queue_free()
@@ -112,6 +142,8 @@ func build_vehicle(bike_id: String) -> void:
 		_nitro_particles.emitting = false
 		_tint_meshes(inst, Color(0.42, 0.24, 0.12))
 		_attach_rider(pivot, aabb, pivot.scale.x)
+	elif not (bike_id in ["tank", "aero_jet"]):
+		_attach_weapon_mount(pivot, aabb, pivot.scale.x)
 
 	_wheel_nodes.clear()
 	_collect_wheels(inst, _wheel_nodes)
@@ -128,6 +160,40 @@ func build_vehicle(bike_id: String) -> void:
 			if anim_res:
 				anim_res.loop_mode = Animation.LOOP_LINEAR
 			_anim_player.play(target_anim)
+
+
+func _attach_weapon_mount(pivot: Node3D, veh_aabb: AABB, veh_scale: float) -> void:
+	var mount := Node3D.new()
+	var inv_s := 1.0 / maxf(veh_scale, 0.001)
+	mount.scale = Vector3.ONE * inv_s
+	mount.position = Vector3(veh_aabb.get_center().x, veh_aabb.position.y + veh_aabb.size.y * 0.96, veh_aabb.get_center().z)
+	var gun_mat := StandardMaterial3D.new()
+	gun_mat.albedo_color = Color(0.18, 0.2, 0.24)
+	gun_mat.metallic = 0.65
+	gun_mat.roughness = 0.42
+	var base := MeshInstance3D.new()
+	var bmesh := BoxMesh.new()
+	bmesh.size = Vector3(0.55, 0.22, 0.65)
+	base.mesh = bmesh
+	base.material_override = gun_mat
+	mount.add_child(base)
+	for tx in [-0.18, 0.18]:
+		var tube := MeshInstance3D.new()
+		var tmesh := CylinderMesh.new()
+		tmesh.top_radius = 0.09
+		tmesh.bottom_radius = 0.1
+		tmesh.height = 1.05
+		tube.mesh = tmesh
+		tube.material_override = gun_mat
+		tube.rotation_degrees.x = 90.0
+		tube.position = Vector3(tx, 0.14, 0.28)
+		mount.add_child(tube)
+	_weapon_mount = mount
+	pivot.add_child(mount)
+
+
+func trigger_weapon_recoil() -> void:
+	_weapon_recoil = 0.28
 
 
 func _tint_meshes(node: Node, col: Color) -> void:
@@ -164,14 +230,14 @@ func _pose_rider_skeleton(node: Node) -> void:
 	if node is Skeleton3D:
 		var skel: Skeleton3D = node
 		var poses := {
-			"LeftUpperArm": Vector3(0.45, 0.0, 1.05),
-			"RightUpperArm": Vector3(0.45, 0.0, -1.05),
-			"LeftLowerArm": Vector3(0.55, 0.0, 0.0),
-			"RightLowerArm": Vector3(0.55, 0.0, 0.0),
-			"LeftUpperLeg": Vector3(-0.85, 0.0, -0.28),
-			"RightUpperLeg": Vector3(-0.85, 0.0, 0.28),
-			"LeftLowerLeg": Vector3(1.15, 0.0, 0.0),
-			"RightLowerLeg": Vector3(1.15, 0.0, 0.0)
+			"UpperArm.L": Vector3(0.55, 0.0, 1.08),
+			"UpperArm.R": Vector3(0.55, 0.0, -1.08),
+			"LowerArm.L": Vector3(0.65, 0.0, 0.0),
+			"LowerArm.R": Vector3(0.65, 0.0, 0.0),
+			"UpperLeg.L": Vector3(-0.92, 0.0, -0.32),
+			"UpperLeg.R": Vector3(-0.92, 0.0, 0.32),
+			"LowerLeg.L": Vector3(1.18, 0.0, 0.0),
+			"LowerLeg.R": Vector3(1.18, 0.0, 0.0)
 		}
 		for bone_name in poses.keys():
 			var idx := skel.find_bone(bone_name)
@@ -207,7 +273,7 @@ func _compute_aabb(node: Node3D) -> AABB:
 
 func _collect_wheels(node: Node, out: Array[Node3D]) -> void:
 	var n_low := node.name.to_lower()
-	if node is Node3D and ("wheel" in n_low or "tire" in n_low or "roue" in n_low):
+	if node is Node3D and ("wheel-" in n_low or "tire" in n_low or "roue" in n_low):
 		out.append(node)
 	for c in node.get_children():
 		_collect_wheels(c, out)
@@ -284,11 +350,15 @@ func update_vehicle(delta: float, speed: float, road_straight: bool) -> void:
 	position = Vector3(road_x + x_offset, hover_y + jump_y, z_pos)
 	rotation.y = road_ang
 	_roll_impulse = lerpf(_roll_impulse, 0.0, clampf(delta * 4.5, 0.0, 1.0))
-	_model_holder.rotation.z = lerpf(_model_holder.rotation.z, -smoothed_steer * 0.25 + _roll_impulse, clampf(delta * 8.0, 0.0, 1.0))
+	var sway := sin(z_pos * 0.45) * 0.032 if speed > 4.0 else 0.0
+	_model_holder.rotation.z = lerpf(_model_holder.rotation.z, -smoothed_steer * 0.25 + _roll_impulse + sway, clampf(delta * 8.0, 0.0, 1.0))
 
 	for w in _wheel_nodes:
 		if is_instance_valid(w):
-			w.rotate_x(speed * delta * 2.8)
+			w.rotate_x(speed * delta * 3.8)
+	if is_instance_valid(_weapon_mount):
+		_weapon_recoil = lerpf(_weapon_recoil, 0.0, clampf(delta * 14.0, 0.0, 1.0))
+		_weapon_mount.position.z -= _weapon_recoil * delta * 2.0
 
 	if _anim_player:
 		if current_bike_id == "cheval" and (GameData.is_braking or speed < 1.2):
@@ -297,3 +367,4 @@ func update_vehicle(delta: float, speed: float, road_straight: bool) -> void:
 			_anim_player.speed_scale = clampf(0.2 + speed * 0.09, 0.15, 2.8)
 
 	_nitro_particles.emitting = GameData.is_nitro_active and speed > 4.0 and current_bike_id != "cheval"
+	_smoke_particles.emitting = (not GameData.is_nitro_active) and speed > 5.0 and current_bike_id != "cheval" and current_bike_id != "aero_jet"

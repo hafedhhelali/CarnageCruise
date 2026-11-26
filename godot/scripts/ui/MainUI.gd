@@ -87,7 +87,7 @@ func show_splash() -> void:
 
 	var top_bar := HBoxContainer.new()
 	var ver := Label.new()
-	ver.text = "CARNAGE CRUISE  •  GODOT VULKAN v0.9.93"
+	ver.text = "CARNAGE CRUISE  •  GODOT VULKAN v0.9.94"
 	ver.add_theme_font_size_override("font_size", 14)
 	ver.modulate = Color(0.55, 0.9, 1.0)
 	var coins := Label.new()
@@ -191,31 +191,66 @@ func show_map() -> void:
 		if _map_region_filter == "TOUTES" or GameData.get_city_region(c) == _map_region_filter:
 			filtered_cities.append(c)
 
+	var map_wrap := Control.new()
+	map_wrap.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	vbox.add_child(map_wrap)
+
 	var map_canvas := MapCanvas.new()
-	map_canvas.set_data(filtered_cities, str(GameData.selected_city.get("id", "paris")))
-	map_canvas.city_clicked.connect(func(cid: String):
+	map_canvas.set_anchors_preset(PRESET_FULL_RECT)
+	map_canvas.set_data(filtered_cities, str(GameData.selected_city.get("id", "paris")), false)
+	map_wrap.add_child(map_canvas)
+
+	# Zoom + / - floating controls on Map
+	var zoom_col := VBoxContainer.new()
+	zoom_col.set_anchors_preset(PRESET_TOP_RIGHT)
+	zoom_col.offset_left = -58
+	zoom_col.offset_right = -10
+	zoom_col.offset_top = 10
+	zoom_col.offset_bottom = 110
+	zoom_col.add_theme_constant_override("separation", 6)
+	var zin := _make_btn("+", Color(0.1, 0.24, 0.42, 0.9), 42)
+	zin.pressed.connect(func(): map_canvas.zoom_by(1.35))
+	var zout := _make_btn("-", Color(0.1, 0.24, 0.42, 0.9), 42)
+	zout.pressed.connect(func(): map_canvas.zoom_by(1.0 / 1.35))
+	zoom_col.add_child(zin)
+	zoom_col.add_child(zout)
+	map_wrap.add_child(zoom_col)
+
+	# Bottom Selected City Card (no city button list!)
+	var city_card := _make_panel(Color(0.05, 0.09, 0.16, 0.95))
+	var cv := VBoxContainer.new()
+	cv.add_theme_constant_override("separation", 8)
+	var c_title := Label.new()
+	c_title.add_theme_font_size_override("font_size", 19)
+	c_title.modulate = Color(1.0, 0.9, 0.35)
+	var c_sub := Label.new()
+	c_sub.add_theme_font_size_override("font_size", 13)
+	c_sub.modulate = Color(0.75, 0.88, 1.0)
+	var play_city_btn := _make_btn("JOUER CETTE ÉTAPE", Color(0.88, 0.18, 0.32), 52)
+	var update_card := func():
+		var sel := GameData.selected_city
+		var cid := str(sel.get("id", "paris"))
+		var stars := int(GameData.save_data["city_stars"].get(cid, 0))
+		c_title.text = "%s (%s)  ★%d/3" % [str(sel.get("name", "Paris")).to_upper(), str(sel.get("country", "")), stars]
+		c_sub.text = "%s • Biome: %s" % [str(sel.get("monument", "")), GameData.get_city_biome(sel).to_upper()]
+	update_card.call()
+	map_canvas.city_selected.connect(func(cid: String):
+		GameData.select_city(cid)
+		update_card.call()
+	)
+	map_canvas.city_play_requested.connect(func(cid: String):
 		GameData.select_city(cid)
 		action_triggered.emit("PLAY_CITY", "STUNT_RAMPS" if (cid.hash() % 3 == 0) else "STANDARD")
 	)
-	vbox.add_child(map_canvas)
-
-	var scroll := ScrollContainer.new()
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	var list := VBoxContainer.new()
-	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	list.add_theme_constant_override("separation", 8)
-	scroll.add_child(list)
-	vbox.add_child(scroll)
-
-	for c in filtered_cities:
-		var cid := str(c.get("id", ""))
-		var stars := int(GameData.save_data["city_stars"].get(cid, 0))
-		var btn := _make_btn("%s (%s)  ★%d/3" % [str(c.get("name", "")).to_upper(), GameData.get_city_biome(c), stars], Color(0.12, 0.22, 0.36) if cid != GameData.selected_city.get("id") else Color(0.12, 0.56, 0.42), 46)
-		btn.pressed.connect(func():
-			GameData.select_city(cid)
-			action_triggered.emit("PLAY_CITY", "STUNT_RAMPS" if (cid.hash() % 3 == 0) else "STANDARD")
-		)
-		list.add_child(btn)
+	play_city_btn.pressed.connect(func():
+		var cid := str(GameData.selected_city.get("id", "paris"))
+		action_triggered.emit("PLAY_CITY", "STUNT_RAMPS" if (cid.hash() % 3 == 0) else "STANDARD")
+	)
+	cv.add_child(c_title)
+	cv.add_child(c_sub)
+	cv.add_child(play_city_btn)
+	city_card.add_child(cv)
+	vbox.add_child(city_card)
 
 
 func show_garage() -> void:

@@ -38,13 +38,13 @@ func _init_environment() -> void:
 	sky.sky_material = p_mat
 	env.sky = sky
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
-	env.ambient_light_sky_contribution = 0.72
+	env.ambient_light_sky_contribution = 0.42
 	env.tonemap_mode = Environment.TONE_MAPPER_ACES
-	env.tonemap_exposure = 1.05
+	env.tonemap_exposure = 0.92
 	env.glow_enabled = true
-	env.glow_intensity = 0.55
-	env.glow_bloom = 0.18
-	env.glow_hdr_threshold = 1.05
+	env.glow_intensity = 0.35
+	env.glow_bloom = 0.04
+	env.glow_hdr_threshold = 2.0
 	env.fog_enabled = true
 	env.fog_light_color = Color(0.75, 0.84, 0.94)
 	env.fog_density = 0.0028
@@ -102,15 +102,15 @@ func _apply_atmosphere(city_def: Dictionary) -> void:
 		hdr = "res://assets/hdr/venice_sunset_1k.hdr"
 		env.fog_light_color = fog_col.lerp(Color(0.95, 0.72, 0.52), 0.35)
 		_sun_light.light_color = Color(1.0, 0.84, 0.62)
-		_sun_light.light_energy = 1.32
+		_sun_light.light_energy = 1.05
 	elif preset == "STORM":
 		env.fog_light_color = Color(0.48, 0.54, 0.62)
-		_sun_light.light_energy = 0.95
+		_sun_light.light_energy = 0.85
 		_road_mat.roughness = 0.22
 	else:
 		env.fog_light_color = fog_col
 		_sun_light.light_color = Color(1.0, 0.96, 0.88)
-		_sun_light.light_energy = 1.35
+		_sun_light.light_energy = 1.05
 		_road_mat.roughness = 0.48
 
 	_road_mat.albedo_color = _int_to_color(int(city_def.get("roadColor", 0)), Color(0.16, 0.18, 0.22))

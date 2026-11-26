@@ -39,7 +39,8 @@ func _load_shared_clips() -> void:
 			if ap:
 				for name in ap.get_animation_list():
 					if name.ends_with("Walk") or name.ends_with("Run"):
-						var clip := ap.get_animation(name).duplicate()
+						var clip: Animation = ap.get_animation(name).duplicate()
+						clip.resource_name = "Run" if name.ends_with("Run") else "Walk"
 						clip.loop_mode = Animation.LOOP_LINEAR
 						_anim_clips.append(clip)
 			tmp.queue_free()
@@ -131,26 +132,25 @@ func update_peds(delta: float, player_pos: Vector3, player_speed: float, road_st
 
 		var dz := n.position.z - player_pos.z
 		var dx := absf(n.position.x - player_pos.x)
-		var should_flee := player_speed > 3.5 and dz > 0.0 and dz < 22.0 and dx < 3.4
+		var should_flee := player_speed > 3.5 and dz > 0.0 and dz < 22.0 and dx < 4.2
 		if should_flee and not p["fleeing"]:
 			p["fleeing"] = true
 			if ap and ap.has_animation("Run"):
 				ap.play("Run")
-				ap.speed_scale = 1.25
+				ap.speed_scale = 1.45
 
 		if p["fleeing"]:
-			var sprint_speed := 6.8
+			var sprint_speed := 7.2
 			var rx := RoadCurve.get_road_center_x(n.position.z, road_straight)
-			var side_f := float(p["side"])
+			var away_x := 1.0 if n.position.x >= player_pos.x else -1.0
 			var dx_from_center := n.position.x - rx
 			if absf(dx_from_center) < 7.8:
-				n.position.x = clampf(n.position.x + side_f * sprint_speed * delta, rx - 7.9, rx + 7.9)
-				n.rotation.y = PI * 0.5 * side_f
+				n.position.x = clampf(n.position.x + away_x * sprint_speed * delta, rx - 7.9, rx + 7.9)
+				n.rotation.y = PI * 0.5 * away_x
 			else:
-				# Reached building wall edge: sprint along the sidewalk instead of getting stuck!
-				var dir_z := 1.0 if float(p["walk_dir"]) >= 0.0 else -1.0
-				n.position.z += dir_z * sprint_speed * delta
-				n.rotation.y = 0.0 if dir_z > 0.0 else PI
+				# Reached building wall edge: sprint forward away from the vehicle!
+				n.position.z += sprint_speed * delta
+				n.rotation.y = 0.0
 		else:
 			n.position.z += float(p["walk_dir"]) * 1.4 * delta
 			n.rotation.y = 0.0 if float(p["walk_dir"]) > 0.0 else PI

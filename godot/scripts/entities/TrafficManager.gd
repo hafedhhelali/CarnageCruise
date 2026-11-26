@@ -12,8 +12,11 @@ func _ready() -> void:
 		var node := _spawn_car_node(key)
 		node.visible = false
 		add_child(node)
+		var wheels: Array[Node3D] = []
+		_collect_car_wheels(node, wheels)
 		vehicles.append({
 			"node": node,
+			"wheels": wheels,
 			"active": false,
 			"crashed": false,
 			"lane": -2.7 if (i % 2 == 0) else 2.7,
@@ -41,6 +44,13 @@ func _spawn_car_node(key: String) -> Node3D:
 	b.size = Vector3(1.8, 1.2, 3.8)
 	m.mesh = b
 	return m
+
+
+func _collect_car_wheels(node: Node, out: Array[Node3D]) -> void:
+	if node is Node3D and "wheel-" in node.name.to_lower():
+		out.append(node)
+	for c in node.get_children():
+		_collect_car_wheels(c, out)
 
 
 func _fix_car_materials(node: Node) -> void:
@@ -90,8 +100,12 @@ func update_traffic(delta: float, player_pos: Vector3, player_speed: float, road
 			continue
 
 		n.position.z += float(v["speed"]) * delta
-		n.position.x = RoadCurve.get_road_center_x(n.position.z, road_straight) + float(v["lane"])
+		var zigzag := sin(n.position.z * 0.08 + float(i) * 1.7) * 0.42
+		n.position.x = RoadCurve.get_road_center_x(n.position.z, road_straight) + float(v["lane"]) + zigzag
 		n.rotation.y = RoadCurve.get_road_angle(n.position.z, road_straight)
+		for w in v.get("wheels", []):
+			if is_instance_valid(w):
+				w.rotate_x(float(v["speed"]) * delta * 3.2)
 
 		var dz := absf(n.position.z - player_pos.z)
 		var dx := absf(n.position.x - player_pos.x)
