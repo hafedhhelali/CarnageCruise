@@ -47,8 +47,29 @@ func _spawn_car_node(key: String) -> Node3D:
 
 
 func _collect_car_wheels(node: Node, out: Array[Node3D]) -> void:
-	if node is Node3D and "wheel-" in node.name.to_lower():
-		out.append(node)
+	if node is MeshInstance3D and "wheel-" in node.name.to_lower():
+		var mi: MeshInstance3D = node
+		var aabb := mi.mesh.get_aabb() if mi.mesh else AABB()
+		if aabb.size.length() > 0.05:
+			var wpivot := Node3D.new()
+			var c := aabb.get_center()
+			wpivot.position = mi.position + c
+			var par := mi.get_parent()
+			if par:
+				par.add_child(wpivot)
+				par.remove_child(mi)
+				wpivot.add_child(mi)
+				mi.position = -c
+				var spoke := MeshInstance3D.new()
+				var smesh := BoxMesh.new()
+				smesh.size = Vector3(aabb.size.x * 1.06, aabb.size.y * 0.22, aabb.size.z * 0.72)
+				var smat := StandardMaterial3D.new()
+				smat.albedo_color = Color(0.8, 0.82, 0.86)
+				spoke.mesh = smesh
+				spoke.material_override = smat
+				wpivot.add_child(spoke)
+				out.append(wpivot)
+				return
 	for c in node.get_children():
 		_collect_car_wheels(c, out)
 
@@ -59,8 +80,9 @@ func _fix_car_materials(node: Node) -> void:
 			var mat: Material = node.get_active_material(s)
 			if mat is StandardMaterial3D:
 				var m2 := mat.duplicate() as StandardMaterial3D
-				m2.roughness = maxf(m2.roughness, 0.52)
-				m2.metallic = minf(m2.metallic, 0.25)
+				m2.roughness = maxf(m2.roughness, 0.68)
+				m2.metallic = minf(m2.metallic, 0.12)
+				m2.metallic_specular = 0.15
 				node.set_surface_override_material(s, m2)
 	for c in node.get_children():
 		_fix_car_materials(c)

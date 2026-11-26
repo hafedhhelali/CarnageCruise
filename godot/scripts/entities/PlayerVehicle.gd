@@ -147,6 +147,7 @@ func build_vehicle(bike_id: String) -> void:
 
 	_wheel_nodes.clear()
 	_collect_wheels(inst, _wheel_nodes)
+	_fix_vehicle_materials(inst)
 	_anim_player = _find_animation_player(inst)
 	if _anim_player:
 		var anims := _anim_player.get_animation_list()
@@ -271,10 +272,48 @@ func _compute_aabb(node: Node3D) -> AABB:
 	return result
 
 
+func _fix_vehicle_materials(node: Node) -> void:
+	if node is MeshInstance3D and node.mesh != null:
+		for s in range(node.mesh.get_surface_count()):
+			var mat: Material = node.get_active_material(s)
+			if mat is StandardMaterial3D:
+				var m2 := mat.duplicate() as StandardMaterial3D
+				m2.roughness = maxf(m2.roughness, 0.68)
+				m2.metallic = minf(m2.metallic, 0.12)
+				m2.metallic_specular = 0.15
+				node.set_surface_override_material(s, m2)
+	for c in node.get_children():
+		_fix_vehicle_materials(c)
+
+
 func _collect_wheels(node: Node, out: Array[Node3D]) -> void:
 	var n_low := node.name.to_lower()
-	if node is Node3D and ("wheel-" in n_low or "tire" in n_low or "roue" in n_low):
-		out.append(node)
+	if node is MeshInstance3D and ("wheel-" in n_low or "tire" in n_low or "roue" in n_low):
+		var mi: MeshInstance3D = node
+		var aabb := mi.mesh.get_aabb() if mi.mesh else AABB()
+		if aabb.size.length() > 0.05:
+			# Wrap wheel in a centered pivot so rotation happens around its true axle!
+			var wpivot := Node3D.new()
+			var c := aabb.get_center()
+			wpivot.position = mi.position + c
+			var par := mi.get_parent()
+			if par:
+				par.add_child(wpivot)
+				par.remove_child(mi)
+				wpivot.add_child(mi)
+				mi.position = -c
+				# Add visible metallic spoke bar so wheel spin is unmistakable!
+				var spoke := MeshInstance3D.new()
+				var smesh := BoxMesh.new()
+				smesh.size = Vector3(aabb.size.x * 1.06, aabb.size.y * 0.22, aabb.size.z * 0.72)
+				var smat := StandardMaterial3D.new()
+				smat.albedo_color = Color(0.82, 0.84, 0.88)
+				smat.roughness = 0.45
+				spoke.mesh = smesh
+				spoke.material_override = smat
+				wpivot.add_child(spoke)
+				out.append(wpivot)
+				return
 	for c in node.get_children():
 		_collect_wheels(c, out)
 

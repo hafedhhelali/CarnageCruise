@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="Carnage Cruise"
-config/version="0.9.95-beta"
+config/version="0.9.96-beta"
 run/main_scene="res://scenes/Main.tscn"
 config/features=PackedStringArray("4.7", "Mobile")
 config/icon="res://assets/icons/icon.png"

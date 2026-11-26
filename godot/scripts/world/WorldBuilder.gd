@@ -37,8 +37,10 @@ func _init_environment() -> void:
 		p_mat.panorama = load(hdr_path)
 	sky.sky_material = p_mat
 	env.sky = sky
-	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
-	env.ambient_light_sky_contribution = 0.42
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	env.ambient_light_color = Color(0.58, 0.62, 0.68)
+	env.ambient_light_energy = 0.72
+	env.reflected_light_source = Environment.REFLECTION_SOURCE_DISABLED
 	env.tonemap_mode = Environment.TONE_MAPPER_ACES
 	env.tonemap_exposure = 0.92
 	env.glow_enabled = true
