@@ -1021,7 +1021,7 @@ export class CharacterSystem {
           }
 
           // Sprint rapide vers le bord, puis continue de courir le long du trottoir sans jamais bloquer devant le mur
-          const sprintSpeed = char.typeDef.speed * 2.4;
+          const sprintSpeed = Math.max(6.2, char.typeDef.speed * 5.0);
           const side = char.sidewalkSide || (char.group.position.x >= fleeCurveX ? 1 : -1);
           const curRelX = (char.group.position.x - fleeCurveX) * side;
 
@@ -1070,21 +1070,21 @@ export class CharacterSystem {
             else char.mouth.scale.set(1.8, 1.6, 1.2);
           }
 
-          // Foulées de sprint + rebond vertical subtil
+          // Foulées de sprint + rebond vertical subtil (pas de double rebond si AnimationMixer actif)
           if (char.mixer && distZ > -10 && distZ < 75) {
             if (char.runAction && char.activeAction !== char.runAction) {
               if (char.activeAction) char.activeAction.fadeOut(0.12);
               char.runAction.reset().fadeIn(0.12).play();
               char.activeAction = char.runAction;
             }
-            char.mixer.update(delta * 1.45);
+            char.mixer.update(delta * (sprintSpeed / 5.4));
           } else {
             const legAngle = Math.sin(char.walkPhase) * 1.05;
             char.legL.rotation.x = legAngle;
             char.legR.rotation.x = -legAngle;
           }
           const baseY = char.isOnSidewalk ? 0.25 : 0.02;
-          char.group.position.y = baseY + Math.abs(Math.sin(char.walkPhase)) * 0.05;
+          char.group.position.y = baseY + (char.mixer ? 0 : Math.abs(Math.sin(char.walkPhase)) * 0.05);
         } else {
           // Marche normale décontractée avec animations spécifiques aux rôles
           char.isFleeing = false;
@@ -1096,7 +1096,7 @@ export class CharacterSystem {
 
           char.walkPhase += delta * 5.8;
           const legAngle = Math.sin(char.walkPhase) * 0.55;
-          const strideBob = Math.abs(Math.sin(char.walkPhase)) * 0.04;
+          const strideBob = char.mixer ? 0 : Math.abs(Math.sin(char.walkPhase)) * 0.04;
           const armBlend = 1.0 - Math.exp(-10.0 * delta);
           if (char.mixer && distZ > -10 && distZ < 75) {
             if (char.walkAction && char.activeAction !== char.walkAction) {
@@ -1104,7 +1104,7 @@ export class CharacterSystem {
               char.walkAction.reset().fadeIn(0.15).play();
               char.activeAction = char.walkAction;
             }
-            char.mixer.update(delta * (char.typeDef.speed || 1.0));
+            char.mixer.update(delta * ((char.typeDef.speed || 1.0) * 1.15));
           } else {
             char.legL.rotation.x = legAngle;
             char.legR.rotation.x = -legAngle;

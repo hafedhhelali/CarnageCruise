@@ -23,7 +23,7 @@ export class Environment {
       this.landmark = null;
     }
     this.finishArch = null;
-    this.finishDistance = 2400; // Parcours étendu à 2400m avec vrais virages et progression 100% équilibrée
+    this.finishDistance = 1650; // Parcours arcade nerveux (45-60s) sans répétition
     this.finishReached = false;
     this.animTime = 0;
     this.animatedFlags = [];
@@ -497,9 +497,9 @@ export class Environment {
     if (finishDistance) {
       this.finishDistance = finishDistance;
     } else if (this.isCataclysmMission) {
-      this.finishDistance = 2600;
+      this.finishDistance = 1350;
     } else {
-      this.finishDistance = 3800; // Parcours prolongé à 3800m pour des poursuites et courses plus intenses
+      this.finishDistance = 1650; // Parcours dynamique et intense sans longueur répétitive
     }
     this.finishReached = false;
     this.animatedFlags = [];
@@ -2017,20 +2017,33 @@ export class Environment {
           continue;
         }
 
-        // Alternance paysagère riche pour les villes de type 'park' / métropoles classiques
-        if (parcelRand < 0.22) {
-          this.createParkZone(chunk, side, xBase, currentZ, bWidth, bDepth, parcelIndex);
-          currentZ += bWidth;
-          continue;
-        } else if (parcelRand >= 0.22 && parcelRand < 0.32) {
+        // Alternance paysagère par quartiers distincts le long du parcours (évite la répétition)
+        const district = Math.floor(chunkIdx / 3) % 4;
+        if (district === 1 && parcelRand < 0.42) {
           this.createUrbanSquare(chunk, side, xBase, currentZ, bWidth, bDepth);
           currentZ += bWidth;
           continue;
-        } else if (parcelRand >= 0.32 && parcelRand < 0.40) {
+        } else if (district === 2 && parcelRand < 0.55) {
+          if (side > 0 && parcelRand < 0.28) {
+            this.createCornicheZone(chunk, side, xBase, currentZ, bWidth, bDepth, parcelIndex);
+          } else {
+            this.createParkZone(chunk, side, xBase, currentZ, bWidth, bDepth, parcelIndex);
+          }
+          currentZ += bWidth;
+          continue;
+        } else if (parcelRand < 0.20) {
+          this.createParkZone(chunk, side, xBase, currentZ, bWidth, bDepth, parcelIndex);
+          currentZ += bWidth;
+          continue;
+        } else if (parcelRand >= 0.20 && parcelRand < 0.30) {
+          this.createUrbanSquare(chunk, side, xBase, currentZ, bWidth, bDepth);
+          currentZ += bWidth;
+          continue;
+        } else if (parcelRand >= 0.30 && parcelRand < 0.38) {
           this.createUrbanMonument(chunk, side, xBase, currentZ, bWidth, bDepth);
           currentZ += bWidth;
           continue;
-        } else if (parcelRand >= 0.40 && parcelRand < 0.48 && side > 0) {
+        } else if (parcelRand >= 0.38 && parcelRand < 0.45 && side > 0) {
           this.createCornicheZone(chunk, side, xBase, currentZ, bWidth, bDepth, parcelIndex);
           currentZ += bWidth;
           continue;
@@ -2055,16 +2068,17 @@ export class Environment {
       const chosenFacadeMat = facadeMats[styleIdx];
       const randomMat = buildingMatPalette[parcelIndex % buildingMatPalette.length];
 
-      // Parcels Europe 1/3 : Immeuble 3D détaillé Quaternius (LOD proche) + façade simple lointaine
+      // Parcels Europe 1/3 : Immeuble 3D détaillé Quaternius (LOD proche) aligné strictement hors trottoir
       const glbBldgKeys = ['q_bldg_balcony', 'q_bldg_wide', 'q_bldg_tall', 'q_house1'];
       const glbBldgKey = glbBldgKeys[parcelIndex % glbBldgKeys.length];
       if (getCityRegion(this.cityTheme) === 'EUROPE' && parcelIndex % 3 === 0 && modelBank.has(glbBldgKey)) {
-        const glbBldg = modelBank.cloneToFootprint(glbBldgKey, bDepth, bHeight * 0.85, bWidth * 0.94);
+        // Échange largeur/profondeur avant rotation ±90° pour ne jamais déborder sur le trottoir
+        const glbBldg = modelBank.cloneToFootprint(glbBldgKey, bWidth * 0.92, bHeight * 0.85, bDepth);
         if (glbBldg) {
-          glbBldg.position.set(side * (bDepth * 0.5), 0, 0);
+          glbBldg.position.set(side * (bDepth * 0.5 + 0.15), 0, 0);
           glbBldg.rotation.y = side > 0 ? -Math.PI / 2 : Math.PI / 2;
-          const lowProxy = new THREE.Mesh(new THREE.BoxGeometry(bDepth, bHeight * 0.85, bWidth * 0.94), randomMat);
-          lowProxy.position.set(side * (bDepth * 0.5), bHeight * 0.425, 0);
+          const lowProxy = new THREE.Mesh(new THREE.BoxGeometry(bDepth, bHeight * 0.85, bWidth * 0.92), randomMat);
+          lowProxy.position.set(side * (bDepth * 0.5 + 0.15), bHeight * 0.425, 0);
           const bldgLod = modelBank.createLodObject(glbBldg, lowProxy, 68);
           buildingGroup.add(bldgLod);
           chunk.add(buildingGroup);
@@ -2909,10 +2923,10 @@ export class Environment {
   // --- CRÉATION DE STANDS DE RUE RÉALISTES & PITTORESQUES (PRIMEURS, BOUQUINISTES, STREET FOOD, FLEURISTES) ---
   createMarketStall(chunk, side, z, stallType = 'stall_primeur') {
     const stallGroup = new THREE.Group();
-    // Position sur la moitié avant du trottoir, face à la rue (largeur chaussée = 10.8m, trottoir = 3.5m)
+    // Position ancrée sur le trottoir (y = 0.25m) sans aucun flottement
     const xPos = side * 6.0;
     const baseRotY = side > 0 ? -Math.PI / 2 + 0.12 : Math.PI / 2 - 0.12;
-    stallGroup.position.set(xPos, 0, z);
+    stallGroup.position.set(xPos, 0.25, z);
     stallGroup.rotation.y = baseRotY;
 
     const woodMat = this.sharedMats?.wood || new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.85 });
@@ -2921,7 +2935,7 @@ export class Environment {
     const commonUserData = {
       type: stallType,
       isHit: false,
-      initialY: 0,
+      initialY: 0.25,
       initialRot: stallGroup.rotation.clone(),
       baseX: xPos,
       localZ: z,
@@ -2961,24 +2975,24 @@ export class Environment {
         }
       });
 
-      // 3. Poteaux fins et auvent rayé protecteur
+      // 3. Poteaux ancrés au sol (y = 0 -> 1.90) et auvent rayé protecteur
       [[-0.45, -0.85], [-0.45, 0.85], [0.45, -0.85], [0.45, 0.85]].forEach(([px, pz]) => {
         const pole = new THREE.Mesh(this.sharedGeos.stallAwningPole, lampMat);
-        pole.position.set(px, 1.25, pz);
+        pole.position.set(px, 0.95, pz);
         stallGroup.add(pole);
       });
 
       const awningTex = textureFactory.getAwningTexture('#e74c3c');
       const awningMat = new THREE.MeshStandardMaterial({ map: awningTex, roughness: 0.7 });
       const awning = new THREE.Mesh(this.sharedGeos.stallAwning, awningMat);
-      awning.position.set(0, 2.15, 0);
+      awning.position.set(0, 1.92, 0);
       awning.rotation.z = -0.15;
       stallGroup.add(awning);
 
-      // 4. Ardoise de prix
+      // 4. Ardoise de prix posée sur le trottoir
       const slateMat = this.sharedMats?.chalkboard || new THREE.MeshStandardMaterial({ color: 0x222f3e, roughness: 0.9 });
-      const slate = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.22, 0.04), slateMat);
-      slate.position.set(-0.52, 0.65, 0.6);
+      const slate = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.36, 0.04), slateMat);
+      slate.position.set(-0.52, 0.18, 0.6);
       slate.rotation.y = 0.2;
       stallGroup.add(slate);
 
@@ -3065,6 +3079,13 @@ export class Environment {
     } else if (stallType === 'stall_fleuriste') {
       stallGroup.userData = { ...commonUserData };
 
+      // Montants verticaux en bois ancrés au sol soutenant les 3 étagères
+      [[-0.36, -0.84], [0.24, -0.84], [-0.36, 0.84], [0.24, 0.84]].forEach(([lx, lz]) => {
+        const leg = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.98, 0.08), woodMat);
+        leg.position.set(lx, 0.49, lz);
+        stallGroup.add(leg);
+      });
+
       // Étagère fleuriste 3 niveaux en bois
       [0.35, 0.65, 0.95].forEach((yStep, idx) => {
         const shelf = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.05, 1.8), woodMat);
@@ -3072,7 +3093,7 @@ export class Environment {
         stallGroup.add(shelf);
       });
 
-      // Seaux en zinc et pots en terre cuite remplis de fleurs éclatantes
+      // Seaux en zinc et pots en terre cuite posés directement sur les étagères
       const zincMat = this.sharedMats?.metalZinc || new THREE.MeshStandardMaterial({ color: 0x95a5a6, roughness: 0.4 });
       const flowerMats = [
         this.sharedMats?.flowerRed || new THREE.MeshStandardMaterial({ color: 0xff4757, roughness: 0.78, metalness: 0.0 }),
@@ -3082,33 +3103,33 @@ export class Environment {
 
       [-0.55, 0, 0.55].forEach((zOff, i) => {
         const bucket = new THREE.Mesh(this.sharedGeos.flowerBucket, zincMat);
-        bucket.position.set(-0.15, 0.6, zOff);
+        bucket.position.set(-0.22, 0.52, zOff);
         stallGroup.add(bucket);
 
         const bouquet = new THREE.Mesh(this.sharedGeos.amphoraBelly, flowerMats[i % 3]);
         bouquet.scale.set(0.42, 0.35, 0.42);
-        bouquet.position.set(-0.15, 0.95, zOff);
+        bouquet.position.set(-0.22, 0.82, zOff);
         stallGroup.add(bouquet);
 
         const pot = new THREE.Mesh(this.sharedGeos.amphora, this.sharedMats?.terracotta || woodMat);
         pot.scale.set(0.6, 0.6, 0.6);
-        pot.position.set(0.15, 1.15, zOff);
+        pot.position.set(0.18, 1.08, zOff);
         const topBouquet = new THREE.Mesh(this.sharedGeos.amphoraBelly, flowerMats[(i + 1) % 3]);
         topBouquet.scale.set(0.32, 0.28, 0.32);
-        topBouquet.position.set(0.15, 1.45, zOff);
+        topBouquet.position.set(0.18, 1.38, zOff);
         stallGroup.add(pot, topBouquet);
       });
 
-      // Auvent léger au-dessus du stand
+      // Auvent léger ancré au sol (y = 0 -> 1.90)
       const flowerAwningTex = textureFactory.getAwningTexture('#27ae60');
       const flowerAwningMat = new THREE.MeshStandardMaterial({ map: flowerAwningTex, roughness: 0.7 });
       const awning = new THREE.Mesh(this.sharedGeos.stallAwning, flowerAwningMat);
-      awning.position.set(0, 2.2, 0);
+      awning.position.set(0, 1.92, 0);
       awning.rotation.z = -0.18;
       const pole = new THREE.Mesh(this.sharedGeos.stallAwningPole, lampMat);
-      pole.position.set(0, 1.3, -0.85);
+      pole.position.set(0, 0.95, -0.85);
       const pole2 = new THREE.Mesh(this.sharedGeos.stallAwningPole, lampMat);
-      pole2.position.set(0, 1.3, 0.85);
+      pole2.position.set(0, 0.95, 0.85);
       stallGroup.add(awning, pole, pole2);
     }
 
@@ -3306,13 +3327,13 @@ export class Environment {
       const side = (idx % 2 === 0 ? 1 : -1);
       const xSidewalk = side * 6.4;
 
-      // 1. Réverbère haussmannien élégant et parfaitement ancré au sol
+      // 1. Réverbère haussmannien élégant ancré sur la dalle trottoir (y = 0.25m)
       const lamp = new THREE.Group();
-      lamp.position.set(side * 5.8, 0, z);
+      lamp.position.set(side * 5.8, 0.25, z);
       lamp.userData = {
         type: 'lamp',
         isHit: false,
-        initialY: 0,
+        initialY: 0.25,
         baseX: side * 5.8,
         localZ: z,
         baseRotY: 0,
@@ -3321,7 +3342,7 @@ export class Environment {
       };
 
       const baseMesh = new THREE.Mesh(this.sharedGeos.lampBase, lampMat);
-      baseMesh.position.y = 0.25;
+      baseMesh.position.y = 0.35;
       lamp.add(baseMesh);
 
       const pole = new THREE.Mesh(this.sharedGeos.lampPost, lampMat);
@@ -3370,7 +3391,7 @@ export class Environment {
         const glbPalm = modelBank.has('q_palm') ? modelBank.cloneNormalized('q_palm', 4.8) : null;
         if (glbPalm) {
           const fallbackGroup = new THREE.Group();
-          this.buildPalmTree(fallbackGroup, 0, 0.25, 0, treeSide);
+          this.buildPalmTree(fallbackGroup, 0, 0, 0, treeSide);
           const treeLod = modelBank.createLodObject(glbPalm, fallbackGroup, 50);
           treeLod.position.y = 0.25;
           treeGroup.add(treeLod);
@@ -3383,7 +3404,7 @@ export class Environment {
         const glbTree = glbKey ? modelBank.cloneNormalized(glbKey, 4.4) : null;
         if (glbTree) {
           const fallbackGroup = new THREE.Group();
-          this.buildBranchingTree(fallbackGroup, 0, 0.25, 0);
+          this.buildBranchingTree(fallbackGroup, 0, 0, 0);
           const treeLod = modelBank.createLodObject(glbTree, fallbackGroup, 50);
           treeLod.position.y = 0.25;
           treeGroup.add(treeLod);
@@ -3395,17 +3416,22 @@ export class Environment {
       chunk.add(treeGroup);
       chunk.userData.props.push(treeGroup);
 
-      // Mobilier léger de trottoir : bancs, bornes d'incendie, chaises de café
+      // Mobilier léger de trottoir ancré à y = 0.25m : bancs avec pieds, bornes d'incendie, chaises
       if (idx === 1) {
         const bench = new THREE.Group();
         const bx = xSidewalk + side * 0.45;
         const bz = z + 2.8;
-        bench.position.set(bx, 0, bz);
-        bench.userData = { type: 'lamp', isHit: false, initialY: 0, baseX: bx, localZ: bz, baseRotY: 0, hideAtIntersection: true, interClearance: 14.2 };
+        bench.position.set(bx, 0.25, bz);
+        bench.userData = { type: 'lamp', isHit: false, initialY: 0.25, baseX: bx, localZ: bz, baseRotY: 0, hideAtIntersection: true, interClearance: 14.2 };
         const seat = new THREE.Mesh(this.sharedGeos.benchSeat, this.sharedMats?.benchWood || woodMat);
-        seat.position.y = 0.46;
+        seat.position.y = 0.40;
         const back = new THREE.Mesh(this.sharedGeos.benchBack, this.sharedMats?.benchWood || woodMat);
-        back.position.set(side * 0.2, 0.68, 0);
+        back.position.set(side * 0.2, 0.62, 0);
+        [-0.5, 0.5].forEach(lz => {
+          const bLeg = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.40, 0.08), lampMat);
+          bLeg.position.set(0, 0.20, lz);
+          bench.add(bLeg);
+        });
         bench.add(seat, back);
         chunk.add(bench);
         chunk.userData.props.push(bench);

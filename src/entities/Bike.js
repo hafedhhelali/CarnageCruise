@@ -2589,10 +2589,9 @@ export class Bike {
       this.smoothedSteer += (steerInput - this.smoothedSteer) * Math.min(1.0, delta * 9.6);
     }
 
-    // Largeur étendue : Chaussée (-5.4 à +5.4) + Trottoirs jusqu'aux façades (-7.4 à +7.4)
-    // Permet de s'approcher et frotter contre les murs/façades de bâtiments
-    // Sensibilité latérale accrue (10.2 m/s max) pour un slalom réactif et esquives précises
-    const MAX_WIDTH = 7.4;
+    // Largeur maitrisée : Chaussée (-5.4 à +5.4) + Trottoir (-6.65 à +6.65)
+    // Permet d'écraser tous les stands/poteaux/arbres (5.8-6.35m) sans jamais traverser les façades (8.4-9.05m)
+    const MAX_WIDTH = 6.65;
     if (!gameState.isBraking) {
       this.x -= this.smoothedSteer * 10.2 * delta;
     }

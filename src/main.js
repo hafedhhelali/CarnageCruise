@@ -1577,8 +1577,8 @@ class GameApp {
               const dX = Math.abs(worldX - this.bike.mesh.position.x);
 
               const isStall = prop.userData.type && prop.userData.type.startsWith('stall_');
-              const hitRadiusZ = isStall ? 2.1 : 1.8;
-              const hitRadiusX = isStall ? 1.6 : 1.35;
+              const hitRadiusZ = isStall ? 2.3 : 1.95;
+              const hitRadiusX = isStall ? 1.85 : 1.55;
 
               if (dZ < hitRadiusZ && dX < hitRadiusX) {
                 const propType = prop.userData.type || 'lamp';

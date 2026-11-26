@@ -10,29 +10,29 @@ import { SampleBank } from './SampleBank.js';
 
 const ENGINE_PROFILES = {
   v8: {
-    baseFreq: 44, maxFreq: 148, subRatio: 0.5, oscType: 'sawtooth', subType: 'triangle',
-    exhaustFreq: 170, exhaustQ: 0.95, intakeMin: 260, intakeMax: 1350, drive: 12,
-    hasTurbo: false, gain: 0.14
+    baseFreq: 42, maxFreq: 132, subRatio: 0.5, oscType: 'triangle', subType: 'sine',
+    exhaustFreq: 155, exhaustQ: 0.85, intakeMin: 210, intakeMax: 680, drive: 5,
+    hasTurbo: false, gain: 0.085
   },
   chopper: {
-    baseFreq: 34, maxFreq: 112, subRatio: 0.5, oscType: 'sawtooth', subType: 'sine',
-    exhaustFreq: 135, exhaustQ: 1.0, intakeMin: 220, intakeMax: 950, drive: 14,
-    hasTurbo: false, gain: 0.15
+    baseFreq: 34, maxFreq: 102, subRatio: 0.5, oscType: 'triangle', subType: 'sine',
+    exhaustFreq: 125, exhaustQ: 0.9, intakeMin: 180, intakeMax: 560, drive: 6,
+    hasTurbo: false, gain: 0.09
   },
   scooter: {
-    baseFreq: 82, maxFreq: 215, subRatio: 0.5, oscType: 'triangle', subType: 'sine',
-    exhaustFreq: 380, exhaustQ: 0.85, intakeMin: 420, intakeMax: 1750, drive: 8,
-    hasTurbo: false, gain: 0.11
+    baseFreq: 76, maxFreq: 185, subRatio: 0.5, oscType: 'triangle', subType: 'sine',
+    exhaustFreq: 320, exhaustQ: 0.75, intakeMin: 340, intakeMax: 920, drive: 4,
+    hasTurbo: false, gain: 0.07
   },
   tank: {
-    baseFreq: 28, maxFreq: 78, subRatio: 0.5, oscType: 'sawtooth', subType: 'sine',
-    exhaustFreq: 105, exhaustQ: 1.1, intakeMin: 160, intakeMax: 680, drive: 15,
-    hasTurbo: false, gain: 0.16
+    baseFreq: 28, maxFreq: 72, subRatio: 0.5, oscType: 'triangle', subType: 'sine',
+    exhaustFreq: 98, exhaustQ: 0.9, intakeMin: 140, intakeMax: 480, drive: 6,
+    hasTurbo: false, gain: 0.095
   },
   jet: {
-    baseFreq: 98, maxFreq: 260, subRatio: 0.5, oscType: 'triangle', subType: 'sine',
-    exhaustFreq: 540, exhaustQ: 0.85, intakeMin: 520, intakeMax: 2600, drive: 7,
-    hasTurbo: true, turboMin: 850, turboMax: 2800, gain: 0.12
+    baseFreq: 92, maxFreq: 225, subRatio: 0.5, oscType: 'sine', subType: 'sine',
+    exhaustFreq: 460, exhaustQ: 0.75, intakeMin: 420, intakeMax: 1250, drive: 3,
+    hasTurbo: true, turboMin: 680, turboMax: 1650, gain: 0.075
   }
 };
 
@@ -111,8 +111,8 @@ export class SoundManager {
 
       this.masterWarmFilter = this.ctx.createBiquadFilter();
       this.masterWarmFilter.type = 'lowpass';
-      this.masterWarmFilter.frequency.setValueAtTime(11000, this.ctx.currentTime);
-      this.masterWarmFilter.Q.value = 0.5;
+      this.masterWarmFilter.frequency.setValueAtTime(4800, this.ctx.currentTime);
+      this.masterWarmFilter.Q.value = 0.55;
 
       this.masterGain = this.ctx.createGain();
       this.masterGain.gain.setValueAtTime(0.92, this.ctx.currentTime);
@@ -1736,12 +1736,12 @@ export class SoundManager {
     // Klaxon bi-ton compresseur italien/français ultra-expressif ("POUËT-POUËT !")
     const now = this.ctx.currentTime;
     const filter = this.ctx.createBiquadFilter();
-    filter.type = 'bandpass';
-    filter.frequency.setValueAtTime(1150, now);
-    filter.Q.setValueAtTime(3.0, now);
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(1100, now);
+    filter.Q.setValueAtTime(1.5, now);
 
     const masterGain = this.ctx.createGain();
-    masterGain.gain.setValueAtTime(0.38, now);
+    masterGain.gain.setValueAtTime(0.24, now);
 
     filter.connect(masterGain);
     masterGain.connect(this.getMasterOutput());
@@ -1758,9 +1758,9 @@ export class SoundManager {
       const o3 = this.ctx.createOscillator();
       const bGain = this.ctx.createGain();
 
-      o1.type = 'sawtooth';
-      o2.type = 'sawtooth';
-      o3.type = 'square';
+      o1.type = 'triangle';
+      o2.type = 'triangle';
+      o3.type = 'sawtooth';
 
       // Accord brillant fanfare : Fondamentale A4 (440Hz), Tierce Majeure C#5 (554.37Hz), Quinte E5 (659Hz)
       o1.frequency.setValueAtTime(440, b.start);
@@ -2530,53 +2530,32 @@ export class SoundManager {
    */
   playPursuitChaseTheme() {
     const bassNotes = [55.0, 55.0, 65.41, 55.0, 73.42, 65.41, 55.0, 49.0]; // A1 tension
-    this._startLookaheadSequencer('PURSUIT', 0.101, (step, time) => {
+    const padChords = {
+      0: [110.0, 164.81, 196.0, 261.63], // Am7
+      8: [98.0, 146.83, 174.61, 233.08]  // Gm7
+    };
+    this._startLookaheadSequencer('PURSUIT', 0.11, (step, time, dur) => {
       const dest = this.getMusicOutput();
       if (!dest || !this.ctx) return;
+      const s16 = step % 16;
 
-      // Basse pulsante
-      const bOsc = this.ctx.createOscillator();
-      const bGain = this.ctx.createGain();
-      bOsc.type = 'sawtooth';
-      bOsc.frequency.setValueAtTime(bassNotes[step % bassNotes.length], time);
-      bGain.gain.setValueAtTime(0.16, time);
-      bGain.gain.exponentialRampToValueAtTime(0.001, time + 0.09);
-      bOsc.connect(bGain);
-      bGain.connect(dest);
-      bOsc.onended = () => this.cleanupNodes(bOsc, bGain);
-      bOsc.start(time);
-      bOsc.stop(time + 0.095);
-
-      // Kick sur temps pairs (0, 4, 8, 12)
-      if (step % 4 === 0) {
-        const kOsc = this.ctx.createOscillator();
-        const kGain = this.ctx.createGain();
-        kOsc.type = 'sine';
-        kOsc.frequency.setValueAtTime(135, time);
-        kOsc.frequency.exponentialRampToValueAtTime(38, time + 0.09);
-        kGain.gain.setValueAtTime(0.32, time);
-        kGain.gain.exponentialRampToValueAtTime(0.001, time + 0.1);
-        kOsc.connect(kGain);
-        kGain.connect(dest);
-        kOsc.onended = () => this.cleanupNodes(kOsc, kGain);
-        kOsc.start(time);
-        kOsc.stop(time + 0.11);
+      if (padChords[s16]) {
+        this._playChordPad(padChords[s16], time, dur * 7.5, 0.04);
       }
 
-      // Sirène deux tons discrète tous les 16 temps
-      if (step % 16 === 0 || step % 16 === 8) {
-        const sOsc = this.ctx.createOscillator();
-        const sGain = this.ctx.createGain();
-        sOsc.type = 'triangle';
-        sOsc.frequency.setValueAtTime(step % 16 === 0 ? 660 : 520, time);
-        sGain.gain.setValueAtTime(0.055, time);
-        sGain.gain.exponentialRampToValueAtTime(0.001, time + 0.28);
-        sOsc.connect(sGain);
-        sGain.connect(dest);
-        sOsc.onended = () => this.cleanupNodes(sOsc, sGain);
-        sOsc.start(time);
-        sOsc.stop(time + 0.3);
-      }
+      // Basse chaude filtrée (zéro sawtooth brut)
+      this._playAnalogNote(bassNotes[step % bassNotes.length], time, dur * 1.35, {
+        vol: 0.15,
+        cutoffStart: 520,
+        cutoffEnd: 120,
+        q: 1.1,
+        type: 'triangle',
+        dest
+      });
+
+      if (step % 4 === 0) this.playDiscoKick(time);
+      if (step % 8 === 4) this.playDiscoClap(time);
+      if (step % 2 === 1) this.playHiHat(time);
     });
   }
 
@@ -2695,12 +2674,12 @@ export class SoundManager {
    * Synthèse analogique chaude à double oscillateur désaccordé + double filtre passe-bas en cascade (<= 2200 Hz).
    */
   _playAnalogNote(freq, time, duration, {
-    vol = 0.16,
-    cutoffStart = 1100,
-    cutoffEnd = 180,
-    q = 2.5,
-    detuneCents = 7,
-    type = 'sawtooth',
+    vol = 0.14,
+    cutoffStart = 880,
+    cutoffEnd = 160,
+    q = 1.1,
+    detuneCents = 5,
+    type = 'triangle',
     dest = this.getMusicOutput()
   } = {}) {
     if (!this.ctx || this.isDestroyed || !dest) return;
@@ -2955,30 +2934,23 @@ export class SoundManager {
       const bassFreq = bassLine[s32];
       if (bassFreq > 0) {
         this._playAnalogNote(bassFreq, time, dur * 1.45, {
-          vol: 0.18,
-          cutoffStart: 980,
-          cutoffEnd: 170,
-          q: 2.6,
-          detuneCents: 6,
+          vol: 0.15,
+          cutoffStart: 620,
+          cutoffEnd: 140,
+          q: 1.2,
+          detuneCents: 4,
+          type: 'triangle',
           dest
         });
       }
 
       const leadFreq = leadLine[s32];
       if (leadFreq > 0) {
-        this._playAnalogNote(leadFreq, time, dur * 1.7, {
-          vol: 0.085,
-          cutoffStart: 1750,
-          cutoffEnd: 560,
-          q: 1.6,
-          detuneCents: 8,
-          type: 'triangle',
-          dest
-        });
+        this._playRhodesNote(leadFreq, time, dur * 1.9, 0.068);
       }
 
-      if (s32 % 4 === 0 || s32 === 30) this.playIndustrialKick(time);
-      if (s32 % 8 === 4) this.playMetalSnare(time);
+      if (s32 % 4 === 0 || s32 === 30) this.playDiscoKick(time);
+      if (s32 % 8 === 4) this.playDiscoClap(time);
       if (s32 % 2 === 1) this.playHiHat(time);
     });
   }
@@ -3175,55 +3147,40 @@ export class SoundManager {
         this._playChordPad(pads[s32], time, padDur, padVol);
       }
 
-      // 2. Basse mélodique à sauts d'octave
+      // 2. Basse mélodique chaleureuse (triangle filtrée)
       const bassFreq = grooveBassline[s32];
       if (bassFreq > 0 && (currentIntensity !== 'CALM' || s32 % 4 === 0)) {
         this._playAnalogNote(bassFreq, time, dur * 1.45, {
-          vol: currentIntensity === 'COMBO' ? 0.21 : (currentIntensity === 'CALM' ? 0.14 : 0.18),
-          cutoffStart: currentIntensity === 'COMBO' ? 1450 : 980,
-          cutoffEnd: currentIntensity === 'CALM' ? 130 : 170,
-          q: currentIntensity === 'COMBO' ? 3.4 : 2.6,
-          detuneCents: 6,
+          vol: currentIntensity === 'COMBO' ? 0.16 : (currentIntensity === 'CALM' ? 0.12 : 0.14),
+          cutoffStart: currentIntensity === 'COMBO' ? 760 : 580,
+          cutoffEnd: 130,
+          q: 1.2,
+          detuneCents: 4,
+          type: 'triangle',
           dest
         });
       }
 
-      // 3. Phrase lead chaude désaccordée sur 32 pas
+      // 3. Phrase lead Rhodes veloutée
       if (currentIntensity !== 'CALM') {
         const leadFreq = leadPhrase[s32];
         if (leadFreq > 0) {
-          this._playAnalogNote(leadFreq, time, dur * 1.75, {
-            vol: currentIntensity === 'COMBO' ? 0.095 : 0.075,
-            cutoffStart: currentIntensity === 'COMBO' ? 1950 : 1650,
-            cutoffEnd: 540,
-            q: 1.6,
-            detuneCents: 8,
-            type: 'triangle',
-            dest
-          });
+          this._playRhodesNote(leadFreq, time, dur * 1.85, currentIntensity === 'COMBO' ? 0.075 : 0.058);
           if (currentIntensity === 'COMBO' && s32 % 8 === 0) {
-            this._playAnalogNote(leadFreq * 2, time, dur * 1.2, {
-              vol: 0.035,
-              cutoffStart: 1850,
-              cutoffEnd: 700,
-              q: 1.2,
-              detuneCents: 10,
-              type: 'sawtooth',
-              dest
-            });
+            this._playRhodesNote(leadFreq * 2, time, dur * 1.2, 0.032);
           }
         }
       }
 
-      // 4. Batterie punchy : Kick serré + Snare claquante + Hi-hats 16e
+      // 4. Rythmique propre et équilibrée
       if (s32 % 4 === 0 && (currentIntensity !== 'CALM' || s32 % 8 === 0)) {
-        this.playHeavyIndustrialKick(time, currentIntensity === 'COMBO');
+        this.playDiscoKick(time);
       } else if (currentIntensity === 'COMBO' && s32 === 30) {
-        this.playHeavyIndustrialKick(time, true);
+        this.playDiscoKick(time);
       }
 
       if (s32 % 8 === 4 && currentIntensity !== 'CALM') {
-        this.playRazorIndustrialSnare(time, currentIntensity === 'COMBO');
+        this.playDiscoClap(time);
       }
 
       if (s32 % 2 === 1 && currentIntensity !== 'CALM') {

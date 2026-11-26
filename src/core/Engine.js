@@ -133,12 +133,12 @@ export class Engine {
       this.scene.environment = null;
     }
 
-    // Caméra perspective grand angle arcade (near=0.65 pour précision Z-buffer optimale sans clignotement)
+    // Caméra perspective grand angle arcade (near=0.85 pour éviter tout clipping dans les décors proches)
     this.baseFov = 72;
     this.camera = new THREE.PerspectiveCamera(
       72,
       window.innerWidth / window.innerHeight,
-      0.65,
+      0.85,
       this.isMobile ? 220 : 500
     );
 
