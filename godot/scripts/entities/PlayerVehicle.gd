@@ -85,20 +85,30 @@ func build_vehicle(bike_id: String) -> void:
 	if inst == null:
 		return
 
+	var pivot := Node3D.new()
 	if key == "q_tank":
 		inst.rotation.y = -PI * 0.5
-		inst.scale = Vector3.ONE * 0.72
-	elif key == "Horse":
-		inst.scale = Vector3.ONE * 0.0092
-	elif key == "q_jet":
-		inst.scale = Vector3.ONE * 0.34
-		inst.position.y = 1.6
-	elif key == "q_rover":
-		inst.scale = Vector3.ONE * 0.45
-	else:
-		inst.scale = Vector3.ONE * 0.95
+	pivot.add_child(inst)
+	_model_holder.add_child(pivot)
 
-	_model_holder.add_child(inst)
+	var aabb := _compute_aabb(pivot)
+	if aabb.size.length() > 0.01:
+		var target_len := 3.8
+		if key == "Horse":
+			target_len = 2.6
+		elif key == "q_jet":
+			target_len = 4.2
+		var max_dim := maxf(aabb.size.x, maxf(aabb.size.y, aabb.size.z))
+		var s := target_len / maxf(max_dim, 0.01)
+		pivot.scale = Vector3.ONE * s
+		var base_y := 2.3 if key == "q_jet" else (0.35 if bike_id == "hovercraft" else 0.0)
+		pivot.position = Vector3(-aabb.get_center().x * s, -aabb.position.y * s + base_y, -aabb.get_center().z * s)
+
+	_nitro_particles.visible = (bike_id != "cheval")
+	if bike_id == "cheval":
+		_nitro_particles.emitting = false
+		_tint_meshes(inst, Color(0.42, 0.24, 0.12))
+
 	_anim_player = _find_animation_player(inst)
 	if _anim_player:
 		var anims := _anim_player.get_animation_list()
@@ -112,6 +122,38 @@ func build_vehicle(bike_id: String) -> void:
 			if anim_res:
 				anim_res.loop_mode = Animation.LOOP_LINEAR
 			_anim_player.play(target_anim)
+
+
+func _tint_meshes(node: Node, col: Color) -> void:
+	if node is MeshInstance3D:
+		var mat := StandardMaterial3D.new()
+		mat.albedo_color = col
+		mat.roughness = 0.68
+		node.material_override = mat
+	for c in node.get_children():
+		_tint_meshes(c, col)
+
+
+func _compute_aabb(node: Node3D) -> AABB:
+	var result := AABB()
+	var first := true
+	var stack: Array[Node] = [node]
+	var xform_map: Dictionary = {node: Transform3D.IDENTITY}
+	while not stack.is_empty():
+		var cur: Node = stack.pop_back()
+		var cur_xf: Transform3D = xform_map.get(cur, Transform3D.IDENTITY)
+		if cur is MeshInstance3D and cur.mesh != null:
+			var transformed: AABB = cur_xf * cur.mesh.get_aabb()
+			if first:
+				result = transformed
+				first = false
+			else:
+				result = result.merge(transformed)
+		for ch in cur.get_children():
+			if ch is Node3D:
+				xform_map[ch] = cur_xf * ch.transform
+				stack.append(ch)
+	return result
 
 
 func _find_animation_player(node: Node) -> AnimationPlayer:
@@ -135,15 +177,33 @@ func reset_run() -> void:
 
 func trigger_jump(speed: float) -> void:
 	if jump_y <= 0.15:
-		jump_vy = clampf(9.5 + speed * 0.14, 10.5, 14.5)
+		jump_vy = clampf(5.5 + speed * 0.22, 6.5, 14.5)
+
+
+func is_heavy_rammer() -> bool:
+	return current_bike_id in ["tank", "rouleau"]
+
+
+func is_airborne_cruiser() -> bool:
+	return current_bike_id == "aero_jet"
+
+
+func get_steer_agility() -> float:
+	match current_bike_id:
+		"cheval": return 13.5
+		"dragster": return 9.0
+		"rouleau": return 7.5
+		"tank": return 8.5
+		_: return 11.2
 
 
 func update_vehicle(delta: float, speed: float, road_straight: bool) -> void:
 	if GameData.is_braking:
 		smoothed_steer = 0.0
 	else:
-		smoothed_steer = lerpf(smoothed_steer, steer_input, clampf(delta * 9.5, 0.0, 1.0))
-		x_offset = clampf(x_offset + smoothed_steer * 10.5 * delta, -MAX_OFFSET, MAX_OFFSET)
+		var agility := get_steer_agility()
+		smoothed_steer = lerpf(smoothed_steer, steer_input, clampf(delta * agility, 0.0, 1.0))
+		x_offset = clampf(x_offset + smoothed_steer * (agility * 0.95) * delta, -MAX_OFFSET, MAX_OFFSET)
 
 	z_pos += speed * delta
 	if jump_y > 0.0 or jump_vy > 0.0:
@@ -155,7 +215,7 @@ func update_vehicle(delta: float, speed: float, road_straight: bool) -> void:
 	var road_x := RoadCurve.get_road_center_x(z_pos, road_straight)
 	var road_ang := RoadCurve.get_road_angle(z_pos, road_straight)
 	var lift := RoadCurve.get_sidewalk_lift(absf(x_offset))
-	var hover_y := 1.4 if current_bike_id == "aero_jet" else lift
+	var hover_y := 2.3 if current_bike_id == "aero_jet" else (maxf(lift, 0.35) if current_bike_id == "hovercraft" else lift)
 
 	position = Vector3(road_x + x_offset, hover_y + jump_y, z_pos)
 	rotation.y = road_ang

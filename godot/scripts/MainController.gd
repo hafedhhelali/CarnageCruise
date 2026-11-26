@@ -112,6 +112,10 @@ func _on_ui_action(action: String, payload = null) -> void:
 				GameData.nitro_timer = 3.2
 				AudioMgr.play_sfx("thruster", 0.95, 1.1, 2.0)
 		"WEAPON":
+			if player.current_bike_id == "cheval":
+				player.trigger_jump(GameData.speed)
+				AudioMgr.play_sfx("click", 0.75, 0.9, 0.0)
+				return
 			AudioMgr.play_sfx("explosion", 0.9, 1.15, 0.0)
 			_trigger_shake(0.32)
 			_spawn_burst(player.position + Vector3(0.0, 0.4, 8.0))
@@ -193,7 +197,8 @@ func _process(delta: float) -> void:
 			GameData.combo = 1
 
 	var target_spd := 0.0 if GameData.is_braking else (GameData.max_speed * (1.38 if GameData.is_nitro_active else 1.0))
-	var accel_rate := 32.0 if GameData.is_braking else 14.0
+	var in_air := player.jump_y > 0.05
+	var accel_rate := (6.0 if in_air else 32.0) if GameData.is_braking else 14.0
 	GameData.speed = move_toward(GameData.speed, target_spd, accel_rate * dt)
 	GameData.distance = player.z_pos
 
@@ -212,9 +217,10 @@ func _process(delta: float) -> void:
 		if p["type"] == "ramp":
 			if dz < 2.3 and dx < 1.85:
 				p["hit"] = true
-				player.trigger_jump(GameData.speed)
-				var r_pts := GameData.add_score(350, false)
-				ui.show_floating_pts(r_pts)
+				if not GameData.is_braking and GameData.speed >= 8.0:
+					player.trigger_jump(GameData.speed)
+					var r_pts := GameData.add_score(350, false)
+					ui.show_floating_pts(r_pts)
 		elif dz < 2.2 and dx < 1.8 and player.jump_y < 1.5:
 			p["hit"] = true
 			p["vx"] = (1.0 if n.global_position.x >= player.position.x else -1.0) * 9.0
@@ -227,12 +233,19 @@ func _process(delta: float) -> void:
 			ui.show_floating_pts(pts)
 
 	# Traffic & Pedestrians
-	traffic.update_traffic(dt, player.position, GameData.speed, world.road_straight, func(pos: Vector3):
-		AudioMgr.play_sfx("crash", 0.88, 1.1, 1.5)
-		_trigger_shake(0.35)
-		_spawn_burst(pos)
-		var pts := GameData.add_score(320, true)
-		ui.show_floating_pts(pts)
+	var can_ram := player.is_heavy_rammer() or (GameData.is_nitro_active and player.current_bike_id != "cheval")
+	traffic.update_traffic(dt, player.position, GameData.speed, world.road_straight, can_ram, func(pos: Vector3, rammed: bool):
+		if rammed:
+			AudioMgr.play_sfx("crash", 0.88, 1.1, 1.5)
+			_trigger_shake(0.35)
+			_spawn_burst(pos)
+			var pts := GameData.add_score(320, true)
+			ui.show_floating_pts(pts)
+		else:
+			AudioMgr.play_sfx("crash", 1.1, 1.25, -3.0)
+			_trigger_shake(0.28)
+			GameData.speed = maxf(4.0, GameData.speed * 0.45)
+			player.x_offset = clampf(player.x_offset + pos.x * 1.45, -PlayerVehicle.MAX_OFFSET, PlayerVehicle.MAX_OFFSET)
 	)
 
 	peds.update_peds(dt, player.position, GameData.speed, world.road_straight, func(pos: Vector3):

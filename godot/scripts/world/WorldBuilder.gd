@@ -75,8 +75,8 @@ func _init_materials() -> void:
 	_curb_mat.roughness = 0.75
 
 	_stripe_mat = StandardMaterial3D.new()
-	_stripe_mat.albedo_color = Color(0.95, 0.96, 0.98)
-	_stripe_mat.roughness = 0.7
+	_stripe_mat.albedo_color = Color(0.84, 0.85, 0.88)
+	_stripe_mat.roughness = 0.75
 
 
 func _apply_atmosphere(city_def: Dictionary) -> void:
@@ -85,8 +85,6 @@ func _apply_atmosphere(city_def: Dictionary) -> void:
 		preset = "DUSK"
 	elif GameData.challenge_mode == "EXTREME_STORM":
 		preset = "STORM"
-	elif (randi() % 4) == 0:
-		preset = "NIGHT"
 
 	var env := _world_env.environment
 	var sky_mat := env.sky.sky_material as PanoramaSkyMaterial
@@ -94,16 +92,11 @@ func _apply_atmosphere(city_def: Dictionary) -> void:
 	if preset == "DUSK":
 		hdr = "res://assets/hdr/venice_sunset_1k.hdr"
 		env.fog_light_color = Color(0.88, 0.56, 0.42)
-		_sun_light.light_color = Color(1.0, 0.74, 0.48)
-		_sun_light.light_energy = 1.15
-	elif preset == "NIGHT":
-		hdr = "res://assets/hdr/moonless_golf_1k.hdr"
-		env.fog_light_color = Color(0.08, 0.11, 0.2)
-		_sun_light.light_color = Color(0.65, 0.78, 1.0)
-		_sun_light.light_energy = 0.65
+		_sun_light.light_color = Color(1.0, 0.78, 0.55)
+		_sun_light.light_energy = 1.25
 	elif preset == "STORM":
-		env.fog_light_color = Color(0.42, 0.48, 0.55)
-		_sun_light.light_energy = 0.75
+		env.fog_light_color = Color(0.48, 0.54, 0.62)
+		_sun_light.light_energy = 0.95
 		_road_mat.roughness = 0.22
 	else:
 		env.fog_light_color = Color(0.75, 0.84, 0.94)
@@ -123,8 +116,8 @@ func setup_city(city_def: Dictionary, finish_dist: float, chal_mode: String) -> 
 	current_biome = GameData.get_city_biome(city_def)
 	_apply_atmosphere(city_def)
 
-	for i in range(TOTAL_CHUNKS):
-		var c := _build_chunk(float(i) * CHUNK_LENGTH, i)
+	for i in range(-1, TOTAL_CHUNKS):
+		var c := _build_chunk(float(i) * CHUNK_LENGTH, maxi(0, i))
 		chunks.append(c)
 		add_child(c)
 
@@ -159,12 +152,16 @@ func _instantiate_normalized(key: String, target_size: Vector3, rot_y: float = 0
 	if ps == null:
 		return null
 	var root := Node3D.new()
+	var pivot := Node3D.new()
 	var inst := ps.instantiate() as Node3D
 	if inst == null:
+		pivot.queue_free()
+		root.queue_free()
 		return null
 	inst.rotation.y = rot_y
-	root.add_child(inst)
-	var aabb := _compute_aabb(inst)
+	pivot.add_child(inst)
+	root.add_child(pivot)
+	var aabb := _compute_aabb(pivot)
 	if aabb.size.y > 0.001:
 		var sx := target_size.x / maxf(aabb.size.x, 0.01)
 		var sy := target_size.y / maxf(aabb.size.y, 0.01)
@@ -172,9 +169,8 @@ func _instantiate_normalized(key: String, target_size: Vector3, rot_y: float = 0
 		if target_size.x <= 0.0:
 			sx = sy
 			sz = sy
-		inst.scale = Vector3(sx, sy, sz)
-		var aabb2 := _compute_aabb(inst)
-		inst.position = Vector3(-aabb2.get_center().x, -aabb2.position.y, -aabb2.get_center().z)
+		pivot.scale = Vector3(sx, sy, sz)
+		pivot.position = Vector3(-aabb.get_center().x * sx, -aabb.position.y * sy, -aabb.get_center().z * sz)
 	return root
 
 
@@ -218,11 +214,11 @@ func _build_ribbon_mesh(z_start: float, width: float, x_offset: float, y_base: f
 		var v11 := Vector3(cx1 + hw, y_base + height, z1)
 		st.set_normal(Vector3.UP)
 		st.add_vertex(v00)
-		st.add_vertex(v01)
-		st.add_vertex(v10)
 		st.add_vertex(v10)
 		st.add_vertex(v01)
+		st.add_vertex(v10)
 		st.add_vertex(v11)
+		st.add_vertex(v01)
 	var mi := MeshInstance3D.new()
 	mi.mesh = st.commit()
 	mi.material_override = mat
@@ -247,7 +243,7 @@ func _build_chunk(z_start: float, chunk_idx: int) -> Node3D:
 		var ang := RoadCurve.get_road_angle(wz, road_straight)
 		var stripe := MeshInstance3D.new()
 		var box := BoxMesh.new()
-		box.size = Vector3(0.2, 0.02, 3.8)
+		box.size = Vector3(0.14, 0.015, 2.6)
 		stripe.mesh = box
 		stripe.material_override = _stripe_mat
 		stripe.position = Vector3(rx, 0.015, lz)

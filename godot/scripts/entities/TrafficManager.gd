@@ -49,7 +49,7 @@ func reset_traffic() -> void:
 		v["node"].visible = false
 
 
-func update_traffic(delta: float, player_pos: Vector3, player_speed: float, road_straight: bool, on_hit: Callable) -> void:
+func update_traffic(delta: float, player_pos: Vector3, player_speed: float, road_straight: bool, can_ram: bool, on_hit: Callable) -> void:
 	for i in range(vehicles.size()):
 		var v := vehicles[i]
 		var n: Node3D = v["node"]
@@ -82,8 +82,13 @@ func update_traffic(delta: float, player_pos: Vector3, player_speed: float, road
 		var dz := absf(n.position.z - player_pos.z)
 		var dx := absf(n.position.x - player_pos.x)
 		if dz < 2.8 and dx < 1.85 and player_pos.y < 1.8:
-			v["crashed"] = true
-			v["vx"] = (1.0 if n.position.x >= player_pos.x else -1.0) * 11.0
-			v["vy"] = 12.0
-			v["vz"] = maxf(10.0, player_speed * 0.7)
-			on_hit.call(n.position)
+			if can_ram:
+				v["crashed"] = true
+				v["vx"] = (1.0 if n.position.x >= player_pos.x else -1.0) * 11.0
+				v["vy"] = 12.0
+				v["vz"] = maxf(10.0, player_speed * 0.7)
+				on_hit.call(n.position, true)
+			else:
+				# Light vehicle or horse: car stays intact, player bounces sideways & slows down
+				var push_dir := -1.0 if player_pos.x < n.position.x else 1.0
+				on_hit.call(Vector3(push_dir, 0.0, n.position.z), false)

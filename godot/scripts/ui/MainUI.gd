@@ -32,19 +32,23 @@ func _make_btn(text: String, bg: Color, min_h: int = 52) -> Button:
 	var btn := Button.new()
 	btn.text = text
 	btn.custom_minimum_size = Vector2(0, min_h)
-	btn.add_theme_font_size_override("font_size", 18)
+	btn.add_theme_font_size_override("font_size", 16)
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = bg
-	sb.corner_radius_top_left = 14
-	sb.corner_radius_top_right = 14
-	sb.corner_radius_bottom_left = 14
-	sb.corner_radius_bottom_right = 14
-	sb.border_width_left = 2
-	sb.border_width_top = 2
-	sb.border_width_right = 2
-	sb.border_width_bottom = 2
-	sb.border_color = bg.lightened(0.35)
+	sb.set_corner_radius_all(18)
+	sb.set_border_width_all(2)
+	sb.border_color = bg.lightened(0.42)
+	sb.shadow_color = Color(0, 0, 0, 0.35)
+	sb.shadow_size = 4
+	sb.shadow_offset = Vector2(0, 2)
+	var sb_hover := sb.duplicate()
+	sb_hover.bg_color = bg.lightened(0.12)
+	var sb_press := sb.duplicate()
+	sb_press.bg_color = bg.darkened(0.18)
+	sb_press.shadow_size = 1
 	btn.add_theme_stylebox_override("normal", sb)
+	btn.add_theme_stylebox_override("hover", sb_hover)
+	btn.add_theme_stylebox_override("pressed", sb_press)
 	btn.pressed.connect(func(): AudioMgr.play_sfx("click"))
 	return btn
 
@@ -151,16 +155,20 @@ func show_map() -> void:
 	vbox.add_theme_constant_override("separation", 10)
 	_screen_root.add_child(vbox)
 
+	var hdr_panel := _make_panel(Color(0.06, 0.09, 0.16, 0.92))
 	var hdr := HBoxContainer.new()
 	var back := _make_btn("RETOUR", Color(0.25, 0.3, 0.4), 44)
 	back.custom_minimum_size.x = 110
 	back.pressed.connect(func(): action_triggered.emit("TO_SPLASH", null))
 	var ttl := Label.new()
 	ttl.text = "  CARTE DU MONDE (%d VILLES)" % GameData.cities.size()
-	ttl.add_theme_font_size_override("font_size", 20)
+	ttl.add_theme_font_size_override("font_size", 18)
+	ttl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	ttl.clip_text = true
 	hdr.add_child(back)
 	hdr.add_child(ttl)
-	vbox.add_child(hdr)
+	hdr_panel.add_child(hdr)
+	vbox.add_child(hdr_panel)
 
 	var filter_row := HBoxContainer.new()
 	filter_row.add_theme_constant_override("separation", 6)
@@ -208,16 +216,20 @@ func show_garage() -> void:
 	vbox.add_theme_constant_override("separation", 10)
 	_screen_root.add_child(vbox)
 
+	var hdr_panel := _make_panel(Color(0.06, 0.09, 0.16, 0.92))
 	var hdr := HBoxContainer.new()
 	var back := _make_btn("RETOUR", Color(0.25, 0.3, 0.4), 44)
 	back.custom_minimum_size.x = 110
 	back.pressed.connect(func(): action_triggered.emit("TO_SPLASH", null))
 	var ttl := Label.new()
 	ttl.text = "  GARAGE & ARSENAL (8 ENGINS)"
-	ttl.add_theme_font_size_override("font_size", 20)
+	ttl.add_theme_font_size_override("font_size", 18)
+	ttl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	ttl.clip_text = true
 	hdr.add_child(back)
 	hdr.add_child(ttl)
-	vbox.add_child(hdr)
+	hdr_panel.add_child(hdr)
+	vbox.add_child(hdr_panel)
 
 	var spacer := Control.new()
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -326,33 +338,36 @@ func show_hud() -> void:
 		steer_row.add_child(rbtn)
 		root.add_child(steer_row)
 
-	# Bottom Controls
+	# Bottom Ergonomic Thumb Zones (ample spacing, clear center road view)
 	var bot := HBoxContainer.new()
 	bot.set_anchors_preset(PRESET_BOTTOM_WIDE)
-	bot.offset_left = 14
-	bot.offset_right = -14
-	bot.offset_top = -112
+	bot.offset_left = 16
+	bot.offset_right = -16
+	bot.offset_top = -104
 	bot.offset_bottom = -18
-	bot.add_theme_constant_override("separation", 10)
+	bot.add_theme_constant_override("separation", 12)
+	bot.alignment = BoxContainer.ALIGNMENT_CENTER
 	root.add_child(bot)
 
-	var brake := _make_btn("FREIN", Color(0.75, 0.14, 0.22), 78)
-	brake.custom_minimum_size.x = 110
+	var brake := _make_btn("FREIN", Color(0.76, 0.14, 0.24, 0.92), 66)
+	brake.custom_minimum_size = Vector2(92, 66)
 	brake.button_down.connect(func(): action_triggered.emit("BRAKE", true))
 	brake.button_up.connect(func(): action_triggered.emit("BRAKE", false))
 	bot.add_child(brake)
 
-	var mid := _make_panel()
+	var mid := _make_panel(Color(0.05, 0.08, 0.14, 0.72))
 	mid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var mv := VBoxContainer.new()
+	mv.alignment = BoxContainer.ALIGNMENT_CENTER
 	_hud_speed = Label.new()
 	_hud_speed.text = "0 KM/H"
 	_hud_speed.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_hud_speed.add_theme_font_size_override("font_size", 22)
+	_hud_speed.add_theme_font_size_override("font_size", 20)
 	_hud_kills = Label.new()
-	_hud_kills.text = "VICTIMES: 0"
+	_hud_kills.text = "0 VICTIMES"
 	_hud_kills.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_hud_kills.modulate = Color(1.0, 0.45, 0.5)
+	_hud_kills.add_theme_font_size_override("font_size", 13)
+	_hud_kills.modulate = Color(1.0, 0.52, 0.56)
 	mv.add_child(_hud_speed)
 	mv.add_child(_hud_kills)
 	mid.add_child(mv)
@@ -362,14 +377,30 @@ func show_hud() -> void:
 	right_col.add_theme_constant_override("separation", 6)
 	_hud_nitro_bar = ProgressBar.new()
 	_hud_nitro_bar.max_value = 100.0
-	_hud_nitro_bar.custom_minimum_size = Vector2(128, 12)
-	var nitro_btn := _make_btn("NITRO", Color(0.06, 0.58, 0.78), 38)
-	nitro_btn.pressed.connect(func(): action_triggered.emit("NITRO", null))
-	var wpn_btn := _make_btn("TIRER", Color(0.88, 0.32, 0.14), 38)
-	wpn_btn.pressed.connect(func(): action_triggered.emit("WEAPON", null))
+	_hud_nitro_bar.show_percentage = false
+	_hud_nitro_bar.custom_minimum_size = Vector2(196, 10)
+	var bar_bg := StyleBoxFlat.new()
+	bar_bg.bg_color = Color(0.08, 0.12, 0.2, 0.85)
+	bar_bg.set_corner_radius_all(5)
+	var bar_fill := StyleBoxFlat.new()
+	bar_fill.bg_color = Color(0.12, 0.88, 1.0)
+	bar_fill.set_corner_radius_all(5)
+	_hud_nitro_bar.add_theme_stylebox_override("background", bar_bg)
+	_hud_nitro_bar.add_theme_stylebox_override("fill", bar_fill)
 	right_col.add_child(_hud_nitro_bar)
-	right_col.add_child(nitro_btn)
-	right_col.add_child(wpn_btn)
+
+	var action_row := HBoxContainer.new()
+	action_row.add_theme_constant_override("separation", 10)
+	var is_horse := str(GameData.selected_bike.get("id", "")) == "cheval"
+	var nitro_btn := _make_btn("GALOP" if is_horse else "NITRO", Color(0.06, 0.56, 0.82, 0.94), 52)
+	nitro_btn.custom_minimum_size = Vector2(93, 52)
+	nitro_btn.pressed.connect(func(): action_triggered.emit("NITRO", null))
+	var wpn_btn := _make_btn("SAUTER" if is_horse else "TIRER", Color(0.9, 0.34, 0.12, 0.94), 52)
+	wpn_btn.custom_minimum_size = Vector2(93, 52)
+	wpn_btn.pressed.connect(func(): action_triggered.emit("WEAPON", null))
+	action_row.add_child(nitro_btn)
+	action_row.add_child(wpn_btn)
+	right_col.add_child(action_row)
 	bot.add_child(right_col)
 
 
@@ -397,14 +428,24 @@ func show_floating_pts(pts: int) -> void:
 	tw.tween_property(_hud_float_lbl, "modulate:a", 0.0, 0.65)
 
 
+func _make_modal_overlay() -> Control:
+	var bg := ColorRect.new()
+	bg.set_anchors_preset(PRESET_FULL_RECT)
+	bg.color = Color(0.0, 0.0, 0.0, 0.58)
+	bg.mouse_filter = Control.MOUSE_FILTER_STOP
+	_screen_root.add_child(bg)
+	var cc := CenterContainer.new()
+	cc.set_anchors_preset(PRESET_FULL_RECT)
+	cc.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bg.add_child(cc)
+	return cc
+
+
 func show_pause_modal() -> void:
+	var cc := _make_modal_overlay()
+	var overlay := cc.get_parent()
 	var modal := _make_panel(Color(0.05, 0.08, 0.14, 0.96))
-	modal.set_anchors_preset(PRESET_CENTER)
-	modal.custom_minimum_size = Vector2(360, 320)
-	modal.offset_left = -180
-	modal.offset_right = 180
-	modal.offset_top = -160
-	modal.offset_bottom = 160
+	modal.custom_minimum_size = Vector2(360, 0)
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 12)
 	var t := Label.new()
@@ -415,33 +456,31 @@ func show_pause_modal() -> void:
 
 	var res := _make_btn("REPRENDRE", Color(0.08, 0.65, 0.42), 52)
 	res.pressed.connect(func():
-		modal.queue_free()
+		overlay.queue_free()
 		action_triggered.emit("RESUME", null)
 	)
 	var rst := _make_btn("RECOMMENCER", Color(0.85, 0.45, 0.12), 48)
 	rst.pressed.connect(func():
-		modal.queue_free()
+		overlay.queue_free()
 		action_triggered.emit("PLAY_CITY", GameData.challenge_mode)
 	)
 	var mp := _make_btn("RETOUR CARTE", Color(0.22, 0.28, 0.42), 48)
 	mp.pressed.connect(func():
-		modal.queue_free()
+		overlay.queue_free()
 		action_triggered.emit("TO_MAP", null)
 	)
 	v.add_child(res)
 	v.add_child(rst)
 	v.add_child(mp)
 	modal.add_child(v)
-	_screen_root.add_child(modal)
+	cc.add_child(modal)
 
 
 func show_results_modal(summary: Dictionary) -> void:
+	var cc := _make_modal_overlay()
+	var overlay := cc.get_parent()
 	var modal := _make_panel(Color(0.05, 0.08, 0.14, 0.96))
-	modal.set_anchors_preset(PRESET_CENTER)
-	modal.offset_left = -190
-	modal.offset_right = 190
-	modal.offset_top = -180
-	modal.offset_bottom = 180
+	modal.custom_minimum_size = Vector2(380, 0)
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 12)
 	var t := Label.new()
@@ -458,27 +497,25 @@ func show_results_modal(summary: Dictionary) -> void:
 
 	var replay := _make_btn("REJOUER", Color(0.1, 0.64, 0.44), 50)
 	replay.pressed.connect(func():
-		modal.queue_free()
+		overlay.queue_free()
 		action_triggered.emit("PLAY_CITY", GameData.challenge_mode)
 	)
 	var to_map := _make_btn("CARTE DU MONDE", Color(0.12, 0.45, 0.78), 50)
 	to_map.pressed.connect(func():
-		modal.queue_free()
+		overlay.queue_free()
 		action_triggered.emit("TO_MAP", null)
 	)
 	v.add_child(replay)
 	v.add_child(to_map)
 	modal.add_child(v)
-	_screen_root.add_child(modal)
+	cc.add_child(modal)
 
 
 func show_options_modal() -> void:
+	var cc := _make_modal_overlay()
+	var overlay := cc.get_parent()
 	var modal := _make_panel(Color(0.05, 0.08, 0.14, 0.96))
-	modal.set_anchors_preset(PRESET_CENTER)
-	modal.offset_left = -190
-	modal.offset_right = 190
-	modal.offset_top = -190
-	modal.offset_bottom = 190
+	modal.custom_minimum_size = Vector2(380, 0)
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 10)
 	var t := Label.new()
@@ -509,10 +546,10 @@ func show_options_modal() -> void:
 		ctrl_btn.text = "CONTRÔLES : %s" % ("BOUTONS" if s["control_mode"] == "buttons" else "GLISSER")
 	)
 	var close := _make_btn("FERMER", Color(0.24, 0.28, 0.36), 46)
-	close.pressed.connect(func(): modal.queue_free())
+	close.pressed.connect(func(): overlay.queue_free())
 	v.add_child(m_btn)
 	v.add_child(fx_btn)
 	v.add_child(ctrl_btn)
 	v.add_child(close)
 	modal.add_child(v)
-	_screen_root.add_child(modal)
+	cc.add_child(modal)

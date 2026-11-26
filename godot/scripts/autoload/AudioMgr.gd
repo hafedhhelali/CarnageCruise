@@ -126,3 +126,17 @@ func update_engine(speed_ratio: float, active: bool) -> void:
 		_engine_player.play()
 	_engine_player.pitch_scale = clampf(0.62 + speed_ratio * 0.72, 0.55, 1.45)
 	_engine_player.volume_db = lerpf(-22.0, -10.0, clampf(speed_ratio, 0.0, 1.0))
+
+
+func _exit_tree() -> void:
+	if is_instance_valid(_music_player):
+		_music_player.stop()
+		_music_player.stream = null
+	if is_instance_valid(_engine_player):
+		_engine_player.stop()
+		_engine_player.stream = null
+	for p in _sfx_pool:
+		if is_instance_valid(p):
+			p.stop()
+			p.stream = null
+	_sfx_cache.clear()
