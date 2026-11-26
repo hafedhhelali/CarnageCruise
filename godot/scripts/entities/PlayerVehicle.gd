@@ -146,7 +146,7 @@ func build_vehicle(bike_id: String) -> void:
 		_apply_distinct_vehicle_colors(inst, bike_id)
 		if not (bike_id in ["tank", "aero_jet"]):
 			_attach_weapon_mount(pivot, aabb, pivot.scale.x)
-		if _wheel_nodes.is_empty() and bike_id in ["rad_rover", "tank", "rouleau"]:
+		if _wheel_nodes.is_empty() and bike_id == "rad_rover":
 			_attach_visible_side_wheels(pivot, aabb, pivot.scale.x)
 
 	_wheel_nodes.clear()
