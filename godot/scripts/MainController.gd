@@ -226,9 +226,9 @@ func _on_ui_action(action: String, payload = null) -> void:
 		"WEAPON":
 			if player.current_bike_id == "cheval":
 				player.trigger_jump(GameData.speed)
-				AudioMgr.play_sfx("click", 0.75, 0.9, 0.0)
+				AudioMgr.play_sfx("hoof_jump", 0.9, 1.1, -4.0)
 				return
-			AudioMgr.play_sfx("explosion", 1.15, 1.35, -3.0)
+			AudioMgr.play_sfx("rocket", 0.95, 1.15, -4.0)
 			_trigger_shake(0.18)
 			_spawn_projectile()
 		"BRAKE":
@@ -316,7 +316,7 @@ func _process(delta: float) -> void:
 	GameData.distance = player.z_pos
 
 	player.update_vehicle(dt, GameData.speed, world.road_straight)
-	AudioMgr.update_engine(GameData.speed / maxf(1.0, GameData.max_speed), true)
+	AudioMgr.update_engine(GameData.speed / maxf(1.0, GameData.max_speed), true, player.current_bike_id)
 
 	world.update_chunks(player.z_pos, dt)
 
@@ -342,8 +342,7 @@ func _process(delta: float) -> void:
 						ui.show_floating_pts(r_pts)
 		elif dz < 2.2 and dx < 1.8 and player.jump_y < 1.5:
 			if player.current_bike_id == "cheval" and p["type"] in ["tree", "lamp"]:
-				# Horse cannot smash steel lampposts or trees: bounce sideways & slow down
-				AudioMgr.play_sfx("crash", 1.1, 1.25, -4.0)
+				AudioMgr.play_sfx("bounce_light", 1.0, 1.15, -4.0)
 				_trigger_shake(0.2)
 				GameData.speed = maxf(4.0, GameData.speed * 0.5)
 				var push := -1.0 if player.position.x < n.global_position.x else 1.0
@@ -353,7 +352,8 @@ func _process(delta: float) -> void:
 			p["vx"] = (1.0 if n.global_position.x >= player.position.x else -1.0) * 9.0
 			p["vy"] = 10.0
 			p["vz"] = maxf(8.0, GameData.speed * 0.6)
-			AudioMgr.play_sfx("smash" if p["type"] in ["stall", "crate"] else "crash", 0.88, 1.15, 0.0)
+			var sfx_key := "wood_smash" if p["type"] in ["stall", "crate"] else "metal_pole"
+			AudioMgr.play_sfx(sfx_key, 0.9, 1.12, -2.0)
 			_trigger_shake(0.28 if p["type"] == "stall" else 0.18)
 			_spawn_burst(n.global_position)
 			_spawn_debris(n.global_position, 4 if p["type"] in ["stall", "crate"] else 2)
@@ -361,24 +361,47 @@ func _process(delta: float) -> void:
 			var pts := GameData.add_score(base_p, false)
 			ui.show_floating_pts(pts)
 
-	# Traffic & Pedestrians
-	var can_ram := player.is_heavy_rammer() or (GameData.is_nitro_active and player.current_bike_id != "cheval")
-	traffic.update_traffic(dt, player.position, GameData.speed, world.road_straight, can_ram, func(pos: Vector3, rammed: bool):
-		if rammed:
-			AudioMgr.play_sfx("crash", 0.88, 1.1, 1.5)
-			_trigger_shake(0.35)
+	# Traffic & Pedestrians (reaction depends strictly on selected vehicle!)
+	var col_mode := "LIGHT_BOUNCE"
+	if player.is_heavy_rammer():
+		col_mode = "HEAVY_RAM"
+	elif player.current_bike_id == "cheval":
+		col_mode = "HORSE_DODGE"
+	elif GameData.is_nitro_active:
+		col_mode = "NITRO_RAM"
+	traffic.update_traffic(dt, player.position, GameData.speed, world.road_straight, col_mode, func(pos: Vector3, mode: String):
+		if mode == "HEAVY_RAM":
+			AudioMgr.play_sfx("ram_heavy", 0.9, 1.08, 0.0)
+			_trigger_shake(0.38)
 			_spawn_burst(pos)
-			var pts := GameData.add_score(320, true)
+			_spawn_debris(pos, 5)
+			GameData.speed = maxf(10.0, GameData.speed * 0.92)
+			var pts := GameData.add_score(350, true)
 			ui.show_floating_pts(pts)
+		elif mode == "NITRO_RAM":
+			AudioMgr.play_sfx("explosion", 0.92, 1.12, -2.0)
+			_trigger_shake(0.32)
+			_spawn_burst(pos)
+			_spawn_debris(pos, 4)
+			GameData.speed = maxf(12.0, GameData.speed * 0.78)
+			var pts := GameData.add_score(280, true)
+			ui.show_floating_pts(pts)
+		elif mode == "LIGHT_BOUNCE":
+			AudioMgr.play_sfx("bounce_light", 0.95, 1.15, -2.0)
+			_trigger_shake(0.30)
+			_spawn_debris(player.position, 2)
+			GameData.speed = maxf(4.0, GameData.speed * 0.42)
+			player.x_offset = clampf(player.x_offset + pos.x * 1.55, -PlayerVehicle.MAX_OFFSET, PlayerVehicle.MAX_OFFSET)
 		else:
-			AudioMgr.play_sfx("crash", 1.1, 1.25, -3.0)
-			_trigger_shake(0.28)
-			GameData.speed = maxf(4.0, GameData.speed * 0.45)
-			player.x_offset = clampf(player.x_offset + pos.x * 1.45, -PlayerVehicle.MAX_OFFSET, PlayerVehicle.MAX_OFFSET)
+			# HORSE_DODGE: car untouched, horse recoils sideways with slight hop
+			AudioMgr.play_sfx("hoof_jump", 0.85, 1.0, -3.0)
+			_trigger_shake(0.22)
+			GameData.speed = maxf(3.5, GameData.speed * 0.45)
+			player.x_offset = clampf(player.x_offset + pos.x * 1.65, -PlayerVehicle.MAX_OFFSET, PlayerVehicle.MAX_OFFSET)
 	)
 
 	peds.update_peds(dt, player.position, GameData.speed, world.road_straight, func(pos: Vector3):
-		AudioMgr.play_sfx("coin", 0.95, 1.2, -2.0)
+		AudioMgr.play_sfx("ped_hit", 0.92, 1.12, -4.0)
 		_trigger_shake(0.16)
 		_spawn_burst(pos)
 		var pts := GameData.add_score(150, true)

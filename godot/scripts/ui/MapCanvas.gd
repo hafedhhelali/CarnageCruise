@@ -25,13 +25,17 @@ var _drag_moved: float = 0.0
 var _last_click_id: String = ""
 var _last_click_time: float = 0.0
 var _geo_countries: Array = []
+var _map_tex: Texture2D = null
 
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	clip_contents = true
 	set_process(true)
-	_load_geo()
+	if ResourceLoader.exists("res://assets/map/real_map.jpg"):
+		_map_tex = load("res://assets/map/real_map.jpg")
+	else:
+		_load_geo()
 
 
 func _load_geo() -> void:
@@ -157,25 +161,23 @@ func _draw() -> void:
 		var q1 := _world_to_screen(Vector2(1.0, float(j) * 0.1))
 		draw_line(q0, q1, grid_col, 1.0)
 
-	# Real Natural Earth 50m country polygons & borders
-	var land_col := Color(0.16, 0.32, 0.25, 0.96)
-	var land_border := Color(0.36, 0.72, 0.60, 0.72)
-	for country in _geo_countries:
-		for ring in country.get("polys", []):
-			var pts_arr := PackedVector2Array()
-			for pt in ring:
-				pts_arr.append(_world_to_screen(Vector2(float(pt[0]) / 100.0, float(pt[1]) / 100.0)))
-			if pts_arr.size() >= 3:
-				if Geometry2D.triangulate_polygon(pts_arr).size() >= 3:
-					draw_colored_polygon(pts_arr, land_col)
-				var closed := PackedVector2Array(pts_arr)
-				closed.append(pts_arr[0])
-				draw_polyline(closed, land_border, 1.2, true)
-
-	# Sea labels
-	var sea_font := ThemeDB.fallback_font
-	draw_string(sea_font, _world_to_screen(Vector2(0.56, 0.78)), "MER MÉDITERRANÉE", HORIZONTAL_ALIGNMENT_CENTER, -1, 11, Color(0.45, 0.72, 0.92, 0.55))
-	draw_string(sea_font, _world_to_screen(Vector2(0.15, 0.48)), "OCÉAN ATLANTIQUE", HORIZONTAL_ALIGNMENT_CENTER, -1, 11, Color(0.45, 0.72, 0.92, 0.55))
+	# Real National Geographic projected map texture (with vector fallback)
+	if _map_tex != null:
+		draw_texture_rect(_map_tex, Rect2(_pan, size * _zoom), false)
+	else:
+		var land_col := Color(0.16, 0.32, 0.25, 0.96)
+		var land_border := Color(0.36, 0.72, 0.60, 0.72)
+		for country in _geo_countries:
+			for ring in country.get("polys", []):
+				var pts_arr := PackedVector2Array()
+				for pt in ring:
+					pts_arr.append(_world_to_screen(Vector2(float(pt[0]) / 100.0, float(pt[1]) / 100.0)))
+				if pts_arr.size() >= 3:
+					if Geometry2D.triangulate_polygon(pts_arr).size() >= 3:
+						draw_colored_polygon(pts_arr, land_col)
+					var closed := PackedVector2Array(pts_arr)
+					closed.append(pts_arr[0])
+					draw_polyline(closed, land_border, 1.2, true)
 
 	# Tour route polyline
 	var route_pts := PackedVector2Array()

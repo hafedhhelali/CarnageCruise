@@ -40,6 +40,11 @@ func _load_shared_clips() -> void:
 				for name in ap.get_animation_list():
 					if name.ends_with("Walk") or name.ends_with("Run"):
 						var clip: Animation = ap.get_animation(name).duplicate()
+						# Remove position/scale tracks so cross-skeleton retargeting never stretches limbs!
+						for ti in range(clip.get_track_count() - 1, -1, -1):
+							var ttype := clip.track_get_type(ti)
+							if ttype == Animation.TYPE_POSITION_3D or ttype == Animation.TYPE_SCALE_3D:
+								clip.remove_track(ti)
 						clip.resource_name = "Run" if name.ends_with("Run") else "Walk"
 						clip.loop_mode = Animation.LOOP_LINEAR
 						_anim_clips.append(clip)
@@ -132,29 +137,29 @@ func update_peds(delta: float, player_pos: Vector3, player_speed: float, road_st
 
 		var dz := n.position.z - player_pos.z
 		var dx := absf(n.position.x - player_pos.x)
-		var should_flee := player_speed > 3.5 and dz > 0.0 and dz < 22.0 and dx < 4.2
+		var should_flee := player_speed > 3.5 and dz > 0.0 and dz < 26.0 and dx < 4.8
 		if should_flee and not p["fleeing"]:
 			p["fleeing"] = true
-			p["vy"] = 4.2
 			if ap and ap.has_animation("Run"):
 				ap.play("Run")
-				ap.speed_scale = 1.45
+				ap.speed_scale = 1.35
 
 		if p["fleeing"]:
-			var sprint_speed := 7.2
-			if n.position.y > 0.25 or float(p["vy"]) > 0.0:
-				p["vy"] = float(p["vy"]) - 18.0 * delta
-				n.position.y = maxf(0.25, n.position.y + float(p["vy"]) * delta)
+			var sprint_speed := 6.2
 			var rx := RoadCurve.get_road_center_x(n.position.z, road_straight)
 			var away_x := 1.0 if n.position.x >= player_pos.x else -1.0
 			var dx_from_center := n.position.x - rx
-			if absf(dx_from_center) < 7.8:
-				n.position.x = clampf(n.position.x + away_x * sprint_speed * delta, rx - 7.9, rx + 7.9)
-				n.rotation.y = PI * 0.5 * away_x
+			if absf(dx_from_center) < 7.6:
+				# Diagonal flee away from vehicle toward sidewalk safety
+				var vx := away_x * sprint_speed * 0.85
+				var vz := sprint_speed * 0.52
+				n.position.x = clampf(n.position.x + vx * delta, rx - 7.7, rx + 7.7)
+				n.position.z += vz * delta
+				n.rotation.y = lerp_angle(n.rotation.y, atan2(vx, vz), clampf(delta * 12.0, 0.0, 1.0))
 			else:
-				# Reached building wall edge: sprint forward away from the vehicle!
+				# Safe along building edge: run forward along sidewalk smoothly
 				n.position.z += sprint_speed * delta
-				n.rotation.y = 0.0
+				n.rotation.y = lerp_angle(n.rotation.y, 0.0, clampf(delta * 10.0, 0.0, 1.0))
 		else:
 			n.position.z += float(p["walk_dir"]) * 1.4 * delta
 			n.rotation.y = 0.0 if float(p["walk_dir"]) > 0.0 else PI

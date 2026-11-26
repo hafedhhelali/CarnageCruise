@@ -113,7 +113,8 @@ func reset_traffic() -> void:
 		v["node"].visible = false
 
 
-func update_traffic(delta: float, player_pos: Vector3, player_speed: float, road_straight: bool, can_ram: bool, on_hit: Callable) -> void:
+func update_traffic(delta: float, player_pos: Vector3, player_speed: float, road_straight: bool, collision_mode: String, on_hit: Callable) -> void:
+	# collision_mode: "HEAVY_RAM" (tank/rouleau), "NITRO_RAM" (light+nitro), "LIGHT_BOUNCE" (light normal), "HORSE_DODGE" (cheval)
 	for i in range(vehicles.size()):
 		var v := vehicles[i]
 		var n: Node3D = v["node"]
@@ -150,13 +151,23 @@ func update_traffic(delta: float, player_pos: Vector3, player_speed: float, road
 		var dz := absf(n.position.z - player_pos.z)
 		var dx := absf(n.position.x - player_pos.x)
 		if dz < 2.8 and dx < 1.85 and player_pos.y < 1.8:
-			if can_ram:
+			var push_dir := -1.0 if player_pos.x < n.position.x else 1.0
+			if collision_mode == "HEAVY_RAM":
 				v["crashed"] = true
-				v["vx"] = (1.0 if n.position.x >= player_pos.x else -1.0) * 11.0
-				v["vy"] = 12.0
-				v["vz"] = maxf(10.0, player_speed * 0.7)
-				on_hit.call(n.position, true)
+				v["vx"] = -push_dir * 12.0
+				v["vy"] = 13.5
+				v["vz"] = maxf(12.0, player_speed * 0.75)
+				on_hit.call(n.position, "HEAVY_RAM")
+			elif collision_mode == "NITRO_RAM":
+				v["crashed"] = true
+				v["vx"] = -push_dir * 9.5
+				v["vy"] = 9.0
+				v["vz"] = maxf(9.0, player_speed * 0.6)
+				on_hit.call(n.position, "NITRO_RAM")
+			elif collision_mode == "LIGHT_BOUNCE":
+				# Traffic car swerves slightly in lane, player bounces back & slows down
+				v["lane"] = clampf(float(v["lane"]) - push_dir * 1.1, -3.8, 3.8)
+				on_hit.call(Vector3(push_dir, 0.0, n.position.z), "LIGHT_BOUNCE")
 			else:
-				# Light vehicle or horse: car stays intact, player bounces sideways & slows down
-				var push_dir := -1.0 if player_pos.x < n.position.x else 1.0
-				on_hit.call(Vector3(push_dir, 0.0, n.position.z), false)
+				# HORSE_DODGE: car stays completely intact, horse recoils sideways!
+				on_hit.call(Vector3(push_dir, 0.0, n.position.z), "HORSE_DODGE")

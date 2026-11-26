@@ -360,7 +360,7 @@ func _build_chunk(z_start: float, chunk_idx: int) -> Node3D:
 	chunk.add_child(stall)
 	props_pool.append({"node": stall, "chunk": chunk, "base_x": float(s_side) * 6.0, "local_z": s_lz, "type": "stall", "hit": false})
 
-	# Challenge props (Stunt Ramps) + Urban Crates / Barriers on road edges
+	# Challenge props (Stunt Ramps)
 	if challenge_mode == "STUNT_RAMPS" and chunk_idx > 0:
 		var ramp := _build_stunt_ramp()
 		var r_lz := 24.0
@@ -369,14 +369,6 @@ func _build_chunk(z_start: float, chunk_idx: int) -> Node3D:
 		ramp.position = Vector3(r_rx + lane_x, 0.0, r_lz)
 		chunk.add_child(ramp)
 		props_pool.append({"node": ramp, "chunk": chunk, "base_x": lane_x, "local_z": r_lz, "type": "ramp", "hit": false})
-	elif chunk_idx > 0:
-		var crate := _build_crate_barrier(district)
-		var c_lz := 42.0
-		var c_rx := RoadCurve.get_road_center_x(z_start + c_lz, road_straight)
-		var c_x := float(((chunk_idx + 1) % 3) - 1) * 3.1
-		crate.position = Vector3(c_rx + c_x, 0.0, c_lz)
-		chunk.add_child(crate)
-		props_pool.append({"node": crate, "chunk": chunk, "base_x": c_x, "local_z": c_lz, "type": "crate", "hit": false})
 
 	return chunk
 

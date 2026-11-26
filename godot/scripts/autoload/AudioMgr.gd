@@ -10,11 +10,14 @@ const TRACK_PATHS := {
 const SFX_PATHS := {
 	"click": ["res://assets/audio/interface/click_001.ogg", "res://assets/audio/interface/click_002.ogg"],
 	"confirm": ["res://assets/audio/interface/confirmation_001.ogg", "res://assets/audio/interface/confirmation_002.ogg"],
-	"crash": ["res://assets/audio/impact/impactMetal_heavy_000.ogg", "res://assets/audio/impact/impactMetal_heavy_001.ogg", "res://assets/audio/impact/impactMetal_heavy_002.ogg"],
-	"smash": ["res://assets/audio/impact/impactGlass_heavy_000.ogg", "res://assets/audio/impact/impactGlass_heavy_001.ogg"],
-	"explosion": ["res://assets/audio/scifi/explosionCrunch_000.ogg", "res://assets/audio/scifi/explosionCrunch_001.ogg", "res://assets/audio/scifi/lowFrequency_explosion_000.ogg"],
-	"coin": ["res://assets/audio/casino/chips-stack-1.ogg", "res://assets/audio/casino/chips-stack-2.ogg"],
-	"thruster": ["res://assets/audio/scifi/thrusterFire_000.ogg"],
+	"ram_heavy": ["res://assets/audio/scifi/lowFrequency_explosion_000.ogg", "res://assets/audio/impact/impactMetal_heavy_000.ogg"],
+	"bounce_light": ["res://assets/audio/impact/impactPlate_heavy_000.ogg", "res://assets/audio/impact/impactPlate_heavy_001.ogg"],
+	"metal_pole": ["res://assets/audio/impact/impactBell_heavy_000.ogg", "res://assets/audio/impact/impactMetal_light_001.ogg"],
+	"wood_smash": ["res://assets/audio/impact/impactGlass_heavy_000.ogg", "res://assets/audio/impact/impactMining_000.ogg"],
+	"explosion": ["res://assets/audio/scifi/explosionCrunch_000.ogg", "res://assets/audio/scifi/lowFrequency_explosion_000.ogg"],
+	"rocket": ["res://assets/audio/scifi/explosionCrunch_001.ogg"],
+	"ped_hit": ["res://assets/audio/impact/impactMetal_light_000.ogg", "res://assets/audio/casino/chips-stack-1.ogg"],
+	"hoof_jump": ["res://assets/audio/interface/back_002.ogg"],
 	"victory": ["res://assets/audio/interface/confirmation_003.ogg"]
 }
 
@@ -112,8 +115,8 @@ func play_sfx(key: String, pitch_min: float = 0.92, pitch_max: float = 1.08, vol
 	p.play()
 
 
-func update_engine(speed_ratio: float, active: bool) -> void:
-	if not active or _sfx_muted:
+func update_engine(speed_ratio: float, active: bool, bike_id: String = "tank") -> void:
+	if not active or _sfx_muted or bike_id == "cheval" or speed_ratio < 0.05:
 		if _engine_player.playing:
 			_engine_player.stop()
 		return
@@ -124,8 +127,13 @@ func update_engine(speed_ratio: float, active: bool) -> void:
 			s.loop = true
 		_engine_player.stream = s
 		_engine_player.play()
-	_engine_player.pitch_scale = clampf(0.62 + speed_ratio * 0.72, 0.55, 1.45)
-	_engine_player.volume_db = lerpf(-22.0, -10.0, clampf(speed_ratio, 0.0, 1.0))
+	if bike_id in ["aero_jet", "hovercraft"]:
+		_engine_player.pitch_scale = clampf(0.75 + speed_ratio * 0.55, 0.7, 1.35)
+		_engine_player.volume_db = lerpf(-24.0, -14.0, clampf(speed_ratio, 0.0, 1.0))
+	else:
+		# Deep mechanical rumble for land vehicles
+		_engine_player.pitch_scale = clampf(0.42 + speed_ratio * 0.45, 0.4, 0.92)
+		_engine_player.volume_db = lerpf(-22.0, -13.0, clampf(speed_ratio, 0.0, 1.0))
 
 
 func _exit_tree() -> void:
