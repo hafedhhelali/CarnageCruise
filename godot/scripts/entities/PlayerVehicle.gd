@@ -140,10 +140,14 @@ func build_vehicle(bike_id: String) -> void:
 	_nitro_particles.visible = (bike_id != "cheval")
 	if bike_id == "cheval":
 		_nitro_particles.emitting = false
-		_tint_meshes(inst, Color(0.42, 0.24, 0.12))
+		_tint_meshes(inst, Color(0.45, 0.25, 0.12))
 		_attach_rider(pivot, aabb, pivot.scale.x)
-	elif not (bike_id in ["tank", "aero_jet"]):
-		_attach_weapon_mount(pivot, aabb, pivot.scale.x)
+	else:
+		_apply_distinct_vehicle_colors(inst, bike_id)
+		if not (bike_id in ["tank", "aero_jet"]):
+			_attach_weapon_mount(pivot, aabb, pivot.scale.x)
+		if _wheel_nodes.is_empty() and bike_id in ["rad_rover", "tank", "rouleau"]:
+			_attach_visible_side_wheels(pivot, aabb, pivot.scale.x)
 
 	_wheel_nodes.clear()
 	_collect_wheels(inst, _wheel_nodes)
@@ -208,46 +212,82 @@ func _tint_meshes(node: Node, col: Color) -> void:
 
 
 func _attach_rider(pivot: Node3D, horse_aabb: AABB, horse_scale: float) -> void:
-	var rider_path := "res://assets/models/q_casual_man.glb"
-	if not ResourceLoader.exists(rider_path):
-		return
-	if not _glb_cache.has("q_casual_man"):
-		_glb_cache["q_casual_man"] = load(rider_path)
-	var ps: PackedScene = _glb_cache["q_casual_man"]
-	if ps == null:
-		return
-	var rider := ps.instantiate() as Node3D
-	if rider == null:
-		return
-	var inv_s := 0.78 / maxf(horse_scale, 0.0001)
-	rider.scale = Vector3.ONE * inv_s
-	rider.position = Vector3(horse_aabb.get_center().x, horse_aabb.position.y + horse_aabb.size.y * 0.30, horse_aabb.get_center().z + horse_aabb.size.z * 0.04)
-	rider.rotation_degrees.x = 14.0
-	pivot.add_child(rider)
-	_pose_rider_skeleton(rider)
+	# Clean articulated jockey seated on saddle (never T-pose!)
+	var jockey := Node3D.new()
+	var inv_s := 1.0 / maxf(horse_scale, 0.0001)
+	jockey.scale = Vector3.ONE * inv_s
+	jockey.position = Vector3(horse_aabb.get_center().x, horse_aabb.position.y + horse_aabb.size.y * 0.66, horse_aabb.get_center().z + horse_aabb.size.z * 0.03)
 
+	var saddle_mat := StandardMaterial3D.new()
+	saddle_mat.albedo_color = Color(0.22, 0.12, 0.06)
+	saddle_mat.roughness = 0.8
+	var jacket_mat := StandardMaterial3D.new()
+	jacket_mat.albedo_color = Color(0.14, 0.36, 0.72)
+	jacket_mat.roughness = 0.7
+	var pants_mat := StandardMaterial3D.new()
+	pants_mat.albedo_color = Color(0.86, 0.84, 0.78)
+	pants_mat.roughness = 0.75
+	var skin_mat := StandardMaterial3D.new()
+	skin_mat.albedo_color = Color(0.88, 0.68, 0.54)
+	skin_mat.roughness = 0.75
+	var helmet_mat := StandardMaterial3D.new()
+	helmet_mat.albedo_color = Color(0.82, 0.16, 0.20)
+	helmet_mat.roughness = 0.45
 
-func _pose_rider_skeleton(node: Node) -> void:
-	if node is Skeleton3D:
-		var skel: Skeleton3D = node
-		var poses := {
-			"UpperArm.L": Vector3(0.55, 0.0, 1.08),
-			"UpperArm.R": Vector3(0.55, 0.0, -1.08),
-			"LowerArm.L": Vector3(0.65, 0.0, 0.0),
-			"LowerArm.R": Vector3(0.65, 0.0, 0.0),
-			"UpperLeg.L": Vector3(-0.92, 0.0, -0.32),
-			"UpperLeg.R": Vector3(-0.92, 0.0, 0.32),
-			"LowerLeg.L": Vector3(1.18, 0.0, 0.0),
-			"LowerLeg.R": Vector3(1.18, 0.0, 0.0)
-		}
-		for bone_name in poses.keys():
-			var idx := skel.find_bone(bone_name)
-			if idx != -1:
-				var e: Vector3 = poses[bone_name]
-				var q := Quaternion.from_euler(e)
-				skel.set_bone_pose_rotation(idx, skel.get_bone_rest(idx).basis.get_rotation_quaternion() * q)
-	for c in node.get_children():
-		_pose_rider_skeleton(c)
+	var saddle := MeshInstance3D.new()
+	var sm := BoxMesh.new()
+	sm.size = Vector3(0.46, 0.12, 0.54)
+	saddle.mesh = sm
+	saddle.material_override = saddle_mat
+	jockey.add_child(saddle)
+
+	var torso := MeshInstance3D.new()
+	var tm := BoxMesh.new()
+	tm.size = Vector3(0.36, 0.52, 0.24)
+	torso.mesh = tm
+	torso.material_override = jacket_mat
+	torso.position = Vector3(0.0, 0.34, 0.05)
+	torso.rotation_degrees.x = 24.0
+	jockey.add_child(torso)
+
+	var head := MeshInstance3D.new()
+	var hm := SphereMesh.new()
+	hm.radius = 0.14
+	hm.height = 0.28
+	head.mesh = hm
+	head.material_override = skin_mat
+	head.position = Vector3(0.0, 0.66, 0.18)
+	jockey.add_child(head)
+
+	var helmet := MeshInstance3D.new()
+	var hlm := SphereMesh.new()
+	hlm.radius = 0.155
+	hlm.height = 0.20
+	helmet.mesh = hlm
+	helmet.material_override = helmet_mat
+	helmet.position = Vector3(0.0, 0.72, 0.18)
+	jockey.add_child(helmet)
+
+	for sx in [-1.0, 1.0]:
+		var arm := MeshInstance3D.new()
+		var am := BoxMesh.new()
+		am.size = Vector3(0.11, 0.40, 0.11)
+		arm.mesh = am
+		arm.material_override = jacket_mat
+		arm.position = Vector3(sx * 0.22, 0.38, 0.22)
+		arm.rotation_degrees = Vector3(58.0, 0.0, sx * -12.0)
+		jockey.add_child(arm)
+
+		var leg := MeshInstance3D.new()
+		var lm := BoxMesh.new()
+		lm.size = Vector3(0.13, 0.44, 0.14)
+		leg.mesh = lm
+		leg.material_override = pants_mat
+		leg.position = Vector3(sx * 0.23, -0.08, 0.06)
+		leg.rotation_degrees = Vector3(-28.0, 0.0, sx * 18.0)
+		jockey.add_child(leg)
+
+	pivot.add_child(jockey)
 
 
 func _compute_aabb(node: Node3D) -> AABB:
@@ -270,6 +310,69 @@ func _compute_aabb(node: Node3D) -> AABB:
 				xform_map[ch] = cur_xf * ch.transform
 				stack.append(ch)
 	return result
+
+
+func _apply_distinct_vehicle_colors(node: Node, bike_id: String) -> void:
+	var body_col := Color(0.84, 0.16, 0.20)
+	match bike_id:
+		"tank": body_col = Color(0.26, 0.36, 0.22)
+		"aero_jet": body_col = Color(0.88, 0.34, 0.10)
+		"rad_rover": body_col = Color(0.82, 0.44, 0.12)
+		"decapotable": body_col = Color(0.86, 0.14, 0.20)
+		"dragster": body_col = Color(0.48, 0.14, 0.82)
+		"rouleau": body_col = Color(0.92, 0.68, 0.08)
+		"hovercraft": body_col = Color(0.08, 0.62, 0.46)
+	_tint_vehicle_parts(node, body_col)
+
+
+func _tint_vehicle_parts(node: Node, body_col: Color) -> void:
+	if node is MeshInstance3D and node.mesh != null:
+		var n_low := node.name.to_lower()
+		var mat := StandardMaterial3D.new()
+		mat.roughness = 0.65
+		mat.metallic = 0.15
+		mat.metallic_specular = 0.18
+		if "wheel" in n_low or "tire" in n_low or "track" in n_low:
+			mat.albedo_color = Color(0.11, 0.11, 0.13)
+		elif "gun" in n_low or "turret" in n_low or "fork" in n_low or "underside" in n_low:
+			mat.albedo_color = Color(0.22, 0.24, 0.28)
+		else:
+			mat.albedo_color = body_col
+		node.material_override = mat
+	for c in node.get_children():
+		_tint_vehicle_parts(c, body_col)
+
+
+func _attach_visible_side_wheels(pivot: Node3D, veh_aabb: AABB, veh_scale: float) -> void:
+	var inv_s := 1.0 / maxf(veh_scale, 0.001)
+	var tire_mat := StandardMaterial3D.new()
+	tire_mat.albedo_color = Color(0.10, 0.10, 0.12)
+	tire_mat.roughness = 0.8
+	var rim_mat := StandardMaterial3D.new()
+	rim_mat.albedo_color = Color(0.86, 0.88, 0.92)
+	rim_mat.roughness = 0.4
+	for sx in [-1.0, 1.0]:
+		for sz in [-0.32, 0.32]:
+			var wp := Node3D.new()
+			wp.scale = Vector3.ONE * inv_s
+			wp.position = Vector3(veh_aabb.get_center().x + sx * veh_aabb.size.x * 0.48, veh_aabb.position.y + veh_aabb.size.y * 0.22, veh_aabb.get_center().z + sz * veh_aabb.size.z)
+			var tire := MeshInstance3D.new()
+			var cm := CylinderMesh.new()
+			cm.top_radius = 0.34
+			cm.bottom_radius = 0.34
+			cm.height = 0.20
+			tire.mesh = cm
+			tire.rotation_degrees.z = 90.0
+			tire.material_override = tire_mat
+			wp.add_child(tire)
+			var bar := MeshInstance3D.new()
+			var bm := BoxMesh.new()
+			bm.size = Vector3(0.23, 0.10, 0.58)
+			bar.mesh = bm
+			bar.material_override = rim_mat
+			wp.add_child(bar)
+			pivot.add_child(wp)
+			_wheel_nodes.append(wp)
 
 
 func _fix_vehicle_materials(node: Node) -> void:
@@ -302,16 +405,18 @@ func _collect_wheels(node: Node, out: Array[Node3D]) -> void:
 				par.remove_child(mi)
 				wpivot.add_child(mi)
 				mi.position = -c
-				# Add visible metallic spoke bar so wheel spin is unmistakable!
-				var spoke := MeshInstance3D.new()
-				var smesh := BoxMesh.new()
-				smesh.size = Vector3(aabb.size.x * 1.06, aabb.size.y * 0.22, aabb.size.z * 0.72)
-				var smat := StandardMaterial3D.new()
-				smat.albedo_color = Color(0.82, 0.84, 0.88)
-				smat.roughness = 0.45
-				spoke.mesh = smesh
-				spoke.material_override = smat
-				wpivot.add_child(spoke)
+				# Add cross-spoke metallic rim so wheel rotation is 100% obvious!
+				for rot_deg in [0.0, 90.0]:
+					var spoke := MeshInstance3D.new()
+					var smesh := BoxMesh.new()
+					smesh.size = Vector3(aabb.size.x * 1.14, aabb.size.y * 0.18, aabb.size.z * 0.78)
+					var smat := StandardMaterial3D.new()
+					smat.albedo_color = Color(0.92, 0.94, 0.98)
+					smat.roughness = 0.4
+					spoke.mesh = smesh
+					spoke.rotation_degrees.x = rot_deg
+					spoke.material_override = smat
+					wpivot.add_child(spoke)
 				out.append(wpivot)
 				return
 	for c in node.get_children():
@@ -389,8 +494,11 @@ func update_vehicle(delta: float, speed: float, road_straight: bool) -> void:
 	position = Vector3(road_x + x_offset, hover_y + jump_y, z_pos)
 	rotation.y = road_ang
 	_roll_impulse = lerpf(_roll_impulse, 0.0, clampf(delta * 4.5, 0.0, 1.0))
-	var sway := sin(z_pos * 0.45) * 0.032 if speed > 4.0 else 0.0
-	_model_holder.rotation.z = lerpf(_model_holder.rotation.z, -smoothed_steer * 0.25 + _roll_impulse + sway, clampf(delta * 8.0, 0.0, 1.0))
+	var sway := sin(z_pos * 0.45) * 0.025 if speed > 4.0 else 0.0
+	var target_bank := -smoothed_steer * 0.22 + _roll_impulse + sway
+	_model_holder.rotation.z = lerpf(_model_holder.rotation.z, target_bank, clampf(delta * 10.0, 0.0, 1.0))
+	# Prevent vehicle chassis from sinking into the asphalt when banking left/right!
+	_model_holder.position.y = absf(sin(_model_holder.rotation.z)) * 0.82
 
 	for w in _wheel_nodes:
 		if is_instance_valid(w):

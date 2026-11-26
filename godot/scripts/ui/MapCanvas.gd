@@ -166,7 +166,8 @@ func _draw() -> void:
 			for pt in ring:
 				pts_arr.append(_world_to_screen(Vector2(float(pt[0]) / 100.0, float(pt[1]) / 100.0)))
 			if pts_arr.size() >= 3:
-				draw_colored_polygon(pts_arr, land_col)
+				if Geometry2D.triangulate_polygon(pts_arr).size() >= 3:
+					draw_colored_polygon(pts_arr, land_col)
 				var closed := PackedVector2Array(pts_arr)
 				closed.append(pts_arr[0])
 				draw_polyline(closed, land_border, 1.2, true)

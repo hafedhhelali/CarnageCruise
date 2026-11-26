@@ -37,13 +37,31 @@ func _spawn_car_node(key: String) -> Node3D:
 			var inst := ps.instantiate() as Node3D
 			if inst:
 				inst.scale = Vector3.ONE * 0.92
-				_fix_car_materials(inst)
+				var col := Color(0.85, 0.16, 0.20)
+				if "green" in key: col = Color(0.14, 0.65, 0.34)
+				elif "yellow" in key: col = Color(0.92, 0.72, 0.12)
+				elif "purple" in key: col = Color(0.52, 0.22, 0.80)
+				elif "motorcycle" in key: col = Color(0.16, 0.48, 0.88)
+				_apply_car_colors(inst, col)
 				return inst
 	var m := MeshInstance3D.new()
 	var b := BoxMesh.new()
 	b.size = Vector3(1.8, 1.2, 3.8)
 	m.mesh = b
 	return m
+
+
+func _apply_car_colors(node: Node, body_col: Color) -> void:
+	if node is MeshInstance3D and node.mesh != null:
+		var n_low := node.name.to_lower()
+		var mat := StandardMaterial3D.new()
+		mat.roughness = 0.62
+		mat.metallic = 0.12
+		mat.metallic_specular = 0.15
+		mat.albedo_color = Color(0.11, 0.11, 0.13) if ("wheel" in n_low or "underside" in n_low) else body_col
+		node.material_override = mat
+	for c in node.get_children():
+		_apply_car_colors(c, body_col)
 
 
 func _collect_car_wheels(node: Node, out: Array[Node3D]) -> void:

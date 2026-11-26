@@ -87,7 +87,7 @@ func show_splash() -> void:
 
 	var top_bar := HBoxContainer.new()
 	var ver := Label.new()
-	ver.text = "CARNAGE CRUISE  •  GODOT VULKAN v0.9.96"
+	ver.text = "CARNAGE CRUISE  •  GODOT VULKAN v0.9.97"
 	ver.add_theme_font_size_override("font_size", 14)
 	ver.modulate = Color(0.55, 0.9, 1.0)
 	var coins := Label.new()
@@ -112,14 +112,39 @@ func show_splash() -> void:
 
 	var info_card := _make_panel()
 	var iv := VBoxContainer.new()
+	iv.add_theme_constant_override("separation", 6)
 	var city_lbl := Label.new()
-	city_lbl.text = "ÉTAPE : %s  (%s)" % [str(GameData.selected_city.get("name", "Paris")).to_upper(), GameData.get_city_biome(GameData.selected_city).to_upper()]
-	city_lbl.add_theme_font_size_override("font_size", 18)
+	city_lbl.text = "ÉTAPE : %s (%s)" % [str(GameData.selected_city.get("name", "Paris")).to_upper(), GameData.get_city_biome(GameData.selected_city).to_upper()]
+	city_lbl.add_theme_font_size_override("font_size", 17)
+	var bike_row := HBoxContainer.new()
+	bike_row.add_theme_constant_override("separation", 8)
+	var prev_b := _make_btn("<", Color(0.18, 0.28, 0.42), 38)
+	prev_b.custom_minimum_size = Vector2(44, 38)
+	prev_b.pressed.connect(func():
+		var idx := GameData.bikes.find(GameData.selected_bike)
+		var prev_idx := (idx - 1 + GameData.bikes.size()) % maxi(1, GameData.bikes.size())
+		action_triggered.emit("SELECT_BIKE", str(GameData.bikes[prev_idx].get("id", "tank")))
+		show_splash()
+	)
 	var bike_lbl := Label.new()
-	bike_lbl.text = "ENGIN : %s" % str(GameData.selected_bike.get("name", "Tank"))
+	bike_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bike_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	bike_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	bike_lbl.text = "%s (%d km/h)" % [str(GameData.selected_bike.get("name", "Tank")), int(round(float(GameData.selected_bike.get("maxSpeed", 20.0)) * 3.6))]
 	bike_lbl.modulate = Color(0.45, 0.92, 1.0)
+	var next_b := _make_btn(">", Color(0.18, 0.28, 0.42), 38)
+	next_b.custom_minimum_size = Vector2(44, 38)
+	next_b.pressed.connect(func():
+		var idx := GameData.bikes.find(GameData.selected_bike)
+		var next_idx := (idx + 1) % maxi(1, GameData.bikes.size())
+		action_triggered.emit("SELECT_BIKE", str(GameData.bikes[next_idx].get("id", "tank")))
+		show_splash()
+	)
+	bike_row.add_child(prev_b)
+	bike_row.add_child(bike_lbl)
+	bike_row.add_child(next_b)
 	iv.add_child(city_lbl)
-	iv.add_child(bike_lbl)
+	iv.add_child(bike_row)
 	info_card.add_child(iv)
 	vbox.add_child(info_card)
 
@@ -187,9 +212,15 @@ func show_map() -> void:
 	vbox.add_child(filter_row)
 
 	var filtered_cities: Array = []
+	var sel_in_filter := false
+	var cur_sel_id := str(GameData.selected_city.get("id", "paris"))
 	for c in GameData.cities:
 		if _map_region_filter == "TOUTES" or GameData.get_city_region(c) == _map_region_filter:
 			filtered_cities.append(c)
+			if str(c.get("id", "")) == cur_sel_id:
+				sel_in_filter = true
+	if not sel_in_filter and filtered_cities.size() > 0:
+		GameData.select_city(str(filtered_cities[0].get("id", "paris")))
 
 	var map_wrap := Control.new()
 	map_wrap.size_flags_vertical = Control.SIZE_EXPAND_FILL
