@@ -1,9 +1,9 @@
 # 🏍️ CarnageCruise : TOUR DE FRANCE ARCADE 3D
 ## DOCUMENT TECHNIQUE DE TRANSMISSION STUDIO (HANDOFF)
 
-> **Migration Native Godot 4.7.2-stable (`v0.9.89-beta`, Build 99)** :
+> **Migration Native Godot 4.7.2-stable (`v0.9.90-beta`, Build 100)** :
 > - **Moteur natif** : Godot 4.7.2-stable (`godot/`, Renderer `mobile`, `540x960` portrait, MSAA 3D)
-> - **APK Android signé** : `android/CarnageCruise-Godot-v0.9.89-b99-release.apk` (`45 138 090` octets, `com.motormageddon.game`, `arm64-v8a`)
+> - **APK Android signé** : `android/CarnageCruise-Godot-v0.9.90-b100-release.apk` (`com.motormageddon.game`, `arm64-v8a`)
 > - **Assets** : Modèles GLB décodés pour Godot (`godot/assets/models/`), HDRI (`godot/assets/hdr/`), 4 pistes `.mp3` CC0 (`godot/assets/music/`), SFX `.ogg` (`godot/assets/audio/`), `godot/data/parity.json`.
 
 Ce document fournit l'ensemble des informations de conception, d'architecture logicielle, de déploiement et de versionnage pour **CarnageCruise**.
