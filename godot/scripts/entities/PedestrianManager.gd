@@ -139,11 +139,18 @@ func update_peds(delta: float, player_pos: Vector3, player_speed: float, road_st
 				ap.speed_scale = 1.25
 
 		if p["fleeing"]:
-			var sprint_speed := 6.5
+			var sprint_speed := 6.8
 			var rx := RoadCurve.get_road_center_x(n.position.z, road_straight)
 			var side_f := float(p["side"])
-			n.position.x = clampf(n.position.x + side_f * sprint_speed * delta, rx - 6.6, rx + 6.6)
-			n.rotation.y = PI * 0.5 * side_f
+			var dx_from_center := n.position.x - rx
+			if absf(dx_from_center) < 7.8:
+				n.position.x = clampf(n.position.x + side_f * sprint_speed * delta, rx - 7.9, rx + 7.9)
+				n.rotation.y = PI * 0.5 * side_f
+			else:
+				# Reached building wall edge: sprint along the sidewalk instead of getting stuck!
+				var dir_z := 1.0 if float(p["walk_dir"]) >= 0.0 else -1.0
+				n.position.z += dir_z * sprint_speed * delta
+				n.rotation.y = 0.0 if dir_z > 0.0 else PI
 		else:
 			n.position.z += float(p["walk_dir"]) * 1.4 * delta
 			n.rotation.y = 0.0 if float(p["walk_dir"]) > 0.0 else PI

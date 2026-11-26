@@ -79,30 +79,49 @@ func _init_materials() -> void:
 	_stripe_mat.roughness = 0.75
 
 
+func _int_to_color(val: int, fallback: Color) -> Color:
+	if val <= 0:
+		return fallback
+	return Color(float((val >> 16) & 0xFF) / 255.0, float((val >> 8) & 0xFF) / 255.0, float(val & 0xFF) / 255.0)
+
+
 func _apply_atmosphere(city_def: Dictionary) -> void:
 	var preset := "DAY_CLEAR"
 	if bool(city_def.get("isNuclearMission", false)):
 		preset = "DUSK"
 	elif GameData.challenge_mode == "EXTREME_STORM":
 		preset = "STORM"
+	elif current_biome in ["desert", "canyon", "beach"]:
+		preset = "DUSK"
 
 	var env := _world_env.environment
 	var sky_mat := env.sky.sky_material as PanoramaSkyMaterial
 	var hdr := "res://assets/hdr/pedestrian_overpass_1k.hdr"
+	var fog_col := _int_to_color(int(city_def.get("fogColor", 0)), Color(0.75, 0.84, 0.94))
 	if preset == "DUSK":
 		hdr = "res://assets/hdr/venice_sunset_1k.hdr"
-		env.fog_light_color = Color(0.88, 0.56, 0.42)
-		_sun_light.light_color = Color(1.0, 0.78, 0.55)
-		_sun_light.light_energy = 1.25
+		env.fog_light_color = fog_col.lerp(Color(0.95, 0.72, 0.52), 0.35)
+		_sun_light.light_color = Color(1.0, 0.84, 0.62)
+		_sun_light.light_energy = 1.32
 	elif preset == "STORM":
 		env.fog_light_color = Color(0.48, 0.54, 0.62)
 		_sun_light.light_energy = 0.95
 		_road_mat.roughness = 0.22
 	else:
-		env.fog_light_color = Color(0.75, 0.84, 0.94)
+		env.fog_light_color = fog_col
 		_sun_light.light_color = Color(1.0, 0.96, 0.88)
 		_sun_light.light_energy = 1.35
 		_road_mat.roughness = 0.48
+
+	_road_mat.albedo_color = _int_to_color(int(city_def.get("roadColor", 0)), Color(0.16, 0.18, 0.22))
+	if current_biome in ["desert", "canyon"]:
+		_sidewalk_mat.albedo_color = Color(0.78, 0.66, 0.46)
+	elif current_biome in ["corniche", "beach"]:
+		_sidewalk_mat.albedo_color = Color(0.82, 0.79, 0.72)
+	elif current_biome == "cliffs":
+		_sidewalk_mat.albedo_color = Color(0.44, 0.48, 0.54)
+	else:
+		_sidewalk_mat.albedo_color = Color(0.56, 0.58, 0.62)
 
 	if ResourceLoader.exists(hdr):
 		sky_mat.panorama = load(hdr)
@@ -250,16 +269,22 @@ func _build_chunk(z_start: float, chunk_idx: int) -> Node3D:
 		stripe.rotation.y = ang
 		chunk.add_child(stripe)
 
-	# Buildings (GLBs properly sized and aligned at x = +-9.2m, zero sidewalk overhang!)
+	# Buildings (varied per city/biome + footprint aligned at x = +-14m)
 	var bldg_keys := ["q_bldg_balcony", "q_bldg_wide", "q_bldg_tall", "q_house1"]
+	if current_biome in ["desert", "canyon", "beach"]:
+		bldg_keys = ["q_house1", "building-small-a", "building-small-b", "q_bldg_wide"]
+	elif current_biome in ["corniche", "cliffs"]:
+		bldg_keys = ["building-small-c", "building-small-d", "q_bldg_balcony", "building-garage"]
+	var city_seed := absi(str(GameData.selected_city.get("id", "paris")).hash())
+	var bldg_palette: Array = GameData.selected_city.get("buildingColors", [])
 	for side in [-1, 1]:
 		for slot in range(4):
 			var lz := float(slot) * 15.0 + 7.5
 			var wz := z_start + lz
 			var rx := RoadCurve.get_road_center_x(wz, road_straight)
 			var ang := RoadCurve.get_road_angle(wz, road_straight)
-			var key: String = bldg_keys[(chunk_idx + slot + (1 if side > 0 else 0)) % bldg_keys.size()]
-			var h := 11.0 + float((chunk_idx + slot) % 3) * 3.5
+			var key: String = bldg_keys[(city_seed + chunk_idx + slot + (1 if side > 0 else 0)) % bldg_keys.size()]
+			var h := 10.5 + float((city_seed + chunk_idx + slot) % 4) * 3.2
 			var bldg := _instantiate_normalized(key, Vector3(9.5, h, 13.5), -PI * 0.5 if side > 0 else PI * 0.5)
 			if bldg:
 				bldg.position = Vector3(rx + float(side) * 14.0, 0.0, lz)

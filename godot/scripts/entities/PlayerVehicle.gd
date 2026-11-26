@@ -108,6 +108,7 @@ func build_vehicle(bike_id: String) -> void:
 	if bike_id == "cheval":
 		_nitro_particles.emitting = false
 		_tint_meshes(inst, Color(0.42, 0.24, 0.12))
+		_attach_rider(pivot, aabb, s)
 
 	_anim_player = _find_animation_player(inst)
 	if _anim_player:
@@ -132,6 +133,25 @@ func _tint_meshes(node: Node, col: Color) -> void:
 		node.material_override = mat
 	for c in node.get_children():
 		_tint_meshes(c, col)
+
+
+func _attach_rider(pivot: Node3D, horse_aabb: AABB, horse_scale: float) -> void:
+	var rider_path := "res://assets/models/q_casual_man.glb"
+	if not ResourceLoader.exists(rider_path):
+		return
+	if not _glb_cache.has("q_casual_man"):
+		_glb_cache["q_casual_man"] = load(rider_path)
+	var ps: PackedScene = _glb_cache["q_casual_man"]
+	if ps == null:
+		return
+	var rider := ps.instantiate() as Node3D
+	if rider == null:
+		return
+	# Counter-scale so rider is ~1.55m tall in world space regardless of Horse.glb cm scale
+	var inv_s := 0.85 / maxf(horse_scale, 0.0001)
+	rider.scale = Vector3.ONE * inv_s
+	rider.position = Vector3(horse_aabb.get_center().x, horse_aabb.position.y + horse_aabb.size.y * 0.58, horse_aabb.get_center().z)
+	pivot.add_child(rider)
 
 
 func _compute_aabb(node: Node3D) -> AABB:
@@ -222,6 +242,9 @@ func update_vehicle(delta: float, speed: float, road_straight: bool) -> void:
 	_model_holder.rotation.z = lerpf(_model_holder.rotation.z, -smoothed_steer * 0.25, clampf(delta * 8.0, 0.0, 1.0))
 
 	if _anim_player:
-		_anim_player.speed_scale = clampf(0.2 + speed * 0.09, 0.15, 2.8)
+		if current_bike_id == "cheval" and (GameData.is_braking or speed < 1.2):
+			_anim_player.speed_scale = 0.0
+		else:
+			_anim_player.speed_scale = clampf(0.2 + speed * 0.09, 0.15, 2.8)
 
 	_nitro_particles.emitting = GameData.is_nitro_active and speed > 4.0 and current_bike_id != "cheval"

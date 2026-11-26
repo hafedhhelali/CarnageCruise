@@ -34,12 +34,26 @@ func _spawn_car_node(key: String) -> Node3D:
 			var inst := ps.instantiate() as Node3D
 			if inst:
 				inst.scale = Vector3.ONE * 0.92
+				_fix_car_materials(inst)
 				return inst
 	var m := MeshInstance3D.new()
 	var b := BoxMesh.new()
 	b.size = Vector3(1.8, 1.2, 3.8)
 	m.mesh = b
 	return m
+
+
+func _fix_car_materials(node: Node) -> void:
+	if node is MeshInstance3D and node.mesh != null:
+		for s in range(node.mesh.get_surface_count()):
+			var mat := node.get_active_material(s)
+			if mat is StandardMaterial3D:
+				var m2 := mat.duplicate() as StandardMaterial3D
+				m2.roughness = maxf(m2.roughness, 0.52)
+				m2.metallic = minf(m2.metallic, 0.25)
+				node.set_surface_override_material(s, m2)
+	for c in node.get_children():
+		_fix_car_materials(c)
 
 
 func reset_traffic() -> void:

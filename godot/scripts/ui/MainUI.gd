@@ -87,7 +87,7 @@ func show_splash() -> void:
 
 	var top_bar := HBoxContainer.new()
 	var ver := Label.new()
-	ver.text = "CARNAGE CRUISE  •  GODOT VULKAN v0.9.90"
+	ver.text = "CARNAGE CRUISE  •  GODOT VULKAN v0.9.91"
 	ver.add_theme_font_size_override("font_size", 14)
 	ver.modulate = Color(0.55, 0.9, 1.0)
 	var coins := Label.new()
@@ -186,6 +186,19 @@ func show_map() -> void:
 		filter_row.add_child(fb)
 	vbox.add_child(filter_row)
 
+	var filtered_cities: Array = []
+	for c in GameData.cities:
+		if _map_region_filter == "TOUTES" or GameData.get_city_region(c) == _map_region_filter:
+			filtered_cities.append(c)
+
+	var map_canvas := MapCanvas.new()
+	map_canvas.set_data(filtered_cities, str(GameData.selected_city.get("id", "paris")))
+	map_canvas.city_clicked.connect(func(cid: String):
+		GameData.select_city(cid)
+		action_triggered.emit("PLAY_CITY", "STUNT_RAMPS" if (cid.hash() % 3 == 0) else "STANDARD")
+	)
+	vbox.add_child(map_canvas)
+
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	var list := VBoxContainer.new()
@@ -194,12 +207,10 @@ func show_map() -> void:
 	scroll.add_child(list)
 	vbox.add_child(scroll)
 
-	for c in GameData.cities:
-		if _map_region_filter != "TOUTES" and GameData.get_city_region(c) != _map_region_filter:
-			continue
+	for c in filtered_cities:
 		var cid := str(c.get("id", ""))
 		var stars := int(GameData.save_data["city_stars"].get(cid, 0))
-		var btn := _make_btn("%s (%s)  ★%d/3" % [str(c.get("name", "")).to_upper(), GameData.get_city_biome(c), stars], Color(0.12, 0.22, 0.36) if cid != GameData.selected_city.get("id") else Color(0.12, 0.56, 0.42), 48)
+		var btn := _make_btn("%s (%s)  ★%d/3" % [str(c.get("name", "")).to_upper(), GameData.get_city_biome(c), stars], Color(0.12, 0.22, 0.36) if cid != GameData.selected_city.get("id") else Color(0.12, 0.56, 0.42), 46)
 		btn.pressed.connect(func():
 			GameData.select_city(cid)
 			action_triggered.emit("PLAY_CITY", "STUNT_RAMPS" if (cid.hash() % 3 == 0) else "STANDARD")
@@ -272,6 +283,7 @@ func show_hud() -> void:
 	# Top HUD
 	var top := HBoxContainer.new()
 	top.set_anchors_preset(PRESET_TOP_WIDE)
+	top.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	top.offset_left = 14
 	top.offset_right = -14
 	top.offset_top = 18
@@ -280,7 +292,9 @@ func show_hud() -> void:
 	root.add_child(top)
 
 	var score_panel := _make_panel()
+	score_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var sv := VBoxContainer.new()
+	sv.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_hud_score = Label.new()
 	_hud_score.text = "0"
 	_hud_score.add_theme_font_size_override("font_size", 22)
@@ -293,12 +307,15 @@ func show_hud() -> void:
 	top.add_child(score_panel)
 
 	var prog_panel := _make_panel()
+	prog_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	prog_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var pv := VBoxContainer.new()
+	pv.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var cname := Label.new()
 	cname.text = "%s (%dm)" % [str(GameData.selected_city.get("name", "PARIS")).to_upper(), int(GameData.finish_distance)]
 	cname.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_hud_progress = ProgressBar.new()
+	_hud_progress.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_hud_progress.max_value = 100.0
 	_hud_progress.custom_minimum_size.y = 18
 	pv.add_child(cname)

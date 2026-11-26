@@ -12,12 +12,17 @@ var _cinematic_angle: float = 0.0
 var _shake_intensity: float = 0.0
 var _touch_steer_idx: int = -1
 var _touch_start_x: float = 0.0
+var _touch_last_x: float = 0.0
 var _button_steer: float = 0.0
 var _explosion_vfx: GPUParticles3D
+var _projectiles: Array[Dictionary] = []
+var _proj_mesh: CylinderMesh
+var _proj_mat: StandardMaterial3D
 
 
 func _ready() -> void:
 	_init_explosion_vfx()
+	_init_projectile_res()
 	ui.action_triggered.connect(_on_ui_action)
 	_apply_city_preview()
 	AudioMgr.play_music("MENU")
@@ -54,6 +59,43 @@ func _init_explosion_vfx() -> void:
 	add_child(_explosion_vfx)
 
 
+func _init_projectile_res() -> void:
+	_proj_mesh = CylinderMesh.new()
+	_proj_mesh.top_radius = 0.14
+	_proj_mesh.bottom_radius = 0.24
+	_proj_mesh.height = 2.6
+	_proj_mat = StandardMaterial3D.new()
+	_proj_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	_proj_mat.albedo_color = Color(1.0, 0.85, 0.2)
+	_proj_mat.emission_enabled = true
+	_proj_mat.emission = Color(1.0, 0.55, 0.08)
+	_proj_mat.emission_energy_multiplier = 3.5
+	_proj_mesh.material = _proj_mat
+
+
+func _spawn_projectile() -> void:
+	var m := MeshInstance3D.new()
+	m.mesh = _proj_mesh
+	m.rotation_degrees.x = 90.0
+	var start_pos := player.position + Vector3(0.0, 1.05, 2.2)
+	m.position = start_pos
+	add_child(m)
+	_projectiles.append({
+		"node": m,
+		"x_offset": player.x_offset,
+		"z": player.z_pos + 2.2,
+		"y": player.position.y + 1.05,
+		"life": 1.1
+	})
+
+
+func _clear_projectiles() -> void:
+	for pr in _projectiles:
+		if is_instance_valid(pr.get("node")):
+			pr["node"].queue_free()
+	_projectiles.clear()
+
+
 func _apply_city_preview() -> void:
 	world.setup_city(GameData.selected_city, 1650.0, "STANDARD")
 	player.reset_run()
@@ -71,6 +113,9 @@ func _on_ui_action(action: String, payload = null) -> void:
 	match action:
 		"PLAY_CITY":
 			var chal := str(payload) if payload != null else "STANDARD"
+			_clear_projectiles()
+			_touch_steer_idx = -1
+			_button_steer = 0.0
 			GameData.start_run(str(GameData.selected_city.get("id", "paris")), chal)
 			world.setup_city(GameData.selected_city, GameData.finish_distance, chal)
 			player.reset_run()
@@ -116,19 +161,9 @@ func _on_ui_action(action: String, payload = null) -> void:
 				player.trigger_jump(GameData.speed)
 				AudioMgr.play_sfx("click", 0.75, 0.9, 0.0)
 				return
-			AudioMgr.play_sfx("explosion", 0.9, 1.15, 0.0)
-			_trigger_shake(0.32)
-			_spawn_burst(player.position + Vector3(0.0, 0.4, 8.0))
-			for v in traffic.vehicles:
-				if v["active"] and not v["crashed"]:
-					var dz := absf(v["node"].position.z - player.z_pos)
-					if dz < 26.0:
-						v["crashed"] = true
-						v["vy"] = 14.0
-						v["vz"] = 18.0
-						v["vx"] = (1.0 if randf() > 0.5 else -1.0) * 10.0
-						var pts := GameData.add_score(450, true)
-						ui.show_floating_pts(pts)
+			AudioMgr.play_sfx("explosion", 1.15, 1.35, -3.0)
+			_trigger_shake(0.18)
+			_spawn_projectile()
 		"BRAKE":
 			GameData.is_braking = bool(payload)
 		"STEER_BTN":
@@ -140,22 +175,33 @@ func _trigger_shake(amount: float) -> void:
 		_shake_intensity = maxf(_shake_intensity, amount)
 
 
-func _unhandled_input(event: InputEvent) -> void:
+func _input(event: InputEvent) -> void:
 	if GameData.current_mode != "PLAYING":
 		return
 	var ctrl_mode := str(GameData.save_data.get("settings", {}).get("control_mode", "swipe"))
 	if ctrl_mode == "buttons":
 		return
+	var vp_h := get_viewport().get_visible_rect().size.y
 	if event is InputEventScreenTouch:
-		if event.pressed and event.position.y < 760.0:
+		if event.pressed and event.position.y < (vp_h - 118.0):
 			_touch_steer_idx = event.index
 			_touch_start_x = event.position.x
+			_touch_last_x = event.position.x
 		elif not event.pressed and event.index == _touch_steer_idx:
 			_touch_steer_idx = -1
 			player.steer_input = 0.0
 	elif event is InputEventScreenDrag and event.index == _touch_steer_idx:
+		# Sliding anchor: reversing finger direction immediately reverses steer!
+		var delta_move: float = event.position.x - _touch_last_x
+		_touch_last_x = event.position.x
 		var dx: float = event.position.x - _touch_start_x
-		player.steer_input = clampf(-dx / 85.0, -1.0, 1.0)
+		if (dx > 55.0 and delta_move < -2.0) or (dx < -55.0 and delta_move > 2.0):
+			_touch_start_x = event.position.x - signf(dx) * 35.0
+			dx = event.position.x - _touch_start_x
+		elif absf(dx) > 95.0:
+			_touch_start_x = event.position.x - signf(dx) * 95.0
+			dx = event.position.x - _touch_start_x
+		player.steer_input = clampf(-dx / 65.0, -1.0, 1.0)
 
 
 func _process(delta: float) -> void:
@@ -222,6 +268,14 @@ func _process(delta: float) -> void:
 					var r_pts := GameData.add_score(350, false)
 					ui.show_floating_pts(r_pts)
 		elif dz < 2.2 and dx < 1.8 and player.jump_y < 1.5:
+			if player.current_bike_id == "cheval" and p["type"] in ["tree", "lamp"]:
+				# Horse cannot smash steel lampposts or trees: bounce sideways & slow down
+				AudioMgr.play_sfx("crash", 1.1, 1.25, -4.0)
+				_trigger_shake(0.2)
+				GameData.speed = maxf(4.0, GameData.speed * 0.5)
+				var push := -1.0 if player.position.x < n.global_position.x else 1.0
+				player.x_offset = clampf(player.x_offset + push * 1.35, -PlayerVehicle.MAX_OFFSET, PlayerVehicle.MAX_OFFSET)
+				continue
 			p["hit"] = true
 			p["vx"] = (1.0 if n.global_position.x >= player.position.x else -1.0) * 9.0
 			p["vy"] = 10.0
@@ -256,6 +310,8 @@ func _process(delta: float) -> void:
 		ui.show_floating_pts(pts)
 	)
 
+	_update_projectiles(dt)
+
 	# Camera follow + banking + trauma shake
 	var target_cam := player.position + Vector3(0.0, 4.9, -10.4)
 	camera.position = camera.position.lerp(target_cam, clampf(dt * 10.0, 0.0, 1.0))
@@ -270,7 +326,40 @@ func _process(delta: float) -> void:
 
 	# Finish Check
 	if player.z_pos >= world.finish_distance:
+		_clear_projectiles()
 		AudioMgr.update_engine(0.0, false)
 		AudioMgr.play_sfx("victory", 0.95, 1.05, 1.0)
 		var summary := GameData.end_run(true)
 		ui.show_results_modal(summary)
+
+
+func _update_projectiles(dt: float) -> void:
+	for i in range(_projectiles.size() - 1, -1, -1):
+		var pr := _projectiles[i]
+		var n: MeshInstance3D = pr["node"]
+		pr["life"] = float(pr["life"]) - dt
+		pr["z"] = float(pr["z"]) + (115.0 + GameData.speed) * dt
+		var pz: float = pr["z"]
+		var px := RoadCurve.get_road_center_x(pz, world.road_straight) + float(pr["x_offset"])
+		n.position = Vector3(px, float(pr["y"]), pz)
+		n.rotation.y = RoadCurve.get_road_angle(pz, world.road_straight)
+
+		var hit := false
+		for v in traffic.vehicles:
+			if v["active"] and not v["crashed"]:
+				var vn: Node3D = v["node"]
+				if absf(vn.position.z - pz) < 3.6 and absf(vn.position.x - px) < 2.6:
+					v["crashed"] = true
+					v["vy"] = 14.0
+					v["vz"] = 18.0
+					v["vx"] = (1.0 if randf() > 0.5 else -1.0) * 10.0
+					AudioMgr.play_sfx("explosion", 0.88, 1.12, 1.0)
+					_trigger_shake(0.32)
+					_spawn_burst(vn.position)
+					var pts := GameData.add_score(450, true)
+					ui.show_floating_pts(pts)
+					hit = true
+					break
+		if hit or float(pr["life"]) <= 0.0:
+			n.queue_free()
+			_projectiles.remove_at(i)
