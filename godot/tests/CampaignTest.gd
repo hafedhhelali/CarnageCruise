@@ -83,7 +83,9 @@ func _run_suite() -> void:
 	_assert(GameData.bikes.size() == 8, "8 bikes loaded from parity.json")
 	_assert(GameData.current_mode == "SPLASH", "Initial mode is SPLASH")
 
-	# 1. Splash screen & real click test on OPTIONS
+	# 1. Splash screen (ensure tank selected for visual check) & real click test on OPTIONS
+	GameData.select_bike("tank")
+	main.player.build_vehicle("tank")
 	await _save_shot("godot_test_01_splash.png")
 	var opt_btn := _find_button_containing(ui, "OPTIONS")
 	_assert(opt_btn != null, "Splash OPTIONS button exists")

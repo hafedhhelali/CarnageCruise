@@ -87,7 +87,7 @@ func build_vehicle(bike_id: String) -> void:
 
 	var pivot := Node3D.new()
 	if key == "q_tank":
-		inst.rotation.y = -PI * 0.5
+		inst.rotation.y = PI * 0.5
 	pivot.add_child(inst)
 	_model_holder.add_child(pivot)
 

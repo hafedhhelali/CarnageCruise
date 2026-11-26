@@ -157,14 +157,16 @@ func show_map() -> void:
 
 	var hdr_panel := _make_panel(Color(0.06, 0.09, 0.16, 0.92))
 	var hdr := HBoxContainer.new()
-	var back := _make_btn("RETOUR", Color(0.25, 0.3, 0.4), 44)
-	back.custom_minimum_size.x = 110
+	hdr.add_theme_constant_override("separation", 10)
+	var back := _make_btn("RETOUR", Color(0.25, 0.3, 0.4), 42)
+	back.custom_minimum_size = Vector2(96, 42)
+	back.add_theme_font_size_override("font_size", 14)
 	back.pressed.connect(func(): action_triggered.emit("TO_SPLASH", null))
 	var ttl := Label.new()
-	ttl.text = "  CARTE DU MONDE (%d VILLES)" % GameData.cities.size()
-	ttl.add_theme_font_size_override("font_size", 18)
+	ttl.text = "CARTE (%d VILLES)" % GameData.cities.size()
+	ttl.add_theme_font_size_override("font_size", 17)
 	ttl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	ttl.clip_text = true
+	ttl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	hdr.add_child(back)
 	hdr.add_child(ttl)
 	hdr_panel.add_child(hdr)
@@ -218,14 +220,16 @@ func show_garage() -> void:
 
 	var hdr_panel := _make_panel(Color(0.06, 0.09, 0.16, 0.92))
 	var hdr := HBoxContainer.new()
-	var back := _make_btn("RETOUR", Color(0.25, 0.3, 0.4), 44)
-	back.custom_minimum_size.x = 110
+	hdr.add_theme_constant_override("separation", 10)
+	var back := _make_btn("RETOUR", Color(0.25, 0.3, 0.4), 42)
+	back.custom_minimum_size = Vector2(96, 42)
+	back.add_theme_font_size_override("font_size", 14)
 	back.pressed.connect(func(): action_triggered.emit("TO_SPLASH", null))
 	var ttl := Label.new()
-	ttl.text = "  GARAGE & ARSENAL (8 ENGINS)"
-	ttl.add_theme_font_size_override("font_size", 18)
+	ttl.text = "GARAGE (8 ENGINS)"
+	ttl.add_theme_font_size_override("font_size", 17)
 	ttl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	ttl.clip_text = true
+	ttl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	hdr.add_child(back)
 	hdr.add_child(ttl)
 	hdr_panel.add_child(hdr)
@@ -382,8 +386,9 @@ func show_hud() -> void:
 	var bar_bg := StyleBoxFlat.new()
 	bar_bg.bg_color = Color(0.08, 0.12, 0.2, 0.85)
 	bar_bg.set_corner_radius_all(5)
+	var is_horse := str(GameData.selected_bike.get("id", "")) == "cheval"
 	var bar_fill := StyleBoxFlat.new()
-	bar_fill.bg_color = Color(0.12, 0.88, 1.0)
+	bar_fill.bg_color = Color(0.24, 0.85, 0.42) if is_horse else Color(0.12, 0.88, 1.0)
 	bar_fill.set_corner_radius_all(5)
 	_hud_nitro_bar.add_theme_stylebox_override("background", bar_bg)
 	_hud_nitro_bar.add_theme_stylebox_override("fill", bar_fill)
@@ -391,7 +396,6 @@ func show_hud() -> void:
 
 	var action_row := HBoxContainer.new()
 	action_row.add_theme_constant_override("separation", 10)
-	var is_horse := str(GameData.selected_bike.get("id", "")) == "cheval"
 	var nitro_btn := _make_btn("GALOP" if is_horse else "NITRO", Color(0.06, 0.56, 0.82, 0.94), 52)
 	nitro_btn.custom_minimum_size = Vector2(93, 52)
 	nitro_btn.pressed.connect(func(): action_triggered.emit("NITRO", null))
