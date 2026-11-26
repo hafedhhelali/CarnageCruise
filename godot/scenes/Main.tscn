@@ -1,0 +1,40 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/MainController.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/world/WorldBuilder.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/entities/PlayerVehicle.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/entities/TrafficManager.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/entities/PedestrianManager.gd" id="5"]
+[ext_resource type="Script" path="res://scripts/ui/MainUI.gd" id="6"]
+
+[node name="Main" type="Node3D"]
+script = ExtResource("1")
+
+[node name="WorldBuilder" type="Node3D" parent="."]
+script = ExtResource("2")
+
+[node name="PlayerVehicle" type="Node3D" parent="."]
+script = ExtResource("3")
+
+[node name="TrafficManager" type="Node3D" parent="."]
+script = ExtResource("4")
+
+[node name="PedestrianManager" type="Node3D" parent="."]
+script = ExtResource("5")
+
+[node name="Camera3D" type="Camera3D" parent="."]
+position = Vector3(0, 4.9, -10.4)
+fov = 70.0
+near = 0.25
+far = 260.0
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="MainUI" type="Control" parent="CanvasLayer"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("6")

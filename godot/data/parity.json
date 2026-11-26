@@ -1,0 +1,3786 @@
+{
+  "cities": [
+    {
+      "id": "paris",
+      "name": "Paris",
+      "country": "France",
+      "countryFlag": "🇫🇷",
+      "emblem": "🗼",
+      "monument": "Tour Eiffel & Arc de Triomphe",
+      "subtitle": "La Ville Lumière & Grands Boulevards",
+      "typeTag": "Monument & Avenues",
+      "description": "Slalomez à vive allure sur les boulevards haussmanniens sous le regard de la Tour Eiffel et l’Arc de Triomphe !",
+      "targetScore": 26000,
+      "starThresholds": [
+        26000,
+        43000,
+        62500
+      ],
+      "unlockScoreRequired": 0,
+      "skyColor": 8900331,
+      "fogColor": 14215416,
+      "ambientColor": 16777215,
+      "roadColor": 3355960,
+      "buildingColors": [
+        16115400,
+        15521203,
+        13943461,
+        14866368
+      ],
+      "roofColor": 4871528,
+      "accentColor": 3447003,
+      "unlockedByDefault": true,
+      "population": 2160000,
+      "exterminationTarget": 2160000,
+      "mapCoords": {
+        "x": 41.7,
+        "y": 55.1
+      }
+    },
+    {
+      "id": "bruxelles",
+      "name": "Bruxelles",
+      "country": "Belgique",
+      "countryFlag": "🇧🇪",
+      "emblem": "🇧🇪",
+      "monument": "L’Atomium & Grand-Place",
+      "subtitle": "Capitale Européenne & Pavés Dorés",
+      "typeTag": "Grand-Place & Beffroi",
+      "description": "Foncez entre les façades baroques à pignons dorés et l’impressionnante structure d’acier chromé de l’Atomium !",
+      "targetScore": 31000,
+      "starThresholds": [
+        31000,
+        51000,
+        74500
+      ],
+      "unlockScoreRequired": 8400,
+      "skyColor": 9489145,
+      "fogColor": 14938877,
+      "ambientColor": 16777215,
+      "roadColor": 3093826,
+      "buildingColors": [
+        16180621,
+        16760438,
+        14678523,
+        14702333
+      ],
+      "roofColor": 2899536,
+      "accentColor": 16370212,
+      "unlockedByDefault": false,
+      "population": 1220000,
+      "exterminationTarget": 1220000,
+      "mapCoords": {
+        "x": 44.6,
+        "y": 50.1
+      }
+    },
+    {
+      "id": "londres",
+      "name": "Londres",
+      "country": "Royaume-Uni",
+      "countryFlag": "🇬🇧",
+      "emblem": "🇬🇧",
+      "monument": "Big Ben & Tower Bridge",
+      "subtitle": "Big Ben, Tamise & Cabines Rouges",
+      "typeTag": "Avenues Victoriennes & Beffroi",
+      "description": "Slalomez sur Westminster Bridge sous les carillons légendaires de Big Ben, les cabines rouges et les bus à impériale !",
+      "targetScore": 36500,
+      "starThresholds": [
+        36500,
+        60000,
+        87500
+      ],
+      "unlockScoreRequired": 10150,
+      "skyColor": 7649791,
+      "fogColor": 14673130,
+      "ambientColor": 15856374,
+      "roadColor": 1976110,
+      "buildingColors": [
+        9109504,
+        8425115,
+        13555424,
+        13818594
+      ],
+      "roofColor": 1976110,
+      "accentColor": 16729943,
+      "unlockedByDefault": false,
+      "population": 8980000,
+      "exterminationTarget": 8980000,
+      "mapCoords": {
+        "x": 38,
+        "y": 48.4
+      }
+    },
+    {
+      "id": "dublin",
+      "name": "Dublin",
+      "country": "Irlande",
+      "countryFlag": "🇮🇪",
+      "emblem": "🇮🇪",
+      "monument": "Spire de Dublin & Temple Bar",
+      "subtitle": "Liffy, Façades Géorgiennes & Pubs Mythiques",
+      "typeTag": "Avenues Géorgiennes",
+      "description": "Foncez le long de la Liffey sous la flèche d’acier de la Spire et les façades colorées du quartier historique de Temple Bar !",
+      "targetScore": 42000,
+      "starThresholds": [
+        42000,
+        69500,
+        101000
+      ],
+      "unlockScoreRequired": 11900,
+      "skyColor": 6843872,
+      "fogColor": 13102318,
+      "ambientColor": 16119546,
+      "roadColor": 3094080,
+      "buildingColors": [
+        15420747,
+        3069299,
+        16180621,
+        5463144
+      ],
+      "roofColor": 1249088,
+      "accentColor": 3069299,
+      "unlockedByDefault": false,
+      "population": 1250000,
+      "exterminationTarget": 1250000,
+      "mapCoords": {
+        "x": 29,
+        "y": 43.4
+      }
+    },
+    {
+      "id": "newcastle",
+      "name": "Newcastle",
+      "country": "Royaume-Uni",
+      "countryFlag": "🇬🇧",
+      "emblem": "🇬🇧",
+      "monument": "Tyne Bridge & Château Normand",
+      "subtitle": "Cité Industrielle & Ponts Métalliques Géants",
+      "typeTag": "Architecture Industrielle & Viaducs",
+      "description": "Propulsez votre bolide sur les arches métalliques monumentales du Tyne Bridge et les viaducs victoriens de briques rouges !",
+      "targetScore": 47500,
+      "starThresholds": [
+        47500,
+        78500,
+        114000
+      ],
+      "unlockScoreRequired": 13650,
+      "skyColor": 5726319,
+      "fogColor": 10793150,
+      "ambientColor": 14673130,
+      "roadColor": 3093826,
+      "buildingColors": [
+        7634316,
+        5726319,
+        12597547,
+        3093826
+      ],
+      "roofColor": 1976110,
+      "accentColor": 16753922,
+      "unlockedByDefault": false,
+      "population": 820000,
+      "exterminationTarget": 820000,
+      "mapCoords": {
+        "x": 35.9,
+        "y": 38.9
+      }
+    },
+    {
+      "id": "reykjavik",
+      "name": "Reykjavik",
+      "country": "Islande",
+      "countryFlag": "🇮🇸",
+      "emblem": "🇮🇸",
+      "monument": "Hallgrímskirkja & Geysers d’Hiver",
+      "subtitle": "Bord du Cercle Polaire & Aurores Boréales",
+      "typeTag": "Glace, Volcans & Geysers",
+      "description": "Défiez le blizzard arctique et les fumerolles volcaniques sous les orgues de basalte de la cathédrale Hallgrímskirkja !",
+      "targetScore": 52500,
+      "starThresholds": [
+        52500,
+        86500,
+        126000
+      ],
+      "unlockScoreRequired": 15400,
+      "skyColor": 3426654,
+      "fogColor": 14678523,
+      "ambientColor": 16777215,
+      "roadColor": 1249088,
+      "buildingColors": [
+        5460717,
+        7381503,
+        16777215,
+        13555424
+      ],
+      "roofColor": 3069299,
+      "accentColor": 52937,
+      "unlockedByDefault": false,
+      "population": 135000,
+      "exterminationTarget": 135000,
+      "mapCoords": {
+        "x": 6,
+        "y": 9.2
+      }
+    },
+    {
+      "id": "oslo",
+      "name": "Oslo",
+      "country": "Norvège",
+      "countryFlag": "🇳🇴",
+      "emblem": "🇳🇴",
+      "monument": "Opéra d’Oslo & Fjord Scintillant",
+      "subtitle": "Marbre Blanc, Fjords & Forteresse d’Akershus",
+      "typeTag": "Architecture Moderne & Fjords",
+      "description": "Gravissez les pentes immaculées de l’Opéra plongeant dans les eaux glaciales du fjord au milieu des forêts boréales !",
+      "targetScore": 58000,
+      "starThresholds": [
+        58000,
+        95500,
+        139000
+      ],
+      "unlockScoreRequired": 17150,
+      "skyColor": 4751024,
+      "fogColor": 16119546,
+      "ambientColor": 16777215,
+      "roadColor": 3094080,
+      "buildingColors": [
+        16777215,
+        14474721,
+        7438483,
+        2571381
+      ],
+      "roofColor": 1649238,
+      "accentColor": 43263,
+      "unlockedByDefault": false,
+      "population": 697000,
+      "exterminationTarget": 697000,
+      "mapCoords": {
+        "x": 54,
+        "y": 23.9
+      }
+    },
+    {
+      "id": "stockholm",
+      "name": "Stockholm",
+      "country": "Suède",
+      "countryFlag": "🇸🇪",
+      "emblem": "🇸🇪",
+      "monument": "Palais Royal & Gamla Stan",
+      "subtitle": "La Venise du Nord sur 14 Îles Fluviales",
+      "typeTag": "Façades Ocre & Ponts Lacustres",
+      "description": "Franchissez les ponts reliant les 14 îles de la capitale entre les bâtisses ocre du XVIe siècle et l’Hôtel de Ville de brique !",
+      "targetScore": 63500,
+      "starThresholds": [
+        63500,
+        105000,
+        152500
+      ],
+      "unlockScoreRequired": 18900,
+      "skyColor": 4223902,
+      "fogColor": 14474721,
+      "ambientColor": 16119546,
+      "roadColor": 3488584,
+      "buildingColors": [
+        14790956,
+        12727830,
+        16500017,
+        7438483
+      ],
+      "roofColor": 3094080,
+      "accentColor": 16500017,
+      "unlockedByDefault": false,
+      "population": 975000,
+      "exterminationTarget": 975000,
+      "mapCoords": {
+        "x": 65.1,
+        "y": 25.9
+      }
+    },
+    {
+      "id": "copenhague",
+      "name": "Copenhague",
+      "country": "Danemark",
+      "countryFlag": "🇩🇰",
+      "emblem": "🇩🇰",
+      "monument": "Canal de Nyhavn & Bourse Historique",
+      "subtitle": "Maisons Colorées de Nyhavn & Pont de l’Øresund",
+      "typeTag": "Canaux Portuaires & Briques Rouges",
+      "description": "Traversez les quais pavés de Nyhavn bordés de navires historiques et de façades multicolores menant à la Bourse royale !",
+      "targetScore": 69000,
+      "starThresholds": [
+        69000,
+        114000,
+        165500
+      ],
+      "unlockScoreRequired": 20650,
+      "skyColor": 4774907,
+      "fogColor": 13162213,
+      "ambientColor": 16777215,
+      "roadColor": 2240318,
+      "buildingColors": [
+        16739179,
+        16697943,
+        4774907,
+        1954209
+      ],
+      "roofColor": 5727604,
+      "accentColor": 16739179,
+      "unlockedByDefault": false,
+      "population": 650000,
+      "exterminationTarget": 650000,
+      "mapCoords": {
+        "x": 56.7,
+        "y": 36.9
+      }
+    },
+    {
+      "id": "helsinki",
+      "name": "Helsinki",
+      "country": "Finlande",
+      "countryFlag": "🇫🇮",
+      "emblem": "🇫🇮",
+      "monument": "Cathédrale Blanche & Suomenlinna",
+      "subtitle": "La Fille de la Baltique & Dômes Émeraude",
+      "typeTag": "Néo-Classicisme & Granit Nordique",
+      "description": "Slalomez sur la place du Sénat dominée par les colonnes de marbre blanc et les dômes émeraude de la cathédrale monumentale !",
+      "targetScore": 74000,
+      "starThresholds": [
+        74000,
+        122000,
+        177500
+      ],
+      "unlockScoreRequired": 22400,
+      "skyColor": 5546239,
+      "fogColor": 14678523,
+      "ambientColor": 16777215,
+      "roadColor": 3093826,
+      "buildingColors": [
+        16777215,
+        13102318,
+        9809856,
+        5463144
+      ],
+      "roofColor": 3069299,
+      "accentColor": 623843,
+      "unlockedByDefault": false,
+      "population": 660000,
+      "exterminationTarget": 660000,
+      "mapCoords": {
+        "x": 74.9,
+        "y": 23.1
+      }
+    },
+    {
+      "id": "tallinn",
+      "name": "Tallinn",
+      "country": "Estonie",
+      "countryFlag": "🇪🇪",
+      "emblem": "🇪🇪",
+      "monument": "Château de Toompea & Tours Fortifiées",
+      "subtitle": "Remparts Médiévaux & Toits Pointus",
+      "typeTag": "Cité Médiévale Balte & Forteresse",
+      "description": "Foncez le long des remparts crénelés médiévaux et des ruelles pavées dominées par la tour légendaire du Gros Hermann !",
+      "targetScore": 79500,
+      "starThresholds": [
+        79500,
+        131000,
+        191000
+      ],
+      "unlockScoreRequired": 24150,
+      "skyColor": 4946924,
+      "fogColor": 13752544,
+      "ambientColor": 16119546,
+      "roadColor": 3696598,
+      "buildingColors": [
+        16234289,
+        15416154,
+        16417329,
+        7834787
+      ],
+      "roofColor": 10837738,
+      "accentColor": 3696598,
+      "unlockedByDefault": false,
+      "population": 440000,
+      "exterminationTarget": 440000,
+      "mapCoords": {
+        "x": 74.6,
+        "y": 25.5
+      }
+    },
+    {
+      "id": "riga",
+      "name": "Riga",
+      "country": "Lettonie",
+      "countryFlag": "🇱🇻",
+      "emblem": "🇱🇻",
+      "monument": "Maison des Têtes Noires & Daugava",
+      "subtitle": "Joyau Art Nouveau & Flèches Gothiques",
+      "typeTag": "Art Nouveau & Bords de Daugava",
+      "description": "Slalomez entre les sculptures baroques de la Maison des Têtes Noires et les façades Art Nouveau mondialement célèbres !",
+      "targetScore": 85000,
+      "starThresholds": [
+        85000,
+        140500,
+        204000
+      ],
+      "unlockScoreRequired": 25900,
+      "skyColor": 3696598,
+      "fogColor": 13752544,
+      "ambientColor": 16777215,
+      "roadColor": 2962486,
+      "buildingColors": [
+        15416154,
+        16234289,
+        13752544,
+        4941188
+      ],
+      "roofColor": 2146155,
+      "accentColor": 15416154,
+      "unlockedByDefault": false,
+      "population": 615000,
+      "exterminationTarget": 615000,
+      "mapCoords": {
+        "x": 73.7,
+        "y": 33.2
+      }
+    },
+    {
+      "id": "vilnius",
+      "name": "Vilnius",
+      "country": "Lituanie",
+      "countryFlag": "🇱🇹",
+      "emblem": "🇱🇹",
+      "monument": "Tour de Gediminas & Église Sainte-Anne",
+      "subtitle": "Baroque Flamboyant & Collines Boisées",
+      "typeTag": "Briques Gothiques & Flèches Baroques",
+      "description": "Déboulez au pied de la Tour de Gediminas dominant la Neris et les chefs-d’œuvre de brique rouge gothique de Sainte-Anne !",
+      "targetScore": 90500,
+      "starThresholds": [
+        90500,
+        149500,
+        217000
+      ],
+      "unlockScoreRequired": 27650,
+      "skyColor": 2146155,
+      "fogColor": 10858946,
+      "ambientColor": 16119546,
+      "roadColor": 2962486,
+      "buildingColors": [
+        16417329,
+        16234289,
+        15416154,
+        4941188
+      ],
+      "roofColor": 7834787,
+      "accentColor": 2146155,
+      "unlockedByDefault": false,
+      "population": 590000,
+      "exterminationTarget": 590000,
+      "mapCoords": {
+        "x": 75.4,
+        "y": 39.7
+      }
+    },
+    {
+      "id": "saint_petersbourg",
+      "name": "Saint-Pétersbourg",
+      "country": "Russie",
+      "countryFlag": "🇷🇺",
+      "emblem": "🇷🇺",
+      "monument": "Palais d’Hiver & Colonne d’Alexandre",
+      "subtitle": "Venise du Nord Impériale & Neva Gelée",
+      "typeTag": "Palais Baroques & Quais de la Neva",
+      "description": "Franchissez la place du Palais d’Hiver aux façades turquoise et dorées avant d’enflammer les boulevards gelés de la perspective Nevski !",
+      "targetScore": 95500,
+      "starThresholds": [
+        95500,
+        157500,
+        229000
+      ],
+      "unlockScoreRequired": 29400,
+      "skyColor": 703971,
+      "fogColor": 13162213,
+      "ambientColor": 16777215,
+      "roadColor": 1092740,
+      "buildingColors": [
+        1092740,
+        703971,
+        16697943,
+        16777215
+      ],
+      "roofColor": 2240318,
+      "accentColor": 16697943,
+      "unlockedByDefault": false,
+      "population": 5400000,
+      "exterminationTarget": 5400000,
+      "mapCoords": {
+        "x": 82.9,
+        "y": 23.9
+      }
+    },
+    {
+      "id": "moscou",
+      "name": "Moscou",
+      "country": "Russie",
+      "countryFlag": "🇷🇺",
+      "emblem": "🇷🇺",
+      "monument": "Kremlin & Cathédrale Saint-Basile",
+      "subtitle": "Place Rouge, Murailles Ocre & Bulbes Multicolores",
+      "typeTag": "Murailles Impériales & Avenues Géantes",
+      "description": "Foncez sur les pavés historiques de la Place Rouge devant les bulbes polychromes féeriques de la cathédrale Saint-Basile !",
+      "targetScore": 101000,
+      "starThresholds": [
+        101000,
+        166500,
+        242500
+      ],
+      "unlockScoreRequired": 31150,
+      "skyColor": 15618643,
+      "fogColor": 16752451,
+      "ambientColor": 16777215,
+      "roadColor": 1976110,
+      "buildingColors": [
+        12597547,
+        16752451,
+        16775781,
+        52937
+      ],
+      "roofColor": 8598641,
+      "accentColor": 16726072,
+      "unlockedByDefault": false,
+      "population": 13000000,
+      "exterminationTarget": 13000000,
+      "mapCoords": {
+        "x": 93.6,
+        "y": 36.7
+      }
+    },
+    {
+      "id": "minsk",
+      "name": "Minsk",
+      "country": "Biélorussie",
+      "countryFlag": "🇧🇾",
+      "emblem": "🇧🇾",
+      "monument": "Portes de Minsk & Place de la Victoire",
+      "subtitle": "Néo-Classicisme Monumental & Grands Parcs",
+      "typeTag": "Avenues Impériales Larges",
+      "description": "Dominez l’avenue de l’Indépendance sous les tours jumelles des Portes de Minsk et les flèches commémoratives en granit !",
+      "targetScore": 106500,
+      "starThresholds": [
+        106500,
+        175500,
+        255500
+      ],
+      "unlockScoreRequired": 32900,
+      "skyColor": 5727604,
+      "fogColor": 8623527,
+      "ambientColor": 13162213,
+      "roadColor": 2240318,
+      "buildingColors": [
+        13162213,
+        8623527,
+        16697943,
+        5727604
+      ],
+      "roofColor": 1092740,
+      "accentColor": 16739179,
+      "unlockedByDefault": false,
+      "population": 2000000,
+      "exterminationTarget": 2000000,
+      "mapCoords": {
+        "x": 78.8,
+        "y": 41.9
+      }
+    },
+    {
+      "id": "kiev",
+      "name": "Kiev",
+      "country": "Ukraine",
+      "countryFlag": "🇺🇦",
+      "emblem": "🇺🇦",
+      "monument": "Laure des Grottes & Dniepr",
+      "subtitle": "Dômes d’Or, Collines Boisées & Fleuve Majestueux",
+      "typeTag": "Monastères & Fleuve",
+      "description": "Franchissez les ponts colossaux sur le Dniepr sous la splendeur des dômes dorés de la Laure des Grottes et de Sainte-Sophie !",
+      "targetScore": 112000,
+      "starThresholds": [
+        112000,
+        185000,
+        269000
+      ],
+      "unlockScoreRequired": 34650,
+      "skyColor": 3696598,
+      "fogColor": 16242580,
+      "ambientColor": 16777215,
+      "roadColor": 2899536,
+      "buildingColors": [
+        16108921,
+        16242580,
+        5533157,
+        16777215
+      ],
+      "roofColor": 2146155,
+      "accentColor": 16765738,
+      "unlockedByDefault": false,
+      "population": 2950000,
+      "exterminationTarget": 2950000,
+      "mapCoords": {
+        "x": 83.1,
+        "y": 51.1
+      }
+    },
+    {
+      "id": "varsovie",
+      "name": "Varsovie",
+      "country": "Pologne",
+      "countryFlag": "🇵🇱",
+      "emblem": "🇵🇱",
+      "monument": "Palais de la Culture & Vieille Ville",
+      "subtitle": "Gratte-Ciels de Verre & Reconstruction Baroque",
+      "typeTag": "Gratte-ciels & Cité Historique",
+      "description": "Foncez sur Marszałkowska sous l’immense flèche du Palais de la Culture et les reflets dorés des façades de la place du Marché !",
+      "targetScore": 117000,
+      "starThresholds": [
+        117000,
+        193000,
+        281000
+      ],
+      "unlockScoreRequired": 36400,
+      "skyColor": 3696598,
+      "fogColor": 13752544,
+      "ambientColor": 16777215,
+      "roadColor": 3093826,
+      "buildingColors": [
+        16729943,
+        16777215,
+        16169275,
+        4876733
+      ],
+      "roofColor": 1976110,
+      "accentColor": 16729943,
+      "unlockedByDefault": false,
+      "population": 1860000,
+      "exterminationTarget": 1860000,
+      "mapCoords": {
+        "x": 69.1,
+        "y": 46.5
+      }
+    },
+    {
+      "id": "berlin",
+      "name": "Berlin",
+      "country": "Allemagne",
+      "countryFlag": "🇩🇪",
+      "emblem": "🇩🇪",
+      "monument": "Porte de Brandebourg & Fernsehturm",
+      "subtitle": "Unter den Linden & Tour TV Alexanderplatz",
+      "typeTag": "Monuments Néo-Classiques & Tour TV",
+      "description": "Pulvérisez vos records sous le quadrige de la Porte de Brandebourg et l’immense aiguille métallique de la Fernsehturm !",
+      "targetScore": 122500,
+      "starThresholds": [
+        122500,
+        202000,
+        294000
+      ],
+      "unlockScoreRequired": 38150,
+      "skyColor": 4876733,
+      "fogColor": 14474721,
+      "ambientColor": 16777215,
+      "roadColor": 1976110,
+      "buildingColors": [
+        13818594,
+        8425115,
+        16169275,
+        498066
+      ],
+      "roofColor": 2898503,
+      "accentColor": 16169275,
+      "unlockedByDefault": false,
+      "population": 3670000,
+      "exterminationTarget": 3670000,
+      "mapCoords": {
+        "x": 57.9,
+        "y": 45.7
+      }
+    },
+    {
+      "id": "bonn",
+      "name": "Bonn",
+      "country": "Allemagne",
+      "countryFlag": "🇩🇪",
+      "emblem": "🇩🇪",
+      "monument": "Bords du Rhin & Maison de Beethoven",
+      "subtitle": "Ancienne Capitale Fédérale & Rives Rhénanes",
+      "typeTag": "Boulevards Rhénans & Châteaux",
+      "description": "Slalomez le long du Rhin en longeant le palais de Poppelsdorf et les avenues ombragées de la cité musicale de Beethoven !",
+      "targetScore": 128000,
+      "starThresholds": [
+        128000,
+        211000,
+        307000
+      ],
+      "unlockScoreRequired": 39900,
+      "skyColor": 6982092,
+      "fogColor": 14678523,
+      "ambientColor": 16777215,
+      "roadColor": 3093826,
+      "buildingColors": [
+        16302737,
+        15028281,
+        6333372,
+        4876733
+      ],
+      "roofColor": 671074,
+      "accentColor": 15028281,
+      "unlockedByDefault": false,
+      "population": 330000,
+      "exterminationTarget": 330000,
+      "mapCoords": {
+        "x": 48.7,
+        "y": 50.4
+      }
+    },
+    {
+      "id": "francfort",
+      "name": "Francfort",
+      "country": "Allemagne",
+      "countryFlag": "🇩🇪",
+      "emblem": "🇩🇪",
+      "monument": "Skyline Mainhattan & Place du Römer",
+      "subtitle": "Cœur Financier, Verre Chromé & Maisons à Colombages",
+      "typeTag": "Skyline & Ponts sur le Main",
+      "description": "Foncez entre les tours de verre vertigineuses de la BCE et la place médiévale du Römer aux pignons à colombages sculptés !",
+      "targetScore": 133500,
+      "starThresholds": [
+        133500,
+        220500,
+        320500
+      ],
+      "unlockScoreRequired": 41650,
+      "skyColor": 1980313,
+      "fogColor": 8572125,
+      "ambientColor": 16777215,
+      "roadColor": 795745,
+      "buildingColors": [
+        4876733,
+        6333372,
+        7921807,
+        3714473
+      ],
+      "roofColor": 498066,
+      "accentColor": 7921807,
+      "unlockedByDefault": false,
+      "population": 760000,
+      "exterminationTarget": 760000,
+      "mapCoords": {
+        "x": 51,
+        "y": 52
+      }
+    },
+    {
+      "id": "amsterdam",
+      "name": "Amsterdam",
+      "country": "Pays-Bas",
+      "countryFlag": "🇳🇱",
+      "emblem": "🇳🇱",
+      "monument": "Canaux du Dam & Rijksmuseum",
+      "subtitle": "Ponts Levants, Vélos & Façades en Briques",
+      "typeTag": "Canaux & Ponts Levants",
+      "description": "Enchaînez les virages serrés le long des canaux concentriques enjambant les ponts levants et les rangées de péniches !",
+      "targetScore": 138500,
+      "starThresholds": [
+        138500,
+        228500,
+        332500
+      ],
+      "unlockScoreRequired": 43400,
+      "skyColor": 3714473,
+      "fogColor": 12118420,
+      "ambientColor": 16777215,
+      "roadColor": 2898503,
+      "buildingColors": [
+        11998528,
+        15028281,
+        16302737,
+        4876733
+      ],
+      "roofColor": 1980313,
+      "accentColor": 16739201,
+      "unlockedByDefault": false,
+      "population": 870000,
+      "exterminationTarget": 870000,
+      "mapCoords": {
+        "x": 45.4,
+        "y": 46.1
+      }
+    },
+    {
+      "id": "anvers",
+      "name": "Anvers",
+      "country": "Belgique",
+      "countryFlag": "🇧🇪",
+      "emblem": "🇧🇪",
+      "monument": "Gare Centrale & Quartier des Diamants",
+      "subtitle": "Palais Ferroviaire & Rives de l’Escaut",
+      "typeTag": "Architecture Flamande & Quais",
+      "description": "Propulsez votre engin devant la majestueuse cathédrale de fer et de verre de la Gare Centrale et les quais de l’Escaut !",
+      "targetScore": 144000,
+      "starThresholds": [
+        144000,
+        237500,
+        345500
+      ],
+      "unlockScoreRequired": 45150,
+      "skyColor": 4876733,
+      "fogColor": 14678523,
+      "ambientColor": 16777215,
+      "roadColor": 1976110,
+      "buildingColors": [
+        16302737,
+        6333372,
+        16760438,
+        16742005
+      ],
+      "roofColor": 2899536,
+      "accentColor": 3714473,
+      "unlockedByDefault": false,
+      "population": 530000,
+      "exterminationTarget": 530000,
+      "mapCoords": {
+        "x": 44.7,
+        "y": 49.1
+      }
+    },
+    {
+      "id": "cherbourg",
+      "name": "Cherbourg",
+      "country": "France",
+      "countryFlag": "🇫🇷",
+      "emblem": "⚓",
+      "monument": "Rade & Cité de la Mer",
+      "subtitle": "La Grande Rade & Sous-Marin Redoutable",
+      "typeTag": "Port & Digue Marine",
+      "description": "Affrontez les embruns de la plus grande rade artificielle du monde devant la silhouette monumentale du sous-marin Redoutable !",
+      "targetScore": 149500,
+      "starThresholds": [
+        149500,
+        246500,
+        359000
+      ],
+      "unlockScoreRequired": 46900,
+      "skyColor": 6333372,
+      "fogColor": 14678523,
+      "ambientColor": 16777215,
+      "roadColor": 3093826,
+      "buildingColors": [
+        13555424,
+        7634316,
+        10793150,
+        5726319
+      ],
+      "roofColor": 1976110,
+      "accentColor": 3714473,
+      "unlockedByDefault": false,
+      "population": 80000,
+      "exterminationTarget": 80000,
+      "mapCoords": {
+        "x": 36,
+        "y": 53.3
+      }
+    },
+    {
+      "id": "saint_malo",
+      "name": "Saint-Malo",
+      "country": "France",
+      "countryFlag": "🇫🇷",
+      "emblem": "🏴‍☠️",
+      "monument": "Remparts de Granit & Cité Corsaire",
+      "subtitle": "La Cité Corsaire Face aux Vagues",
+      "typeTag": "Remparts & Baie",
+      "description": "Slalomez sur les remparts en granit gris battus par les marées géantes avec vue imprenable sur les forts insulaires !",
+      "targetScore": 155000,
+      "starThresholds": [
+        155000,
+        256000,
+        372000
+      ],
+      "unlockScoreRequired": 48650,
+      "skyColor": 4876733,
+      "fogColor": 8572125,
+      "ambientColor": 16119546,
+      "roadColor": 2898503,
+      "buildingColors": [
+        5726319,
+        7634316,
+        10793150,
+        13818594
+      ],
+      "roofColor": 1976110,
+      "accentColor": 52937,
+      "unlockedByDefault": false,
+      "population": 47000,
+      "exterminationTarget": 47000,
+      "mapCoords": {
+        "x": 35.5,
+        "y": 55.8
+      }
+    },
+    {
+      "id": "bordeaux",
+      "name": "Bordeaux",
+      "country": "France",
+      "countryFlag": "🇫🇷",
+      "emblem": "🍷",
+      "monument": "Place de la Bourse & Pont de Pierre",
+      "subtitle": "Miroir d’Eau, Garonne & Arcades Dorées",
+      "typeTag": "Façades Classiques & Quais",
+      "description": "Foncez sur les quais de la Garonne en traversant les reflets du Miroir d’Eau et les arches de briques du Pont de Pierre !",
+      "targetScore": 160000,
+      "starThresholds": [
+        160000,
+        264000,
+        384000
+      ],
+      "unlockScoreRequired": 50400,
+      "skyColor": 16295362,
+      "fogColor": 16242580,
+      "ambientColor": 16777215,
+      "roadColor": 3160402,
+      "buildingColors": [
+        16242580,
+        16108921,
+        15967875,
+        16295362
+      ],
+      "roofColor": 5533157,
+      "accentColor": 14769985,
+      "unlockedByDefault": false,
+      "population": 260000,
+      "exterminationTarget": 260000,
+      "mapCoords": {
+        "x": 37.4,
+        "y": 64.7
+      }
+    },
+    {
+      "id": "lyon",
+      "name": "Lyon",
+      "country": "France",
+      "countryFlag": "🇫🇷",
+      "emblem": "🦁",
+      "monument": "Basilique de Fourvière & Passerelles",
+      "subtitle": "La Confluence, Saône, Rhône & Traboules",
+      "typeTag": "Ponts Fluviaux & Collines",
+      "description": "Enchaînez les ponts au-dessus de la Saône et du Rhône sous le regard protecteur de la basilique de Fourvière !",
+      "targetScore": 165500,
+      "starThresholds": [
+        165500,
+        273000,
+        397000
+      ],
+      "unlockScoreRequired": 52150,
+      "skyColor": 7834787,
+      "fogColor": 13752544,
+      "ambientColor": 16777215,
+      "roadColor": 2962486,
+      "buildingColors": [
+        15416154,
+        16417329,
+        16234289,
+        13752544
+      ],
+      "roofColor": 4941188,
+      "accentColor": 15416154,
+      "unlockedByDefault": false,
+      "population": 520000,
+      "exterminationTarget": 520000,
+      "mapCoords": {
+        "x": 45.3,
+        "y": 62.6
+      }
+    },
+    {
+      "id": "strasbourg",
+      "name": "Strasbourg",
+      "country": "France",
+      "countryFlag": "🇫🇷",
+      "emblem": "🥨",
+      "monument": "Cathédrale Notre-Dame & Petite France",
+      "subtitle": "Grès Rose, Colombages & Ponts Couverts",
+      "typeTag": "Gothique en Grès & Canaux de l’Ill",
+      "description": "Prenez les virages en épingle entre les maisons à colombages de la Petite France et la flèche en grès rose de la cathédrale !",
+      "targetScore": 171000,
+      "starThresholds": [
+        171000,
+        282000,
+        410500
+      ],
+      "unlockScoreRequired": 53900,
+      "skyColor": 4941188,
+      "fogColor": 10858946,
+      "ambientColor": 16777215,
+      "roadColor": 2962486,
+      "buildingColors": [
+        15416154,
+        16234289,
+        13752544,
+        7834787
+      ],
+      "roofColor": 2146155,
+      "accentColor": 16417329,
+      "unlockedByDefault": false,
+      "population": 290000,
+      "exterminationTarget": 290000,
+      "mapCoords": {
+        "x": 49.5,
+        "y": 55.9
+      }
+    },
+    {
+      "id": "geneve",
+      "name": "Genève",
+      "country": "Suisse",
+      "countryFlag": "🇨🇭",
+      "emblem": "🇨🇭",
+      "monument": "Jet d’Eau & Mont-Blanc en Fond",
+      "subtitle": "Palais des Nations & Rade Scintillante",
+      "typeTag": "Lac, Jet d’Eau & Cimes",
+      "description": "Frôlez le puissant panache de 140m du Jet d’Eau le long des quais fleuris bordés d’horlogeries de luxe !",
+      "targetScore": 176500,
+      "starThresholds": [
+        176500,
+        291000,
+        423500
+      ],
+      "unlockScoreRequired": 55650,
+      "skyColor": 2270899,
+      "fogColor": 8312543,
+      "ambientColor": 16777215,
+      "roadColor": 1249088,
+      "buildingColors": [
+        16777215,
+        13102318,
+        9809856,
+        16180621
+      ],
+      "roofColor": 3158891,
+      "accentColor": 2270899,
+      "unlockedByDefault": false,
+      "population": 200000,
+      "exterminationTarget": 200000,
+      "mapCoords": {
+        "x": 47.4,
+        "y": 61
+      }
+    },
+    {
+      "id": "zurich",
+      "name": "Zurich",
+      "country": "Suisse",
+      "countryFlag": "🇨🇭",
+      "emblem": "🇨🇭",
+      "monument": "Fraumünster & Quai de la Limmat",
+      "subtitle": "La Limmat, Ponts Historiques & Banques",
+      "typeTag": "Bords de Lac & Clochers Pointus",
+      "description": "Fendez les quais de la Limmat sous les vitraux de Chagall et les reflets cristallins des cimes alpines dans le lac !",
+      "targetScore": 181500,
+      "starThresholds": [
+        181500,
+        299500,
+        435500
+      ],
+      "unlockScoreRequired": 57400,
+      "skyColor": 623843,
+      "fogColor": 7649791,
+      "ambientColor": 16777215,
+      "roadColor": 2962486,
+      "buildingColors": [
+        14673130,
+        15856374,
+        13555424,
+        7634316
+      ],
+      "roofColor": 52937,
+      "accentColor": 52937,
+      "unlockedByDefault": false,
+      "population": 420000,
+      "exterminationTarget": 420000,
+      "mapCoords": {
+        "x": 50.8,
+        "y": 58.7
+      }
+    },
+    {
+      "id": "innsbruck",
+      "name": "Innsbruck",
+      "country": "Autriche",
+      "countryFlag": "🇦🇹",
+      "emblem": "🇦🇹",
+      "monument": "Petit Toit d’Or & Tremplin de Bergisel",
+      "subtitle": "La Capitale du Tyrol Cernée de Géants Rocheux",
+      "typeTag": "Gorges Alpines & Toits Scintillants",
+      "description": "Accélérez entre les sommets enneigés de la Nordkette et les reflets cuivrés du Petit Toit d’Or au cœur du Tyrol !",
+      "targetScore": 187000,
+      "starThresholds": [
+        187000,
+        308500,
+        449000
+      ],
+      "unlockScoreRequired": 59150,
+      "skyColor": 4774907,
+      "fogColor": 14678523,
+      "ambientColor": 16777215,
+      "roadColor": 2240318,
+      "buildingColors": [
+        16697943,
+        16752627,
+        5546239,
+        1954209
+      ],
+      "roofColor": 16739179,
+      "accentColor": 16697943,
+      "unlockedByDefault": false,
+      "population": 130000,
+      "exterminationTarget": 130000,
+      "mapCoords": {
+        "x": 55,
+        "y": 59
+      }
+    },
+    {
+      "id": "prague",
+      "name": "Prague",
+      "country": "République Tchèque",
+      "countryFlag": "🇨🇿",
+      "emblem": "🇨🇿",
+      "monument": "Pont Charles & Château de Prague",
+      "subtitle": "La Ville aux Cent Clochers & Vltava Miroitante",
+      "typeTag": "Gothique, Baroque & Statues de Pierre",
+      "description": "Foncez sur les pavés du Pont Charles entre les trente statues de saints et la silhouette colossale du château dominant la Vltava !",
+      "targetScore": 192500,
+      "starThresholds": [
+        192500,
+        317500,
+        462000
+      ],
+      "unlockScoreRequired": 60900,
+      "skyColor": 3415959,
+      "fogColor": 15618643,
+      "ambientColor": 16777215,
+      "roadColor": 2240318,
+      "buildingColors": [
+        16697943,
+        16752451,
+        16739179,
+        5727604
+      ],
+      "roofColor": 1092740,
+      "accentColor": 16697943,
+      "unlockedByDefault": false,
+      "population": 1330000,
+      "exterminationTarget": 1330000,
+      "mapCoords": {
+        "x": 59.5,
+        "y": 52.1
+      }
+    },
+    {
+      "id": "vienne",
+      "name": "Vienne",
+      "country": "Autriche",
+      "countryFlag": "🇦🇹",
+      "emblem": "🇦🇹",
+      "monument": "Château de Schönbrunn & Ringstrasse",
+      "subtitle": "Palais Impériaux des Habsbourg & Danube Bleu",
+      "typeTag": "Palais Impériaux & Boulevards Larges",
+      "description": "Dépassez les calèches impériales sur le célèbre Ring en passant devant le palais de la Hofburg et le Belvédère baroque !",
+      "targetScore": 198000,
+      "starThresholds": [
+        198000,
+        326500,
+        475000
+      ],
+      "unlockScoreRequired": 62650,
+      "skyColor": 703971,
+      "fogColor": 16697943,
+      "ambientColor": 16777215,
+      "roadColor": 2240318,
+      "buildingColors": [
+        16697943,
+        16777215,
+        16752451,
+        4774907
+      ],
+      "roofColor": 1092740,
+      "accentColor": 16752451,
+      "unlockedByDefault": false,
+      "population": 1980000,
+      "exterminationTarget": 1980000,
+      "mapCoords": {
+        "x": 62.3,
+        "y": 56.7
+      }
+    },
+    {
+      "id": "bratislava",
+      "name": "Bratislava",
+      "country": "Slovaquie",
+      "countryFlag": "🇸🇰",
+      "emblem": "🇸🇰",
+      "monument": "Château Blanc & Pont OVNI sur le Danube",
+      "subtitle": "La Table Renversée & Tour Rétro-Futuriste",
+      "typeTag": "Forteresse Médiévale & Pont OVNI",
+      "description": "Franchissez le Danube sous la tour panoramique OVNI du pont SNP avec vue plongeante sur les quatre tours blanches du château !",
+      "targetScore": 203000,
+      "starThresholds": [
+        203000,
+        335000,
+        487000
+      ],
+      "unlockScoreRequired": 64400,
+      "skyColor": 6236109,
+      "fogColor": 4774907,
+      "ambientColor": 16777215,
+      "roadColor": 3415959,
+      "buildingColors": [
+        16777215,
+        13162213,
+        16697943,
+        15618643
+      ],
+      "roofColor": 1092740,
+      "accentColor": 53971,
+      "unlockedByDefault": false,
+      "population": 475000,
+      "exterminationTarget": 475000,
+      "mapCoords": {
+        "x": 63.5,
+        "y": 56.9
+      }
+    },
+    {
+      "id": "budapest",
+      "name": "Budapest",
+      "country": "Hongrie",
+      "countryFlag": "🇭🇺",
+      "emblem": "🇭🇺",
+      "monument": "Parlement Néo-Gothique & Pont des Chaînes",
+      "subtitle": "La Perle du Danube entre Buda et Pest",
+      "typeTag": "Palais Monumental & Ponts Suspendus",
+      "description": "Slalomez à pleine vitesse sur le Pont des Chaînes flanqué de ses lions de pierre sous l’immense coupole dorée du Parlement !",
+      "targetScore": 208500,
+      "starThresholds": [
+        208500,
+        344000,
+        500500
+      ],
+      "unlockScoreRequired": 66150,
+      "skyColor": 3049182,
+      "fogColor": 16697943,
+      "ambientColor": 16777215,
+      "roadColor": 2240318,
+      "buildingColors": [
+        16775781,
+        16752451,
+        16777215,
+        15618643
+      ],
+      "roofColor": 1092740,
+      "accentColor": 16775781,
+      "unlockedByDefault": false,
+      "population": 1750000,
+      "exterminationTarget": 1750000,
+      "mapCoords": {
+        "x": 66.2,
+        "y": 58.4
+      }
+    },
+    {
+      "id": "ljubljana",
+      "name": "Ljubljana",
+      "country": "Slovénie",
+      "countryFlag": "🇸🇮",
+      "emblem": "🇸🇮",
+      "monument": "Pont des Dragons & Château Perché",
+      "subtitle": "Capitale Verte, Canaux Émeraude & Dragons",
+      "typeTag": "Ponts Sculptés & Colline Boisée",
+      "description": "Passez en trombe sous les griffes des quatre dragons de bronze gardant la rivière Ljubljanica dominée par le château médiéval !",
+      "targetScore": 214000,
+      "starThresholds": [
+        214000,
+        353000,
+        513500
+      ],
+      "unlockScoreRequired": 67900,
+      "skyColor": 1092740,
+      "fogColor": 1954209,
+      "ambientColor": 16777215,
+      "roadColor": 2240318,
+      "buildingColors": [
+        1954209,
+        1092740,
+        16697943,
+        16777215
+      ],
+      "roofColor": 15618643,
+      "accentColor": 1954209,
+      "unlockedByDefault": false,
+      "population": 295000,
+      "exterminationTarget": 295000,
+      "mapCoords": {
+        "x": 59.6,
+        "y": 61.9
+      }
+    },
+    {
+      "id": "zagreb",
+      "name": "Zagreb",
+      "country": "Croatie",
+      "countryFlag": "🇭🇷",
+      "emblem": "🇭🇷",
+      "monument": "Toit Tuilé de Saint-Marc & Ville Haute",
+      "subtitle": "Gornji Grad, Funiculaire & Flèches Jumelles",
+      "typeTag": "Toits en Damier & Ruelles Pavées",
+      "description": "Franchissez la place Saint-Marc sous son célèbre toit en damier rouge, blanc et bleu et les ruelles pavées de la Ville Haute !",
+      "targetScore": 219500,
+      "starThresholds": [
+        219500,
+        362000,
+        527000
+      ],
+      "unlockScoreRequired": 69650,
+      "skyColor": 3415959,
+      "fogColor": 15618643,
+      "ambientColor": 16777215,
+      "roadColor": 2240318,
+      "buildingColors": [
+        16729943,
+        16777215,
+        3049182,
+        16697943
+      ],
+      "roofColor": 16726072,
+      "accentColor": 3049182,
+      "unlockedByDefault": false,
+      "population": 800000,
+      "exterminationTarget": 800000,
+      "mapCoords": {
+        "x": 61.7,
+        "y": 62.4
+      }
+    },
+    {
+      "id": "sarajevo",
+      "name": "Sarajevo",
+      "country": "Bosnie-Herzégovine",
+      "countryFlag": "🇧🇦",
+      "emblem": "🇧🇦",
+      "monument": "Baščaršija & Pont Latin Historique",
+      "subtitle": "La Jérusalem d’Europe entre Montagnes & Mosquées",
+      "typeTag": "Minarets, Bazars & Gorges",
+      "description": "Vrombissez le long de la Miljacka en contournant la fontaine Sebilj et le Pont Latin entouré par les sommets olympiques !",
+      "targetScore": 224500,
+      "starThresholds": [
+        224500,
+        370500,
+        539000
+      ],
+      "unlockScoreRequired": 71400,
+      "skyColor": 15618643,
+      "fogColor": 16697943,
+      "ambientColor": 16777215,
+      "roadColor": 1976110,
+      "buildingColors": [
+        16697943,
+        5727604,
+        16777215,
+        15618643
+      ],
+      "roofColor": 3069299,
+      "accentColor": 16752451,
+      "unlockedByDefault": false,
+      "population": 350000,
+      "exterminationTarget": 350000,
+      "mapCoords": {
+        "x": 65.3,
+        "y": 66.9
+      }
+    },
+    {
+      "id": "belgrade",
+      "name": "Belgrade",
+      "country": "Serbie",
+      "countryFlag": "🇷🇸",
+      "emblem": "🇷🇸",
+      "monument": "Forteresse de Kalemegdan & Confluence Danube-Save",
+      "subtitle": "La Ville Blanche aux Portes des Balkans",
+      "typeTag": "Forteresse Millénaire & Ponts Métalliques",
+      "description": "Déboulez au pied des remparts millénaires de Kalemegdan dominant la confluence spectaculaire de la Save et du Danube !",
+      "targetScore": 230000,
+      "starThresholds": [
+        230000,
+        379500,
+        552000
+      ],
+      "unlockScoreRequired": 73150,
+      "skyColor": 2240318,
+      "fogColor": 15618643,
+      "ambientColor": 16777215,
+      "roadColor": 795745,
+      "buildingColors": [
+        16777215,
+        15618643,
+        3049182,
+        16697943
+      ],
+      "roofColor": 1092740,
+      "accentColor": 15618643,
+      "unlockedByDefault": false,
+      "population": 1400000,
+      "exterminationTarget": 1400000,
+      "mapCoords": {
+        "x": 68.3,
+        "y": 64.8
+      }
+    },
+    {
+      "id": "podgorica",
+      "name": "Podgorica",
+      "country": "Monténégro",
+      "countryFlag": "🇲🇪",
+      "emblem": "🇲🇪",
+      "monument": "Pont du Millénaire & Canyons de la Morača",
+      "subtitle": "Canyons Sauvages, Pont Suspendu & Calcaire Blanc",
+      "typeTag": "Canyons Vertigineux & Pont Suspendu",
+      "description": "Franchissez le tablier futuriste du Pont du Millénaire suspendu au-dessus des eaux turquoise des gorges de la Morača !",
+      "targetScore": 235500,
+      "starThresholds": [
+        235500,
+        388500,
+        565000
+      ],
+      "unlockScoreRequired": 74900,
+      "skyColor": 53971,
+      "fogColor": 5546239,
+      "ambientColor": 16777215,
+      "roadColor": 2240318,
+      "buildingColors": [
+        16777215,
+        13162213,
+        5727604,
+        15618643
+      ],
+      "roofColor": 16726072,
+      "accentColor": 16752451,
+      "unlockedByDefault": false,
+      "population": 200000,
+      "exterminationTarget": 200000,
+      "mapCoords": {
+        "x": 66.6,
+        "y": 70.1
+      }
+    },
+    {
+      "id": "tirana",
+      "name": "Tirana",
+      "country": "Albanie",
+      "countryFlag": "🇦🇱",
+      "emblem": "🇦🇱",
+      "monument": "Place Skanderbeg & Pyramide de Tirana",
+      "subtitle": "Façades Multicolores & Statue de Skanderbeg",
+      "typeTag": "Places Monumentales & Édifices Colorés",
+      "description": "Balayez la gigantesque place Skanderbeg au pied de la statue équestre de bronze et de la pyramide d’acier revitalisée !",
+      "targetScore": 241000,
+      "starThresholds": [
+        241000,
+        397500,
+        578500
+      ],
+      "unlockScoreRequired": 76650,
+      "skyColor": 16729943,
+      "fogColor": 16739201,
+      "ambientColor": 16777215,
+      "roadColor": 3093826,
+      "buildingColors": [
+        16729943,
+        16753922,
+        3069299,
+        2003199
+      ],
+      "roofColor": 3093826,
+      "accentColor": 16729943,
+      "unlockedByDefault": false,
+      "population": 560000,
+      "exterminationTarget": 560000,
+      "mapCoords": {
+        "x": 67.4,
+        "y": 72.5
+      }
+    },
+    {
+      "id": "skopje",
+      "name": "Skopje",
+      "country": "Macédoine du Nord",
+      "countryFlag": "🇲🇰",
+      "emblem": "🇲🇰",
+      "monument": "Pont de Pierre & Statue d’Alexandre le Grand",
+      "subtitle": "Statues Monumentales & Vardar Scintillant",
+      "typeTag": "Pont Ancien & Façades Néo-Classiques",
+      "description": "Foncez sur le Pont de Pierre byzantin enjambant le Vardar sous les regards des dizaines de statues héroïques colossales !",
+      "targetScore": 246000,
+      "starThresholds": [
+        246000,
+        406000,
+        590500
+      ],
+      "unlockScoreRequired": 78400,
+      "skyColor": 16752451,
+      "fogColor": 16697943,
+      "ambientColor": 16777215,
+      "roadColor": 2240318,
+      "buildingColors": [
+        16777215,
+        16697943,
+        15618643,
+        5727604
+      ],
+      "roofColor": 12597547,
+      "accentColor": 16752451,
+      "unlockedByDefault": false,
+      "population": 550000,
+      "exterminationTarget": 550000,
+      "mapCoords": {
+        "x": 69.7,
+        "y": 71.1
+      }
+    },
+    {
+      "id": "sofia",
+      "name": "Sofia",
+      "country": "Bulgarie",
+      "countryFlag": "🇧🇬",
+      "emblem": "🇧🇬",
+      "monument": "Cathédrale Alexandre-Nevski & Mont Vitocha",
+      "subtitle": "Dômes d’Or Scintillants & Montagne Vitocha",
+      "typeTag": "Architecture Néo-Byzantine & Pavés Jaunes",
+      "description": "Slalomez sur les célèbres pavés jaunes de la capitale bulgare sous la coupole étincelante de la cathédrale Alexandre-Nevski !",
+      "targetScore": 251500,
+      "starThresholds": [
+        251500,
+        415000,
+        603500
+      ],
+      "unlockScoreRequired": 80150,
+      "skyColor": 1092740,
+      "fogColor": 16697943,
+      "ambientColor": 16777215,
+      "roadColor": 16697943,
+      "buildingColors": [
+        16775781,
+        16777215,
+        1092740,
+        15618643
+      ],
+      "roofColor": 1954209,
+      "accentColor": 16775781,
+      "unlockedByDefault": false,
+      "population": 1300000,
+      "exterminationTarget": 1300000,
+      "mapCoords": {
+        "x": 72.5,
+        "y": 69.5
+      }
+    },
+    {
+      "id": "bucarest",
+      "name": "Bucarest",
+      "country": "Roumanie",
+      "countryFlag": "🇷🇴",
+      "emblem": "🇷🇴",
+      "monument": "Palais du Parlement Colossal & Arc de Triomphe",
+      "subtitle": "Le Petit Paris des Balkans & Édifice Gigantesque",
+      "typeTag": "Palais Cyclopéen & Boulevards Haussmanniens",
+      "description": "Propulsez votre bolide sur le boulevard Unirii face au Palais du Parlement, deuxième plus grand bâtiment administratif au monde !",
+      "targetScore": 257000,
+      "starThresholds": [
+        257000,
+        424000,
+        617000
+      ],
+      "unlockScoreRequired": 81900,
+      "skyColor": 3049182,
+      "fogColor": 15618643,
+      "ambientColor": 16777215,
+      "roadColor": 2240318,
+      "buildingColors": [
+        16777215,
+        16697943,
+        15618643,
+        3049182
+      ],
+      "roofColor": 5727604,
+      "accentColor": 3049182,
+      "unlockedByDefault": false,
+      "population": 1830000,
+      "exterminationTarget": 1830000,
+      "mapCoords": {
+        "x": 76.6,
+        "y": 65.7
+      }
+    },
+    {
+      "id": "chisinau",
+      "name": "Chisinau",
+      "country": "Moldavie",
+      "countryFlag": "🇲🇩",
+      "emblem": "🇲🇩",
+      "monument": "Arc de Triomphe Moldave & Parcs Verdoyants",
+      "subtitle": "La Ville aux Pierres Blanches & Vignobles Légendaires",
+      "typeTag": "Calcaire Blanc & Parcs Ombragés",
+      "description": "Franchissez l’avenue Ștefan cel Mare bordée de calcaire blanc immaculé devant l’Arc de Triomphe et la cathédrale de la Nativité !",
+      "targetScore": 262500,
+      "starThresholds": [
+        262500,
+        433000,
+        630000
+      ],
+      "unlockScoreRequired": 83650,
+      "skyColor": 5546239,
+      "fogColor": 1954209,
+      "ambientColor": 16777215,
+      "roadColor": 3093826,
+      "buildingColors": [
+        16777215,
+        13162213,
+        1954209,
+        16697943
+      ],
+      "roofColor": 1092740,
+      "accentColor": 5546239,
+      "unlockedByDefault": false,
+      "population": 530000,
+      "exterminationTarget": 530000,
+      "mapCoords": {
+        "x": 80.7,
+        "y": 59.6
+      }
+    },
+    {
+      "id": "istanbul",
+      "name": "Istanbul",
+      "country": "Turquie",
+      "countryFlag": "🇹🇷",
+      "emblem": "🇹🇷",
+      "monument": "Sainte-Sophie, Mosquée Bleue & Bosphore",
+      "subtitle": "Le Carrefour des Mondes entre Europe et Asie",
+      "typeTag": "Dômes Byzantins & Ponts Géants",
+      "description": "Franchissez le pont suspendu du Bosphore entre deux continents sous le vol des mouettes et les minarets légendaires de Sainte-Sophie !",
+      "targetScore": 267500,
+      "starThresholds": [
+        267500,
+        441500,
+        642000
+      ],
+      "unlockScoreRequired": 85400,
+      "skyColor": 15618643,
+      "fogColor": 16752451,
+      "ambientColor": 16777215,
+      "roadColor": 1976110,
+      "buildingColors": [
+        16775781,
+        16752451,
+        16777215,
+        703971
+      ],
+      "roofColor": 1092740,
+      "accentColor": 16726072,
+      "unlockedByDefault": false,
+      "population": 15800000,
+      "exterminationTarget": 15800000,
+      "mapCoords": {
+        "x": 80.6,
+        "y": 73.1
+      }
+    },
+    {
+      "id": "athenes",
+      "name": "Athènes",
+      "country": "Grèce",
+      "countryFlag": "🇬🇷",
+      "emblem": "🇬🇷",
+      "monument": "L’Acropole & Le Parthénon de Marbre",
+      "subtitle": "Berceau de la Civilisation & Colline Sacrée",
+      "typeTag": "Temples Antiques & Ruelles de Plaka",
+      "description": "Foncez au pied des colonnes de marbre du Parthénon dominant la mer Égée et les ruelles pittoresques de Plaka !",
+      "targetScore": 273000,
+      "starThresholds": [
+        273000,
+        450500,
+        655000
+      ],
+      "unlockScoreRequired": 87150,
+      "skyColor": 52937,
+      "fogColor": 14678523,
+      "ambientColor": 16777215,
+      "roadColor": 3093826,
+      "buildingColors": [
+        16777215,
+        16180621,
+        623843,
+        7649791
+      ],
+      "roofColor": 623843,
+      "accentColor": 52937,
+      "unlockedByDefault": false,
+      "population": 3150000,
+      "exterminationTarget": 3150000,
+      "mapCoords": {
+        "x": 73.1,
+        "y": 79.6
+      }
+    },
+    {
+      "id": "crete",
+      "name": "Crète",
+      "country": "Grèce",
+      "countryFlag": "🇬🇷",
+      "emblem": "🇬🇷",
+      "monument": "Palais Minoen de Knossos & Port Vénitien",
+      "subtitle": "Héraklion, Forteresse de Koules & Eaux Émeraude",
+      "typeTag": "Île Méditerranéenne & Port Vénitien",
+      "description": "Déboulez sur les quais de la forteresse vénitienne de Koules cernée par les flots émeraude de la mer de Crète !",
+      "targetScore": 278500,
+      "starThresholds": [
+        278500,
+        459500,
+        668500
+      ],
+      "unlockScoreRequired": 88900,
+      "skyColor": 623843,
+      "fogColor": 8514796,
+      "ambientColor": 16777215,
+      "roadColor": 2962486,
+      "buildingColors": [
+        16777215,
+        8514796,
+        16180621,
+        16742005
+      ],
+      "roofColor": 623843,
+      "accentColor": 52937,
+      "unlockedByDefault": false,
+      "population": 630000,
+      "exterminationTarget": 630000,
+      "mapCoords": {
+        "x": 75.4,
+        "y": 85.2
+      }
+    },
+    {
+      "id": "nicosie",
+      "name": "Nicosie",
+      "country": "Chypre",
+      "countryFlag": "🇨🇾",
+      "emblem": "🇨🇾",
+      "monument": "Remparts Vénitiens en Étoile & Porte de Famagouste",
+      "subtitle": "L’Île d’Aphrodite & Murailles Fortifiées",
+      "typeTag": "Remparts Circulaires & Lauriers Roses",
+      "description": "Slalomez autour des onze bastions en pointe de flèche des remparts vénitiens baignés par le soleil oriental !",
+      "targetScore": 284000,
+      "starThresholds": [
+        284000,
+        468500,
+        681500
+      ],
+      "unlockScoreRequired": 90650,
+      "skyColor": 15965202,
+      "fogColor": 16180621,
+      "ambientColor": 16777215,
+      "roadColor": 2899536,
+      "buildingColors": [
+        16242580,
+        16777215,
+        15967875,
+        16295362
+      ],
+      "roofColor": 15105570,
+      "accentColor": 15965202,
+      "unlockedByDefault": false,
+      "population": 330000,
+      "exterminationTarget": 330000,
+      "mapCoords": {
+        "x": 87.2,
+        "y": 85.6
+      }
+    },
+    {
+      "id": "venise",
+      "name": "Venise",
+      "country": "Italie",
+      "countryFlag": "🇮🇹",
+      "emblem": "🎭",
+      "monument": "Pont du Rialto & Place Saint-Marc",
+      "subtitle": "La Sérénissime, Gondoles & Palais Flottants",
+      "typeTag": "Lagune, Ponts & Marbre",
+      "description": "Affrontez le Grand Canal sous les arcades du Pont du Rialto et les mosaïques byzantines de la basilique Saint-Marc !",
+      "targetScore": 289000,
+      "starThresholds": [
+        289000,
+        477000,
+        693500
+      ],
+      "unlockScoreRequired": 92400,
+      "skyColor": 7649791,
+      "fogColor": 8514796,
+      "ambientColor": 16777215,
+      "roadColor": 2899536,
+      "buildingColors": [
+        16742005,
+        16180621,
+        16777215,
+        14678523
+      ],
+      "roofColor": 623843,
+      "accentColor": 16742005,
+      "unlockedByDefault": false,
+      "population": 260000,
+      "exterminationTarget": 260000,
+      "mapCoords": {
+        "x": 56.2,
+        "y": 63.2
+      }
+    },
+    {
+      "id": "milan",
+      "name": "Milan",
+      "country": "Italie",
+      "countryFlag": "🇮🇹",
+      "emblem": "🇮🇹",
+      "monument": "Duomo Gothique & Galleria Vittorio Emanuele",
+      "subtitle": "Capitale de la Mode & Flèches de Marbre Blanc",
+      "typeTag": "Marbre Blanc & Grandes Galeries",
+      "description": "Accélérez sous les mille flèches ciselées du Duomo de marbre blanc et les verrières fastueuses de la Galleria !",
+      "targetScore": 294500,
+      "starThresholds": [
+        294500,
+        486000,
+        707000
+      ],
+      "unlockScoreRequired": 94150,
+      "skyColor": 7101671,
+      "fogColor": 10656766,
+      "ambientColor": 16777215,
+      "roadColor": 2962486,
+      "buildingColors": [
+        16777215,
+        14673130,
+        13555424,
+        7634316
+      ],
+      "roofColor": 2962486,
+      "accentColor": 10656766,
+      "unlockedByDefault": false,
+      "population": 1370000,
+      "exterminationTarget": 1370000,
+      "mapCoords": {
+        "x": 51.7,
+        "y": 63.3
+      }
+    },
+    {
+      "id": "rome",
+      "name": "Rome",
+      "country": "Italie",
+      "countryFlag": "🇮🇹",
+      "emblem": "🏛️",
+      "monument": "Le Colisée & Forum Romain",
+      "subtitle": "La Ville Éternelle, Voie Appienne & Arènes",
+      "typeTag": "Arènes & Ruines Antiques",
+      "description": "Pilotez comme un gladiateur moderne sur la via dei Fori Imperiali devant les arches cyclopéennes du Colisée !",
+      "targetScore": 300000,
+      "starThresholds": [
+        300000,
+        495000,
+        720000
+      ],
+      "unlockScoreRequired": 95900,
+      "skyColor": 16752451,
+      "fogColor": 16697943,
+      "ambientColor": 16777215,
+      "roadColor": 3355960,
+      "buildingColors": [
+        16242580,
+        16108921,
+        15967875,
+        16295362
+      ],
+      "roofColor": 12597547,
+      "accentColor": 16726072,
+      "unlockedByDefault": false,
+      "population": 2870000,
+      "exterminationTarget": 2870000,
+      "mapCoords": {
+        "x": 56.6,
+        "y": 71.3
+      }
+    },
+    {
+      "id": "napoli",
+      "name": "Napoli",
+      "country": "Italie",
+      "countryFlag": "🇮🇹",
+      "emblem": "🌋",
+      "monument": "Le Vésuve & Baie de Naples",
+      "subtitle": "Spaccanapoli, Volcan & Mer Tyrrhénienne",
+      "typeTag": "Bord de Mer & Volcan Actif",
+      "description": "Dévalez les ruelles vibrantes du bord de mer avec en toile de fond le cône fumant du redoutable volcan Vésuve !",
+      "targetScore": 305500,
+      "starThresholds": [
+        305500,
+        504000,
+        733000
+      ],
+      "unlockScoreRequired": 97650,
+      "skyColor": 15105570,
+      "fogColor": 13849600,
+      "ambientColor": 16777215,
+      "roadColor": 1976110,
+      "buildingColors": [
+        15965202,
+        15158332,
+        15844367,
+        12436423
+      ],
+      "roofColor": 2899536,
+      "accentColor": 15158332,
+      "unlockedByDefault": false,
+      "population": 960000,
+      "exterminationTarget": 960000,
+      "mapCoords": {
+        "x": 59.2,
+        "y": 73.4
+      }
+    },
+    {
+      "id": "nice",
+      "name": "Nice",
+      "country": "France",
+      "countryFlag": "🇫🇷",
+      "emblem": "🌴",
+      "monument": "Promenade des Anglais & Baie des Anges",
+      "subtitle": "Palmiers, Mer Azur & Palaces de la Belle Époque",
+      "typeTag": "Bord de Mer & Palmiers",
+      "description": "Enflammer l’asphalte de la Promenade des Anglais le long des eaux turquoise de la Méditerranée et des palaces centenaires !",
+      "targetScore": 310500,
+      "starThresholds": [
+        310500,
+        512500,
+        745000
+      ],
+      "unlockScoreRequired": 99400,
+      "skyColor": 52937,
+      "fogColor": 8514796,
+      "ambientColor": 16777215,
+      "roadColor": 2962486,
+      "buildingColors": [
+        16632686,
+        16742005,
+        16777215,
+        14678523
+      ],
+      "roofColor": 14037041,
+      "accentColor": 623843,
+      "unlockedByDefault": false,
+      "population": 340000,
+      "exterminationTarget": 340000,
+      "mapCoords": {
+        "x": 48.8,
+        "y": 67.2
+      }
+    },
+    {
+      "id": "marseille",
+      "name": "Marseille",
+      "country": "France",
+      "countryFlag": "🇫🇷",
+      "emblem": "⚓",
+      "monument": "Notre-Dame de la Garde & Vieux-Port",
+      "subtitle": "La Bonne Mère, Calanques & Vieux-Port",
+      "typeTag": "Corniche & Port Historique",
+      "description": "Frôlez les mâts des bateaux sur le Vieux-Port et montez la colline vers la Bonne Mère sous le soleil brûlant !",
+      "targetScore": 316000,
+      "starThresholds": [
+        316000,
+        521500,
+        758500
+      ],
+      "unlockScoreRequired": 101150,
+      "skyColor": 623843,
+      "fogColor": 7649791,
+      "ambientColor": 16777215,
+      "roadColor": 2962486,
+      "buildingColors": [
+        16180621,
+        16760438,
+        16777215,
+        13555424
+      ],
+      "roofColor": 15420747,
+      "accentColor": 52937,
+      "unlockedByDefault": false,
+      "population": 870000,
+      "exterminationTarget": 870000,
+      "mapCoords": {
+        "x": 46.3,
+        "y": 68.2
+      }
+    },
+    {
+      "id": "barcelone",
+      "name": "Barcelone",
+      "country": "Espagne",
+      "countryFlag": "🇪🇸",
+      "emblem": "🇪🇸",
+      "monument": "Sagrada Família & Les Ramblas",
+      "subtitle": "Gaudi, Méditerranée & Avenues Vivantes",
+      "typeTag": "Modernisme & Boulevards Méditerranéens",
+      "description": "Traversez les boulevards géométriques de l’Eixample sous les tours organiques et féeriques de la Sagrada Família !",
+      "targetScore": 321500,
+      "starThresholds": [
+        321500,
+        530500,
+        771500
+      ],
+      "unlockScoreRequired": 102900,
+      "skyColor": 16742005,
+      "fogColor": 16632686,
+      "ambientColor": 16777215,
+      "roadColor": 2962486,
+      "buildingColors": [
+        16632686,
+        16742005,
+        52937,
+        16777215
+      ],
+      "roofColor": 7101671,
+      "accentColor": 16729943,
+      "unlockedByDefault": false,
+      "population": 1630000,
+      "exterminationTarget": 1630000,
+      "mapCoords": {
+        "x": 41.3,
+        "y": 72.4
+      }
+    },
+    {
+      "id": "saragosse",
+      "name": "Saragosse",
+      "country": "Espagne",
+      "countryFlag": "🇪🇸",
+      "emblem": "🇪🇸",
+      "monument": "Basilique du Pilar & Ébre Majestueux",
+      "subtitle": "Ponts de Pierre sur l’Èbre & Dômes Mauresques",
+      "typeTag": "Art Mudéjar & Fleuve",
+      "description": "Enchaînez les courbes sur les ponts traversant l’Èbre dominés par les quatre clochers élancés de la basilique du Pilar !",
+      "targetScore": 327000,
+      "starThresholds": [
+        327000,
+        539500,
+        785000
+      ],
+      "unlockScoreRequired": 104650,
+      "skyColor": 15965202,
+      "fogColor": 16242580,
+      "ambientColor": 16777215,
+      "roadColor": 2899536,
+      "buildingColors": [
+        16108921,
+        15967875,
+        16295362,
+        16777215
+      ],
+      "roofColor": 12597547,
+      "accentColor": 15965202,
+      "unlockedByDefault": false,
+      "population": 680000,
+      "exterminationTarget": 680000,
+      "mapCoords": {
+        "x": 36.9,
+        "y": 71.8
+      }
+    },
+    {
+      "id": "madrid",
+      "name": "Madrid",
+      "country": "Espagne",
+      "countryFlag": "🇪🇸",
+      "emblem": "👑",
+      "monument": "Palais Royal & Gran Vía",
+      "subtitle": "Gran Vía, Fontaine de Cybèle & Palais Royal",
+      "typeTag": "Avenues Royales & Boulevards",
+      "description": "Dévalez la Gran Vía sous les enseignes lumineuses avant de tourner devant la fontaine monumentale de la place de Cybèle !",
+      "targetScore": 332000,
+      "starThresholds": [
+        332000,
+        548000,
+        797000
+      ],
+      "unlockScoreRequired": 106400,
+      "skyColor": 3714473,
+      "fogColor": 16302737,
+      "ambientColor": 16777215,
+      "roadColor": 1976110,
+      "buildingColors": [
+        16777215,
+        16302737,
+        15028281,
+        4876733
+      ],
+      "roofColor": 795745,
+      "accentColor": 15028281,
+      "unlockedByDefault": false,
+      "population": 3220000,
+      "exterminationTarget": 3220000,
+      "mapCoords": {
+        "x": 32.8,
+        "y": 74.5
+      }
+    },
+    {
+      "id": "seville",
+      "name": "Séville",
+      "country": "Espagne",
+      "countryFlag": "🇪🇸",
+      "emblem": "💃",
+      "monument": "Place d’Espagne & Giralda",
+      "subtitle": "Flamenco, Azulejos & Palais de l’Alcázar",
+      "typeTag": "Architecture Mudéjare & Orangers",
+      "description": "Slalomez autour des balustrades d’azulejos de la gigantesque Place d’Espagne et sous le minaret converti de la Giralda !",
+      "targetScore": 337500,
+      "starThresholds": [
+        337500,
+        557000,
+        810000
+      ],
+      "unlockScoreRequired": 108150,
+      "skyColor": 15965202,
+      "fogColor": 15844367,
+      "ambientColor": 16777215,
+      "roadColor": 2899536,
+      "buildingColors": [
+        15844367,
+        15105570,
+        16777215,
+        12436423
+      ],
+      "roofColor": 13849600,
+      "accentColor": 15158332,
+      "unlockedByDefault": false,
+      "population": 690000,
+      "exterminationTarget": 690000,
+      "mapCoords": {
+        "x": 29.4,
+        "y": 80.9
+      }
+    },
+    {
+      "id": "lisbonne",
+      "name": "Lisbonne",
+      "country": "Portugal",
+      "countryFlag": "🇵🇹",
+      "emblem": "🇵🇹",
+      "monument": "Tour de Belém & Pont du 25 Avril",
+      "subtitle": "Tramway 28, Azulejos & Estuaire du Tage",
+      "typeTag": "Collines, Tramways & Pont Suspendu",
+      "description": "Dépassez les célèbres tramways jaunes gravissant les sept collines avant de traverser le géant rouge du Pont du 25 Avril !",
+      "targetScore": 343000,
+      "starThresholds": [
+        343000,
+        566000,
+        823000
+      ],
+      "unlockScoreRequired": 109900,
+      "skyColor": 623843,
+      "fogColor": 7649791,
+      "ambientColor": 16777215,
+      "roadColor": 2962486,
+      "buildingColors": [
+        16108921,
+        16242580,
+        16777215,
+        5533157
+      ],
+      "roofColor": 12597547,
+      "accentColor": 15844367,
+      "unlockedByDefault": false,
+      "population": 545000,
+      "exterminationTarget": 545000,
+      "mapCoords": {
+        "x": 25,
+        "y": 78.2
+      }
+    },
+    {
+      "id": "casablanca",
+      "name": "Casablanca",
+      "country": "Maroc",
+      "countryFlag": "🇲🇦",
+      "emblem": "🇲🇦",
+      "region": "AFRIQUE DU NORD",
+      "biome": "corniche",
+      "monument": "Mosquée Hassan II & Océan Atlantique",
+      "subtitle": "Minaret Géant sur l’Eau & Corniche d’Aïn Diab",
+      "typeTag": "Corniche Océanique & Minaret sur l’Eau",
+      "description": "Fendez la Corniche d’Aïn Diab battue par l’Atlantique sous les 210 mètres de marbre et de laser vert de la mosquée Hassan II !",
+      "targetScore": 348500,
+      "starThresholds": [
+        348500,
+        575000,
+        836500
+      ],
+      "unlockScoreRequired": 111650,
+      "skyColor": 703971,
+      "fogColor": 4774907,
+      "ambientColor": 16777215,
+      "roadColor": 2240318,
+      "buildingColors": [
+        16777215,
+        16697943,
+        1092740,
+        5727604
+      ],
+      "roofColor": 1092740,
+      "accentColor": 703971,
+      "unlockedByDefault": false,
+      "population": 3750000,
+      "exterminationTarget": 3750000,
+      "mapCoords": {
+        "x": 27.2,
+        "y": 88.5
+      }
+    },
+    {
+      "id": "tanger",
+      "name": "Tanger",
+      "country": "Maroc",
+      "countryFlag": "🇲🇦",
+      "emblem": "🇲🇦",
+      "region": "AFRIQUE DU NORD",
+      "biome": "cliffs",
+      "monument": "Cap Spartel & Grottes d’Hercule",
+      "subtitle": "Falaises du Détroit de Gibraltar & Phare",
+      "typeTag": "Falaises Maritimes & Détroit",
+      "description": "Dominez les falaises vertigineuses du Cap Spartel là où la Méditerranée rencontre l’Atlantique face au phare ocre !",
+      "targetScore": 350500,
+      "starThresholds": [
+        350500,
+        578500,
+        841000
+      ],
+      "unlockScoreRequired": 112200,
+      "skyColor": 959977,
+      "fogColor": 8246268,
+      "ambientColor": 16777215,
+      "roadColor": 2240318,
+      "buildingColors": [
+        16777215,
+        14742270,
+        16708551,
+        3718648
+      ],
+      "roofColor": 165063,
+      "accentColor": 16096779,
+      "unlockedByDefault": false,
+      "population": 1120000,
+      "exterminationTarget": 1120000,
+      "mapCoords": {
+        "x": 29.7,
+        "y": 84.3
+      }
+    },
+    {
+      "id": "marrakech",
+      "name": "Marrakech",
+      "country": "Maroc",
+      "countryFlag": "🇲🇦",
+      "emblem": "🇲🇦",
+      "region": "AFRIQUE DU NORD",
+      "biome": "desert",
+      "monument": "Mosquée Koutoubia & Palmeraie",
+      "subtitle": "La Ville Rouge, Désert d’Agafay & Oasis",
+      "typeTag": "Désert Ocre, Oasis & Remparts",
+      "description": "Traversez les dunes dorées et la grande palmeraie sous la silhouette de grès rose du minaret de la Koutoubia !",
+      "targetScore": 352000,
+      "starThresholds": [
+        352000,
+        581000,
+        845000
+      ],
+      "unlockScoreRequired": 112800,
+      "skyColor": 16347926,
+      "fogColor": 16628340,
+      "ambientColor": 16775149,
+      "roadColor": 3876896,
+      "buildingColors": [
+        14251842,
+        12736831,
+        14716501,
+        16569165
+      ],
+      "roofColor": 1409085,
+      "accentColor": 16498468,
+      "unlockedByDefault": false,
+      "population": 1050000,
+      "exterminationTarget": 1050000,
+      "mapCoords": {
+        "x": 26.5,
+        "y": 92.3
+      }
+    },
+    {
+      "id": "oran",
+      "name": "Oran",
+      "country": "Algérie",
+      "countryFlag": "🇩🇿",
+      "emblem": "🇩🇿",
+      "region": "AFRIQUE DU NORD",
+      "biome": "corniche",
+      "monument": "Fort de Santa Cruz & Front de Mer",
+      "subtitle": "El Bahia la Radieuse, Corniche & Falaises du Murdjadjo",
+      "typeTag": "Corniche Méditerranéenne & Citadelle",
+      "description": "Foncez sur la corniche d’Oran surplombée par le piton rocheux du Murdjadjo et la forteresse espagnole de Santa Cruz !",
+      "targetScore": 353000,
+      "starThresholds": [
+        353000,
+        582500,
+        847000
+      ],
+      "unlockScoreRequired": 113100,
+      "skyColor": 165063,
+      "fogColor": 12248829,
+      "ambientColor": 16777215,
+      "roadColor": 2240318,
+      "buildingColors": [
+        16777215,
+        16708551,
+        14251782,
+        3718648
+      ],
+      "roofColor": 11817737,
+      "accentColor": 1096065,
+      "unlockedByDefault": false,
+      "population": 1560000,
+      "exterminationTarget": 1560000,
+      "mapCoords": {
+        "x": 37.4,
+        "y": 84.3
+      }
+    },
+    {
+      "id": "alger",
+      "name": "Alger",
+      "country": "Algérie",
+      "countryFlag": "🇩🇿",
+      "emblem": "🇩🇿",
+      "region": "AFRIQUE DU NORD",
+      "biome": "corniche",
+      "monument": "Mémorial du Martyr & Baie d’Alger",
+      "subtitle": "Alger la Blanche, Casbah & Palmiers Méditerranéens",
+      "typeTag": "Corniche Maritime & Mémorial Monumental",
+      "description": "Foncez sur les boulevards maritimes d’Alger la Blanche sous les trois feuilles de palmier en béton armé du Mémorial du Martyr !",
+      "targetScore": 353500,
+      "starThresholds": [
+        353500,
+        583500,
+        848500
+      ],
+      "unlockScoreRequired": 113400,
+      "skyColor": 53971,
+      "fogColor": 5546239,
+      "ambientColor": 16777215,
+      "roadColor": 2240318,
+      "buildingColors": [
+        16777215,
+        13162213,
+        1092740,
+        3049182
+      ],
+      "roofColor": 1092740,
+      "accentColor": 53971,
+      "unlockedByDefault": false,
+      "population": 2980000,
+      "exterminationTarget": 2980000,
+      "mapCoords": {
+        "x": 42.8,
+        "y": 82.3
+      }
+    },
+    {
+      "id": "constantine",
+      "name": "Constantine",
+      "country": "Algérie",
+      "countryFlag": "🇩🇿",
+      "emblem": "🇩🇿",
+      "region": "AFRIQUE DU NORD",
+      "biome": "canyon",
+      "monument": "Ponts Suspendus & Gorges du Rhumel",
+      "subtitle": "La Cité des Ponts Perchée sur son Canyon Vertigineux",
+      "typeTag": "Canyon Vertigineux & Ponts Suspendus",
+      "description": "Franchissez les gorges abyssales du Rhumel au milieu des falaises calcaires abruptes et des ponts suspendus légendaires !",
+      "targetScore": 356500,
+      "starThresholds": [
+        356500,
+        588000,
+        855500
+      ],
+      "unlockScoreRequired": 114200,
+      "skyColor": 3718648,
+      "fogColor": 16639626,
+      "ambientColor": 16777215,
+      "roadColor": 2962486,
+      "buildingColors": [
+        16708551,
+        14078929,
+        11051678,
+        16777215
+      ],
+      "roofColor": 12131356,
+      "accentColor": 16096779,
+      "unlockedByDefault": false,
+      "population": 940000,
+      "exterminationTarget": 940000,
+      "mapCoords": {
+        "x": 48,
+        "y": 82.9
+      }
+    },
+    {
+      "id": "annaba",
+      "name": "Annaba",
+      "country": "Algérie",
+      "countryFlag": "🇩🇿",
+      "emblem": "🇩🇿",
+      "region": "AFRIQUE DU NORD",
+      "biome": "cliffs",
+      "monument": "Basilique Saint-Augustin & Corniche",
+      "subtitle": "L’Antique Hippone, Falaises de Ras El Hamra & Phare",
+      "typeTag": "Falaises Côtières & Basilique",
+      "description": "Traversez la corniche rocheuse de Ras El Hamra sous les coupoles byzantines de la basilique Saint-Augustin dominant la mer !",
+      "targetScore": 359000,
+      "starThresholds": [
+        359000,
+        592500,
+        861500
+      ],
+      "unlockScoreRequired": 115150,
+      "skyColor": 3049182,
+      "fogColor": 8623527,
+      "ambientColor": 16777215,
+      "roadColor": 2240318,
+      "buildingColors": [
+        16777215,
+        16697943,
+        15618643,
+        1092740
+      ],
+      "roofColor": 5727604,
+      "accentColor": 3049182,
+      "unlockedByDefault": false,
+      "population": 460000,
+      "exterminationTarget": 460000,
+      "mapCoords": {
+        "x": 49.6,
+        "y": 82
+      }
+    },
+    {
+      "id": "ghardaia",
+      "name": "Ghardaïa (Sahara)",
+      "country": "Algérie",
+      "countryFlag": "🇩🇿",
+      "emblem": "🇩🇿",
+      "region": "AFRIQUE DU NORD",
+      "biome": "desert",
+      "monument": "Ksar de Ghardaïa & Dunes du Grand Erg",
+      "subtitle": "La Perle des Oasis, Vallée du M’Zab & Sahara",
+      "typeTag": "Désert Saharien, Dunes & Oasis",
+      "description": "Slalomez entre les grandes dunes de sable d’or du Sahara et les palmeraies millénaires dominées par la pyramide du Ksar !",
+      "targetScore": 361500,
+      "starThresholds": [
+        361500,
+        596500,
+        867500
+      ],
+      "unlockScoreRequired": 116000,
+      "skyColor": 16096779,
+      "fogColor": 16639626,
+      "ambientColor": 16776171,
+      "roadColor": 4009502,
+      "buildingColors": [
+        16639626,
+        16096779,
+        14251782,
+        16708551
+      ],
+      "roofColor": 11817737,
+      "accentColor": 1096065,
+      "unlockedByDefault": false,
+      "population": 360000,
+      "exterminationTarget": 360000,
+      "mapCoords": {
+        "x": 43.6,
+        "y": 90.6
+      }
+    },
+    {
+      "id": "tunis",
+      "name": "Tunis",
+      "country": "Tunisie",
+      "countryFlag": "🇹🇳",
+      "emblem": "🇹🇳",
+      "region": "AFRIQUE DU NORD",
+      "biome": "corniche",
+      "monument": "Médina de Tunis & Ruines de Carthage",
+      "subtitle": "Carthage, Minaret de la Zitouna & Sidi Bou Saïd",
+      "typeTag": "Falaises Bleu & Blanc & Bord de Mer",
+      "description": "Enchaînez les virages entre les colonnes antiques de Carthage et les façades bleu et blanc surplombant le golfe de Tunis !",
+      "targetScore": 364500,
+      "starThresholds": [
+        364500,
+        601500,
+        875000
+      ],
+      "unlockScoreRequired": 116900,
+      "skyColor": 623843,
+      "fogColor": 7649791,
+      "ambientColor": 16777215,
+      "roadColor": 2962486,
+      "buildingColors": [
+        16777215,
+        7649791,
+        16180621,
+        16742005
+      ],
+      "roofColor": 623843,
+      "accentColor": 15420747,
+      "unlockedByDefault": false,
+      "population": 1070000,
+      "exterminationTarget": 1070000,
+      "mapCoords": {
+        "x": 53.2,
+        "y": 82
+      }
+    },
+    {
+      "id": "djerba",
+      "name": "Djerba",
+      "country": "Tunisie",
+      "countryFlag": "🇹🇳",
+      "emblem": "🇹🇳",
+      "region": "AFRIQUE DU NORD",
+      "biome": "beach",
+      "monument": "Fort Ghazi Mustapha & Lagunes Turquoise",
+      "subtitle": "L’Île des Lotophages, Plages de Sable Fin & Palmiers",
+      "typeTag": "Plages Méditerranéennes & Lagunes",
+      "description": "Déboulez le long des plages de sable blanc bordées de parasols, de palmiers et d’eaux cristallines autour du fort historique !",
+      "targetScore": 367000,
+      "starThresholds": [
+        367000,
+        605500,
+        881000
+      ],
+      "unlockScoreRequired": 117800,
+      "skyColor": 440020,
+      "fogColor": 10875900,
+      "ambientColor": 16777215,
+      "roadColor": 2898503,
+      "buildingColors": [
+        16777215,
+        14742270,
+        3718648,
+        16708551
+      ],
+      "roofColor": 165063,
+      "accentColor": 440020,
+      "unlockedByDefault": false,
+      "population": 180000,
+      "exterminationTarget": 180000,
+      "mapCoords": {
+        "x": 54.4,
+        "y": 88.7
+      }
+    },
+    {
+      "id": "tripoli",
+      "name": "Tripoli",
+      "country": "Libye",
+      "countryFlag": "🇱🇾",
+      "emblem": "🇱🇾",
+      "region": "AFRIQUE DU NORD",
+      "biome": "desert",
+      "monument": "Château Rouge & Arc de Marc Aurèle",
+      "subtitle": "La Mariée de la Méditerranée & Porte du Sahara",
+      "typeTag": "Forteresse Ocre, Dunes & Palmiers",
+      "description": "Foncez le long du front de mer méditerranéen dominé par les murailles ocre du Château Rouge et l’arc antique de Marc Aurèle !",
+      "targetScore": 370000,
+      "starThresholds": [
+        370000,
+        610500,
+        888000
+      ],
+      "unlockScoreRequired": 118650,
+      "skyColor": 15965202,
+      "fogColor": 15844367,
+      "ambientColor": 16777215,
+      "roadColor": 2899536,
+      "buildingColors": [
+        16242580,
+        16108921,
+        16777215,
+        15105570
+      ],
+      "roofColor": 13849600,
+      "accentColor": 2600544,
+      "unlockedByDefault": false,
+      "population": 1150000,
+      "exterminationTarget": 1150000,
+      "mapCoords": {
+        "x": 57.7,
+        "y": 90
+      }
+    },
+    {
+      "id": "benghazi",
+      "name": "Benghazi",
+      "country": "Libye",
+      "countryFlag": "🇱🇾",
+      "emblem": "🇱🇾",
+      "region": "AFRIQUE DU NORD",
+      "biome": "corniche",
+      "monument": "Phare de Benghazi & Baie Méditerranéenne",
+      "subtitle": "Le Golfe de Syrte, Corniche & Palmiers Côtiers",
+      "typeTag": "Corniche & Port de Mer",
+      "description": "Dépassez la silhouette rayée de noir et blanc du grand phare sur la corniche ouverte sur les eaux chaudes du golfe de Syrte !",
+      "targetScore": 375000,
+      "starThresholds": [
+        375000,
+        619000,
+        900000
+      ],
+      "unlockScoreRequired": 120400,
+      "skyColor": 15105570,
+      "fogColor": 15965202,
+      "ambientColor": 16777215,
+      "roadColor": 1976110,
+      "buildingColors": [
+        16777215,
+        15965202,
+        13849600,
+        12436423
+      ],
+      "roofColor": 2899536,
+      "accentColor": 15105570,
+      "unlockedByDefault": false,
+      "population": 650000,
+      "exterminationTarget": 650000,
+      "mapCoords": {
+        "x": 67.9,
+        "y": 91.3
+      }
+    },
+    {
+      "id": "alexandrie",
+      "name": "Alexandrie",
+      "country": "Égypte",
+      "countryFlag": "🇪🇬",
+      "emblem": "🇪🇬",
+      "region": "AFRIQUE DU NORD",
+      "biome": "corniche",
+      "monument": "Phare Antique de Pharos & Citadelle de Qaitbay",
+      "subtitle": "La Perle de la Méditerranée & Corniche Royale",
+      "typeTag": "Grande Corniche & Merveille Antique",
+      "description": "Parcourez à plein régime les 20 kilomètres de la Corniche d’Alexandrie face aux flots bleus et à la silhouette du Phare mythique !",
+      "targetScore": 378000,
+      "starThresholds": [
+        378000,
+        623500,
+        907000
+      ],
+      "unlockScoreRequired": 121300,
+      "skyColor": 165063,
+      "fogColor": 8246268,
+      "ambientColor": 16777215,
+      "roadColor": 1976635,
+      "buildingColors": [
+        16708551,
+        16777215,
+        16639626,
+        3718648
+      ],
+      "roofColor": 14251782,
+      "accentColor": 16096779,
+      "unlockedByDefault": false,
+      "population": 5480000,
+      "exterminationTarget": 5480000,
+      "mapCoords": {
+        "x": 82.3,
+        "y": 93.2
+      }
+    },
+    {
+      "id": "le_caire",
+      "name": "Le Caire",
+      "country": "Égypte",
+      "countryFlag": "🇪🇬",
+      "emblem": "🇪🇬",
+      "region": "AFRIQUE DU NORD",
+      "biome": "desert",
+      "monument": "Pyramides de Gizeh & Nil Millénaire",
+      "subtitle": "La Cité des Mille Minarets & Sphinx Éternel",
+      "typeTag": "Désert des Pyramides & Oasis du Nil",
+      "description": "Foncez à travers les dunes dorées sous le regard millénaire du Sphinx et des grandes pyramides de Gizeh bordant le Nil !",
+      "targetScore": 380500,
+      "starThresholds": [
+        380500,
+        628000,
+        913000
+      ],
+      "unlockScoreRequired": 122150,
+      "skyColor": 15965202,
+      "fogColor": 16242580,
+      "ambientColor": 16777215,
+      "roadColor": 2899536,
+      "buildingColors": [
+        16108921,
+        15967875,
+        16775781,
+        16777215
+      ],
+      "roofColor": 12597547,
+      "accentColor": 16765738,
+      "unlockedByDefault": false,
+      "population": 10000000,
+      "exterminationTarget": 10000000,
+      "mapCoords": {
+        "x": 84.2,
+        "y": 95.3
+      }
+    },
+    {
+      "id": "charm_el_cheikh",
+      "name": "Charm el-Cheikh",
+      "country": "Égypte",
+      "countryFlag": "🇪🇬",
+      "emblem": "🇪🇬",
+      "region": "AFRIQUE DU NORD",
+      "biome": "beach",
+      "monument": "Baie de Naama & Récifs de la Mer Rouge",
+      "subtitle": "Lagunes Coralliennes, Plages Dorées & Montagnes du Sinaï",
+      "typeTag": "Plages de la Mer Rouge & Sinaï",
+      "description": "Accélérez entre les plages de sable d’or de la mer Rouge et les sommets granitiques ocre de la péninsule du Sinaï !",
+      "targetScore": 384000,
+      "starThresholds": [
+        384000,
+        633500,
+        921500
+      ],
+      "unlockScoreRequired": 123200,
+      "skyColor": 440020,
+      "fogColor": 6809849,
+      "ambientColor": 16777215,
+      "roadColor": 2240318,
+      "buildingColors": [
+        16708551,
+        16777215,
+        16628340,
+        2282478
+      ],
+      "roofColor": 15357964,
+      "accentColor": 440020,
+      "unlockedByDefault": false,
+      "population": 150000,
+      "exterminationTarget": 150000,
+      "mapCoords": {
+        "x": 88.7,
+        "y": 98.2
+      }
+    },
+    {
+      "id": "antalya",
+      "name": "Antalya",
+      "country": "Turquie",
+      "countryFlag": "🇹🇷",
+      "emblem": "🇹🇷",
+      "region": "PROCHE-ORIENT",
+      "biome": "cliffs",
+      "monument": "Falaises de Düden & Porte d’Hadrien",
+      "subtitle": "La Riviera Turque, Cascades Maritimes & Monts Taurus",
+      "typeTag": "Falaises Côtières & Plages Turquoise",
+      "description": "Dévalez la route surplombant les hautes falaises calcaires d’Antalya d’où les cascades plongent directement dans la Méditerranée !",
+      "targetScore": 387000,
+      "starThresholds": [
+        387000,
+        638500,
+        929000
+      ],
+      "unlockScoreRequired": 124250,
+      "skyColor": 959977,
+      "fogColor": 12248829,
+      "ambientColor": 16777215,
+      "roadColor": 1976110,
+      "buildingColors": [
+        16777215,
+        16708551,
+        16639626,
+        3718648
+      ],
+      "roofColor": 14251782,
+      "accentColor": 440020,
+      "unlockedByDefault": false,
+      "population": 1340000,
+      "exterminationTarget": 1340000,
+      "mapCoords": {
+        "x": 83.3,
+        "y": 81.7
+      }
+    },
+    {
+      "id": "cappadoce",
+      "name": "Cappadoce",
+      "country": "Turquie",
+      "countryFlag": "🇹🇷",
+      "emblem": "🇹🇷",
+      "region": "PROCHE-ORIENT",
+      "biome": "steppe",
+      "monument": "Cheminées de Fées & Citadelle d’Uçhisar",
+      "subtitle": "Hauts Plateaux d’Anatolie, Steppe & Vallées Troglodytes",
+      "typeTag": "Steppe Sauvage & Pitons Rocheux",
+      "description": "Traversez les steppes d’Anatolie centrale hérissées de cheminées de fées volcaniques et de pitons troglodytes millénaires !",
+      "targetScore": 390000,
+      "starThresholds": [
+        390000,
+        643500,
+        936000
+      ],
+      "unlockScoreRequired": 125300,
+      "skyColor": 16096779,
+      "fogColor": 16639626,
+      "ambientColor": 16776171,
+      "roadColor": 4011051,
+      "buildingColors": [
+        14075826,
+        12759680,
+        15061939,
+        12099442
+      ],
+      "roofColor": 9584654,
+      "accentColor": 16347926,
+      "unlockedByDefault": false,
+      "population": 310000,
+      "exterminationTarget": 310000,
+      "mapCoords": {
+        "x": 89.5,
+        "y": 78.3
+      }
+    },
+    {
+      "id": "limassol",
+      "name": "Chypre (Limassol)",
+      "country": "Chypre",
+      "countryFlag": "🇨🇾",
+      "emblem": "🇨🇾",
+      "region": "PROCHE-ORIENT",
+      "biome": "beach",
+      "monument": "Rocher d’Aphrodite & Remparts Vénitiens",
+      "subtitle": "L’Île de Cuivre, Plages Dorées & Mer du Levant",
+      "typeTag": "Plages Mythologiques & Remparts",
+      "description": "Filez le long des plages dorées et des criques turquoise où surgit le légendaire Rocher d’Aphrodite !",
+      "targetScore": 393500,
+      "starThresholds": [
+        393500,
+        649500,
+        944500
+      ],
+      "unlockScoreRequired": 126350,
+      "skyColor": 165063,
+      "fogColor": 8246268,
+      "ambientColor": 16777215,
+      "roadColor": 2240318,
+      "buildingColors": [
+        16777215,
+        16708551,
+        14742270,
+        16639626
+      ],
+      "roofColor": 14251782,
+      "accentColor": 16096779,
+      "unlockedByDefault": false,
+      "population": 420000,
+      "exterminationTarget": 420000,
+      "mapCoords": {
+        "x": 86.7,
+        "y": 86.3
+      }
+    },
+    {
+      "id": "beyrouth",
+      "name": "Beyrouth",
+      "country": "Liban",
+      "countryFlag": "🇱🇧",
+      "emblem": "🇱🇧",
+      "region": "PROCHE-ORIENT",
+      "biome": "corniche",
+      "monument": "Rocher aux Pigeons & Corniche de Raouché",
+      "subtitle": "La Perle du Levant, Cèdres Millénaires & Promenade Maritime",
+      "typeTag": "Corniche Méditerranéenne & Arche Rocheuse",
+      "description": "Foncez sur la célèbre Corniche de Raouché bordée de palmiers face aux deux arches géantes du Rocher aux Pigeons !",
+      "targetScore": 396500,
+      "starThresholds": [
+        396500,
+        654000,
+        951500
+      ],
+      "unlockScoreRequired": 127400,
+      "skyColor": 959977,
+      "fogColor": 12248829,
+      "ambientColor": 16777215,
+      "roadColor": 1976635,
+      "buildingColors": [
+        16777215,
+        16708551,
+        3718648,
+        16557477
+      ],
+      "roofColor": 1409085,
+      "accentColor": 15680580,
+      "unlockedByDefault": false,
+      "population": 2420000,
+      "exterminationTarget": 2420000,
+      "mapCoords": {
+        "x": 90.7,
+        "y": 87.9
+      }
+    },
+    {
+      "id": "damas",
+      "name": "Damas",
+      "country": "Syrie",
+      "countryFlag": "🇸🇾",
+      "emblem": "🇸🇾",
+      "region": "PROCHE-ORIENT",
+      "biome": "park",
+      "monument": "Grande Mosquée des Omeyyades & Jardins de la Ghouta",
+      "subtitle": "La Cité du Jasmin, Parcs Verdoyants & Minarets Millénaires",
+      "typeTag": "Grands Parcs, Fontaines & Citadelle",
+      "description": "Traversez les grands parcs parfumés de jasmin, les bassins de marbre et les colonnades dorées de la plus ancienne capitale du monde !",
+      "targetScore": 400000,
+      "starThresholds": [
+        400000,
+        660000,
+        960000
+      ],
+      "unlockScoreRequired": 128450,
+      "skyColor": 1096065,
+      "fogColor": 11006928,
+      "ambientColor": 16777215,
+      "roadColor": 1976635,
+      "buildingColors": [
+        16708551,
+        16777215,
+        13761253,
+        16639626
+      ],
+      "roofColor": 292951,
+      "accentColor": 1096065,
+      "unlockedByDefault": false,
+      "population": 2580000,
+      "exterminationTarget": 2580000,
+      "mapCoords": {
+        "x": 91.6,
+        "y": 88.6
+      }
+    },
+    {
+      "id": "palmyre",
+      "name": "Palmyre",
+      "country": "Syrie",
+      "countryFlag": "🇸🇾",
+      "emblem": "🇸🇾",
+      "region": "PROCHE-ORIENT",
+      "biome": "desert",
+      "monument": "Grande Colonnade & Arc Triomphal du Désert",
+      "subtitle": "La Fiancée du Désert, Oasis des Caravanes & Dunes",
+      "typeTag": "Désert Antique & Colonnes Impériales",
+      "description": "Élancez-vous à travers le désert syrien entre les rangées de colonnes corinthiennes dorées et les palmeraies de la reine Zénobie !",
+      "targetScore": 403000,
+      "starThresholds": [
+        403000,
+        665000,
+        967000
+      ],
+      "unlockScoreRequired": 129500,
+      "skyColor": 16096779,
+      "fogColor": 16639626,
+      "ambientColor": 16776171,
+      "roadColor": 4009502,
+      "buildingColors": [
+        16639626,
+        16569165,
+        14251782,
+        16708551
+      ],
+      "roofColor": 11817737,
+      "accentColor": 16096779,
+      "unlockedByDefault": false,
+      "population": 120000,
+      "exterminationTarget": 120000,
+      "mapCoords": {
+        "x": 94.5,
+        "y": 86.6
+      }
+    },
+    {
+      "id": "jerusalem",
+      "name": "Jérusalem",
+      "country": "Terre Sainte",
+      "countryFlag": "🏛️",
+      "emblem": "🏛️",
+      "region": "PROCHE-ORIENT",
+      "biome": "cliffs",
+      "monument": "Dôme du Rocher & Murailles de Pierre Dorée",
+      "subtitle": "Mont des Oliviers, Escarpements de Judée & Coupole d’Or",
+      "typeTag": "Collines Rocheuses & Murailles Millénaires",
+      "description": "Gravissez les corniches rocheuses des monts de Judée illuminées par l’éclat de la coupole dorée et des remparts de pierre blanche !",
+      "targetScore": 406500,
+      "starThresholds": [
+        406500,
+        670500,
+        975500
+      ],
+      "unlockScoreRequired": 130550,
+      "skyColor": 3718648,
+      "fogColor": 16708551,
+      "ambientColor": 16777215,
+      "roadColor": 2962486,
+      "buildingColors": [
+        16708551,
+        16639626,
+        16777215,
+        16569165
+      ],
+      "roofColor": 16096779,
+      "accentColor": 16498468,
+      "unlockedByDefault": false,
+      "population": 980000,
+      "exterminationTarget": 980000,
+      "mapCoords": {
+        "x": 89.6,
+        "y": 92
+      }
+    },
+    {
+      "id": "amman",
+      "name": "Amman",
+      "country": "Jordanie",
+      "countryFlag": "🇯🇴",
+      "emblem": "🇯🇴",
+      "region": "PROCHE-ORIENT",
+      "biome": "steppe",
+      "monument": "Citadelle d’Amman & Théâtre Antique",
+      "subtitle": "Les Sept Collines Blanches & Hauts Plateaux de Moab",
+      "typeTag": "Steppe des Hauts Plateaux & Citadelle",
+      "description": "Foncez sur les hauts plateaux et les steppes dorées de Jordanie sous les colonnes géantes du Temple d’Hercule !",
+      "targetScore": 409500,
+      "starThresholds": [
+        409500,
+        675500,
+        983000
+      ],
+      "unlockScoreRequired": 131600,
+      "skyColor": 15381256,
+      "fogColor": 16707722,
+      "ambientColor": 16777215,
+      "roadColor": 3353894,
+      "buildingColors": [
+        16710083,
+        16638023,
+        14078929,
+        16777215
+      ],
+      "roofColor": 10576391,
+      "accentColor": 15381256,
+      "unlockedByDefault": false,
+      "population": 4000000,
+      "exterminationTarget": 4000000,
+      "mapCoords": {
+        "x": 91.1,
+        "y": 91.7
+      }
+    },
+    {
+      "id": "petra",
+      "name": "Pétra (Wadi Rum)",
+      "country": "Jordanie",
+      "countryFlag": "🇯🇴",
+      "emblem": "🇯🇴",
+      "region": "PROCHE-ORIENT",
+      "biome": "canyon",
+      "monument": "Le Khazneh & Canyon Rouge du Siq",
+      "subtitle": "La Cité Rose Sculptée dans les Falaises de Grès",
+      "typeTag": "Canyon de Grès Rose & Façade Nabatéenne",
+      "description": "Engouffrez-vous à pleine vitesse dans le vertigineux canyon rouge du Siq jusqu’au Trésor des Pharaons taillé à même la falaise !",
+      "targetScore": 414000,
+      "starThresholds": [
+        414000,
+        683000,
+        993500
+      ],
+      "unlockScoreRequired": 133000,
+      "skyColor": 14753096,
+      "fogColor": 16622767,
+      "ambientColor": 16773618,
+      "roadColor": 3874084,
+      "buildingColors": [
+        14753096,
+        16007006,
+        16478597,
+        14251782
+      ],
+      "roofColor": 10424889,
+      "accentColor": 16498468,
+      "unlockedByDefault": false,
+      "population": 250000,
+      "exterminationTarget": 250000,
+      "mapCoords": {
+        "x": 90.4,
+        "y": 94.7
+      }
+    },
+    {
+      "id": "bagdad",
+      "name": "Bagdad",
+      "country": "Irak",
+      "countryFlag": "🇮🇶",
+      "emblem": "🇮🇶",
+      "region": "PROCHE-ORIENT",
+      "biome": "park",
+      "monument": "Monument Al-Shaheed & Jardins du Tigre",
+      "subtitle": "La Cité des Mille et Une Nuits, Palmeraies & Coupole Turquoise",
+      "typeTag": "Grands Parcs Fluviaux & Dôme Turquoise",
+      "description": "Couronnez votre conquête du Proche-Orient le long des parcs verdoyants du Tigre sous l’immense coupole fendue turquoise d’Al-Shaheed !",
+      "targetScore": 419500,
+      "starThresholds": [
+        419500,
+        692000,
+        1007000
+      ],
+      "unlockScoreRequired": 134500,
+      "skyColor": 440020,
+      "fogColor": 10875900,
+      "ambientColor": 16777215,
+      "roadColor": 1976635,
+      "buildingColors": [
+        16708551,
+        440020,
+        16777215,
+        16639626
+      ],
+      "roofColor": 561586,
+      "accentColor": 2282478,
+      "unlockedByDefault": false,
+      "population": 7650000,
+      "exterminationTarget": 7650000,
+      "mapCoords": {
+        "x": 98.5,
+        "y": 89
+      }
+    }
+  ],
+  "bikes": [
+    {
+      "id": "tank",
+      "name": "Char AMX-Titan 120mm 💥",
+      "shortName": "Tank Blindé",
+      "category": "CHAR D'ASSAUT",
+      "icon": "🪖",
+      "tagline": "Canon lourd 120mm & Doubles Chenilles",
+      "type": "Char de Combat Blindé",
+      "description": "Blindage réactif lourd, doubles chenilles à galets d'acier rotatifs et tourelle orientable avec canon 120mm ! Tirez des projectiles perforants dévastateurs pour pulvériser voitures, obstacles et tout écraser !",
+      "speedRating": 3,
+      "handlingRating": 2,
+      "bounceRating": 5,
+      "cost": 0,
+      "unlocked": true,
+      "scale": 1.25,
+      "maxSpeed": 18.9,
+      "accel": 9.5,
+      "steerSpeed": 13,
+      "accelProfile": "heavy",
+      "isTank": true
+    },
+    {
+      "id": "aero_jet",
+      "name": "Aéro-Jet Fusion 🚀",
+      "shortName": "Aéro-Jet",
+      "category": "ENGIN VOLANT",
+      "icon": "🚀",
+      "tagline": "Propulseurs à Fusion & Ailes Delta",
+      "type": "Vaisseau d’Évasion Sub-Orbital",
+      "description": "Engin volant d’évasion supersonique à poussée vectorielle et ailes delta en titane ! Conçu spécialement pour s’arracher au sol et contempler les éruptions apocalyptiques depuis la stratosphère.",
+      "speedRating": 5,
+      "handlingRating": 4,
+      "bounceRating": 5,
+      "cost": 5000,
+      "unlocked": true,
+      "scale": 1.15,
+      "maxSpeed": 58.3,
+      "accel": 28,
+      "steerSpeed": 22,
+      "accelProfile": "supersonic",
+      "isFlyingCraft": true
+    },
+    {
+      "id": "hovercraft",
+      "name": "Hydro-Glisseur Vortex-Torpille 🌊",
+      "shortName": "Hydro-Glisseur",
+      "category": "AQUATIQUE & BARRAGE",
+      "icon": "🚤",
+      "tagline": "Turbines Carénées & Lance-Torpilles",
+      "type": "Aéroglisseur Fluvial d'Assaut",
+      "description": "Fini le bitume ! Conçu spécialement pour écumer les barrages, canaux fluviaux et lacs de retenue à 150 km/h sur coussin d'air avec doubles hélices et lance-torpilles aquatiques.",
+      "speedRating": 5,
+      "handlingRating": 4,
+      "bounceRating": 5,
+      "cost": 3500,
+      "unlocked": true,
+      "scale": 1.2,
+      "maxSpeed": 40.3,
+      "accel": 18,
+      "steerSpeed": 19,
+      "accelProfile": "glide",
+      "isHovercraft": true,
+      "terrainSpecialty": "DAM"
+    },
+    {
+      "id": "rad_rover",
+      "name": "Blindé NRBC Rad-Buster 8x8 ☢️",
+      "shortName": "Rover NRBC 8x8",
+      "category": "DÉCONTAMINATION & CENTRALE",
+      "icon": "☣️",
+      "tagline": "Blindage Plombé & Canon Ionique",
+      "type": "Véhicule d'Assaut Anti-Radiation",
+      "description": "Armé pour résister aux pires irradiations des centrales nucléaires ! Châssis lourd 8x8 étanche, pare-buffle bélier, gyrophares orange et canon à impulsions ioniques perforantes.",
+      "speedRating": 3,
+      "handlingRating": 3,
+      "bounceRating": 5,
+      "cost": 4200,
+      "unlocked": true,
+      "scale": 1.25,
+      "maxSpeed": 23.6,
+      "accel": 12.5,
+      "steerSpeed": 16,
+      "accelProfile": "heavy",
+      "isRadRover": true,
+      "terrainSpecialty": "NUCLEAR"
+    },
+    {
+      "id": "decapotable",
+      "name": "Cabriolet Riviera 68",
+      "shortName": "Décapotable Sport",
+      "category": "VOITURE DÉCAPOTABLE",
+      "icon": "🚗",
+      "tagline": "V8 Rugissant & Pare-brise Rétro",
+      "type": "Cabriolet Sport",
+      "description": "Fini les deux-roues ordinaires ! Installez-vous au volant d’un cabriolet sport décapotable rouge feu avec 4 roues motrices et échappements chromés.",
+      "speedRating": 4,
+      "handlingRating": 4,
+      "bounceRating": 5,
+      "cost": 1600,
+      "unlocked": false,
+      "scale": 1.22,
+      "maxSpeed": 37.5,
+      "accel": 19,
+      "steerSpeed": 18,
+      "accelProfile": "muscle"
+    },
+    {
+      "id": "cheval",
+      "name": "Étalon Pur-Sang",
+      "shortName": "Étalon Sauvage",
+      "category": "MONTURE & FOUET",
+      "icon": "🐎",
+      "tagline": "Galop furieux & Grand FOUET cinglant",
+      "type": "Monture Sauvage",
+      "description": "Pas de moteur thermique mais 1 pur-sang furieux au galop ! Le cavalier brandit son grand FOUET en cuir tressé pour cingler le bitume et balayer tout obstacle.",
+      "speedRating": 3,
+      "handlingRating": 4,
+      "bounceRating": 3,
+      "cost": 3800,
+      "unlocked": false,
+      "scale": 1.12,
+      "maxSpeed": 18,
+      "accel": 18,
+      "steerSpeed": 22,
+      "accelProfile": "gallop"
+    },
+    {
+      "id": "rouleau",
+      "name": "Titan Compresseur 50T",
+      "shortName": "Rouleau Titan",
+      "category": "ENGIN LOURD",
+      "icon": "🚜",
+      "tagline": "Cylindre broyeur d’acier & Fumée noire",
+      "type": "Rouleau Compresseur Industriel",
+      "description": "Cylindre avant géant de 50 tonnes en acier massif et cheminée diesel ! Rien ne lui résiste, il aplatit impitoyablement tout sur son passage.",
+      "speedRating": 1,
+      "handlingRating": 1,
+      "bounceRating": 5,
+      "cost": 8500,
+      "unlocked": false,
+      "scale": 1.25,
+      "maxSpeed": 9.8,
+      "accel": 5.5,
+      "steerSpeed": 10,
+      "accelProfile": "titan"
+    },
+    {
+      "id": "dragster",
+      "name": "Nitro V8 Dragster",
+      "shortName": "V8 Dragster",
+      "category": "NITRO DRAGSTER",
+      "icon": "💀",
+      "tagline": "V8 Blower & Double lance-flammes",
+      "type": "Dragster Pro-Street",
+      "description": "Pneu arrière dragster 300mm, compresseur soufflant géant et bonbonnes de protoxyde d’azote pour pulvériser le bitume.",
+      "speedRating": 5,
+      "handlingRating": 2,
+      "bounceRating": 5,
+      "cost": 11000,
+      "unlocked": false,
+      "scale": 1.28,
+      "maxSpeed": 50,
+      "accel": 32,
+      "steerSpeed": 12,
+      "accelProfile": "drag"
+    }
+  ],
+  "biomes": {
+    "park": {
+      "id": "park",
+      "label": "Parcs & Jardins",
+      "icon": "🏞️",
+      "badgeColor": "#10b981",
+      "bgTint": "rgba(16, 185, 129, 0.18)"
+    },
+    "corniche": {
+      "id": "corniche",
+      "label": "Corniche & Mer",
+      "icon": "🌊",
+      "badgeColor": "#0ea5e9",
+      "bgTint": "rgba(14, 165, 233, 0.18)"
+    },
+    "beach": {
+      "id": "beach",
+      "label": "Plages & Lagunes",
+      "icon": "🏖️",
+      "badgeColor": "#06b6d4",
+      "bgTint": "rgba(6, 182, 212, 0.18)"
+    },
+    "desert": {
+      "id": "desert",
+      "label": "Désert & Oasis",
+      "icon": "🏜️",
+      "badgeColor": "#f59e0b",
+      "bgTint": "rgba(245, 158, 11, 0.18)"
+    },
+    "steppe": {
+      "id": "steppe",
+      "label": "Steppes & Plateaux",
+      "icon": "🌾",
+      "badgeColor": "#eab308",
+      "bgTint": "rgba(234, 179, 8, 0.18)"
+    },
+    "cliffs": {
+      "id": "cliffs",
+      "label": "Falaises & Escarpements",
+      "icon": "⛰️",
+      "badgeColor": "#8b5cf6",
+      "bgTint": "rgba(139, 92, 246, 0.18)"
+    },
+    "canyon": {
+      "id": "canyon",
+      "label": "Canyons & Gorges",
+      "icon": "🪨",
+      "badgeColor": "#f43f5e",
+      "bgTint": "rgba(244, 63, 94, 0.18)"
+    }
+  },
+  "challenges": {
+    "CONVOY_BOSS": {
+      "id": "CONVOY_BOSS",
+      "name": "Convoi Blindé",
+      "shortName": "Boss Convoi",
+      "icon": "🚛",
+      "color": "#ff4757",
+      "description": "Détruisez le camion-forteresse du convoi avant la ligne d'arrivée !",
+      "objectiveText": "Détruire le Boss Convoi (100% PV)",
+      "rewardCoins": 150,
+      "rewardScore": 8000
+    },
+    "SLALOM_CHRONO": {
+      "id": "SLALOM_CHRONO",
+      "name": "Slalom Chrono",
+      "shortName": "Slalom",
+      "icon": "⏱️",
+      "color": "#00d2d3",
+      "description": "Franchissez les portiques lumineux pour gagner +3.5s avant la fin du chrono !",
+      "objectiveText": "Passer les portiques avant 0.0s",
+      "rewardCoins": 120,
+      "rewardScore": 3000
+    },
+    "MANHUNT": {
+      "id": "MANHUNT",
+      "name": "Chasse à l'Homme",
+      "shortName": "Manhunt",
+      "icon": "🚓",
+      "color": "#5352ed",
+      "description": "Forcez les barrages de police et survivez avec votre bouclier à 3 charges !",
+      "objectiveText": "Franchir les barrages & survivre",
+      "rewardCoins": 140,
+      "rewardScore": 4000
+    },
+    "STUNT_RAMPS": {
+      "id": "STUNT_RAMPS",
+      "name": "Méga-Rampes Stunt",
+      "shortName": "Stunt",
+      "icon": "🛫",
+      "color": "#ffa502",
+      "description": "Enchaînez les sauts géants et traversez les anneaux aériens pour cumuler 6.5s de vol !",
+      "objectiveText": "Cumuler 6.5s d'Air Time",
+      "rewardCoins": 130,
+      "rewardScore": 3500
+    },
+    "EXTREME_STORM": {
+      "id": "EXTREME_STORM",
+      "name": "Tempête Extrême",
+      "shortName": "Tempête",
+      "icon": "⛈️",
+      "color": "#1e90ff",
+      "description": "Affrontez des rafales latérales violentes sous l'orage et réussissez 6 frôlements !",
+      "objectiveText": "Réussir 6 frôlements sous l'orage",
+      "rewardCoins": 160,
+      "rewardScore": 5000
+    },
+    "POLICE_PURSUIT": {
+      "id": "POLICE_PURSUIT",
+      "name": "Poursuite Policière",
+      "shortName": "Poursuite",
+      "icon": "🚨",
+      "color": "#2563eb",
+      "description": "Échappez aux intercepteurs de police ou écrasez-les avec un engin lourd / nitro !",
+      "objectiveText": "Semer la police jusqu'à l'arrivée",
+      "rewardCoins": 180,
+      "rewardScore": 5500
+    }
+  },
+  "missions": [
+    {
+      "id": "kill_50",
+      "type": "kill",
+      "target": 50,
+      "label": "Écraser 50 piétons",
+      "reward": 60
+    },
+    {
+      "id": "kill_120",
+      "type": "kill",
+      "target": 120,
+      "label": "Carnage : 120 cibles",
+      "reward": 120
+    },
+    {
+      "id": "nearmiss_8",
+      "type": "nearMiss",
+      "target": 8,
+      "label": "8 frôlements à pleine vitesse",
+      "reward": 70
+    },
+    {
+      "id": "combo_15",
+      "type": "combo",
+      "target": 15,
+      "label": "Combo x15",
+      "reward": 80
+    },
+    {
+      "id": "combo_30",
+      "type": "combo",
+      "target": 30,
+      "label": "Combo x30 (« La Vague »)",
+      "reward": 150
+    },
+    {
+      "id": "redlight_3",
+      "type": "redLight",
+      "target": 3,
+      "label": "Griller 3 feux rouges",
+      "reward": 60
+    },
+    {
+      "id": "distance_2000",
+      "type": "distance",
+      "target": 2000,
+      "label": "Parcourir 2 000 m",
+      "reward": 50
+    },
+    {
+      "id": "distance_4500",
+      "type": "distance",
+      "target": 4500,
+      "label": "Marathon : 4 500 m",
+      "reward": 110
+    },
+    {
+      "id": "airtime_3",
+      "type": "airTime",
+      "target": 3,
+      "label": "3 sauts sur dos d'âne",
+      "reward": 60
+    },
+    {
+      "id": "run_3",
+      "type": "run",
+      "target": 3,
+      "label": "Terminer 3 courses",
+      "reward": 90
+    },
+    {
+      "id": "run_1",
+      "type": "run",
+      "target": 1,
+      "label": "Terminer 1 course",
+      "reward": 30
+    },
+    {
+      "id": "coins_150",
+      "type": "coins",
+      "target": 150,
+      "label": "Encaisser 150 pièces",
+      "reward": 40
+    },
+    {
+      "id": "nitro_5",
+      "type": "nitro",
+      "target": 5,
+      "label": "Activer le Nitro 5 fois",
+      "reward": 50
+    },
+    {
+      "id": "prop_10",
+      "type": "prop",
+      "target": 10,
+      "label": "Broyer 10 props urbains",
+      "reward": 60
+    },
+    {
+      "id": "killstreak_5",
+      "type": "killStreak",
+      "target": 5,
+      "label": "Série de 5 kills d'affilée",
+      "reward": 70
+    }
+  ],
+  "characters": [
+    {
+      "type": "parisian",
+      "name": "Parisien Pressé",
+      "category": "man",
+      "points": 105,
+      "bodyColor": 2899536,
+      "pantsColor": 3426654,
+      "hatColor": 1118481,
+      "hasBaguette": true,
+      "scale": 1,
+      "speed": 1.3
+    },
+    {
+      "type": "chic_woman",
+      "name": "Parisienne Chic",
+      "category": "woman",
+      "points": 119,
+      "bodyColor": 15221651,
+      "pantsColor": 2962486,
+      "hatColor": 16632686,
+      "hasHandbag": true,
+      "scale": 0.96,
+      "speed": 1.1
+    },
+    {
+      "type": "papy",
+      "name": "Papy & Canne en Bois",
+      "category": "elderly",
+      "points": 133,
+      "bodyColor": 7951688,
+      "pantsColor": 5125166,
+      "hatColor": 5727604,
+      "hasCane": true,
+      "scale": 0.9,
+      "speed": 0.65
+    },
+    {
+      "type": "papy_chic",
+      "name": "Vieux Gentilhomme à Canne",
+      "category": "elderly",
+      "points": 154,
+      "bodyColor": 3093826,
+      "pantsColor": 5726319,
+      "hatColor": 1976110,
+      "hasCane": true,
+      "hasBowtie": true,
+      "scale": 0.93,
+      "speed": 0.58
+    },
+    {
+      "type": "grandma_cane",
+      "name": "Mamie & Canne Fleurie",
+      "category": "elderly",
+      "points": 130,
+      "bodyColor": 10656766,
+      "pantsColor": 7101671,
+      "hatColor": 14673130,
+      "hasCane": true,
+      "scale": 0.86,
+      "speed": 0.55
+    },
+    {
+      "type": "poussette",
+      "name": "Parent & Poussette",
+      "category": "stroller",
+      "points": 182,
+      "bodyColor": 1092740,
+      "pantsColor": 2240318,
+      "hatColor": 16753922,
+      "hasStroller": true,
+      "isDoubleStroller": false,
+      "scale": 1,
+      "speed": 0.95
+    },
+    {
+      "type": "poussette_twins",
+      "name": "Maman & Poussette Jumeaux",
+      "category": "stroller",
+      "points": 238,
+      "bodyColor": 16739201,
+      "pantsColor": 5726319,
+      "hatColor": 16775781,
+      "hasStroller": true,
+      "isDoubleStroller": true,
+      "scale": 1,
+      "speed": 0.88
+    },
+    {
+      "type": "child_scooter",
+      "name": "Enfant en Trottinette",
+      "category": "child",
+      "points": 147,
+      "bodyColor": 623843,
+      "pantsColor": 16742005,
+      "hatColor": 16729943,
+      "hasScooter": true,
+      "scale": 0.78,
+      "speed": 2.2
+    },
+    {
+      "type": "grandma",
+      "name": "Mamie & son Caddie",
+      "category": "elderly",
+      "points": 105,
+      "bodyColor": 9323693,
+      "pantsColor": 7101671,
+      "hatColor": 13162213,
+      "hasCaddy": true,
+      "scale": 0.88,
+      "speed": 0.6
+    },
+    {
+      "type": "tourist_woman",
+      "name": "Touriste Flâneuse",
+      "category": "woman",
+      "points": 91,
+      "bodyColor": 53971,
+      "pantsColor": 1954209,
+      "hatColor": 16752627,
+      "hasCamera": true,
+      "scale": 0.94,
+      "speed": 0.85
+    },
+    {
+      "type": "businessman",
+      "name": "Trader en Retard",
+      "category": "man",
+      "points": 126,
+      "bodyColor": 1976110,
+      "pantsColor": 1976110,
+      "tieColor": 16726072,
+      "scale": 1.02,
+      "speed": 1.45
+    },
+    {
+      "type": "waiter",
+      "name": "Garçon de Café",
+      "category": "man",
+      "points": 154,
+      "bodyColor": 16119546,
+      "vestColor": 3094080,
+      "pantsColor": 3094080,
+      "hasTray": true,
+      "scale": 0.98,
+      "speed": 1.2
+    },
+    {
+      "type": "group",
+      "name": "Groupe d'Amis",
+      "category": "man",
+      "points": 224,
+      "bodyColor": 15965202,
+      "pantsColor": 2719929,
+      "hatColor": 2600544,
+      "isGroup": true,
+      "scale": 1,
+      "speed": 0.75
+    },
+    {
+      "type": "dog",
+      "name": "Chien Fidèle 🐕",
+      "category": "dog",
+      "points": 147,
+      "bodyColor": 13849600,
+      "collarColor": 15158332,
+      "scale": 0.62,
+      "speed": 1.8,
+      "isPet": true
+    },
+    {
+      "type": "cat",
+      "name": "Chat Agile 🐈",
+      "category": "cat",
+      "points": 161,
+      "bodyColor": 2962486,
+      "scale": 0.52,
+      "speed": 1.9,
+      "isPet": true
+    },
+    {
+      "type": "monkey",
+      "name": "Singe Farceur 🐒",
+      "category": "monkey",
+      "points": 203,
+      "bodyColor": 7951688,
+      "faceColor": 16767916,
+      "fezColor": 12597547,
+      "scale": 0.6,
+      "speed": 2.2,
+      "isPet": true
+    }
+  ]
+}
