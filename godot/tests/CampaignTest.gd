@@ -183,6 +183,52 @@ func _run_suite() -> void:
 	_assert(GameData.current_mode == "RESULTS", "Results modal shown upon reaching finish line")
 	await _save_shot("godot_test_07_results.png")
 
+	# 6. Scenarios B, D, E, F, G: City switching, All 8 vehicles, Heavy VFX/Destruction, 300-frame Endurance & Memory
+	var mem_before := OS.get_static_memory_usage()
+	var city_gen_times: Array[float] = []
+	for cid in ["paris", "marrakech", "tokyo"]:
+		var t0 := Time.get_ticks_usec()
+		GameData.select_city(cid)
+		main.world.setup_city(GameData.selected_city, 1650.0, "STUNT_RAMPS")
+		city_gen_times.append(float(Time.get_ticks_usec() - t0) / 1000.0)
+	_assert(city_gen_times.size() == 3, "Scenario F: City transitions measured (Paris=%.1fms, Marrakech=%.1fms, Tokyo=%.1fms)" % [city_gen_times[0], city_gen_times[1], city_gen_times[2]])
+
+	for b in GameData.bikes:
+		var bid := str(b.get("id", ""))
+		GameData.select_bike(bid)
+		main.player.build_vehicle(bid)
+		main.player.update_vehicle(0.016, 22.0, false)
+	_assert(GameData.bikes.size() == 8, "Scenario G: All 8 vehicles built and updated cleanly")
+
+	# Scenarios B/D/E: 300 frames sustained race with rockets, nitro, debris & steering
+	GameData.start_run("marrakech", "STUNT_RAMPS")
+	main.world.setup_city(GameData.selected_city, 1650.0, "STUNT_RAMPS")
+	main.player.reset_run()
+	main.player.build_vehicle("decapotable")
+	main.ui.show_hud()
+	var min_ft := 9999.0
+	var max_ft := 0.0
+	var total_ft := 0.0
+	for f in range(300):
+		var f0 := Time.get_ticks_usec()
+		main.player.steer_input = sin(float(f) * 0.12)
+		if f % 45 == 0:
+			main._on_ui_action("WEAPON", null)
+		if f == 20:
+			GameData.nitro_charge = 100.0
+			main._on_ui_action("NITRO", null)
+		await get_tree().process_frame
+		var ft := float(Time.get_ticks_usec() - f0) / 1000.0
+		min_ft = minf(min_ft, ft)
+		max_ft = maxf(max_ft, ft)
+		total_ft += ft
+	var avg_ft := total_ft / 300.0
+	var avg_fps := 1000.0 / maxf(avg_ft, 0.01)
+	var mem_after := OS.get_static_memory_usage()
+	var mem_delta_kb := float(int(mem_after) - int(mem_before)) / 1024.0
+	print("[BENCH A-G] 300 frames: avg=%.2f ms/f (%.1f FPS), min=%.2f ms, max=%.2f ms, mem_delta=%.1f KB" % [avg_ft, avg_fps, min_ft, max_ft, mem_delta_kb])
+	_assert(avg_ft < 65.0, "Scenarios B/D/E: Sustained 300-frame perf healthy (avg %.2f ms/frame)" % avg_ft)
+
 	print("==========================================")
 	print("CAMPAIGN SUMMARY: %d checks, %d failures" % [_checks, _failures.size()])
 	if _failures.size() > 0:

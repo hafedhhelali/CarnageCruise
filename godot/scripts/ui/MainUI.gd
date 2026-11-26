@@ -87,7 +87,7 @@ func show_splash() -> void:
 
 	var top_bar := HBoxContainer.new()
 	var ver := Label.new()
-	ver.text = "CARNAGE CRUISE  •  GODOT VULKAN v0.9.98"
+	ver.text = "CARNAGE CRUISE  •  GODOT VULKAN v1.0.0"
 	ver.add_theme_font_size_override("font_size", 14)
 	ver.modulate = Color(0.55, 0.9, 1.0)
 	var coins := Label.new()
@@ -378,7 +378,9 @@ func show_hud() -> void:
 	var pv := VBoxContainer.new()
 	pv.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var cname := Label.new()
-	cname.text = "%s (%dm)" % [str(GameData.selected_city.get("name", "PARIS")).to_upper(), int(GameData.finish_distance)]
+	var target_sc := int(GameData.selected_city.get("targetScore", 26000))
+	cname.text = "%s (%dm) • Obj %dk" % [str(GameData.selected_city.get("name", "PARIS")).to_upper(), int(GameData.finish_distance), int(target_sc / 1000)]
+	cname.add_theme_font_size_override("font_size", 13)
 	cname.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_hud_progress = ProgressBar.new()
 	_hud_progress.mouse_filter = Control.MOUSE_FILTER_IGNORE

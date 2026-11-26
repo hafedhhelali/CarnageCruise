@@ -65,7 +65,7 @@ func _spawn_ped_node(key: String) -> Node3D:
 		if ps:
 			var inst := ps.instantiate() as Node3D
 			if inst:
-				inst.scale = Vector3.ONE * 0.92
+				inst.scale = Vector3.ONE * randf_range(0.84, 1.02)
 				var ap := _find_ap(inst)
 				if ap == null and _anim_clips.size() > 0:
 					ap = AnimationPlayer.new()
@@ -135,12 +135,16 @@ func update_peds(delta: float, player_pos: Vector3, player_speed: float, road_st
 		var should_flee := player_speed > 3.5 and dz > 0.0 and dz < 22.0 and dx < 4.2
 		if should_flee and not p["fleeing"]:
 			p["fleeing"] = true
+			p["vy"] = 4.2
 			if ap and ap.has_animation("Run"):
 				ap.play("Run")
 				ap.speed_scale = 1.45
 
 		if p["fleeing"]:
 			var sprint_speed := 7.2
+			if n.position.y > 0.25 or float(p["vy"]) > 0.0:
+				p["vy"] = float(p["vy"]) - 18.0 * delta
+				n.position.y = maxf(0.25, n.position.y + float(p["vy"]) * delta)
 			var rx := RoadCurve.get_road_center_x(n.position.z, road_straight)
 			var away_x := 1.0 if n.position.x >= player_pos.x else -1.0
 			var dx_from_center := n.position.x - rx

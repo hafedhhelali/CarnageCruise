@@ -291,6 +291,9 @@ func _build_chunk(z_start: float, chunk_idx: int) -> Node3D:
 			if bldg:
 				bldg.position = Vector3(rx + float(side) * 14.0, 0.0, lz)
 				bldg.rotation.y = ang
+				if bldg_palette.size() > 0:
+					var bcol := _int_to_color(int(bldg_palette[(chunk_idx + slot) % bldg_palette.size()]), Color(0.75, 0.72, 0.68))
+					_tint_building(bldg, bcol)
 				chunk.add_child(bldg)
 
 	# Trees, Streetlights & Grounded Smashable Stalls
@@ -327,7 +330,7 @@ func _build_chunk(z_start: float, chunk_idx: int) -> Node3D:
 	chunk.add_child(stall)
 	props_pool.append({"node": stall, "chunk": chunk, "base_x": float(s_side) * 6.0, "local_z": s_lz, "type": "stall", "hit": false})
 
-	# Challenge props (Stunt Ramps & Aerial Rings)
+	# Challenge props (Stunt Ramps) + Urban Crates / Barriers on road edges
 	if challenge_mode == "STUNT_RAMPS" and chunk_idx > 0:
 		var ramp := _build_stunt_ramp()
 		var r_lz := 24.0
@@ -336,8 +339,49 @@ func _build_chunk(z_start: float, chunk_idx: int) -> Node3D:
 		ramp.position = Vector3(r_rx + lane_x, 0.0, r_lz)
 		chunk.add_child(ramp)
 		props_pool.append({"node": ramp, "chunk": chunk, "base_x": lane_x, "local_z": r_lz, "type": "ramp", "hit": false})
+	elif chunk_idx > 0:
+		var crate := _build_crate_barrier(district)
+		var c_lz := 42.0
+		var c_rx := RoadCurve.get_road_center_x(z_start + c_lz, road_straight)
+		var c_x := float(((chunk_idx + 1) % 3) - 1) * 3.1
+		crate.position = Vector3(c_rx + c_x, 0.0, c_lz)
+		chunk.add_child(crate)
+		props_pool.append({"node": crate, "chunk": chunk, "base_x": c_x, "local_z": c_lz, "type": "crate", "hit": false})
 
 	return chunk
+
+
+func _tint_building(node: Node, col: Color) -> void:
+	if node is MeshInstance3D and node.mesh != null:
+		for s in range(node.mesh.get_surface_count()):
+			var mat: Material = node.get_active_material(s)
+			var m2: StandardMaterial3D
+			if mat is StandardMaterial3D:
+				m2 = mat.duplicate() as StandardMaterial3D
+				m2.albedo_color = m2.albedo_color.lerp(col, 0.65)
+			else:
+				m2 = StandardMaterial3D.new()
+				m2.albedo_color = col
+			m2.roughness = maxf(m2.roughness, 0.78)
+			m2.metallic_specular = 0.12
+			node.set_surface_override_material(s, m2)
+	for c in node.get_children():
+		_tint_building(c, col)
+
+
+func _build_crate_barrier(district: int) -> Node3D:
+	var g := Node3D.new()
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(0.88, 0.45, 0.12) if (district % 2 == 0) else Color(0.62, 0.42, 0.22)
+	mat.roughness = 0.75
+	var m := MeshInstance3D.new()
+	var b := BoxMesh.new()
+	b.size = Vector3(1.4, 0.85, 0.85)
+	m.mesh = b
+	m.material_override = mat
+	m.position = Vector3(0.0, 0.425, 0.0)
+	g.add_child(m)
+	return g
 
 
 func _build_grounded_stall() -> Node3D:
@@ -442,10 +486,18 @@ func update_chunks(player_z: float, delta: float) -> void:
 	for p in props_pool:
 		if p.get("hit", false) and is_instance_valid(p.get("node")):
 			var n: Node3D = p["node"]
-			n.position.y += float(p.get("vy", 0.0)) * delta
-			p["vy"] = float(p.get("vy", 0.0)) - 20.0 * delta
-			n.position.x += float(p.get("vx", 0.0)) * delta
-			n.position.z += float(p.get("vz", 0.0)) * delta
-			n.rotation.x += 5.0 * delta
-			if n.position.y < -4.0:
-				n.visible = false
+			var ptype := str(p.get("type", "stall"))
+			if ptype in ["lamp", "tree"]:
+				# Poles and trees topple over realistically instead of flying into orbit
+				var tilt_dir := 1.0 if float(p.get("vx", 1.0)) >= 0.0 else -1.0
+				n.rotation.z = move_toward(n.rotation.z, -tilt_dir * 1.48, 5.5 * delta)
+				n.rotation.x = move_toward(n.rotation.x, 0.55, 2.8 * delta)
+			else:
+				n.position.y += float(p.get("vy", 0.0)) * delta
+				p["vy"] = float(p.get("vy", 0.0)) - 22.0 * delta
+				n.position.x += float(p.get("vx", 0.0)) * delta
+				n.position.z += float(p.get("vz", 0.0)) * delta
+				n.rotation.x += 6.5 * delta
+				n.rotation.z += 4.2 * delta
+				if n.position.y < -4.0:
+					n.visible = false

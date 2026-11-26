@@ -16,6 +16,8 @@ var _touch_last_x: float = 0.0
 var _button_steer: float = 0.0
 var _explosion_vfx: GPUParticles3D
 var _projectiles: Array[Dictionary] = []
+var _debris_pool: Array[Dictionary] = []
+var _debris_idx: int = 0
 var _proj_mesh: CylinderMesh
 var _proj_mat: StandardMaterial3D
 
@@ -23,6 +25,7 @@ var _proj_mat: StandardMaterial3D
 func _ready() -> void:
 	_init_explosion_vfx()
 	_init_projectile_res()
+	_init_debris_pool()
 	ui.action_triggered.connect(_on_ui_action)
 	_apply_city_preview()
 	AudioMgr.play_music("MENU")
@@ -56,6 +59,7 @@ func _init_explosion_vfx() -> void:
 	sphere.material = mat
 	_explosion_vfx.process_material = pm
 	_explosion_vfx.draw_pass_1 = sphere
+	_explosion_vfx.material_override = mat
 	add_child(_explosion_vfx)
 
 
@@ -120,6 +124,36 @@ func _spawn_projectile() -> void:
 		"vy": 2.8,
 		"life": 0.62
 	})
+
+
+func _init_debris_pool() -> void:
+	var d_mesh := BoxMesh.new()
+	d_mesh.size = Vector3(0.28, 0.18, 0.34)
+	var d_mat := StandardMaterial3D.new()
+	d_mat.albedo_color = Color(0.72, 0.42, 0.18)
+	d_mat.roughness = 0.8
+	for i in range(16):
+		var m := MeshInstance3D.new()
+		m.mesh = d_mesh
+		m.material_override = d_mat
+		m.visible = false
+		add_child(m)
+		_debris_pool.append({"node": m, "active": false, "vx": 0.0, "vy": 0.0, "vz": 0.0, "life": 0.0})
+
+
+func _spawn_debris(pos: Vector3, count: int = 4) -> void:
+	for _i in range(count):
+		var d := _debris_pool[_debris_idx]
+		_debris_idx = (_debris_idx + 1) % _debris_pool.size()
+		var n: MeshInstance3D = d["node"]
+		n.position = pos + Vector3(randf_range(-0.4, 0.4), 0.5, randf_range(-0.4, 0.4))
+		n.rotation = Vector3(randf() * TAU, randf() * TAU, 0.0)
+		n.visible = true
+		d["active"] = true
+		d["vx"] = randf_range(-8.0, 8.0)
+		d["vy"] = randf_range(6.5, 13.0)
+		d["vz"] = randf_range(4.0, maxf(10.0, GameData.speed * 0.7))
+		d["life"] = 0.85
 
 
 func _clear_projectiles() -> void:
@@ -320,10 +354,12 @@ func _process(delta: float) -> void:
 			p["vx"] = (1.0 if n.global_position.x >= player.position.x else -1.0) * 9.0
 			p["vy"] = 10.0
 			p["vz"] = maxf(8.0, GameData.speed * 0.6)
-			AudioMgr.play_sfx("smash", 0.88, 1.15, 0.0)
-			_trigger_shake(0.24)
+			AudioMgr.play_sfx("smash" if p["type"] in ["stall", "crate"] else "crash", 0.88, 1.15, 0.0)
+			_trigger_shake(0.28 if p["type"] == "stall" else 0.18)
 			_spawn_burst(n.global_position)
-			var pts := GameData.add_score(240 if p["type"] == "stall" else 180, false)
+			_spawn_debris(n.global_position, 4 if p["type"] in ["stall", "crate"] else 2)
+			var base_p := 240 if p["type"] == "stall" else (210 if p["type"] == "crate" else 180)
+			var pts := GameData.add_score(base_p, false)
 			ui.show_floating_pts(pts)
 
 	# Traffic & Pedestrians
@@ -351,14 +387,16 @@ func _process(delta: float) -> void:
 	)
 
 	_update_projectiles(dt)
+	_update_debris(dt)
 
-	# Camera follow + banking + trauma shake
-	var target_cam := player.position + Vector3(0.0, 4.9, -10.4)
+	# Camera follow + steering anticipation + trauma shake
+	var target_cam := player.position + Vector3(-player.smoothed_steer * 0.75, 4.9, -10.4)
 	camera.position = camera.position.lerp(target_cam, clampf(dt * 10.0, 0.0, 1.0))
 	if _shake_intensity > 0.005:
 		camera.position += Vector3(randf_range(-1.0, 1.0), randf_range(-0.6, 0.6), 0.0) * _shake_intensity
 		_shake_intensity = maxf(0.0, _shake_intensity - dt * 1.4)
-	camera.look_at(player.position + Vector3(0.0, 1.3, 16.0), Vector3.UP)
+	camera.look_at(player.position + Vector3(player.smoothed_steer * 0.6, 1.3, 16.0), Vector3.UP)
+	camera.rotation.z = lerpf(camera.rotation.z, player.smoothed_steer * 0.035, clampf(dt * 6.0, 0.0, 1.0))
 	var target_fov := 70.0 + clampf(GameData.speed / 3.5, 0.0, 12.0) + (6.0 if GameData.is_nitro_active else 0.0)
 	camera.fov = lerpf(camera.fov, target_fov, clampf(dt * 6.0, 0.0, 1.0))
 
@@ -410,3 +448,18 @@ func _update_projectiles(dt: float) -> void:
 				_spawn_burst(Vector3(px, 0.25, pz))
 			n.queue_free()
 			_projectiles.remove_at(i)
+
+
+func _update_debris(dt: float) -> void:
+	for d in _debris_pool:
+		if not d["active"]:
+			continue
+		d["life"] = float(d["life"]) - dt
+		var n: MeshInstance3D = d["node"]
+		n.position += Vector3(float(d["vx"]), float(d["vy"]), float(d["vz"])) * dt
+		d["vy"] = float(d["vy"]) - 24.0 * dt
+		n.rotation.x += 8.0 * dt
+		n.rotation.y += 6.0 * dt
+		if float(d["life"]) <= 0.0 or n.position.y < -1.0:
+			d["active"] = false
+			n.visible = false

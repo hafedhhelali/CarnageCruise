@@ -54,6 +54,7 @@ func _init_nitro_vfx() -> void:
 	mat.emission_energy_multiplier = 2.0
 	streak.material = mat
 	_nitro_particles.draw_pass_1 = streak
+	_nitro_particles.material_override = mat
 	_nitro_particles.position = Vector3(0.0, 0.55, -1.6)
 	add_child(_nitro_particles)
 
@@ -79,6 +80,7 @@ func _init_nitro_vfx() -> void:
 	smat.roughness = 1.0
 	sm.material = smat
 	_smoke_particles.draw_pass_1 = sm
+	_smoke_particles.material_override = smat
 	_smoke_particles.position = Vector3(0.0, 0.35, -1.7)
 	add_child(_smoke_particles)
 
