@@ -108,7 +108,7 @@ func build_vehicle(bike_id: String) -> void:
 	if bike_id == "cheval":
 		_nitro_particles.emitting = false
 		_tint_meshes(inst, Color(0.42, 0.24, 0.12))
-		_attach_rider(pivot, aabb, s)
+		_attach_rider(pivot, aabb, pivot.scale.x)
 
 	_anim_player = _find_animation_player(inst)
 	if _anim_player:

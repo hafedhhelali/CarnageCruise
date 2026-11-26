@@ -87,7 +87,7 @@ func show_splash() -> void:
 
 	var top_bar := HBoxContainer.new()
 	var ver := Label.new()
-	ver.text = "CARNAGE CRUISE  •  GODOT VULKAN v0.9.91"
+	ver.text = "CARNAGE CRUISE  •  GODOT VULKAN v0.9.92"
 	ver.add_theme_font_size_override("font_size", 14)
 	ver.modulate = Color(0.55, 0.9, 1.0)
 	var coins := Label.new()
